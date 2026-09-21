@@ -35,7 +35,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const listing = await prisma.listing.findUnique({
     where: { id },
     include: {
-      owner: true,
+      owner: { include: { storefront: { select: { slug: true, published: true } } } },
       reviews: {
         where: { hidden: false },
         include: { author: { select: { id: true, name: true } } },
@@ -58,6 +58,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const rating = averageRating(listing.reviews);
   const shareUrl = whatsappShareLink(listing.title, `${await origin()}/listings/${listing.id}`);
   const chatUrl = listing.contactWhatsapp ? whatsappChatLink(listing.contactWhatsapp, listing.title) : "";
+  const shop = listing.owner.storefront?.published ? listing.owner.storefront : null;
   const callUrl = telHref(listing.contactPhone);
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
@@ -121,10 +122,18 @@ export default async function ListingPage({ params, searchParams }: Props) {
             Call
           </a>
         ) : null}
+        {shop ? (
+          <Link href={`/b/${shop.slug}`} className={btnSecondary}>
+            Visit storefront
+          </Link>
+        ) : null}
         {isOwner ? (
           <>
             <Link href={`/listings/${listing.id}/edit`} className={btnSecondary}>
               Edit
+            </Link>
+            <Link href="/account/storefront" className={btnSecondary}>
+              Manage storefront
             </Link>
             <Link href={`/upgrade?listing=${listing.id}`} className={btnSecondary}>
               Feature this listing

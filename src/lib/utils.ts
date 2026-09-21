@@ -34,3 +34,22 @@ export function telHref(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, "");
   return cleaned ? `tel:${cleaned}` : "";
 }
+
+export function centsToInput(cents: number | null | undefined) {
+  if (cents == null) return "";
+  const major = cents / 100;
+  return Number.isInteger(major) ? String(major) : major.toFixed(2);
+}
+
+export function formatOfferingPrice(priceCents: number | null | undefined, currency: string) {
+  if (priceCents == null) return "";
+  const major = priceCents / 100;
+  const digits = priceCents % 100 === 0 ? 0 : 2;
+  const text = major.toLocaleString("en-GB", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: 2,
+  });
+  if (currency === "GBP") return `£${text}`;
+  if (currency === "KES") return `KES ${text}`;
+  return currency ? `${currency} ${text}` : text;
+}

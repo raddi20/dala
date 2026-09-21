@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { startPayment } from "@/lib/actions/payments";
-import { PRICES } from "@/lib/constants";
+import { FREE_OFFERING_CAP, PRICES, PRO_OFFERING_CAP } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
@@ -45,7 +45,8 @@ export function PayForm({
           <span>
             <span className="font-semibold">Verified Pro</span>
             <span className="mt-1 block text-ink/70">
-              A paid badge on your profile and listings. {PRICES.verified_pro.Nairobi} or {PRICES.verified_pro.London}. Manual
+              A paid badge on your profile and listings, a cover banner, and up to {PRO_OFFERING_CAP} offerings on your shop.
+              Free shops list {FREE_OFFERING_CAP}. {PRICES.verified_pro.Nairobi} or {PRICES.verified_pro.London}. Manual
               verification is still an admin action.
             </span>
           </span>

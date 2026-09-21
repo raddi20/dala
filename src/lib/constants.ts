@@ -43,6 +43,24 @@ export const REPORT_REASONS = [
 
 export const FEATURED_DAYS = 30;
 
+/** Active (not archived) offerings on a free shop. */
+export const FREE_OFFERING_CAP = 5;
+
+/** Active offerings once the seller has Verified Pro. */
+export const PRO_OFFERING_CAP = 20;
+
+export const OFFERING_CURRENCIES = ["KES", "GBP"] as const;
+
+export type OfferingCurrency = (typeof OFFERING_CURRENCIES)[number];
+
+export function offeringCap(verifiedPro: boolean) {
+  return verifiedPro ? PRO_OFFERING_CAP : FREE_OFFERING_CAP;
+}
+
+export function isOfferingCurrency(value: string): value is OfferingCurrency {
+  return (OFFERING_CURRENCIES as readonly string[]).includes(value);
+}
+
 export const PRICES = {
   featured: { Nairobi: "KES 1,500", London: "£12" },
   verified_pro: { Nairobi: "KES 2,500", London: "£20" },

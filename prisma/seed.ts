@@ -628,12 +628,139 @@ const reviews: { title: string; author: string; rating: number; body: string }[]
   },
 ];
 
+const photo = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+
+type SeedOffering = {
+  title: string;
+  description: string;
+  priceCents: number | null;
+  currency: "KES" | "GBP";
+  imageUrl: string;
+};
+
+const shops: {
+  owner: string;
+  slug: string;
+  bannerUrl?: string;
+  offerings: SeedOffering[];
+}[] = [
+  {
+    owner: "atieno@dala.local",
+    slug: "mama-atieno",
+    offerings: [
+      {
+        title: "Lunch plate",
+        description: "Fried tilapia, ugali, and sukuma. Served from noon at the Kilimani kitchen.",
+        priceCents: 45000,
+        currency: "KES",
+        imageUrl: photo("photo-1555939594-58d7cb561ad1"),
+      },
+      {
+        title: "Weekend nyama tray",
+        description: "Beef by the tray for Saturday. Message by Thursday so the meat can be ordered.",
+        priceCents: 280000,
+        currency: "KES",
+        imageUrl: photo("photo-1544025162-d76694265947"),
+      },
+      {
+        title: "Ngong Road office drop",
+        description: "Ten plates or more, delivered along Ngong Road before noon.",
+        priceCents: 55000,
+        currency: "KES",
+        imageUrl: photo("photo-1504674900247-0877df9cc836"),
+      },
+      {
+        title: "Home catering tray",
+        description: "Fish, beef, rice, and greens for a meeting or a house gathering. Minimum ten plates.",
+        priceCents: 60000,
+        currency: "KES",
+        imageUrl: photo("photo-1414235077428-338989a2e8c0"),
+      },
+    ],
+  },
+  {
+    owner: "peter@dala.local",
+    slug: "peckham-grocer",
+    offerings: [
+      {
+        title: "Dried omena, 500g",
+        description: "Packed for the shelf in Peckham. Ask at the till if the next box has landed.",
+        priceCents: 650,
+        currency: "GBP",
+        imageUrl: photo("photo-1615485290382-441e4d049cb5"),
+      },
+      {
+        title: "Maize flour, 2kg",
+        description: "The bag used for ugali. Price is marked on the shelf and matched at the till.",
+        priceCents: 320,
+        currency: "GBP",
+        imageUrl: photo("photo-1574323347407-f5e1ad6d020b"),
+      },
+      {
+        title: "Sukuma wiki bunch",
+        description: "Greens for the evening pot. Sold by the bunch, not by weight.",
+        priceCents: 150,
+        currency: "GBP",
+        imageUrl: photo("photo-1542838132-92c53300491e"),
+      },
+      {
+        title: "Fish stew takeaway",
+        description: "The same pot as Lake & Nile Kitchen next door. Order in the morning for the same day.",
+        priceCents: 1200,
+        currency: "GBP",
+        imageUrl: photo("photo-1467003909585-2f8a72700288"),
+      },
+    ],
+  },
+  {
+    owner: "okello@dala.local",
+    slug: "okello-and-co",
+    bannerUrl: photo("photo-1497366216548-37526070297c"),
+    offerings: [
+      {
+        title: "Tenancy deposit review",
+        description: "We read the agreement and the deposit-scheme papers before you pay a fee for further work.",
+        priceCents: 8000,
+        currency: "GBP",
+        imageUrl: photo("photo-1450101499163-c8848c66ca85"),
+      },
+      {
+        title: "Small-business paperwork",
+        description: "Filings and a plain explanation for a shop or a salon. This is not an immigration matter.",
+        priceCents: 15000,
+        currency: "GBP",
+        imageUrl: photo("photo-1454165804606-c3d57bc86b40"),
+      },
+      {
+        title: "Self-assessment session",
+        description: "Help with a UK return when you also have a small shop or a rental back home.",
+        priceCents: 8000,
+        currency: "GBP",
+        imageUrl: photo("photo-1554224155-6726b3ff858f"),
+      },
+      {
+        title: "Introductory call",
+        description: "Fifteen minutes on the phone. We say whether we can help before any fee.",
+        priceCents: null,
+        currency: "GBP",
+        imageUrl: photo("photo-1521791136064-7986c2920216"),
+      },
+    ],
+  },
+];
+
 async function main() {
   const unknown = listings.filter((listing) => !(CATEGORIES as readonly string[]).includes(listing.category));
   if (unknown.length > 0) {
     throw new Error(`Unknown categories: ${unknown.map((listing) => listing.category).join(", ")}`);
   }
+  if (shops.some((shop) => shop.offerings.length < 3)) {
+    throw new Error("Seed shops need at least 3 offerings.");
+  }
 
+  await prisma.offering.deleteMany();
+  await prisma.storefront.deleteMany();
   await prisma.review.deleteMany();
   await prisma.report.deleteMany();
   await prisma.block.deleteMany();
@@ -751,8 +878,33 @@ async function main() {
     },
   });
 
+  for (const shop of shops) {
+    const owner = createdUsers.get(shop.owner);
+    if (!owner) throw new Error(`Missing shop owner ${shop.owner}`);
+    await prisma.storefront.create({
+      data: {
+        userId: owner.id,
+        slug: shop.slug,
+        bannerUrl: shop.bannerUrl ?? "",
+        published: true,
+        offerings: {
+          create: shop.offerings.map((offering, index) => ({
+            title: offering.title,
+            description: offering.description,
+            priceCents: offering.priceCents,
+            currency: offering.currency,
+            imageUrl: offering.imageUrl,
+            sortOrder: index,
+          })),
+        },
+      },
+    });
+  }
+
   const flagged = await prisma.listing.count({ where: { scamRisk: { not: "low" } } });
-  console.log(`Seeded ${createdUsers.size} people, ${idsByTitle.size} listings, ${flagged} flagged.`);
+  console.log(
+    `Seeded ${createdUsers.size} people, ${idsByTitle.size} listings, ${flagged} flagged, ${shops.length} shops.`,
+  );
 }
 
 main()
