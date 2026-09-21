@@ -17,6 +17,10 @@ export default async function AccountPage({
 }) {
   const sp = await searchParams;
   const user = await requireUser("/account");
+  const storefront = await prisma.storefront.findUnique({
+    where: { userId: user.id },
+    select: { slug: true, published: true },
+  });
   const listings = await prisma.listing.findMany({
     where: { ownerId: user.id },
     orderBy: { createdAt: "desc" },
@@ -66,6 +70,24 @@ export default async function AccountPage({
           email: user.email,
         }}
       />
+
+      <section className="grid gap-2">
+        <h2 className="font-serif text-2xl">Your shop</h2>
+        <p className="text-sm text-ink/70">
+          A public page of what you offer. Buyers message you on WhatsApp.
+          {storefront ? (storefront.published ? " Published." : " Draft. Only you can preview it.") : " Start one when you want a page for your offerings."}
+        </p>
+        <div className="flex flex-wrap gap-3 text-sm font-semibold">
+          <Link href="/account/storefront" className="text-lake-dark">
+            Manage storefront
+          </Link>
+          {storefront?.published ? (
+            <Link href={`/b/${storefront.slug}`} className="text-lake-dark">
+              View shop
+            </Link>
+          ) : null}
+        </div>
+      </section>
 
       <section className="grid gap-3">
         <div className="flex items-center justify-between gap-3">

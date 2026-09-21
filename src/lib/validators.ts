@@ -4,6 +4,7 @@ import {
   CITIES,
   isCategory,
   isCityName,
+  isOfferingCurrency,
   REPORT_REASONS,
 } from "@/lib/constants";
 
@@ -105,5 +106,73 @@ export const reportSchema = z.object({
   ),
   details: z.string().trim().max(1000).default(""),
 });
+
+const httpUrl = (value: string) => value === "" || /^https?:\/\//i.test(value);
+
+export const storefrontSchema = z.object({
+  slug: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(3, "Shop address must be at least 3 characters.")
+    .max(40, "Shop address must be 40 characters or fewer.")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens."),
+  bannerUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .default("")
+    .refine(httpUrl, "Banner URL must start with http:// or https://."),
+  bio: z.string().trim().max(500, "About must be 500 characters or fewer.").default(""),
+});
+
+export function parseStorefrontForm(formData: FormData) {
+  const parsed = storefrontSchema.safeParse({
+    slug: field(formData, "slug"),
+    bannerUrl: field(formData, "bannerUrl"),
+    bio: field(formData, "bio"),
+  });
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Check the form." };
+  }
+  const published = formData.getAll("published").map(String).includes("1");
+  return { ok: true as const, data: { ...parsed.data, published } };
+}
+
+export function parsePriceCents(raw: string) {
+  const trimmed = raw.trim();
+  if (!trimmed) return { ok: true as const, cents: null };
+  if (!/^\d{1,8}(\.\d{1,2})?$/.test(trimmed)) {
+    return { ok: false as const, error: "Price must be a number, like 450 or 12.50." };
+  }
+  return { ok: true as const, cents: Math.round(Number(trimmed) * 100) };
+}
+
+export const offeringSchema = z.object({
+  title: z.string().trim().min(2, "Title must be at least 2 characters.").max(80),
+  description: z.string().trim().min(2, "Add a short description.").max(400, "Keep the description under 400 characters."),
+  currency: z.string().refine(isOfferingCurrency, "Choose KES or GBP."),
+  imageUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .default("")
+    .refine(httpUrl, "Photo URL must start with http:// or https://."),
+});
+
+export function parseOfferingForm(formData: FormData) {
+  const parsed = offeringSchema.safeParse({
+    title: field(formData, "title"),
+    description: field(formData, "description"),
+    currency: field(formData, "currency"),
+    imageUrl: field(formData, "imageUrl"),
+  });
+  if (!parsed.success) {
+    return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Check the form." };
+  }
+  const price = parsePriceCents(field(formData, "price"));
+  if (!price.ok) return price;
+  return { ok: true as const, data: { ...parsed.data, priceCents: price.cents } };
+}
 
 export { CATEGORIES, CITIES };

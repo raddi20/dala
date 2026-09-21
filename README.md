@@ -45,6 +45,22 @@ Every seeded account uses the password `demo1234`.
 
 Try the sentence search with `verified restaurants in Nairobi` or `housing in London`. The high-risk plot advert and the "limited offer" sofa are there so the scam check is visible. One phone advert is already hidden for the admin queue.
 
+## Shops
+
+A published shop is a public page at `/b/[slug]`. It shows a banner (Verified Pro), the profile about text, a WhatsApp button, and the seller's offerings. Buyers do not need an account. There is no cart, checkout, stock count, or shipping. The WhatsApp draft names the offering and includes the shop URL. The product name in that sentence comes from `src/lib/brand.ts` (`Hi, I saw {offering} on your {APP_NAME} shop ({url})…`).
+
+| Shop | City | Seller | Notes |
+| --- | --- | --- | --- |
+| `/b/mama-atieno` | Nairobi | `atieno@dala.local` | Free. Four offerings. |
+| `/b/peckham-grocer` | London | `peter@dala.local` | Free. Four offerings. |
+| `/b/okello-and-co` | London | `okello@dala.local` | Verified Pro. Cover banner and four offerings. |
+
+Sign in as the seller and open **Manage storefront** from Account or from the listing edit page. From there you can change the address, write the about text, add or edit offerings, archive them, move them up or down, and publish. Unpublished shops return a not-found page to everyone except the owner, who can still preview.
+
+Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro`, already used by the paid badge) raises that to 20 and unlocks the cover banner. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
+
+Listing cards show **Shop**, and the listing page shows **Visit storefront**, when that seller's shop is published.
+
 ## Environment
 
 | Variable | Purpose |
@@ -82,16 +98,17 @@ The schema uses strings rather than database enums so the model itself does not 
 - Star reviews. Report a listing or profile. Block a person (their listings drop out of your browse).
 - Admin: list and hide listings, grant or remove Verified, grant or remove Pro, dismiss or act on reports.
 - WhatsApp: chat the contact, or share the listing, both via `wa.me` with the listing URL in the text.
+- Shop pages at `/b/[slug]` with offerings, a WhatsApp draft that names the offering, and seller publish controls. See **Shops** above.
 - Featured listing and Verified Pro checkout. M-Pesa and card forms are placeholders. The receipt is marked paid and the badge updates. No money moves.
 - New listings get a scam-risk flag from keyword rules (wires, gift cards, "pay first", guaranteed returns, and similar). High and medium results show on the listing.
 
 ## Out of scope
 
-Social feed, dating, remittances, a shipping marketplace, and automated KYC. Transport listings here are local cabs and couriers, not a parcel marketplace.
+Social feed, dating, remittances, a shipping marketplace, and automated KYC. Transport listings here are local cabs and couriers, not a parcel marketplace. Shops do not add a cart, checkout, inventory, or a gallery of more than one photo per offering.
 
 ## Layout
 
-- `src/app` — pages
+- `src/app` — pages, including `b/[slug]` for a public shop and `account/storefront` for the seller editor
 - `src/lib/brand.ts` — name
 - `src/lib/constants.ts` — cities, categories, prices
 - `src/lib/nl-query.ts` — sentence to filters

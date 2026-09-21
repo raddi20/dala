@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ListingForm } from "@/components/listing-form";
 import { btnDanger } from "@/components/ui";
@@ -19,6 +20,13 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="font-serif text-3xl">Edit listing</h1>
+      {user.id === listing.ownerId ? (
+        <p className="mt-2 text-sm">
+          <Link href="/account/storefront" className="font-semibold text-lake-dark">
+            Manage storefront
+          </Link>
+        </p>
+      ) : null}
       <div className="mt-6">
         <ListingForm
           mode="edit"

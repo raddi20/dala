@@ -34,6 +34,11 @@ export default async function PersonPage({ params }: Props) {
     includeHidden: viewer?.id === person.id || viewer?.role === "admin",
   });
   const region = person.city === "London" ? "diaspora" : "homeland";
+  const shop = await prisma.storefront.findUnique({
+    where: { userId: person.id },
+    select: { slug: true, published: true },
+  });
+  const showShop = Boolean(shop?.published) && !blocked;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-8">
@@ -50,6 +55,11 @@ export default async function PersonPage({ params }: Props) {
           {person.phone ? <p>Phone {person.phone}</p> : null}
           {person.whatsapp ? <p>WhatsApp {person.whatsapp}</p> : null}
         </div>
+        {showShop && shop ? (
+          <Link href={`/b/${shop.slug}`} className="mt-3 inline-block text-sm font-semibold text-lake-dark">
+            Visit storefront
+          </Link>
+        ) : null}
       </div>
 
       {blocked ? (

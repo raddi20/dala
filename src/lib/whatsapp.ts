@@ -13,3 +13,11 @@ export function whatsappChatLink(phone: string, title: string) {
 export function whatsappShareLink(title: string, url: string) {
   return waMe("", `${title}\n${url}\nShared from ${APP_NAME}`);
 }
+
+export function whatsappShopLink(phone: string, url: string) {
+  return waMe(phone, `Hi, I saw your ${APP_NAME} shop (${url})…`);
+}
+
+export function whatsappOfferingLink(phone: string, offering: string, url: string) {
+  return waMe(phone, `Hi, I saw ${offering} on your ${APP_NAME} shop (${url})…`);
+}

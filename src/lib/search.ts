@@ -4,7 +4,14 @@ import { isFeatured } from "@/lib/utils";
 
 const include = {
   reviews: { where: { hidden: false }, select: { rating: true } },
-  owner: { select: { id: true, name: true, verifiedPro: true } },
+  owner: {
+    select: {
+      id: true,
+      name: true,
+      verifiedPro: true,
+      storefront: { select: { slug: true, published: true } },
+    },
+  },
 } satisfies Prisma.ListingInclude;
 
 export async function searchListings(filters: {
