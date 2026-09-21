@@ -63,13 +63,48 @@ Listing cards show **Shop**, and the listing page shows **Visit storefront**, wh
 
 ## Environment
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | SQLite file. Default `file:./dev.db`, resolved from the `prisma/` directory. |
-| `AUTH_SECRET` | Signs the Auth.js session cookie. Change it before any shared deployment. |
-| `AUTH_TRUST_HOST` | Allows Auth.js on localhost. |
+| Variable | Local | Production (Vercel) |
+| --- | --- | --- |
+| `DATABASE_URL` | `file:./dev.db` (SQLite, resolved from `prisma/`). | Neon Postgres URL, including `sslmode=require`. Use the **direct** connection string (host without `-pooler`) so `prisma db push` can create tables. |
+| `AUTH_SECRET` | Any dev string. | A long random string. `openssl rand -base64 32` |
+| `AUTH_TRUST_HOST` | `true` | `true`. Auth.js already sets `trustHost` in `src/auth.ts`. |
+| `AUTH_URL` | Omit. | `https://<project>.vercel.app` once Vercel assigns the URL. |
+| `NEXTAUTH_URL` | Omit. | Same value as `AUTH_URL`. |
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later.
+
+## Deploy on Vercel
+
+SQLite is fine on your laptop. Vercel serverless has no durable disk, so production uses Postgres. The committed schema stays `provider = "sqlite"`. `vercel.json` runs `npm run build:vercel`, which points Prisma at Postgres when `DATABASE_URL` starts with `postgres://` or `postgresql://`, creates the tables with `prisma db push`, and loads the demo seed only when the user table is empty. Later deploys do not wipe the database.
+
+About ten minutes, after this deploy config is on `main`:
+
+1. Create a free database at [neon.tech](https://neon.tech). New project, name it `dala`. Open **Connect**, choose the **direct** connection (not the pooler), and copy the URI. It should look like `postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require`.
+2. Open [vercel.com/new](https://vercel.com/new). Import the GitHub repo **raddi20/dala**. Framework preset: Next.js. Production branch: `main`. Root directory: `./`.
+3. Before the first deploy, add these environment variables (Production, and Preview if you want preview URLs to work):
+
+   | Name | Value |
+   | --- | --- |
+   | `DATABASE_URL` | The Neon URI from step 1 |
+   | `AUTH_SECRET` | Output of `openssl rand -base64 32` |
+   | `AUTH_TRUST_HOST` | `true` |
+
+4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi and London demo shops.
+5. Copy the deployment URL, for example `https://dala-xxxxx.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL` and `NEXTAUTH_URL`, both set to that exact origin (no trailing path). Redeploy once so sign-in cookies use that host.
+6. Open `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co`. Demo password is `demo1234`.
+
+Do not point production `DATABASE_URL` at `file:./dev.db`. The build refuses a non-Postgres URL on Vercel, and it refuses the sample `AUTH_SECRET` from `.env.example`.
+
+To reload demo data later from your laptop (this **deletes** whatever is in that database, then reseeds):
+
+```bash
+DATABASE_URL="postgresql://..." AUTH_SECRET="the-same-secret" node scripts/prepare-db-provider.mjs
+npx prisma generate
+npx prisma db seed
+git checkout -- prisma/schema.prisma
+```
+
+`git checkout` puts the local schema back to SQLite so `npm run db:setup` keeps working.
 
 ## Rename
 
@@ -79,14 +114,9 @@ Auth is email and password so the demo runs without an email server. A magic-lin
 
 ## Postgres
 
-The committed migration targets SQLite. For Postgres:
+Local development keeps the SQLite migrations in `prisma/migrations`. Production does not run those files. On Vercel, `prisma db push` creates the same models in Postgres. The schema uses strings rather than database enums so that push does not need a second migration history.
 
-1. In `prisma/schema.prisma`, set `provider = "postgresql"`.
-2. Set `DATABASE_URL` to a Postgres URL, for example `postgresql://user:pass@localhost:5432/dala?schema=public`.
-3. Delete `prisma/migrations` and create a new one with `npx prisma migrate dev --name init`.
-4. Run `npx prisma db seed`.
-
-The schema uses strings rather than database enums so the model itself does not need a rewrite.
+See **Deploy on Vercel** for the Neon connection string. A local Postgres database works the same way: set `DATABASE_URL` to a `postgresql://` URL, run `node scripts/prepare-db-provider.mjs`, then `npx prisma db push` and `npx prisma db seed`. Check the schema file back to SQLite afterward if you still want `npm run db:setup` on the laptop.
 
 ## What is in the prototype
 
@@ -115,4 +145,5 @@ Social feed, dating, remittances, a shipping marketplace, and automated KYC. Tra
 - `src/lib/draft.ts` — listing draft assist
 - `src/lib/scam.ts` — risk rules
 - `src/auth.ts` — Auth.js credentials
-- `prisma/schema.prisma` — data model
+- `prisma/schema.prisma` — data model (SQLite locally; Vercel build switches it to Postgres)
+- `vercel.json` — production build: push the schema, then seed an empty database

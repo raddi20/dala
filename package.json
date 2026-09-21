@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:vercel": "node scripts/prepare-db-provider.mjs && prisma generate && prisma db push --skip-generate && node scripts/seed-if-empty.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "node scripts/ensure-env.mjs && prisma generate",
