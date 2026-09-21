@@ -1,7 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
+// Git keeps this datasource on SQLite so local npm run db:setup stays a file database.
+// The Vercel build switches the datasource to Postgres when DATABASE_URL is a postgres URL.
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
