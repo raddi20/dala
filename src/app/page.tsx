@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
-import { btnPrimary, fieldClass } from "@/components/ui";
-import { APP_MEANING, APP_NAME, APP_TAGLINE } from "@/lib/brand";
+import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { CATEGORIES, CITIES } from "@/lib/constants";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { isFeatured } from "@/lib/utils";
+
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1800&q=80";
 
 export default async function HomePage() {
   const user = await getSessionUser();
@@ -15,14 +18,26 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="border-b border-sand bg-card">
-        <div className="mx-auto max-w-5xl px-4 py-10 sm:py-14">
-          <p className="text-sm font-semibold uppercase tracking-wide text-lake">{APP_MEANING}</p>
-          <h1 className="mt-2 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">
-            {APP_NAME} lists Luo businesses and services.
+      <section className="relative isolate min-h-[min(88vh,760px)] overflow-hidden">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={HERO_IMAGE}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/92 via-navy/78 to-navy/45" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-navy/30" />
+
+        <div className="relative mx-auto flex min-h-[min(88vh,760px)] max-w-5xl flex-col justify-end px-4 pb-12 pt-20 sm:justify-center sm:pb-16 sm:pt-24">
+          <p className="font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
+            {APP_NAME}
+          </p>
+          <h1 className="mt-4 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
+            Find Luo businesses and services you can trust.
           </h1>
-          <p className="mt-3 max-w-xl text-lg text-ink/80">{APP_TAGLINE} Chat stays on WhatsApp.</p>
-          <form action="/listings" method="get" className="mt-6 flex flex-col gap-2 sm:flex-row">
+          <p className="mt-3 max-w-lg text-base text-white/75 sm:text-lg">{APP_TAGLINE}</p>
+
+          <form action="/listings" method="get" className="mt-8 flex w-full max-w-xl flex-col gap-2 sm:flex-row">
             <label className="sr-only" htmlFor="home-nl">
               Search in a sentence
             </label>
@@ -30,48 +45,59 @@ export default async function HomePage() {
               id="home-nl"
               name="nl"
               placeholder="Try: verified restaurants in Nairobi"
-              className={fieldClass}
+              className={`${fieldClass} mt-0 border-0 bg-white/95 shadow-lg`}
             />
-            <button className={btnPrimary}>Search</button>
+            <button className={`${btnPrimary} shrink-0 shadow-lg sm:px-6`}>Search</button>
           </form>
-          <div className="mt-4 flex flex-wrap gap-2 text-sm">
-            <Link href="/listings?city=Nairobi&type=business" className="rounded-full bg-sand px-3 py-1 hover:bg-sand/70">
-              Nairobi directory
-            </Link>
-            <Link href="/listings?city=London&region=diaspora" className="rounded-full bg-sand px-3 py-1 hover:bg-sand/70">
-              London diaspora
-            </Link>
-            <Link href="/listings?type=classifieds" className="rounded-full bg-sand px-3 py-1 hover:bg-sand/70">
-              Classifieds
-            </Link>
-          </div>
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-5xl gap-10 px-4 py-10">
-        <section className="grid gap-3 sm:grid-cols-2">
-          {CITIES.map((city) => (
-            <Link
-              key={city.name}
-              href={`/listings?city=${city.name}&region=${city.region}`}
-              className="rounded-2xl border border-sand bg-card p-5"
-            >
-              <p className="text-sm font-semibold uppercase tracking-wide text-lake">
-                {city.region === "homeland" ? "Homeland" : "Diaspora"} · {city.country}
-              </p>
-              <h2 className="mt-1 font-serif text-3xl">{city.name}</h2>
+      <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 pb-28 sm:gap-14 sm:py-16 md:pb-16">
+        <section>
+          <h2 className={sectionTitleClass}>Where to start</h2>
+          <p className="mt-2 max-w-xl text-ink/65">Browse the directory, open a shop page, or list your business.</p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link href="/listings" className={btnNavy}>
+              Browse
             </Link>
-          ))}
+            <Link href="/account/storefront" className={btnSecondary}>
+              Open a shop
+            </Link>
+            <Link href="/listings/new" className={btnSecondary}>
+              List your business
+            </Link>
+          </div>
         </section>
 
         <section>
-          <h2 className="font-serif text-2xl">Categories</h2>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <h2 className={sectionTitleClass}>Cities</h2>
+          <p className="mt-2 text-ink/65">Homeland and diaspora — same community directory.</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
+            {CITIES.map((city) => (
+              <Link
+                key={city.name}
+                href={`/listings?city=${city.name}&region=${city.region}`}
+                className={`card-lift group relative overflow-hidden ${cardClass} p-6`}
+              >
+                <p className="text-xs font-semibold uppercase tracking-wider text-lake">
+                  {city.region === "homeland" ? "Homeland" : "Diaspora"} · {city.country}
+                </p>
+                <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
+                  {city.name}
+                </h3>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className={sectionTitleClass}>Categories</h2>
+          <div className="mt-4 flex flex-wrap gap-2">
             {CATEGORIES.map((category) => (
               <Link
                 key={category}
                 href={`/listings?category=${encodeURIComponent(category)}`}
-                className="rounded-xl border border-sand bg-card px-3 py-3 text-sm hover:border-lake"
+                className="rounded-full border border-sand bg-card px-3.5 py-2 text-sm font-medium text-ink/80 shadow-sm transition-colors hover:border-navy/20 hover:bg-white hover:text-navy"
               >
                 {category}
               </Link>
@@ -81,12 +107,15 @@ export default async function HomePage() {
 
         <section>
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-serif text-2xl">Featured</h2>
-            <Link href="/listings" className="text-sm font-semibold text-lake-dark">
+            <div>
+              <h2 className={sectionTitleClass}>Featured</h2>
+              <p className="mt-1 text-sm text-ink/60">Raised shops and listings worth a look first.</p>
+            </div>
+            <Link href="/listings" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
               Browse all
             </Link>
           </div>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {featured.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
@@ -95,17 +124,34 @@ export default async function HomePage() {
 
         <section>
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-serif text-2xl">Recent classifieds</h2>
-            <Link href="/listings?type=classifieds" className="text-sm font-semibold text-lake-dark">
+            <div>
+              <h2 className={sectionTitleClass}>Recent classifieds</h2>
+              <p className="mt-1 text-sm text-ink/60">Housing, goods, and services from the community.</p>
+            </div>
+            <Link
+              href="/listings?type=classifieds"
+              className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake"
+            >
               All classifieds
             </Link>
           </div>
-          <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {classifieds.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </div>
         </section>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden sticky-cta-bar">
+        <div className="mx-auto flex max-w-5xl gap-2">
+          <Link href="/listings" className={`${btnPrimary} flex-1`}>
+            Search
+          </Link>
+          <Link href="/listings/new" className={`${btnSecondary} flex-1`}>
+            List business
+          </Link>
+        </div>
       </div>
     </div>
   );

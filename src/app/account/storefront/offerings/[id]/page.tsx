@@ -22,23 +22,25 @@ export default async function EditOfferingPage({ params }: { params: Promise<{ i
   return (
     <div className="mx-auto grid max-w-2xl gap-4 px-4 py-8">
       <div>
-        <h1 className="font-serif text-3xl">Edit offering</h1>
-        <Link href="/account/storefront" className="mt-2 inline-block text-sm font-semibold text-lake-dark">
+        <h1 className="font-serif text-3xl text-navy">Edit offering</h1>
+        <Link href="/account/storefront" className="mt-2 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
           Back to shop
         </Link>
       </div>
-      <OfferingForm
-        mode="edit"
-        currencyDefault={user.city === "London" ? "GBP" : "KES"}
-        offering={{
-          id: offering.id,
-          title: offering.title,
-          description: offering.description,
-          price: centsToInput(offering.priceCents),
-          currency: offering.currency,
-          imageUrl: offering.imageUrl,
-        }}
-      />
+      <div className="rounded-[1.25rem] border border-sand/80 bg-card p-5 shadow-[var(--shadow-card)]">
+        <OfferingForm
+          mode="edit"
+          currencyDefault={user.city === "London" ? "GBP" : "KES"}
+          offering={{
+            id: offering.id,
+            title: offering.title,
+            description: offering.description,
+            price: centsToInput(offering.priceCents),
+            currency: offering.currency,
+            imageUrl: offering.imageUrl,
+          }}
+        />
+      </div>
     </div>
   );
 }
