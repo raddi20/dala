@@ -186,7 +186,7 @@ export default async function HomePage() {
             Open a shop
           </Link>
           <Link href={listHref} className={`${btnSecondary} flex-1`}>
-            List business
+            List your business
           </Link>
         </div>
       </div>
