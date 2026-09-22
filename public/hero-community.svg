@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none" role="img" aria-hidden="true">
+  <title>Warm geometric marketplace backdrop</title>
+  <!-- Brand palette: navy / amber / cream / lake. Abstract shops + connection nodes  no food imagery. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a364c"/>
+      <stop offset="45%" stop-color="#1a2436"/>
+      <stop offset="100%" stop-color="#0b5a54"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0.2" y1="0" x2="0.9" y2="1">
+      <stop offset="0%" stop-color="#c8881a" stop-opacity="0.55"/>
+      <stop offset="55%" stop-color="#c8881a" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0f766e" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#fbf1dc" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#fbf1dc" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" stroke="#f7f3ec" stroke-opacity="0.06" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <rect width="1600" height="900" fill="url(#warm)"/>
+  <rect width="1600" height="900" fill="url(#grid)"/>
+  <ellipse cx="1180" cy="180" rx="420" ry="260" fill="url(#glow)"/>
+  <ellipse cx="240" cy="720" rx="380" ry="220" fill="#c8881a" fill-opacity="0.14"/>
+
+  <!-- Soft city / shop silhouettes (right half, behind overlay text on left) -->
+  <g opacity="0.55">
+    <rect x="760" y="420" width="110" height="320" rx="8" fill="#f7f3ec" fill-opacity="0.12"/>
+    <rect x="890" y="340" width="140" height="400" rx="8" fill="#f7f3ec" fill-opacity="0.16"/>
+    <rect x="1050" y="390" width="120" height="350" rx="8" fill="#f7f3ec" fill-opacity="0.13"/>
+    <rect x="1190" y="300" width="160" height="440" rx="8" fill="#f7f3ec" fill-opacity="0.18"/>
+    <rect x="1370" y="450" width="130" height="290" rx="8" fill="#f7f3ec" fill-opacity="0.11"/>
+
+    <!-- Shop windows -->
+    <rect x="910" y="420" width="40" height="48" rx="4" fill="#fbf1dc" fill-opacity="0.35"/>
+    <rect x="970" y="420" width="40" height="48" rx="4" fill="#fbf1dc" fill-opacity="0.28"/>
+    <rect x="910" y="500" width="40" height="48" rx="4" fill="#fbf1dc" fill-opacity="0.22"/>
+    <rect x="970" y="500" width="40" height="48" rx="4" fill="#fbf1dc" fill-opacity="0.3"/>
+    <rect x="1220" y="380" width="44" height="52" rx="4" fill="#c8881a" fill-opacity="0.45"/>
+    <rect x="1280" y="380" width="44" height="52" rx="4" fill="#c8881a" fill-opacity="0.35"/>
+    <rect x="1220" y="460" width="44" height="52" rx="4" fill="#0f766e" fill-opacity="0.4"/>
+    <rect x="1280" y="460" width="44" height="52" rx="4" fill="#fbf1dc" fill-opacity="0.28"/>
+  </g>
+
+  <!-- Community connection nodes -->
+  <g stroke="#fbf1dc" stroke-opacity="0.22" stroke-width="1.5">
+    <path d="M820 560 C920 480, 1020 500, 1120 420"/>
+    <path d="M980 640 C1080 580, 1180 600, 1300 520"/>
+    <path d="M860 700 C980 660, 1100 720, 1240 640"/>
+  </g>
+  <g fill="#fbf1dc">
+    <circle cx="820" cy="560" r="7" fill-opacity="0.55"/>
+    <circle cx="980" cy="640" r="6" fill-opacity="0.45"/>
+    <circle cx="1120" cy="420" r="8" fill-opacity="0.6"/>
+    <circle cx="1300" cy="520" r="7" fill-opacity="0.5"/>
+    <circle cx="1240" cy="640" r="6" fill-opacity="0.4"/>
+    <circle cx="860" cy="700" r="5" fill-opacity="0.35"/>
+  </g>
+
+  <!-- Stylized phone / chat cue (neutral, not food) -->
+  <g transform="translate(1280 620)" opacity="0.7">
+    <rect x="0" y="0" width="72" height="120" rx="14" fill="#f7f3ec" fill-opacity="0.2" stroke="#fbf1dc" stroke-opacity="0.45" stroke-width="2"/>
+    <rect x="12" y="18" width="48" height="72" rx="6" fill="#0f766e" fill-opacity="0.55"/>
+    <circle cx="36" cy="106" r="5" fill="#fbf1dc" fill-opacity="0.55"/>
+  </g>
+</svg>
