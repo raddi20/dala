@@ -25,6 +25,9 @@ function publicError(message: string) {
   if (/email/i.test(text)) {
     return "Flutterwave rejected the email on this account. Demo addresses ending in @dala.local are local only — use a real email.";
   }
+  if (/authoriz|invalid key|secret key/i.test(text)) {
+    return "Flutterwave rejected the secret key. Check FLW_SECRET_KEY and try again.";
+  }
   if (text.length > 180) return "Flutterwave could not start checkout.";
   return text;
 }
