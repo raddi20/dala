@@ -256,7 +256,7 @@ export default async function ManageStorefrontPage({
                 ? `This shop is at the Verified Pro limit of ${cap}. Archive one to add another.`
                 : `This shop is at the free limit of ${FREE_OFFERING_CAP}. Archive one, or get Verified Pro for ${PRO_OFFERING_CAP}.`}{" "}
               {!user.verifiedPro ? (
-                <Link href="/upgrade" className="font-semibold text-lake-dark hover:text-lake">
+                <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
                   See Promote
                 </Link>
               ) : null}

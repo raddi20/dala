@@ -861,9 +861,12 @@ async function main() {
       product: "featured",
       method: "mpesa",
       amount: "KES 1,500",
+      amountValue: 1500,
+      currency: "KES",
       reference: "DALA-MPESA-0101",
+      provider: "simulated",
       status: "paid",
-      note: "Simulated checkout. No M-Pesa request and no card charge.",
+      note: "Seeded receipt from the old simulated checkout. No M-Pesa request and no card charge.",
     },
   });
   await prisma.payment.create({
@@ -872,9 +875,12 @@ async function main() {
       product: "verified_pro",
       method: "card",
       amount: "£20",
+      amountValue: 20,
+      currency: "GBP",
       reference: "DALA-CARD-4242",
+      provider: "simulated",
       status: "paid",
-      note: "Simulated checkout. No M-Pesa request and no card charge.",
+      note: "Seeded receipt from the old simulated checkout. No M-Pesa request and no card charge.",
     },
   });
 

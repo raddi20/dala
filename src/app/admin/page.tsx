@@ -36,7 +36,7 @@ export default async function AdminPage() {
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8">
       <div>
         <h1 className="font-serif text-3xl">Moderation</h1>
-        <p className="mt-1 text-sm text-ink/70">Hide listings, grant the verified badge, and close reports. Verified Pro is the paid stub.</p>
+        <p className="mt-1 text-sm text-ink/70">Hide listings, grant the verified badge, and close reports. Verified Pro is paid on Promote. You can still grant or remove it here.</p>
       </div>
 
       <section className="grid gap-3">

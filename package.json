@@ -8,6 +8,7 @@
     "build:vercel": "node scripts/prepare-db-provider.mjs && prisma generate && prisma db push --skip-generate && node scripts/seed-if-empty.mjs && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "node --import tsx --test src/lib/payments/rules.test.ts src/lib/payments/fulfill.test.ts",
     "postinstall": "node scripts/ensure-env.mjs && prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
     "db:reset": "prisma migrate reset --force",
