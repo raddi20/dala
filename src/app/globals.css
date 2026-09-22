@@ -139,6 +139,77 @@ h3,
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
+/* Home hero: soft presence motions (brand orbs + staggered copy) */
+.hero-visual {
+  transform: scale(1.04);
+  animation: hero-drift 28s ease-in-out infinite alternate;
+}
+
+.hero-orb {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(40px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.hero-orb-a {
+  top: 12%;
+  right: 8%;
+  width: min(42vw, 320px);
+  height: min(42vw, 320px);
+  background: rgb(200 136 26 / 0.35);
+  animation: hero-orb-float 16s ease-in-out infinite alternate;
+}
+
+.hero-orb-b {
+  bottom: 18%;
+  right: 28%;
+  width: min(28vw, 200px);
+  height: min(28vw, 200px);
+  background: rgb(15 118 110 / 0.3);
+  animation: hero-orb-float 12s ease-in-out infinite alternate-reverse;
+}
+
+.hero-brand {
+  animation: hero-rise 520ms ease-out both;
+}
+
+.hero-copy {
+  animation: hero-rise 620ms ease-out both;
+}
+
+@keyframes hero-drift {
+  from {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.08) translate3d(-1.5%, -1%, 0);
+  }
+}
+
+@keyframes hero-orb-float {
+  from {
+    transform: translate3d(0, 0, 0);
+    opacity: 0.28;
+  }
+  to {
+    transform: translate3d(-6%, 8%, 0);
+    opacity: 0.42;
+  }
+}
+
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --page-fade: 0ms;
@@ -148,9 +219,17 @@ h3,
   .page-enter,
   .skeleton,
   .card-lift,
-  .btn-press {
+  .btn-press,
+  .hero-visual,
+  .hero-orb,
+  .hero-brand,
+  .hero-copy {
     animation: none !important;
     transition: none !important;
+  }
+
+  .hero-visual {
+    transform: none;
   }
 
   .card-lift:hover {

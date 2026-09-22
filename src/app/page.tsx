@@ -7,8 +7,8 @@ import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { isFeatured } from "@/lib/utils";
 
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&w=1800&q=80";
+/** Local SVG: warm geometric shops + connection nodes (navy/amber/cream). Replaces Unsplash food plate. */
+const HERO_IMAGE = "/hero-community.svg";
 
 export default async function HomePage() {
   const user = await getSessionUser();
@@ -18,33 +18,45 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="relative isolate min-h-[min(88vh,760px)] overflow-hidden">
+      <section className="hero-banner relative isolate min-h-[min(88vh,760px)] overflow-hidden">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={HERO_IMAGE}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover"
+          className="hero-visual absolute inset-0 h-full w-full object-cover object-right"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/92 via-navy/78 to-navy/45" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-navy/30" />
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <span className="hero-orb hero-orb-a" />
+          <span className="hero-orb hero-orb-b" />
+        </div>
+        {/* Left-weighted overlays keep copy readable while shop geometry stays visible on the right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/55 to-navy/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/55 via-transparent to-navy/15" />
 
         <div className="relative mx-auto flex min-h-[min(88vh,760px)] max-w-5xl flex-col justify-end px-4 pb-12 pt-20 sm:justify-center sm:pb-16 sm:pt-24">
-          <p className="font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
+          <p className="hero-brand font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
             {APP_NAME}
           </p>
-          <h1 className="mt-4 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
-            Find Luo businesses and services you can trust.
+          <h1 className="hero-copy mt-4 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
+            Browse trusted Luo shops and classifieds — then chat on WhatsApp.
           </h1>
-          <p className="mt-3 max-w-lg text-base text-white/75 sm:text-lg">{APP_TAGLINE}</p>
+          <p className="hero-copy mt-3 max-w-lg text-base text-white/75 sm:text-lg" style={{ animationDelay: "80ms" }}>
+            {APP_TAGLINE}
+          </p>
 
-          <form action="/listings" method="get" className="mt-8 flex w-full max-w-xl flex-col gap-2 sm:flex-row">
+          <form
+            action="/listings"
+            method="get"
+            className="hero-copy mt-8 flex w-full max-w-xl flex-col gap-2 sm:flex-row"
+            style={{ animationDelay: "140ms" }}
+          >
             <label className="sr-only" htmlFor="home-nl">
               Search in a sentence
             </label>
             <input
               id="home-nl"
               name="nl"
-              placeholder="Try: verified restaurants in Nairobi"
+              placeholder="Try: verified electricians in Nairobi"
               className={`${fieldClass} mt-0 border-0 bg-white/95 shadow-lg`}
             />
             <button className={`${btnPrimary} shrink-0 shadow-lg sm:px-6`}>Search</button>
