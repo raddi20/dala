@@ -1,6 +1,29 @@
 import { typeLabel } from "@/lib/constants";
 import { isFeatured } from "@/lib/utils";
 
+function Chip({
+  children,
+  tone = "neutral",
+}: {
+  children: React.ReactNode;
+  tone?: "neutral" | "verified" | "pro" | "featured" | "danger" | "warn" | "city";
+}) {
+  const tones: Record<string, string> = {
+    neutral: "bg-paper text-ink/75 ring-sand",
+    verified: "bg-teal-soft text-lake-dark ring-lake/20",
+    pro: "bg-amber-soft text-clay-dark ring-clay/25",
+    featured: "bg-navy text-white ring-navy",
+    danger: "bg-red-50 text-danger ring-danger/20",
+    warn: "bg-amber-soft text-warn ring-warn/25",
+    city: "bg-white/90 text-navy ring-white/60 backdrop-blur",
+  };
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${tones[tone]}`}>
+      {children}
+    </span>
+  );
+}
+
 export function Badges({
   type,
   verified,
@@ -18,22 +41,16 @@ export function Badges({
 }) {
   return (
     <div className="flex flex-wrap gap-1.5">
-      <span className="rounded-full bg-sand px-2 py-0.5 text-xs font-medium">{typeLabel(type)}</span>
-      {verified ? (
-        <span className="rounded-full bg-lake px-2 py-0.5 text-xs font-semibold text-white">Verified</span>
-      ) : null}
-      {verifiedPro ? (
-        <span className="rounded-full bg-clay px-2 py-0.5 text-xs font-semibold text-white">Verified Pro</span>
-      ) : null}
-      {isFeatured({ featured, featuredUntil }) ? (
-        <span className="rounded-full bg-ink px-2 py-0.5 text-xs font-semibold text-paper">Featured</span>
-      ) : null}
-      {scamRisk === "high" ? (
-        <span className="rounded-full bg-danger px-2 py-0.5 text-xs font-semibold text-white">Scam risk</span>
-      ) : null}
-      {scamRisk === "medium" ? (
-        <span className="rounded-full bg-warn px-2 py-0.5 text-xs font-semibold text-white">Check details</span>
-      ) : null}
+      <Chip>{typeLabel(type)}</Chip>
+      {verified ? <Chip tone="verified">Verified</Chip> : null}
+      {verifiedPro ? <Chip tone="pro">Verified Pro</Chip> : null}
+      {isFeatured({ featured, featuredUntil }) ? <Chip tone="featured">Featured</Chip> : null}
+      {scamRisk === "high" ? <Chip tone="danger">Scam risk</Chip> : null}
+      {scamRisk === "medium" ? <Chip tone="warn">Check details</Chip> : null}
     </div>
   );
+}
+
+export function CityBadge({ city }: { city: string }) {
+  return <Chip tone="city">{city}</Chip>;
 }

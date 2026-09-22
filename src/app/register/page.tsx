@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { RegisterForm } from "@/components/auth-forms";
+import { APP_NAME } from "@/lib/brand";
+import { cardClass } from "@/components/ui";
 import { getSessionUser } from "@/lib/session";
 import { one, safePath } from "@/lib/utils";
 
@@ -16,12 +18,15 @@ export default async function RegisterPage({
   if (await getSessionUser()) redirect(next);
 
   return (
-    <div className="mx-auto grid max-w-md gap-6 px-4 py-8">
-      <div>
-        <h1 className="font-serif text-3xl">Create an account</h1>
-        <p className="mt-2 text-sm text-ink/70">Use a person profile or a business profile. You can change this later.</p>
+    <div className="mx-auto flex max-w-md flex-col justify-center gap-6 px-4 py-12 sm:py-16">
+      <div className="text-center">
+        <p className="font-serif text-3xl text-navy">{APP_NAME}</p>
+        <h1 className="mt-2 text-xl font-semibold text-ink">Create an account</h1>
+        <p className="mt-2 text-sm text-ink/60">Use a person profile or a business profile. You can change this later.</p>
       </div>
-      <RegisterForm nextPath={next} />
+      <div className={`${cardClass} p-6`}>
+        <RegisterForm nextPath={next} />
+      </div>
     </div>
   );
 }

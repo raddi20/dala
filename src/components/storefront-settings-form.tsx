@@ -50,9 +50,9 @@ export function StorefrontSettingsForm({
           <span className="mt-1 block text-ink/60">One wide photo. Verified Pro includes this.</span>
         </label>
       ) : (
-        <p className="rounded-lg bg-sand/60 px-3 py-2 text-sm">
+        <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
           A cover banner is included with Verified Pro, along with {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}.{" "}
-          <Link href="/upgrade" className="font-semibold text-lake-dark">
+          <Link href="/upgrade" className="font-semibold text-lake-dark hover:text-lake">
             See Promote
           </Link>
         </p>
