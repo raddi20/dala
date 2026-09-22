@@ -3,15 +3,26 @@ import { ListingCard } from "@/components/listing-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
 import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 import { CATEGORIES, CITIES } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
-import { isFeatured } from "@/lib/utils";
+import { continueHref, isFeatured } from "@/lib/utils";
 
 /** Local SVG: warm geometric shops + connection nodes (navy/amber/cream). Replaces Unsplash food plate. */
 const HERO_IMAGE = "/hero-community.svg";
 
 export default async function HomePage() {
   const user = await getSessionUser();
+  const shop = user
+    ? await prisma.storefront.findUnique({ where: { userId: user.id }, select: { id: true } })
+    : null;
+  const shopHref = continueHref(Boolean(user), "/account/storefront");
+  const listHref = continueHref(Boolean(user), "/listings/new");
+  const sellerHint = !user
+    ? "Sign in first. We continue to shop setup or the listing form."
+    : shop
+      ? "Your shop is in the header. List another business in the directory any time."
+      : "Open a shop, add one offering, then publish. Buyers message you on WhatsApp.";
   const listings = await searchListings({ viewerId: user?.id });
   const featured = listings.filter((listing) => isFeatured(listing)).slice(0, 4);
   const classifieds = listings.filter((listing) => listing.type !== "business").slice(0, 4);
@@ -61,22 +72,36 @@ export default async function HomePage() {
             />
             <button className={`${btnPrimary} shrink-0 shadow-lg sm:px-6`}>Search</button>
           </form>
+
+          <div className="hero-copy mt-4 flex w-full max-w-xl flex-col gap-2 sm:flex-row" style={{ animationDelay: "200ms" }}>
+            <Link href={shopHref} className={`${btnPrimary} shadow-lg`}>
+              Open a shop
+            </Link>
+            <Link href={listHref} className={`${btnSecondary} shadow-lg`}>
+              List your business
+            </Link>
+          </div>
+          <p className="hero-copy mt-3 max-w-lg text-sm text-white/75" style={{ animationDelay: "240ms" }}>
+            {sellerHint}
+          </p>
         </div>
       </section>
 
       <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 pb-28 sm:gap-14 sm:py-16 md:pb-16">
         <section>
           <h2 className={sectionTitleClass}>Where to start</h2>
-          <p className="mt-2 max-w-xl text-ink/65">Browse the directory, open a shop page, or list your business.</p>
+          <p className="mt-2 max-w-xl text-ink/65">
+            Browse the directory, or open a shop in three steps: create it from your profile, add an offering, then publish.
+          </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link href="/listings" className={btnNavy}>
-              Browse
-            </Link>
-            <Link href="/account/storefront" className={btnSecondary}>
+            <Link href={shopHref} className={btnPrimary}>
               Open a shop
             </Link>
-            <Link href="/listings/new" className={btnSecondary}>
+            <Link href={listHref} className={btnNavy}>
               List your business
+            </Link>
+            <Link href="/listings" className={btnSecondary}>
+              Browse
             </Link>
           </div>
         </section>
@@ -157,10 +182,10 @@ export default async function HomePage() {
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden sticky-cta-bar">
         <div className="mx-auto flex max-w-5xl gap-2">
-          <Link href="/listings" className={`${btnPrimary} flex-1`}>
-            Search
+          <Link href={shopHref} className={`${btnPrimary} flex-1`}>
+            Open a shop
           </Link>
-          <Link href="/listings/new" className={`${btnSecondary} flex-1`}>
+          <Link href={listHref} className={`${btnSecondary} flex-1`}>
             List business
           </Link>
         </div>

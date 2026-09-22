@@ -16,12 +16,14 @@ export function StorefrontSettingsForm({
   bio,
   published,
   verifiedPro,
+  emphasizePublish = false,
 }: {
   slug: string;
   bannerUrl: string;
   bio: string;
   published: boolean;
   verifiedPro: boolean;
+  emphasizePublish?: boolean;
 }) {
   const [state, action] = useActionState(updateStorefront, initial);
 
@@ -57,7 +59,14 @@ export function StorefrontSettingsForm({
           </Link>
         </p>
       )}
-      <label className="flex items-start gap-2 text-sm">
+      <label
+        id="published"
+        className={
+          emphasizePublish
+            ? "flex items-start gap-2 rounded-xl bg-amber-soft/80 px-3 py-3 text-sm ring-1 ring-clay/30"
+            : "flex items-start gap-2 text-sm"
+        }
+      >
         <input type="hidden" name="published" value="0" />
         <input type="checkbox" name="published" value="1" defaultChecked={published} className="mt-1" />
         <span>

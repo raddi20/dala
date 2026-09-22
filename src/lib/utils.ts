@@ -10,6 +10,23 @@ export function safePath(input: string, fallback = "/") {
   return input;
 }
 
+/** Signed-out seller links go through sign-in and return to the same page. */
+export function continueHref(signedIn: boolean, path: string) {
+  if (signedIn) return path;
+  return `/login?next=${encodeURIComponent(path)}`;
+}
+
+export function authContinueCopy(next: string, mode: "login" | "register" = "login") {
+  const start = mode === "register" ? "Create an account" : "Sign in";
+  if (next.startsWith("/account/storefront")) {
+    return `${start} to open your shop. We continue to shop setup after that.`;
+  }
+  if (next.startsWith("/listings/new")) {
+    return `${start} to list your business. We continue to the listing form after that.`;
+  }
+  return "";
+}
+
 export function averageRating(reviews: { rating: number }[]) {
   if (reviews.length === 0) return null;
   const total = reviews.reduce((sum, review) => sum + review.rating, 0);

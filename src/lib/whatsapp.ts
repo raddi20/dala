@@ -18,6 +18,10 @@ export function whatsappShopLink(phone: string, url: string) {
   return waMe(phone, `Hi, I saw your ${APP_NAME} shop (${url})…`);
 }
 
+export function whatsappOfferingText(offering: string, url: string) {
+  return `Hi, I saw ${offering} on your ${APP_NAME} shop (${url})…`;
+}
+
 export function whatsappOfferingLink(phone: string, offering: string, url: string) {
-  return waMe(phone, `Hi, I saw ${offering} on your ${APP_NAME} shop (${url})…`);
+  return waMe(phone, whatsappOfferingText(offering, url));
 }

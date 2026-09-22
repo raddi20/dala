@@ -55,7 +55,9 @@ A published shop is a public page at `/b/[slug]`. It shows a banner (Verified Pr
 | `/b/peckham-grocer` | London | `peter@dala.local` | Free. Four offerings. |
 | `/b/okello-and-co` | London | `okello@dala.local` | Verified Pro. Cover banner and four offerings. |
 
-Sign in as the seller and open **Manage storefront** from Account or from the listing edit page. From there you can change the address, write the about text, add or edit offerings, archive them, move them up or down, and publish. Unpublished shops return a not-found page to everyone except the owner, who can still preview.
+Sign in as the seller and open **Manage storefront** from Account, the header (**Open a shop**), or the listing edit page. Home and the header use the same labels. Signed-out visitors go to sign-in and return to shop setup or the listing form.
+
+With no shop yet, Manage storefront shows three steps: create the shop from your profile, add a first offering, then publish. After the first offering, that page asks you to publish and shows the WhatsApp line buyers will send. From there you can change the address, write the about text, add or edit offerings, archive them, move them up or down, and publish. Unpublished shops return a not-found page to everyone except the owner, who can still preview.
 
 Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro`, already used by the paid badge) raises that to 20 and unlocks the cover banner. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
 
