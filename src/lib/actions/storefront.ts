@@ -126,7 +126,16 @@ export async function createOffering(_prev: ActionState, formData: FormData): Pr
   });
 
   await revalidateShop(user.id, storefront.slug);
-  redirect("/account/storefront?notice=offering");
+  redirect(`/account/storefront?notice=${active === 0 ? "first" : "offering"}`);
+}
+
+export async function publishStorefront() {
+  const { user, storefront } = await requireUserShop();
+  if (!storefront.published) {
+    await prisma.storefront.update({ where: { id: storefront.id }, data: { published: true } });
+  }
+  await revalidateShop(user.id, storefront.slug);
+  redirect("/account/storefront?notice=published");
 }
 
 export async function updateOffering(_prev: ActionState, formData: FormData): Promise<ActionState> {

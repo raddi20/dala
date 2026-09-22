@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ListingForm } from "@/components/listing-form";
 import { requireUser } from "@/lib/session";
 
@@ -11,6 +12,12 @@ export default async function NewListingPage() {
       <h1 className="font-serif text-3xl">Add a listing</h1>
       <p className="mt-2 text-sm text-ink/70">
         Businesses go in the directory. For sale, wanted, housing, and services are classifieds. A new listing is checked for common scam language.
+      </p>
+      <p className="mt-2 text-sm text-ink/70">
+        A shop page is separate: offerings and a WhatsApp button.{" "}
+        <Link href="/account/storefront" className="font-semibold text-lake-dark hover:text-lake">
+          Open a shop
+        </Link>
       </p>
       <div className="mt-6">
         <ListingForm

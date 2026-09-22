@@ -60,7 +60,7 @@ export function ProfileForm({
           Phone
           <input name="phone" defaultValue={user.phone} className={fieldClass} />
         </label>
-        <label className="block text-sm">
+        <label id="profile-whatsapp" className="block text-sm">
           WhatsApp
           <input name="whatsapp" defaultValue={user.whatsapp} className={fieldClass} />
         </label>

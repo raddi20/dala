@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ProfileForm } from "@/components/profile-form";
-import { Flash } from "@/components/ui";
-import { btnSecondary } from "@/components/ui";
+import { SellerSteps } from "@/components/seller-steps";
+import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
@@ -19,7 +19,11 @@ export default async function AccountPage({
   const user = await requireUser("/account");
   const storefront = await prisma.storefront.findUnique({
     where: { userId: user.id },
-    select: { slug: true, published: true },
+    select: {
+      slug: true,
+      published: true,
+      _count: { select: { offerings: { where: { archived: false } } } },
+    },
   });
   const listings = await prisma.listing.findMany({
     where: { ownerId: user.id },
@@ -71,29 +75,66 @@ export default async function AccountPage({
         }}
       />
 
-      <section className="grid gap-2">
-        <h2 className="font-serif text-2xl">Your shop</h2>
-        <p className="text-sm text-ink/70">
-          A public page of what you offer. Buyers message you on WhatsApp.
-          {storefront ? (storefront.published ? " Published." : " Draft. Only you can preview it.") : " Start one when you want a page for your offerings."}
-        </p>
-        <div className="flex flex-wrap gap-3 text-sm font-semibold">
-          <Link href="/account/storefront" className="text-lake-dark">
-            Manage storefront
-          </Link>
-          {storefront?.published ? (
-            <Link href={`/b/${storefront.slug}`} className="text-lake-dark">
-              View shop
+      <section className={`${cardClass} grid gap-4 p-5`}>
+        <h2 className="font-serif text-2xl text-navy">Your shop</h2>
+        {!storefront ? (
+          <>
+            <p className="text-sm text-ink/70">
+              You do not have a shop page yet. Create it from this profile, add an offering, then publish.
+            </p>
+            <SellerSteps current={1} />
+            <Link href="/account/storefront" className={btnPrimary}>
+              Open a shop
             </Link>
-          ) : null}
-        </div>
+          </>
+        ) : storefront._count.offerings === 0 ? (
+          <>
+            <p className="text-sm text-ink/70">
+              Shop started at /b/{storefront.slug}. It is still a draft. Add a first offering next.
+            </p>
+            <SellerSteps current={2} />
+            <Link href="/account/storefront#add-offering" className={btnPrimary}>
+              Add your first offering
+            </Link>
+          </>
+        ) : !storefront.published ? (
+          <>
+            <p className="text-sm text-ink/70">
+              {storefront._count.offerings} offering{storefront._count.offerings === 1 ? "" : "s"} saved. The shop is still
+              a draft, so buyers cannot open it yet.
+            </p>
+            <SellerSteps current={3} />
+            <div className="flex flex-wrap gap-2">
+              <Link href="/account/storefront" className={btnPrimary}>
+                Publish shop
+              </Link>
+              <Link href={`/b/${storefront.slug}`} className={btnSecondary}>
+                Preview shop
+              </Link>
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-ink/70">
+              Published at /b/{storefront.slug}. Buyers message you on WhatsApp.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link href={`/b/${storefront.slug}`} className={btnPrimary}>
+                View shop
+              </Link>
+              <Link href="/account/storefront" className={btnSecondary}>
+                Manage storefront
+              </Link>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="grid gap-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-serif text-2xl">Your listings</h2>
           <Link href="/listings/new" className={btnSecondary}>
-            Add
+            List your business
           </Link>
         </div>
         {listings.length === 0 ? <p className="text-sm text-ink/70">You have not posted yet.</p> : null}

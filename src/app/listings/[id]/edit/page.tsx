@@ -21,8 +21,9 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
     <div className="mx-auto max-w-2xl px-4 py-8">
       <h1 className="font-serif text-3xl">Edit listing</h1>
       {user.id === listing.ownerId ? (
-        <p className="mt-2 text-sm">
-          <Link href="/account/storefront" className="font-semibold text-lake-dark">
+        <p className="mt-2 text-sm text-ink/70">
+          Offerings live on your shop page, separate from this listing.{" "}
+          <Link href="/account/storefront" className="font-semibold text-lake-dark hover:text-lake">
             Manage storefront
           </Link>
         </p>

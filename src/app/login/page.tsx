@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth-forms";
 import { APP_NAME } from "@/lib/brand";
 import { cardClass } from "@/components/ui";
 import { getSessionUser } from "@/lib/session";
-import { one, safePath } from "@/lib/utils";
+import { authContinueCopy, one, safePath } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Sign in" };
 
@@ -24,7 +24,9 @@ export default async function LoginPage({
       <div className="text-center">
         <p className="font-serif text-3xl text-navy">{APP_NAME}</p>
         <h1 className="mt-2 text-xl font-semibold text-ink">Sign in</h1>
-        <p className="mt-2 text-sm text-ink/60">Email and password. No email provider is required for this demo.</p>
+        <p className="mt-2 text-sm text-ink/60">
+          {authContinueCopy(next) || "Email and password. No email provider is required for this demo."}
+        </p>
       </div>
       <div className={`${cardClass} grid gap-5 p-6`}>
         <div className="rounded-xl bg-amber-soft/80 px-3.5 py-3 text-sm text-ink/80">

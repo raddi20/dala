@@ -73,7 +73,17 @@ export default async function StorefrontPage({ params }: Props) {
   return (
     <article className="mx-auto grid max-w-3xl gap-6 px-4 py-8 pb-28 sm:pb-10">
       {!shop.published && isOwner ? (
-        <Flash>This shop is a draft. Only you can see this preview.</Flash>
+        <div className="grid gap-2">
+          <Flash>This shop is a draft. Only you can see this preview.</Flash>
+          <p className="text-sm text-ink/70">
+            <Link href="/account/storefront" className="font-semibold text-lake-dark hover:text-lake">
+              {shop.offerings.length > 0 ? "Publish the shop" : "Finish shop setup"}
+            </Link>
+            {shop.offerings.length > 0
+              ? " so buyers can use the WhatsApp button on this page."
+              : " — add an offering, then publish."}
+          </p>
+        </div>
       ) : null}
 
       <header className={`overflow-hidden ${cardClass}`}>
