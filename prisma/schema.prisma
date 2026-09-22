@@ -146,16 +146,23 @@ model Offering {
 }
 
 model Payment {
-  id        String   @id @default(cuid())
-  userId    String
-  listingId String?
-  product   String
-  method    String
-  amount    String
-  reference String
-  status    String   @default("paid")
-  note      String   @default("Simulated. No charge was made.")
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  listing   Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
+  id          String   @id @default(cuid())
+  userId      String
+  listingId   String?
+  product     String
+  method      String
+  amount      String
+  // Major units that match the label: 1500 for KES 1,500, 12 for £12.
+  amountValue Int      @default(0)
+  currency    String   @default("")
+  reference   String   @unique
+  // flutterwave for checkout, simulated for seeded historical receipts.
+  provider    String   @default("")
+  providerId  String   @default("")
+  // pending, paid, failed, cancelled
+  status      String   @default("pending")
+  note        String   @default("")
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing     Listing? @relation(fields: [listingId], references: [id], onDelete: SetNull)
 }

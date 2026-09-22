@@ -1,8 +1,12 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
-import { FEATURED_DAYS, priceFor } from "@/lib/constants";
+import { chargeFor, isPaidProduct } from "@/lib/constants";
+import { paymentConfig } from "@/lib/payments/config";
+import { createFlutterwaveCheckout } from "@/lib/payments/flutterwave";
+import { publicOrigin } from "@/lib/payments/origin";
+import { normalizeMpesaPhone } from "@/lib/payments/rules";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { field, type ActionState } from "@/lib/validators";
@@ -11,10 +15,20 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
   const user = await getSessionUser();
   if (!user) return { error: "Sign in to continue." };
 
+  const config = paymentConfig();
+  if (!config.configured) {
+    return {
+      error:
+        config.mode === "invalid"
+          ? "FLW_SECRET_KEY is set, but it is not a Flutterwave secret key."
+          : "Add a Flutterwave secret key before checkout. The steps are on this page.",
+    };
+  }
+
   const product = field(formData, "product");
   const method = field(formData, "method");
   const listingId = field(formData, "listingId");
-  if (product !== "featured" && product !== "verified_pro") return { error: "Choose a product." };
+  if (!isPaidProduct(product)) return { error: "Choose a product." };
   if (method !== "mpesa" && method !== "card") return { error: "Choose a payment method." };
 
   let city = user.city;
@@ -27,52 +41,66 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
     }
     city = listing.city;
     linkedListingId = listing.id;
+  } else if (user.verifiedPro) {
+    return { error: "You already have Verified Pro." };
   }
 
-  let reference = "";
+  const charge = chargeFor(product, city);
+  if (method === "mpesa" && charge.currency !== "KES") {
+    return { error: "M-Pesa only charges Kenyan shillings. Choose card for this price." };
+  }
+
+  let phone = "";
   if (method === "mpesa") {
-    const phone = field(formData, "phone").replace(/\s/g, "");
-    if (!/^\+?[0-9]{10,15}$/.test(phone)) {
-      return { error: "Enter a phone number for the simulated M-Pesa prompt." };
-    }
-    reference = `DALA-MPESA-${phone.slice(-4)}-${Date.now()}`;
-  } else {
-    const card = field(formData, "card").replace(/\s/g, "");
-    const expiry = field(formData, "expiry").trim();
-    const cvc = field(formData, "cvc").trim();
-    if (!/^\d{12,19}$/.test(card)) return { error: "Enter a demo card number. Nothing is charged." };
-    if (!/^\d{2}\/\d{2}$/.test(expiry)) return { error: "Expiry should look like 12/28." };
-    if (!/^\d{3,4}$/.test(cvc)) return { error: "Enter a 3 or 4 digit demo CVC." };
-    reference = `DALA-CARD-${card.slice(-4)}-${Date.now()}`;
+    const normalized = normalizeMpesaPhone(field(formData, "phone"));
+    if (!normalized) return { error: "Enter a Safaricom number, like 2547… or 07…." };
+    phone = normalized;
   }
 
-  const amount = priceFor(product, city);
-  await prisma.payment.create({
+  const reference = `dala_${randomBytes(12).toString("hex")}`;
+  const payment = await prisma.payment.create({
     data: {
       userId: user.id,
       listingId: linkedListingId,
       product,
       method,
-      amount,
+      amount: charge.label,
+      amountValue: charge.amount,
+      currency: charge.currency,
       reference,
-      status: "paid",
-      note: "Simulated checkout. No M-Pesa request and no card charge.",
+      provider: "flutterwave",
+      status: "pending",
+      note: config.testMode ? "Test mode. Waiting for Flutterwave." : "Waiting for Flutterwave.",
     },
   });
 
-  if (product === "featured" && linkedListingId) {
-    const featuredUntil = new Date(Date.now() + FEATURED_DAYS * 86_400_000);
-    await prisma.listing.update({
-      where: { id: linkedListingId },
-      data: { featured: true, featuredUntil },
+  const origin = await publicOrigin();
+  const checkout = await createFlutterwaveCheckout({
+    secret: config.secret,
+    txRef: reference,
+    amount: charge.amount,
+    currency: charge.currency,
+    redirectUrl: `${origin}/upgrade/return`,
+    paymentOption: method,
+    email: user.email,
+    name: user.name,
+    phone,
+    description: product === "featured" ? "Featured listing for 30 days" : "Verified Pro",
+    meta: {
+      payment_id: payment.id,
+      product,
+      user_id: user.id,
+      listing_id: linkedListingId ?? "",
+    },
+  });
+
+  if (!checkout.ok) {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: { status: "failed", note: checkout.error.slice(0, 240) },
     });
-    revalidatePath(`/listings/${linkedListingId}`);
-  } else {
-    await prisma.user.update({ where: { id: user.id }, data: { verifiedPro: true } });
+    return { error: checkout.error };
   }
 
-  revalidatePath("/account");
-  revalidatePath("/listings");
-  revalidatePath("/");
-  redirect("/account?paid=1");
+  redirect(checkout.link);
 }

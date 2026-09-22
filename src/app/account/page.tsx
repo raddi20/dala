@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PaymentSetup } from "@/components/payment-setup";
 import { ProfileForm } from "@/components/profile-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
+import { productLabel } from "@/lib/constants";
+import { paymentConfig } from "@/lib/payments/config";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatWhen, one } from "@/lib/utils";
@@ -39,14 +42,22 @@ export default async function AccountPage({
     include: { blocked: { select: { id: true, name: true } } },
   });
 
+  const paid = one(sp.paid);
   const flash =
     one(sp.saved) === "1"
       ? "Profile saved."
-      : one(sp.paid) === "1"
-        ? "Payment simulated. Nothing was charged."
-        : one(sp.deleted) === "1"
-          ? "Listing deleted."
-          : "";
+      : paid === "1"
+        ? "Payment received. Featured listing or Verified Pro is active."
+        : paid === "pending"
+          ? "Payment is still pending. If you approved the M-Pesa prompt, it updates when Flutterwave confirms it."
+          : paid === "cancelled"
+            ? "Checkout cancelled. Nothing was charged."
+            : paid === "failed"
+              ? "Payment did not complete. Nothing was upgraded."
+              : one(sp.deleted) === "1"
+                ? "Listing deleted."
+                : "";
+  const paymentsConfig = paymentConfig();
 
   return (
     <div className="mx-auto grid max-w-2xl gap-8 px-4 py-8">
@@ -159,17 +170,23 @@ export default async function AccountPage({
         </Link>
       </section>
 
+      <section className="grid gap-3">
+        <h2 className="font-serif text-2xl">Payment settings</h2>
+        <PaymentSetup mode={paymentsConfig.mode} webhookReady={paymentsConfig.webhookReady} />
+      </section>
+
       <section className="grid gap-2">
         <h2 className="font-serif text-2xl">Receipts</h2>
-        {payments.length === 0 ? <p className="text-sm text-ink/70">No simulated payments yet.</p> : null}
+        {payments.length === 0 ? <p className="text-sm text-ink/70">No payments yet.</p> : null}
         <ul className="grid gap-2">
           {payments.map((payment) => (
             <li key={payment.id} className="rounded-xl border border-sand bg-card p-3 text-sm">
               <p className="font-semibold">
-                {payment.product === "featured" ? "Featured listing" : "Verified Pro"} · {payment.amount}
+                {productLabel(payment.product)} · {payment.amount}
+                {payment.status === "paid" ? "" : ` · ${payment.status}`}
               </p>
               <p className="text-ink/70">
-                {payment.method === "mpesa" ? "M-Pesa" : "Card"} · {payment.reference}
+                {payment.method === "mpesa" ? "M-Pesa" : payment.method === "card" ? "Card" : payment.method} · {payment.reference}
                 {payment.listing ? ` · ${payment.listing.title}` : ""}
               </p>
               <p className="text-ink/60">{payment.note}</p>

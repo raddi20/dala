@@ -61,10 +61,31 @@ export function isOfferingCurrency(value: string): value is OfferingCurrency {
   return (OFFERING_CURRENCIES as readonly string[]).includes(value);
 }
 
-export const PRICES = {
-  featured: { Nairobi: "KES 1,500", London: "£12" },
-  verified_pro: { Nairobi: "KES 2,500", London: "£20" },
+/** Charged in major units. Nairobi is Kenyan shillings. London is pounds. */
+export const CHARGE = {
+  featured: {
+    Nairobi: { amount: 1500, currency: "KES", label: "KES 1,500" },
+    London: { amount: 12, currency: "GBP", label: "£12" },
+  },
+  verified_pro: {
+    Nairobi: { amount: 2500, currency: "KES", label: "KES 2,500" },
+    London: { amount: 20, currency: "GBP", label: "£20" },
+  },
 } as const;
+
+export type PaidProduct = keyof typeof CHARGE;
+
+export const PRICES = {
+  featured: { Nairobi: CHARGE.featured.Nairobi.label, London: CHARGE.featured.London.label },
+  verified_pro: {
+    Nairobi: CHARGE.verified_pro.Nairobi.label,
+    London: CHARGE.verified_pro.London.label,
+  },
+} as const;
+
+export function isPaidProduct(value: string): value is PaidProduct {
+  return value === "featured" || value === "verified_pro";
+}
 
 export function regionForCity(city: string): RegionName {
   const match = CITIES.find((item) => item.name === city);
@@ -81,9 +102,19 @@ export function regionLabel(region: string) {
   return region;
 }
 
-export function priceFor(product: keyof typeof PRICES, city: string) {
-  if (city === "London") return PRICES[product].London;
-  return PRICES[product].Nairobi;
+export function chargeFor(product: PaidProduct, city: string) {
+  const prices = CHARGE[product];
+  return city === "London" ? prices.London : prices.Nairobi;
+}
+
+export function priceFor(product: PaidProduct, city: string) {
+  return chargeFor(product, city).label;
+}
+
+export function productLabel(product: string) {
+  if (product === "featured") return "Featured listing";
+  if (product === "verified_pro") return "Verified Pro";
+  return product;
 }
 
 export function isCityName(value: string): value is CityName {
