@@ -23,14 +23,15 @@ export default async function HomePage() {
         <img
           src={HERO_IMAGE}
           alt=""
-          className="hero-visual absolute inset-0 h-full w-full object-cover"
+          className="hero-visual absolute inset-0 h-full w-full object-cover object-right"
         />
         <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
           <span className="hero-orb hero-orb-a" />
           <span className="hero-orb hero-orb-b" />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/88 via-navy/72 to-navy/35" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/75 via-transparent to-navy/25" />
+        {/* Left-weighted overlays keep copy readable while shop geometry stays visible on the right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/55 to-navy/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-navy/55 via-transparent to-navy/15" />
 
         <div className="relative mx-auto flex min-h-[min(88vh,760px)] max-w-5xl flex-col justify-end px-4 pb-12 pt-20 sm:justify-center sm:pb-16 sm:pt-24">
           <p className="hero-brand font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
