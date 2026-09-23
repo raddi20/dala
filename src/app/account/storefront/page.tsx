@@ -151,7 +151,7 @@ export default async function ManageStorefrontPage({
         <section id="add-offering" className={`${cardClass} grid gap-3 p-5`}>
           <h2 className="font-serif text-xl text-navy">Add your first offering</h2>
           <p className="text-sm text-ink/65">
-            This is step 2. A photo is optional. You can list {cap} active offerings
+            This is step 2. A photo is optional — drop one in, or choose it from this phone or computer. You can list {cap} active offerings
             {user.verifiedPro ? " on Verified Pro" : ` on the free plan, or ${PRO_OFFERING_CAP} with Verified Pro`}.
           </p>
           <OfferingForm mode="create" currencyDefault={currencyDefault} />

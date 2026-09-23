@@ -24,7 +24,9 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
   }
 
   await prisma.user.update({ where: { id: user.id }, data: parsed.data });
+  const shop = await prisma.storefront.findUnique({ where: { userId: user.id }, select: { slug: true } });
   revalidatePath("/account");
   revalidatePath(`/people/${user.id}`);
+  if (shop) revalidatePath(`/b/${shop.slug}`);
   redirect("/account?saved=1");
 }
