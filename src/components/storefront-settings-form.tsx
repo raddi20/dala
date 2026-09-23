@@ -5,6 +5,7 @@ import Link from "next/link";
 import { updateStorefront } from "@/lib/actions/storefront";
 import { FREE_OFFERING_CAP, PRO_OFFERING_CAP } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
+import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
 
@@ -46,11 +47,13 @@ export function StorefrontSettingsForm({
         <textarea name="bio" defaultValue={bio} rows={4} maxLength={500} className={fieldClass} />
       </label>
       {verifiedPro ? (
-        <label className="block text-sm">
-          Cover banner URL
-          <input name="bannerUrl" defaultValue={bannerUrl} placeholder="https://" className={fieldClass} />
-          <span className="mt-1 block text-ink/60">One wide photo. Verified Pro includes this.</span>
-        </label>
+        <PhotoField
+          name="bannerUrl"
+          label="Cover photo"
+          purpose="banner"
+          defaultUrl={bannerUrl}
+          hint="One wide photo at the top of your shop. Drop it here, or choose it from this phone or computer. Verified Pro includes this."
+        />
       ) : (
         <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
           A cover banner is included with Verified Pro, along with {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}.{" "}

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { updateProfile } from "@/lib/actions/profile";
 import { CITIES } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
+import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
 
@@ -65,10 +66,13 @@ export function ProfileForm({
           <input name="whatsapp" defaultValue={user.whatsapp} className={fieldClass} />
         </label>
       </div>
-      <label className="block text-sm">
-        Photo URL
-        <input name="avatarUrl" defaultValue={user.avatarUrl} placeholder="https://" className={fieldClass} />
-      </label>
+      <PhotoField
+        name="avatarUrl"
+        label="Profile photo"
+        purpose="avatar"
+        defaultUrl={user.avatarUrl}
+        hint="Shows on your shop page. Drop a photo, or choose one from this phone or computer."
+      />
       <SubmitButton className={btnPrimary} pendingLabel="Saving…">
         Save profile
       </SubmitButton>

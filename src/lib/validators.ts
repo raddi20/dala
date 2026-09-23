@@ -36,7 +36,7 @@ export const listingSchema = z.object({
   photoUrl: z
     .string()
     .trim()
-    .max(500)
+    .max(2000)
     .default("")
     .refine(
       (value) => value === "" || /^https?:\/\//i.test(value),
@@ -74,7 +74,7 @@ export const profileSchema = z.object({
   avatarUrl: z
     .string()
     .trim()
-    .max(500)
+    .max(2000)
     .default("")
     .refine(
       (value) => value === "" || /^https?:\/\//i.test(value),
@@ -120,7 +120,7 @@ export const storefrontSchema = z.object({
   bannerUrl: z
     .string()
     .trim()
-    .max(500)
+    .max(2000)
     .default("")
     .refine(httpUrl, "Banner URL must start with http:// or https://."),
   bio: z.string().trim().max(500, "About must be 500 characters or fewer.").default(""),
@@ -155,7 +155,7 @@ export const offeringSchema = z.object({
   imageUrl: z
     .string()
     .trim()
-    .max(500)
+    .max(2000)
     .default("")
     .refine(httpUrl, "Photo URL must start with http:// or https://."),
 });

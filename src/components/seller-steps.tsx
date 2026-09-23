@@ -5,7 +5,7 @@ const STEPS = [
   },
   {
     title: "Add a first offering",
-    body: "A title, a price, and a short line. Free shops list 5 offerings. Verified Pro lists 20.",
+    body: "A title, a price, a short line, and a photo from your phone if you have one. Free shops list 5 offerings. Verified Pro lists 20.",
   },
   {
     title: "Publish",

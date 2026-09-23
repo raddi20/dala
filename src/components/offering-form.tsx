@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { createOffering, updateOffering } from "@/lib/actions/storefront";
 import { OFFERING_CURRENCIES } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
+import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
 
@@ -68,10 +69,14 @@ export function OfferingForm({
           </select>
         </label>
       </div>
-      <label className="block text-sm">
-        Photo URL
-        <input name="imageUrl" defaultValue={offering?.imageUrl ?? ""} placeholder="https://" className={fieldClass} />
-      </label>
+      <PhotoField
+        name="imageUrl"
+        label="Photo"
+        purpose="offering"
+        resourceId={offering?.id}
+        defaultUrl={offering?.imageUrl ?? ""}
+        hint="Optional. Shows on your shop. Drop a photo, or choose one from this phone or computer. Large photos are resized first."
+      />
       <SubmitButton className={btnPrimary} pendingLabel="Saving…">
         {mode === "create" ? "Add offering" : "Save offering"}
       </SubmitButton>

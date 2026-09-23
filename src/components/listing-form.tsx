@@ -5,6 +5,7 @@ import { createListing, updateListing } from "@/lib/actions/listings";
 import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
 import { draftListing } from "@/lib/draft";
 import { btnPrimary, btnSecondary, ErrorNote, fieldClass } from "@/components/ui";
+import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
 
@@ -146,10 +147,14 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           WhatsApp number
           <input name="contactWhatsapp" defaultValue={initial.contactWhatsapp} maxLength={32} placeholder="+2547…" className={fieldClass} />
         </label>
-        <label className="block text-sm">
-          Photo URL <span className="text-ink/60">(optional)</span>
-          <input name="photoUrl" defaultValue={initial.photoUrl} maxLength={500} placeholder="https://" className={fieldClass} />
-        </label>
+        <PhotoField
+          name="photoUrl"
+          label="Photo"
+          purpose="listing"
+          resourceId={initial.id}
+          defaultUrl={initial.photoUrl}
+          hint="Optional. Shows on the listing. Drop a photo, or choose one from this phone or computer. Large photos are resized first."
+        />
         <SubmitButton className={btnPrimary} pendingLabel="Saving…">
           {mode === "create" ? "Publish listing" : "Save changes"}
         </SubmitButton>

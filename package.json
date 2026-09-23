@@ -8,7 +8,7 @@
     "build:vercel": "node scripts/prepare-db-provider.mjs && prisma generate && node scripts/db-push.mjs && node scripts/seed-if-empty.mjs && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --import tsx --test src/lib/payments/rules.test.ts src/lib/payments/fulfill.test.ts scripts/db-push.test.mjs",
+    "test": "node --import tsx --test src/lib/payments/rules.test.ts src/lib/payments/fulfill.test.ts src/lib/image-upload.test.ts scripts/db-push.test.mjs",
     "postinstall": "node scripts/ensure-env.mjs && prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
     "db:reset": "prisma migrate reset --force",
@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^2.4.3",
     "next": "16.3.5",
     "next-auth": "^5.0.0-beta.32",

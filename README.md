@@ -76,8 +76,23 @@ Listing cards show **Shop**, and the listing page shows **Visit storefront**, wh
 | `FLW_PUBLIC_KEY` | Optional. Stored next to the secret. The hosted checkout does not send it to the browser. | Same. |
 | `FLW_WEBHOOK_HASH` | Any long random string. The same value goes in the Flutterwave webhook settings. | Same value as the dashboard secret hash. |
 | `APP_URL` | Omit. The dev server host is used for the return URL. | `https://dala-sigma.vercel.app` (no path). |
+| `BLOB_READ_WRITE_TOKEN` | Omit. Device upload stays off; paste a photo URL. | Set when you connect a Blob store. See **Photos**. |
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later.
+
+## Photos
+
+Seller create and edit forms upload a photo from the device: listing photo, offering photo, shop cover (Verified Pro), and profile photo (the round picture on the shop). Drag a file on desktop, or use the phone camera roll / file picker. The browser resizes large photos (longest edge 1600px, JPEG) before upload. The server accepts JPEG, PNG, and WebP up to 5 MB and stores them in [Vercel Blob](https://vercel.com/docs/vercel-blob). The public `https` URL is saved on the existing string fields (`photoUrl`, `imageUrl`, `bannerUrl`, `avatarUrl`), so the storefront, listing pages, and edit screens render it the same way as a pasted URL.
+
+Seeded shops keep their current image URLs. Paste-a-URL stays under **Paste a photo URL instead** for those links and for demo data. Only the signed-in owner can upload for their shop, offering, listing, or profile. An admin can upload for a listing or offering they are allowed to edit. There is still one photo per offering, and no cart.
+
+### Add Blob on Vercel
+
+1. Open the Vercel project → **Storage** → **Blob** → create a store and connect it to this project.
+2. Confirm `BLOB_READ_WRITE_TOKEN` is set for **Production** (and **Preview** if preview URLs should upload). Do not commit the token or paste it into git.
+3. Redeploy (`cd ~/dala && git pull && npx vercel --prod` after the variable is saved). Until the token exists, upload returns an error and pasted photo URLs still save.
+
+Locally, leave the variable unset, or copy the token into `.env` and restart `npm run dev`. Phone HEIC photos need to be JPEG, PNG, or WebP — choosing the photo again in Safari usually exports JPEG.
 
 ## Payments
 
@@ -162,6 +177,7 @@ About ten minutes, after this deploy config is on `main`:
 5. Copy the deployment URL, for example `https://dala-xxxxx.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL` and `NEXTAUTH_URL`, both set to that exact origin (no trailing path). Redeploy once so sign-in cookies use that host.
 6. Open `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co`. Demo password is `demo1234`.
 7. To take test payments, add the Flutterwave variables in **Payments** and redeploy with `cd ~/dala && git pull && npx vercel --prod`.
+8. To let sellers upload photos from a phone, connect a Blob store. See **Photos**. Pasted image URLs keep working without it.
 
 Do not point production `DATABASE_URL` at `file:./dev.db`. The build refuses a non-Postgres URL on Vercel, and it refuses the sample `AUTH_SECRET` from `.env.example`.
 
@@ -191,7 +207,7 @@ See **Deploy on Vercel** for the Neon connection string. A local Postgres databa
 ## What is in the prototype
 
 - Person and business profiles, with email/password sign-in.
-- Create, edit, and delete listings. Photo field accepts an `http(s)` URL. Blank photos use a placeholder.
+- Create, edit, and delete listings. Photos upload from the device (JPEG, PNG, or WebP) and are stored as an `https` URL. A pasted URL still works. Blank photos use a placeholder.
 - Listing types: business directory, plus classifieds (`for_sale`, `wanted`, `housing`, `services`).
 - Filters: words, city, homeland vs diaspora, category, type, verified only. A sentence search maps onto those filters locally.
 - Verified badge, granted by an admin. Verified Pro is a separate paid badge.
