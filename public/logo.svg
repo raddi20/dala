@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 48" fill="none" role="img" aria-label="Rangach">
+  <title>Rangach</title>
+  <rect width="48" height="48" rx="12" fill="#1a2436"/>
+  <path d="M14.5 39V20" stroke="#fbf1dc" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M33.5 39V20" stroke="#fbf1dc" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M14.5 20.2c0-6.4 19-6.4 19 0" stroke="#fbf1dc" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M14.5 24.6h19" stroke="#c8881a" stroke-width="2.3" stroke-linecap="round"/>
+  <text x="62" y="33" fill="#1a2436" font-family="Georgia, 'Iowan Old Style', serif" font-size="32" font-weight="600">Rangach</text>
+</svg>

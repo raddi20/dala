@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { Fraunces, Figtree } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
-import { APP_DESCRIPTION, APP_NAME, APP_TAGLINE } from "@/lib/brand";
+import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
+import { publicOrigin } from "@/lib/payments/origin";
 import "./globals.css";
 
 const display = Fraunces({
@@ -20,10 +21,27 @@ const body = Figtree({
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
-  description: `${APP_TAGLINE} ${APP_DESCRIPTION}`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const name = appName();
+  const description = `${APP_TAGLINE} ${APP_DESCRIPTION}`;
+  return {
+    metadataBase: new URL(await publicOrigin()),
+    applicationName: name,
+    title: { default: name, template: `%s · ${name}` },
+    description,
+    openGraph: {
+      type: "website",
+      siteName: name,
+      title: name,
+      description,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: name,
+      description,
+    },
+  };
+}
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth-forms";
-import { APP_NAME } from "@/lib/brand";
+import { Wordmark } from "@/components/wordmark";
 import { cardClass } from "@/components/ui";
 import { getSessionUser } from "@/lib/session";
 import { authContinueCopy, one, safePath } from "@/lib/utils";
@@ -22,7 +22,9 @@ export default async function LoginPage({
   return (
     <div className="mx-auto flex max-w-md flex-col justify-center gap-6 px-4 py-12 sm:py-16">
       <div className="text-center">
-        <p className="font-serif text-3xl text-navy">{APP_NAME}</p>
+        <div className="flex justify-center">
+          <Wordmark size="lg" />
+        </div>
         <h1 className="mt-2 text-xl font-semibold text-ink">Sign in</h1>
         <p className="mt-2 text-sm text-ink/60">
           {authContinueCopy(next) || "Email and password. No email provider is required for this demo."}

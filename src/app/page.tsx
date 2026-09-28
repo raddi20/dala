@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
-import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
+import { GateMark } from "@/components/wordmark";
+import { APP_TAGLINE, appName } from "@/lib/brand";
 import { CATEGORIES, CITIES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
@@ -45,15 +46,14 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-t from-navy/55 via-transparent to-navy/15" />
 
         <div className="relative mx-auto flex min-h-[min(88vh,760px)] max-w-5xl flex-col justify-end px-4 pb-12 pt-20 sm:justify-center sm:pb-16 sm:pt-24">
-          <p className="hero-brand font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
-            {APP_NAME}
+          <GateMark tone="onDark" className="hero-brand h-14 w-14 sm:h-16 sm:w-16" />
+          <p className="hero-brand mt-4 font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
+            {appName()}
           </p>
-          <h1 className="hero-copy mt-4 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
+          <p className="hero-copy mt-4 text-lg font-medium text-amber-soft sm:text-xl">{APP_TAGLINE}</p>
+          <h1 className="hero-copy mt-3 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
             Browse trusted Luo shops and classifieds — then chat on WhatsApp.
           </h1>
-          <p className="hero-copy mt-3 max-w-lg text-base text-white/75 sm:text-lg" style={{ animationDelay: "80ms" }}>
-            {APP_TAGLINE}
-          </p>
 
           <form
             action="/listings"

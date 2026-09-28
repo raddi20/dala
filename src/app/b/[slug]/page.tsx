@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
@@ -10,16 +9,10 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
 import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
+import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ slug: string }> };
-
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -32,7 +25,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const viewer = await getSessionUser();
     if (viewer?.id !== shop.userId) return { title: "Shop" };
   }
-  return { title: shop.user.name, description: shop.user.bio.slice(0, 160) };
+  const title = shop.user.name;
+  const description = shop.user.bio.slice(0, 160);
+  const path = `/b/${slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path },
+  };
 }
 
 export default async function StorefrontPage({ params }: Props) {
@@ -63,11 +64,11 @@ export default async function StorefrontPage({ params }: Props) {
   const [signals, reviews] = await Promise.all([shopSignals(shop.userId), shopReviews(shop.userId)]);
   const region = regionForCity(shop.user.city);
   const rating = averageRating(reviews);
-  const url = `${await origin()}/b/${shop.slug}`;
+  const url = `${await publicOrigin()}/b/${shop.slug}`;
   const phone = shop.user.whatsapp || shop.user.phone;
   const chatUrl = phone ? whatsappShopLink(phone, url) : "";
   const callUrl = telHref(shop.user.phone);
-  const initial = shop.user.name.trim().charAt(0).toUpperCase() || "D";
+  const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const bannerSrc = shop.user.verifiedPro ? shop.bannerUrl : "";
 
   return (

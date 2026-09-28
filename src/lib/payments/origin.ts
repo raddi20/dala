@@ -1,10 +1,15 @@
 import "server-only";
 import { headers } from "next/headers";
+import { explicitSiteUrl } from "@/lib/brand";
 
-/** Origin used for the Flutterwave return URL. */
+/**
+ * Origin for metadata, share links, WhatsApp drafts, and the Flutterwave return URL.
+ * A configured APP_URL / AUTH_URL / NEXTAUTH_URL wins. Otherwise the request host is used,
+ * so local dev and the current Vercel host keep working until APP_URL is set.
+ */
 export async function publicOrigin() {
-  const configured = (process.env.APP_URL || process.env.AUTH_URL || process.env.NEXTAUTH_URL || "").trim();
-  if (configured) return configured.replace(/\/$/, "");
+  const configured = explicitSiteUrl();
+  if (configured) return configured;
   const headerList = await headers();
   const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
   if (!host) return "http://localhost:3000";

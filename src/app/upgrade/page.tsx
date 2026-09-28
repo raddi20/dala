@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PayForm } from "@/components/pay-form";
+import { appName, defaultSiteUrl } from "@/lib/brand";
 import { FEATURED_DAYS, FREE_OFFERING_CAP, PRICES, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
 import { paymentConfig } from "@/lib/payments/config";
 import { prisma } from "@/lib/prisma";
@@ -40,6 +41,8 @@ export default async function UpgradePage({
         verifiedPro={user.verifiedPro}
         mode={payments.mode}
         webhookReady={payments.webhookReady}
+        brandName={appName()}
+        siteUrl={defaultSiteUrl()}
       />
     </div>
   );

@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
+import { appName } from "@/lib/brand";
 import { chargeFor, isPaidProduct } from "@/lib/constants";
 import { paymentConfig } from "@/lib/payments/config";
 import { createFlutterwaveCheckout } from "@/lib/payments/flutterwave";
@@ -57,6 +58,7 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
     phone = normalized;
   }
 
+  // Prefix stays `dala_` so existing Flutterwave rows and webhooks still match.
   const reference = `dala_${randomBytes(12).toString("hex")}`;
   const payment = await prisma.payment.create({
     data: {
@@ -85,7 +87,7 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
     email: user.email,
     name: user.name,
     phone,
-    description: product === "featured" ? "Featured listing for 30 days" : "Verified Pro",
+    description: product === "featured" ? `${appName()} — Featured listing for 30 days` : `${appName()} — Verified Pro`,
     meta: {
       payment_id: payment.id,
       product,

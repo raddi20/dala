@@ -1,6 +1,6 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/wordmark";
 import { signOutAction } from "@/lib/actions/auth";
-import { APP_NAME } from "@/lib/brand";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
@@ -21,11 +21,8 @@ export async function Header() {
   return (
     <header className="sticky top-0 z-30 border-b border-sand/80 bg-card/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-        <Link href="/" className="group flex min-w-0 items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-navy font-serif text-lg text-amber-soft shadow-sm transition-transform duration-150 group-hover:scale-[1.03]">
-            {APP_NAME.slice(0, 1)}
-          </span>
-          <span className="truncate font-serif text-xl font-semibold tracking-tight text-navy">{APP_NAME}</span>
+        <Link href="/" className="group flex min-w-0 items-center">
+          <Wordmark />
         </Link>
 
         <nav className="ml-auto flex flex-wrap items-center justify-end gap-1 text-sm font-medium sm:gap-1.5">

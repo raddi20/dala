@@ -1,4 +1,5 @@
 import "server-only";
+import { appName } from "@/lib/brand";
 import { isFlutterwaveCheckoutUrl, parseVerifyBody, type ParsedCharge } from "@/lib/payments/rules";
 
 const API = "https://api.flutterwave.com/v3";
@@ -54,7 +55,7 @@ export async function createFlutterwaveCheckout(input: CheckoutInput): Promise<C
           phonenumber: input.phone || undefined,
         },
         customizations: {
-          title: "Dala",
+          title: appName(),
           description: input.description,
         },
         meta: input.meta,
