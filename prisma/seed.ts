@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { roleForSeedUser, seedShouldSkip } from "../src/lib/admin-access";
 import { CATEGORIES, regionForCity, type Category } from "../src/lib/constants";
 import { assessScam } from "../src/lib/scam";
 
@@ -759,6 +760,14 @@ async function main() {
     throw new Error("Seed shops need at least 3 offerings.");
   }
 
+  const existingUsers = await prisma.user.count();
+  if (seedShouldSkip(existingUsers)) {
+    console.log(
+      `Refusing to seed: database already has ${existingUsers} users. Passwords, roles, shops, and listings were not changed.`,
+    );
+    return;
+  }
+
   await prisma.offering.deleteMany();
   await prisma.storefront.deleteMany();
   await prisma.review.deleteMany();
@@ -777,7 +786,7 @@ async function main() {
         email: user.email,
         name: user.name,
         passwordHash,
-        role: user.role,
+        role: roleForSeedUser(user.role, user.email, process.env),
         kind: user.kind,
         city: user.city,
         phone: user.phone,

@@ -30,11 +30,11 @@ The initial migration is already in `prisma/migrations`, so `migrate dev` should
 
 ## Demo accounts
 
-Every seeded account uses the password `demo1234`.
+Every seeded account uses the password `demo1234` on your laptop (`npm run dev`). A production deploy disables password login for `@dala.local` and removes any admin role on those accounts. Shops, listings, and `/b/[slug]` stay as they are. The sign-in page lists these addresses only in local development.
 
 | Email | Who |
 | --- | --- |
-| `akinyi@dala.local` | Admin. Hide listings, grant Verified, close reports. |
+| `akinyi@dala.local` | Admin on your laptop. In production this account is a normal user and `demo1234` does not work. The live admin is `ADMIN_EMAIL`. |
 | `atieno@dala.local` | Nairobi restaurant and events. |
 | `okello@dala.local` | London solicitor. Already on Verified Pro. |
 | `grace@dala.local` | Nairobi beauty, clinic, and fellowship. |
@@ -78,8 +78,11 @@ Listing cards show **Shop**, and the listing page shows **Visit storefront**, wh
 | `FLW_PUBLIC_KEY` | Optional. Stored next to the secret. The hosted checkout does not send it to the browser. | Same. |
 | `FLW_WEBHOOK_HASH` | Any long random string. The same value goes in the Flutterwave webhook settings. | Same value as the dashboard secret hash. |
 | `BLOB_READ_WRITE_TOKEN` | Omit. Device upload stays off; paste a photo URL. | Set when you connect a Blob store. See **Photos**. |
+| `ADMIN_EMAIL` | Omit. | `admin@rangach.co.ke`. Production, and Preview if preview deploys use the same database. Comma-separated if you ever need more than one. |
+| `ADMIN_CLAIM_SECRET` | Omit. | 16 to 72 characters. The first login password for `ADMIN_EMAIL`. `openssl rand -base64 24` |
+| `ADMIN_CLAIM_RESET` | Omit. | Leave unset. Set to `1` for one production deploy only when you need to replace the admin password, then delete it. |
 
-Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later.
+Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later. Sign-up does not prove you own the mailbox, so `ADMIN_EMAIL` is not granted admin from the register form. See **Production admin**.
 
 ## Photos
 
@@ -159,9 +162,32 @@ Redeploy after the variables are saved, from the local clone:
 git pull && npx vercel --prod
 ```
 
+## Production admin
+
+The live admin is whoever you name in `ADMIN_EMAIL` (Kevin: `admin@rangach.co.ke`). The register form rejects that address. The production build creates the account if it is missing, with `ADMIN_CLAIM_SECRET` as the password and role `admin`. If someone has already registered that address, the same build replaces their password and only then sets admin, so a typed-in email cannot keep a password a stranger chose. The next deploys see an existing admin and leave the password and profile alone.
+
+Set these in Vercel → **Settings → Environment Variables** before the deploy that should claim admin. Environment: **Production**. Also **Preview** if preview URLs use the same `DATABASE_URL`, so a preview cannot be used to register the address.
+
+| Name | Value |
+| --- | --- |
+| `ADMIN_EMAIL` | `admin@rangach.co.ke` |
+| `ADMIN_CLAIM_SECRET` | A password you choose, 16 to 72 characters. `openssl rand -base64 24` |
+
+Do not set `ADMIN_CLAIM_RESET`. Add it as `1` later only if you must replace that password, redeploy once, then delete the variable.
+
+From the local clone, after the variables are saved:
+
+```bash
+cd ~/dala && git pull && npx vercel --prod
+```
+
+Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` should still load.
+
+If `ADMIN_EMAIL` is unset, the build still succeeds and nobody is promoted. A bad secret fails the build and does not change accounts.
+
 ## Deploy on Vercel
 
-SQLite is fine on your laptop. Vercel serverless has no durable disk, so production uses Postgres. The committed schema stays `provider = "sqlite"`. `vercel.json` runs `npm run build:vercel`, which points Prisma at Postgres when `DATABASE_URL` starts with `postgres://` or `postgresql://`, creates the tables with `prisma db push`, and loads the demo seed only when the user table is empty. Later deploys do not wipe the database.
+SQLite is fine on your laptop. Vercel serverless has no durable disk, so production uses Postgres. The committed schema stays `provider = "sqlite"`. `vercel.json` runs `npm run build:vercel`, which points Prisma at Postgres when `DATABASE_URL` starts with `postgres://` or `postgresql://`, creates the tables with `prisma db push`, loads the demo seed only when the user table is empty, then locks `@dala.local` demo logins and claims `ADMIN_EMAIL` on production. Later deploys do not wipe the database and do not reset an admin password that was already claimed.
 
 About ten minutes, after this deploy config is on `main`:
 
@@ -177,13 +203,15 @@ About ten minutes, after this deploy config is on `main`:
 
 4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi and London demo shops.
 5. The live site is `https://dala-sigma.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL`, each set to that exact origin (no trailing path). `APP_NAME` can stay unset. Redeploy once so sign-in cookies, share links, and payment return URLs use that host.
-6. Open `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co`. Demo password is `demo1234`.
+6. Open `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co`. Those pages are public. `demo1234` works on your laptop only. On the live site, demo password login is disabled.
 7. To take test payments, add the Flutterwave variables in **Payments** and redeploy from the local clone with `git pull && npx vercel --prod`.
 8. To let sellers upload photos from a phone, connect a Blob store. See **Photos**. Pasted image URLs keep working without it.
 
 Do not point production `DATABASE_URL` at `file:./dev.db`. The build refuses a non-Postgres URL on Vercel, and it refuses the sample `AUTH_SECRET` from `.env.example`.
 
-To reload demo data later from your laptop (this **deletes** whatever is in that database, then reseeds):
+`npx prisma db seed` loads demo data only when the user table is empty. If any user already exists, it exits without changing passwords, roles, shops, or listings. Rebuild a local SQLite demo with `npm run db:reset` (that deletes the local database). Do not point that command at the production Neon URL.
+
+To point a laptop at Postgres for an **empty** database:
 
 ```bash
 DATABASE_URL="postgresql://..." AUTH_SECRET="the-same-secret" node scripts/prepare-db-provider.mjs
@@ -192,7 +220,7 @@ npx prisma db seed
 git checkout -- prisma/schema.prisma
 ```
 
-`git checkout` puts the local schema back to SQLite so `npm run db:setup` keeps working.
+`git checkout` puts the local schema back to SQLite so `npm run db:setup` keeps working. If that database already has users, the seed refuses and leaves them alone.
 
 ## Name and public URL
 
@@ -220,14 +248,14 @@ The `dala-sigma.vercel.app` hostname can stay attached. With `APP_URL` set, shar
 These still say `dala` because changing them would break existing data, sessions, or payment checks:
 
 - GitHub repo `raddi20/dala`, the npm package name, Prisma models and tables, and the Neon database. Do not rename them for this rebrand.
-- Demo sign-in emails `@dala.local` (login page, shop contact lines, seed accounts). Flutterwave rejects those addresses; the checkout error still names `@dala.local`.
+- Demo sign-in emails `@dala.local` (shop contact lines, seed accounts). Flutterwave rejects those addresses; the checkout error still names `@dala.local`. Production disables password login for them and hides the demo password on the sign-in page. Local development still shows it.
 - Payment references that start with `dala_`. Flutterwave webhooks match on that reference. New checkouts still use it.
 - Simulated seed receipts already stored as `DALA-MPESA-0101` and `DALA-CARD-4242`. They stay on that database and show on the demo receipt list. A fresh seed uses `RANGACH-MPESA-0101` and `RANGACH-CARD-4242` instead. Those rows are not sent to Flutterwave.
 - Session cookie names and Blob pathnames. They do not include the brand, and they were not renamed.
 - The sample `AUTH_SECRET` in `.env.example` (`dala-dev-secret-change-me`). Production must not use that sample secret; the Vercel build still rejects it.
 - The local clone folder, if it is still named `dala`.
 
-An already-seeded admin bio that still says "Moderates the Dala demo…" is rewritten to Rangach on the next `build:vercel` (exact sentence only). Other profile text is left alone.
+An already-seeded profile bio that still says "Moderates the Dala demo…" is rewritten to Rangach on the next `build:vercel` (exact sentence only). Other profile text, passwords, and roles are left alone by that rewrite.
 
 To add a city, edit `src/lib/constants.ts` (`CITIES`). Nairobi is homeland. London is diaspora. The region is stored on each listing from that list.
 

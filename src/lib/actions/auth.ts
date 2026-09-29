@@ -2,13 +2,14 @@
 
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { normalizeEmail, registrationBlockReason } from "@/lib/admin-access";
 import { signIn, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { safePath } from "@/lib/utils";
 import { field, registerSchema, type ActionState } from "@/lib/validators";
 
 export async function login(_prev: ActionState, formData: FormData): Promise<ActionState> {
-  const email = field(formData, "email").toLowerCase().trim();
+  const email = normalizeEmail(field(formData, "email"));
   const password = field(formData, "password");
   const next = safePath(field(formData, "next"), "/");
 
@@ -35,7 +36,10 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
     return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
 
-  const email = parsed.data.email.toLowerCase();
+  const email = normalizeEmail(parsed.data.email);
+  const reserved = registrationBlockReason(email, process.env);
+  if (reserved) return { error: reserved };
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return { error: "That email is already registered." };
 

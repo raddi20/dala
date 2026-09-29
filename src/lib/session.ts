@@ -1,12 +1,17 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { effectiveRole } from "@/lib/admin-access";
 import { prisma } from "@/lib/prisma";
 
 export async function getSessionUser() {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
-  return prisma.user.findUnique({ where: { id } });
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) return null;
+  const role = effectiveRole(user, process.env);
+  if (role === user.role) return user;
+  return { ...user, role };
 }
 
 export async function requireUser(next = "/") {
