@@ -1,4 +1,4 @@
-import { APP_NAME } from "@/lib/brand";
+import { appName } from "@/lib/brand";
 
 function waMe(phone: string, text: string) {
   const digits = phone.replace(/\D/g, "");
@@ -7,19 +7,19 @@ function waMe(phone: string, text: string) {
 }
 
 export function whatsappChatLink(phone: string, title: string) {
-  return waMe(phone, `Hello, I found ${title} on ${APP_NAME}.`);
+  return waMe(phone, `Hello, I found ${title} on ${appName()}.`);
 }
 
 export function whatsappShareLink(title: string, url: string) {
-  return waMe("", `${title}\n${url}\nShared from ${APP_NAME}`);
+  return waMe("", `${title}\n${url}\nShared from ${appName()}`);
 }
 
 export function whatsappShopLink(phone: string, url: string) {
-  return waMe(phone, `Hi, I saw your ${APP_NAME} shop (${url})…`);
+  return waMe(phone, `Hi, I saw your ${appName()} shop (${url})…`);
 }
 
 export function whatsappOfferingText(offering: string, url: string) {
-  return `Hi, I saw ${offering} on your ${APP_NAME} shop (${url})…`;
+  return `Hi, I saw ${offering} on your ${appName()} shop (${url})…`;
 }
 
 export function whatsappOfferingLink(phone: string, offering: string, url: string) {

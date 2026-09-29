@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
@@ -10,16 +9,10 @@ import { FREE_OFFERING_CAP, PRO_OFFERING_CAP, offeringCap } from "@/lib/constant
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatOfferingPrice, one } from "@/lib/utils";
+import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappOfferingText } from "@/lib/whatsapp";
 
 export const metadata: Metadata = { title: "Manage storefront" };
-
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
-}
 
 export default async function ManageStorefrontPage({
   searchParams,
@@ -108,7 +101,7 @@ export default async function ManageStorefrontPage({
   const readyToPublish = !shop.published && active.length > 0;
   const phone = user.whatsapp || user.phone;
   const first = active[0];
-  const shopUrl = `${await origin()}/b/${shop.slug}`;
+  const shopUrl = `${await publicOrigin()}/b/${shop.slug}`;
   const previewText = first ? whatsappOfferingText(first.title, shopUrl) : "";
   const previewChat = first && phone ? whatsappOfferingLink(phone, first.title, shopUrl) : "";
 

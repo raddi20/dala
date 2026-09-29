@@ -13,8 +13,16 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const person = await prisma.user.findUnique({ where: { id }, select: { name: true } });
-  return { title: person?.name ?? "Profile" };
+  const person = await prisma.user.findUnique({ where: { id }, select: { name: true, bio: true } });
+  const title = person?.name ?? "Profile";
+  const description = person?.bio.slice(0, 160);
+  const path = `/people/${id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path },
+  };
 }
 
 export default async function PersonPage({ params }: Props) {

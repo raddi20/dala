@@ -5,6 +5,7 @@ import { ProfileForm } from "@/components/profile-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
+import { appName, defaultSiteUrl } from "@/lib/brand";
 import { productLabel } from "@/lib/constants";
 import { paymentConfig } from "@/lib/payments/config";
 import { prisma } from "@/lib/prisma";
@@ -172,7 +173,12 @@ export default async function AccountPage({
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Payment settings</h2>
-        <PaymentSetup mode={paymentsConfig.mode} webhookReady={paymentsConfig.webhookReady} />
+        <PaymentSetup
+          mode={paymentsConfig.mode}
+          webhookReady={paymentsConfig.webhookReady}
+          brandName={appName()}
+          siteUrl={defaultSiteUrl()}
+        />
       </section>
 
       <section className="grid gap-2">

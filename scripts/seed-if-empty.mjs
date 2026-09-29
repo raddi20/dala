@@ -7,6 +7,18 @@ const prisma = new PrismaClient();
 const tsx = join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "tsx", "dist", "cli.mjs");
 
 try {
+  const renamed = await prisma.user.updateMany({
+    where: {
+      bio: "Moderates the Dala demo. This account can hide listings and grant the verified badge.",
+    },
+    data: {
+      bio: "Moderates the Rangach demo. This account can hide listings and grant the verified badge.",
+    },
+  });
+  if (renamed.count > 0) {
+    console.log(`Updated ${renamed.count} profile bio to the Rangach name.`);
+  }
+
   const users = await prisma.user.count();
   if (users > 0) {
     console.log(`Database already has ${users} users. Skipping seed.`);

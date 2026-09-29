@@ -19,6 +19,8 @@ export function PayForm({
   verifiedPro,
   mode,
   webhookReady,
+  brandName,
+  siteUrl,
 }: {
   listings: { id: string; title: string; city: string }[];
   defaultListingId: string;
@@ -27,6 +29,8 @@ export function PayForm({
   verifiedPro: boolean;
   mode: PaymentMode;
   webhookReady: boolean;
+  brandName: string;
+  siteUrl: string;
 }) {
   const [state, action] = useActionState(startPayment, initial);
   const [product, setProduct] = useState<PaidProduct>(defaultProduct);
@@ -55,7 +59,7 @@ export function PayForm({
 
   return (
     <form action={action} className="grid gap-4">
-      <PaymentSetup mode={mode} webhookReady={webhookReady} />
+      <PaymentSetup mode={mode} webhookReady={webhookReady} brandName={brandName} siteUrl={siteUrl} />
       <ErrorNote>{state.error}</ErrorNote>
       <fieldset className="grid gap-2">
         <legend className="text-sm font-medium">Product</legend>
@@ -138,10 +142,10 @@ export function PayForm({
         <label className="block text-sm">
           M-Pesa phone
           <input name="phone" inputMode="tel" placeholder="2547… or 07…" className={fieldClass} />
-          <span className="mt-1 block text-ink/60">Flutterwave sends the prompt. Dala does not talk to Safaricom directly.</span>
+          <span className="mt-1 block text-ink/60">Flutterwave sends the prompt. {brandName} does not talk to Safaricom directly.</span>
         </label>
       ) : (
-        <p className="text-sm text-ink/70">The card number is entered on Flutterwave, not on Dala.</p>
+        <p className="text-sm text-ink/70">The card number is entered on Flutterwave, not on {brandName}.</p>
       )}
 
       <p className="text-sm font-semibold text-navy">

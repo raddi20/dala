@@ -1,13 +1,22 @@
 import { cardClass } from "@/components/ui";
 import type { PaymentMode } from "@/lib/payments/rules";
 
-const webhookUrl = "https://dala-sigma.vercel.app/api/payments/flutterwave";
-
-export function PaymentSetup({ mode, webhookReady }: { mode: PaymentMode; webhookReady: boolean }) {
+export function PaymentSetup({
+  mode,
+  webhookReady,
+  brandName,
+  siteUrl,
+}: {
+  mode: PaymentMode;
+  webhookReady: boolean;
+  brandName: string;
+  siteUrl: string;
+}) {
+  const webhookUrl = `${siteUrl}/api/payments/flutterwave`;
   if (mode === "live") {
     return (
       <div className={`${cardClass} p-4 text-sm text-ink/80`}>
-        <p>Checkout opens on Flutterwave. M-Pesa is offered on Kenyan shilling prices. Card covers Nairobi and London. Dala does not see the card number.</p>
+        <p>Checkout opens on Flutterwave. M-Pesa is offered on Kenyan shilling prices. Card covers Nairobi and London. {brandName} does not see the card number.</p>
         {webhookReady ? null : (
           <p className="mt-2">
             <span className="font-semibold">FLW_WEBHOOK_HASH</span> is not set. The upgrade still applies when the buyer returns here. Set the hash so a closed tab still completes.
@@ -59,13 +68,13 @@ export function PaymentSetup({ mode, webhookReady }: { mode: PaymentMode; webhoo
         </li>
         <li>
           On Vercel, add those two plus <span className="font-semibold">APP_URL</span> ={" "}
-          <span className="font-semibold">https://dala-sigma.vercel.app</span> under Settings → Environment Variables.
+          <span className="font-semibold">{siteUrl}</span> under Settings → Environment Variables.
         </li>
         <li>
           Point the Flutterwave webhook at <span className="font-semibold">{webhookUrl}</span> and use the same secret hash. Turn on preferred payment methods so M-Pesa and card can be limited per checkout.
         </li>
         <li>
-          Redeploy with <span className="font-semibold">cd ~/dala && git pull && npx vercel --prod</span>.
+          From the local clone, redeploy with <span className="font-semibold">git pull && npx vercel --prod</span>.
         </li>
         <li>
           For real money later, replace the secret with the live key (<span className="font-semibold">FLWSECK-</span>, not{" "}

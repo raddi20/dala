@@ -1,14 +1,15 @@
 import Link from "next/link";
-import { APP_MEANING, APP_NAME } from "@/lib/brand";
+import { Wordmark } from "@/components/wordmark";
+import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
 
 export function Footer() {
   return (
     <footer className="mt-auto border-t border-sand/80 bg-card/60">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-ink/65 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
-          <p className="font-serif text-lg text-navy">{APP_NAME}</p>
-          <p className="mt-1">
-            Working name ({APP_MEANING}). Discovery and trust here — chat stays on WhatsApp.
+          <Wordmark />
+          <p className="mt-2">
+            {APP_TAGLINE} {appName()} is {APP_MEANING}. Discovery here — chat stays on WhatsApp.
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 font-medium text-ink/80">

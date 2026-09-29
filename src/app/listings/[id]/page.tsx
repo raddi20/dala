@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import { Badges } from "@/components/badges";
 import { ReportForm } from "@/components/report-form";
 import { ReviewForm } from "@/components/review-form";
@@ -11,21 +10,23 @@ import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { averageRating, formatWhen, one, telHref } from "@/lib/utils";
+import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const listing = await prisma.listing.findUnique({ where: { id }, select: { title: true } });
-  return { title: listing?.title ?? "Listing" };
-}
-
-async function origin() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
+  const listing = await prisma.listing.findUnique({ where: { id }, select: { title: true, description: true } });
+  const title = listing?.title ?? "Listing";
+  const description = listing?.description.slice(0, 160);
+  const path = `/listings/${id}`;
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: { title, description, url: path },
+  };
 }
 
 export default async function ListingPage({ params, searchParams }: Props) {
@@ -55,7 +56,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       })
     : null;
   const rating = averageRating(listing.reviews);
-  const shareUrl = whatsappShareLink(listing.title, `${await origin()}/listings/${listing.id}`);
+  const shareUrl = whatsappShareLink(listing.title, `${await publicOrigin()}/listings/${listing.id}`);
   const chatUrl = listing.contactWhatsapp ? whatsappChatLink(listing.contactWhatsapp, listing.title) : "";
   const shop = listing.owner.storefront?.published ? listing.owner.storefront : null;
   const callUrl = telHref(listing.contactPhone);
