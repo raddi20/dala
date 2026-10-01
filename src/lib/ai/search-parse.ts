@@ -29,8 +29,8 @@ export type SearchInterpretation = NlParse & {
 };
 
 export type SearchCache = {
-  get(queryHash: string, now: Date): Promise<SearchParse | null>;
-  put(queryHash: string, queryNorm: string, value: SearchParse, expiresAt: Date): Promise<void>;
+  get(queryKey: string, now: Date): Promise<SearchParse | null>;
+  put(queryKey: string, value: SearchParse, expiresAt: Date): Promise<void>;
 };
 
 export type SearchRunner = (
@@ -44,6 +44,7 @@ export function normalizeSearchQuery(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, " ").slice(0, 200);
 }
 
+/** Cache id. A hash, not the raw query, so a long search cannot overflow the primary key. */
 export function searchQueryHash(queryNorm: string): string {
   return createHash("sha256").update(`${smartSearchPrompt.version}\n${queryNorm}`).digest("hex");
 }
@@ -115,9 +116,9 @@ export function applySearchParse(rules: NlParse, ai: SearchParse): SearchInterpr
 
 export function prismaSearchCache(): SearchCache {
   return {
-    async get(queryHash, now) {
+    async get(queryKey, now) {
       try {
-        const row = await prisma.aiSearchCache.findUnique({ where: { queryHash } });
+        const row = await prisma.aiSearchCache.findUnique({ where: { queryKey } });
         if (!row || row.expiresAt.getTime() <= now.getTime()) return null;
         const parsed = searchParseSchema.safeParse(JSON.parse(row.resultJson));
         return parsed.success ? parsed.data : null;
@@ -125,13 +126,13 @@ export function prismaSearchCache(): SearchCache {
         return null;
       }
     },
-    async put(queryHash, queryNorm, value, expiresAt) {
+    async put(queryKey, value, expiresAt) {
       try {
         const resultJson = JSON.stringify(value);
         await prisma.aiSearchCache.upsert({
-          where: { queryHash },
-          create: { queryHash, queryNorm, resultJson, expiresAt },
-          update: { queryNorm, resultJson, expiresAt },
+          where: { queryKey },
+          create: { queryKey, resultJson, expiresAt },
+          update: { resultJson, expiresAt },
         });
       } catch {
         // A missing table or a full disk must not break search.
@@ -157,8 +158,8 @@ export async function interpretSearch(
 
     const now = deps.now ?? new Date();
     const cache = deps.cache ?? prismaSearchCache();
-    const queryHash = searchQueryHash(queryNorm);
-    const cached = await cache.get(queryHash, now);
+    const queryKey = searchQueryHash(queryNorm);
+    const cached = await cache.get(queryKey, now);
     if (cached) return applySearchParse(rules, cached);
 
     const run = deps.run ?? runAi;
@@ -169,7 +170,7 @@ export async function interpretSearch(
       deps.env ? { env: deps.env } : {},
     );
     if (!result.ok) return fromRules(rules);
-    await cache.put(queryHash, queryNorm, result.data, new Date(now.getTime() + SEARCH_CACHE_MS));
+    await cache.put(queryKey, result.data, new Date(now.getTime() + SEARCH_CACHE_MS));
     return applySearchParse(rules, result.data);
   } catch {
     return fromRules(rules);

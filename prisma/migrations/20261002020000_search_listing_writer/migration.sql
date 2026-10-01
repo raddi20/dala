@@ -2,11 +2,10 @@
 -- New empty tables only. No columns or foreign keys on existing tables.
 -- CreateTable
 CREATE TABLE "AiSearchCache" (
-    "queryHash" TEXT NOT NULL PRIMARY KEY,
-    "queryNorm" TEXT NOT NULL,
+    "queryKey" TEXT NOT NULL PRIMARY KEY,
     "resultJson" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "expiresAt" DATETIME NOT NULL
+    "expiresAt" DATETIME NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateTable
@@ -15,9 +14,9 @@ CREATE TABLE "AiListingDraft" (
     "userId" TEXT NOT NULL DEFAULT '',
     "listingId" TEXT NOT NULL DEFAULT '',
     "inputText" TEXT NOT NULL,
-    "language" TEXT NOT NULL DEFAULT 'en',
     "photoUrl" TEXT NOT NULL DEFAULT '',
-    "outputJson" TEXT NOT NULL,
+    "language" TEXT NOT NULL DEFAULT 'en',
+    "suggestionJson" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,11 +24,10 @@ CREATE TABLE "AiListingDraft" (
 CREATE TABLE "SellerAiPrefs" (
     "userId" TEXT NOT NULL PRIMARY KEY,
     "aiConsentAt" DATETIME,
+    "language" TEXT NOT NULL DEFAULT 'en',
+    "tipsEmailOptIn" BOOLEAN NOT NULL DEFAULT false,
     "updatedAt" DATETIME NOT NULL
 );
-
--- CreateIndex
-CREATE INDEX "AiSearchCache_expiresAt_idx" ON "AiSearchCache"("expiresAt");
 
 -- CreateIndex
 CREATE INDEX "AiListingDraft_userId_createdAt_idx" ON "AiListingDraft"("userId", "createdAt");
