@@ -12,6 +12,7 @@ import {
   sectionTitleClass,
 } from "@/components/ui";
 import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
+import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
 import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { parseNlQuery } from "@/lib/nl-query";
 import { searchListings } from "@/lib/search";
@@ -48,6 +49,7 @@ export default async function ListingsPage({
     type: one(sp.type) || parsed?.type || "",
     verified: one(sp.verified) === "1" || parsed?.verified === true,
     badge: parseShopBadgeFilter(one(sp.badge)) ?? "",
+    diaspora: wantsDiasporaOrders(one(sp.diaspora)),
   };
   const chipBase: Record<string, string> = {
     q: filters.q,
@@ -57,11 +59,20 @@ export default async function ListingsPage({
     type: filters.type,
     verified: filters.verified ? "1" : "",
     badge: filters.badge,
+    diaspora: filters.diaspora ? "1" : "",
   };
   const user = await getSessionUser();
   const listings = await searchListings({ ...filters, viewerId: user?.id });
   const hasFilters = Boolean(
-    filters.q || filters.city || filters.region || filters.category || filters.type || filters.verified || filters.badge || nlRaw,
+    filters.q ||
+      filters.city ||
+      filters.region ||
+      filters.category ||
+      filters.type ||
+      filters.verified ||
+      filters.badge ||
+      filters.diaspora ||
+      nlRaw,
   );
 
   return (
@@ -141,6 +152,12 @@ export default async function ListingsPage({
               {filter.label}
             </Link>
           ))}
+          <Link
+            href={chipHref(chipBase, "diaspora", "1")}
+            className={filters.diaspora ? chipActiveClass : chipClass}
+          >
+            {DIASPORA_ORDERS_LABEL}
+          </Link>
           {hasFilters ? (
             <Link href="/listings" className={`${chipClass} border-dashed`}>
               Clear all
@@ -217,6 +234,10 @@ export default async function ListingsPage({
           <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
             <input type="checkbox" name="verified" value="1" defaultChecked={filters.verified} className="size-4 rounded border-sand" />
             Verified listing only
+          </label>
+          <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
+            <input type="checkbox" name="diaspora" value="1" defaultChecked={filters.diaspora} className="size-4 rounded border-sand" />
+            {DIASPORA_ORDERS_LABEL}
           </label>
           <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
             <button className={btnPrimary}>Apply filters</button>

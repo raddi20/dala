@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
 import { isFeatured } from "@/lib/utils";
@@ -17,6 +18,7 @@ const include = {
           phoneVerified: true,
           locationVerified: true,
           businessVerified: true,
+          servesDiaspora: true,
         },
       },
     },
@@ -31,12 +33,15 @@ export async function searchListings(filters: {
   type?: string;
   verified?: boolean;
   badge?: string;
+  diaspora?: boolean;
+  ids?: string[];
   ownerId?: string;
   viewerId?: string | null;
   includeHidden?: boolean;
 }) {
   const where: Prisma.ListingWhereInput = {};
   if (!filters.includeHidden) where.hidden = false;
+  if (filters.ids) where.id = { in: filters.ids };
   if (filters.city) where.city = filters.city;
   if (filters.region) where.region = filters.region;
   if (filters.category) where.category = filters.category;
@@ -44,10 +49,12 @@ export async function searchListings(filters: {
   else if (filters.type) where.type = filters.type;
   if (filters.verified) where.verified = true;
   const badgeWhere = shopBadgeWhere(filters.badge);
-  if (badgeWhere) {
+  const diasporaWhere = diasporaOrdersWhere(filters.diaspora);
+  const extra = [badgeWhere, diasporaWhere].filter((item) => item !== null);
+  if (extra.length > 0) {
     const current = where.AND;
     const list = Array.isArray(current) ? current : current ? [current] : [];
-    where.AND = [...list, badgeWhere];
+    where.AND = [...list, ...extra];
   }
   if (filters.q) {
     where.OR = [
@@ -76,7 +83,7 @@ export async function searchListings(filters: {
     where,
     include,
     orderBy: { createdAt: "desc" },
-    take: 100,
+    take: filters.ids?.length ? filters.ids.length : 100,
   });
 
   return rows.sort((a, b) => {

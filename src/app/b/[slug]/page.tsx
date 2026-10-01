@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
+import { DiasporaOrdersTag, ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
+import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
@@ -10,6 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
 import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
+import { appName } from "@/lib/brand";
 import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
 
@@ -79,7 +81,7 @@ export default async function StorefrontPage({ params }: Props) {
   };
 
   return (
-    <article className="mx-auto grid max-w-3xl gap-6 px-4 py-8 pb-28 sm:pb-10">
+    <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {!shop.published && isOwner ? (
         <div className="grid gap-2">
           <Flash>This shop is a draft. Only you can see this preview.</Flash>
@@ -129,6 +131,7 @@ export default async function StorefrontPage({ params }: Props) {
               </span>
             ) : null}
             <ShopBadgeChips flags={shopBadges} events={shop.badgeEvents} />
+            {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
             {shop.user.verifiedPro ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
               {shop.user.city}
@@ -180,6 +183,14 @@ export default async function StorefrontPage({ params }: Props) {
             <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
               WhatsApp
             </a>
+          ) : null}
+          {phone ? (
+            <FamilyOrderButton
+              phone={phone}
+              subjectName={shop.user.name}
+              path={`/b/${shop.slug}`}
+              siteName={appName()}
+            />
           ) : null}
           {callUrl ? (
             <a href={callUrl} className={btnSecondary}>
@@ -283,9 +294,20 @@ export default async function StorefrontPage({ params }: Props) {
 
       {chatUrl ? (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">
-          <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-            WhatsApp this shop
-          </a>
+          <div className="grid gap-2">
+            {phone ? (
+              <FamilyOrderButton
+                variant="bar"
+                phone={phone}
+                subjectName={shop.user.name}
+                path={`/b/${shop.slug}`}
+                siteName={appName()}
+              />
+            ) : null}
+            <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+              WhatsApp this shop
+            </a>
+          </div>
         </div>
       ) : null}
     </article>

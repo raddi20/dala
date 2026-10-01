@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { roleForSeedUser, seedShouldSkip } from "../src/lib/admin-access";
+import { ensureOccasionDefinitions } from "../src/lib/occasions";
 import { CATEGORIES, regionForCity, type Category } from "../src/lib/constants";
 import { assessScam } from "../src/lib/scam";
 
@@ -930,6 +931,7 @@ async function main() {
         slug: shop.slug,
         bannerUrl: shop.bannerUrl ?? "",
         published: true,
+        servesDiaspora: shop.slug === "mama-atieno",
         phoneVerified: Boolean(shop.badges?.phone),
         locationVerified: Boolean(shop.badges?.location),
         businessVerified: Boolean(shop.badges?.business),
@@ -946,6 +948,20 @@ async function main() {
         badgeEvents: badgeRows.length > 0 ? { create: badgeRows } : undefined,
       },
     });
+  }
+
+  await ensureOccasionDefinitions(prisma);
+  const mama = await prisma.storefront.findUnique({ where: { slug: "mama-atieno" }, select: { id: true } });
+  if (mama) {
+    const tagged = await prisma.occasion.findMany({
+      where: { slug: { in: ["homecomings", "weddings-dowry", "funerals", "christmas-at-home"] } },
+      select: { id: true },
+    });
+    if (tagged.length > 0) {
+      await prisma.shopOccasion.createMany({
+        data: tagged.map((occasion) => ({ storefrontId: mama.id, occasionId: occasion.id })),
+      });
+    }
   }
 
   const flagged = await prisma.listing.count({ where: { scamRisk: { not: "low" } } });

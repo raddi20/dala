@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { offeringCap } from "@/lib/constants";
+import { OCCASION_DEFINITIONS, ensureOccasionDefinitions, syncShopOccasionSlugs } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { uniqueSlug } from "@/lib/storefront";
@@ -17,6 +18,8 @@ async function revalidateShop(userId: string, slug: string, previousSlug?: strin
   if (previousSlug && previousSlug !== slug) revalidatePath(`/b/${previousSlug}`);
   revalidatePath("/");
   revalidatePath("/listings");
+  revalidatePath("/occasions");
+  for (const item of OCCASION_DEFINITIONS) revalidatePath(`/occasions/${item.slug}`);
   const listings = await prisma.listing.findMany({ where: { ownerId: userId }, select: { id: true } });
   for (const listing of listings) {
     revalidatePath(`/listings/${listing.id}`);
@@ -81,6 +84,7 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
           slug: parsed.data.slug,
           bannerUrl,
           published: parsed.data.published,
+          servesDiaspora: parsed.data.servesDiaspora,
         },
       }),
       prisma.user.update({
@@ -93,6 +97,11 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
       return { error: "That shop address is already taken." };
     }
     throw error;
+  }
+
+  if (parsed.data.occasionsPresent) {
+    await ensureOccasionDefinitions(prisma);
+    await syncShopOccasionSlugs(prisma, storefront.id, parsed.data.occasionSlugs);
   }
 
   await revalidateShop(user.id, parsed.data.slug, storefront.slug);

@@ -4,6 +4,7 @@ import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleC
 import { GateMark } from "@/components/wordmark";
 import { APP_TAGLINE, appName } from "@/lib/brand";
 import { CATEGORIES, CITIES } from "@/lib/constants";
+import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
@@ -24,7 +25,14 @@ export default async function HomePage() {
     : shop
       ? "Your shop is in the header. List another business in the directory any time."
       : "Open a shop, add one offering, then publish. Buyers message you on WhatsApp.";
-  const listings = await searchListings({ viewerId: user?.id });
+  await ensureOccasionDefinitions(prisma);
+  const [listings, occasions] = await Promise.all([
+    searchListings({ viewerId: user?.id }),
+    prisma.occasion.findMany({
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+      select: { slug: true, title: true },
+    }),
+  ]);
   const featured = listings.filter((listing) => isFeatured(listing)).slice(0, 4);
   const classifieds = listings.filter((listing) => listing.type !== "business").slice(0, 4);
 
@@ -122,6 +130,30 @@ export default async function HomePage() {
                 <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
                   {city.name}
                 </h3>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className={sectionTitleClass}>Occasions</h2>
+            <Link href="/occasions" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
+              All occasions
+            </Link>
+          </div>
+          <p className="mt-2 max-w-xl text-ink/65">
+            Homecomings, weddings and ayie, funerals, Christmas at home, and a house being built for the family. Shops
+            tagged for that moment.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {occasions.map((occasion) => (
+              <Link
+                key={occasion.slug}
+                href={`/occasions/${occasion.slug}`}
+                className="rounded-full border border-sand bg-card px-3.5 py-2 text-sm font-medium text-ink/80 shadow-sm transition-colors hover:border-navy/20 hover:bg-white hover:text-navy"
+              >
+                {occasion.title}
               </Link>
             ))}
           </div>

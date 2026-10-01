@@ -1,4 +1,5 @@
 import { typeLabel } from "@/lib/constants";
+import { DIASPORA_ORDERS_EXPLANATION, DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
 import {
   PRO_PLAN_EXPLANATION,
   PRO_PLAN_LABEL,
@@ -18,7 +19,7 @@ function Chip({
   label,
 }: {
   children: React.ReactNode;
-  tone?: "neutral" | "verified" | "pro" | "featured" | "danger" | "warn" | "city";
+  tone?: "neutral" | "verified" | "pro" | "featured" | "danger" | "warn" | "city" | "diaspora";
   title?: string;
   label?: string;
 }) {
@@ -30,6 +31,7 @@ function Chip({
     danger: "bg-red-50 text-danger ring-danger/20",
     warn: "bg-amber-soft text-warn ring-warn/25",
     city: "bg-white/90 text-navy ring-white/60 backdrop-blur",
+    diaspora: "bg-white text-navy ring-lake/40",
   };
   return (
     <span
@@ -39,6 +41,14 @@ function Chip({
     >
       {children}
     </span>
+  );
+}
+
+export function DiasporaOrdersTag() {
+  return (
+    <Chip tone="diaspora" title={DIASPORA_ORDERS_EXPLANATION} label={`${DIASPORA_ORDERS_LABEL}. ${DIASPORA_ORDERS_EXPLANATION}`}>
+      {DIASPORA_ORDERS_LABEL}
+    </Chip>
   );
 }
 
@@ -146,6 +156,7 @@ export function Badges({
   verified,
   verifiedPro,
   shopBadges,
+  servesDiaspora,
   featured,
   featuredUntil,
   scamRisk,
@@ -154,6 +165,7 @@ export function Badges({
   verified: boolean;
   verifiedPro?: boolean;
   shopBadges?: ShopBadgeFlags | null;
+  servesDiaspora?: boolean;
   featured: boolean;
   featuredUntil: Date | null;
   scamRisk?: string;
@@ -167,6 +179,7 @@ export function Badges({
         </Chip>
       ) : null}
       <ShopBadgeChips flags={shopBadges} />
+      {servesDiaspora ? <DiasporaOrdersTag /> : null}
       {verifiedPro ? <ProPlanChip /> : null}
       {isFeatured({ featured, featuredUntil }) ? <Chip tone="featured">Featured</Chip> : null}
       {scamRisk === "high" ? <Chip tone="danger">Scam risk</Chip> : null}

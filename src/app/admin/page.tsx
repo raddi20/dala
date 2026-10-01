@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminOccasions } from "@/components/admin-occasions";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
-import { resolveReport, setListingHidden, setListingVerified, setShopBadge, setVerifiedPro } from "@/lib/actions/admin";
+import {
+  resolveReport,
+  setListingHidden,
+  setListingVerified,
+  setServesDiaspora,
+  setShopBadge,
+  setVerifiedPro,
+} from "@/lib/actions/admin";
 import { prisma } from "@/lib/prisma";
 import {
   DOCUMENTS_SEEN_NOTE,
@@ -78,6 +86,16 @@ export default async function AdminPage() {
                 /b/{shop.slug} · {shop.user.city} · {shop.user.email}
                 {shop.user.verifiedPro ? " · Pro plan (paid, not a shop check)" : ""}
               </p>
+              <form action={setServesDiaspora} className="mt-2 flex flex-wrap items-center gap-2">
+                <input type="hidden" name="storefrontId" value={shop.id} />
+                <input type="hidden" name="value" value={shop.servesDiaspora ? "0" : "1"} />
+                <span className={shop.servesDiaspora ? "font-semibold text-lake-dark" : "text-ink/60"}>
+                  {shop.servesDiaspora ? "Serves diaspora orders" : "Does not serve diaspora orders"}
+                </span>
+                <button className={btnSecondary} type="submit">
+                  {shop.servesDiaspora ? "Turn off" : "Turn on"}
+                </button>
+              </form>
             </div>
             <div className="grid gap-3 lg:grid-cols-3">
               {SHOP_BADGES.map((badge) => {
@@ -158,6 +176,8 @@ export default async function AdminPage() {
           </article>
         ))}
       </section>
+
+      <AdminOccasions />
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Reports</h2>

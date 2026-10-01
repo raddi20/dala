@@ -29,6 +29,9 @@ export async function Header() {
           <Link href="/listings" className={navLink}>
             Browse
           </Link>
+          <Link href="/occasions" className={navLink}>
+            Occasions
+          </Link>
           <Link href="/listings#search" className={`hidden sm:inline ${navLink}`}>
             Search
           </Link>

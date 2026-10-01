@@ -62,6 +62,7 @@ model Listing {
   reviews         Review[]
   reports         Report[]
   payments        Payment[]
+  occasions       ListingOccasion[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -126,12 +127,58 @@ model Storefront {
   phoneVerified    Boolean  @default(false)
   locationVerified Boolean  @default(false)
   businessVerified Boolean  @default(false)
+  // Seller opt-in: this shop will take a WhatsApp order from abroad for family at home.
+  servesDiaspora   Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   offerings        Offering[]
   badgeEvents      ShopBadgeEvent[]
+  occasions        ShopOccasion[]
 
   @@index([published])
+  @@index([servesDiaspora])
+}
+
+// A public collection such as weddings or Christmas at home.
+// Bootstrap inserts a row only when the slug is missing. It never rewrites title or intro.
+model Occasion {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  intro     String   @default("")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shops     ShopOccasion[]
+  listings  ListingOccasion[]
+}
+
+model ShopOccasion {
+  id           String     @id @default(cuid())
+  occasionId   String
+  storefrontId String
+  pinned       Boolean    @default(false)
+  pinOrder     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  occasion     Occasion   @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+
+  @@unique([occasionId, storefrontId])
+  @@index([occasionId, pinned])
+}
+
+model ListingOccasion {
+  id         String   @id @default(cuid())
+  occasionId String
+  listingId  String
+  pinned     Boolean  @default(false)
+  pinOrder   Int      @default(0)
+  createdAt  DateTime @default(now())
+  occasion   Occasion @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([occasionId, listingId])
+  @@index([occasionId, pinned])
 }
 
 // Append-only record of shop badge grants and removals. The app only inserts rows.

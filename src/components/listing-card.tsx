@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Badges, CityBadge } from "@/components/badges";
+import { FamilyOrderButton } from "@/components/family-order-button";
 import { cardClass } from "@/components/ui";
+import { appName } from "@/lib/brand";
 import type { ListingCardData } from "@/lib/search";
 import { averageRating } from "@/lib/utils";
 
@@ -8,6 +10,8 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
   const rating = averageRating(listing.reviews);
   const initial = listing.title.trim().charAt(0).toUpperCase() || "D";
   const shopSlug = listing.owner.storefront?.published ? listing.owner.storefront.slug : "";
+  const whatsapp = listing.contactWhatsapp.trim();
+  const servesDiaspora = Boolean(listing.owner.storefront?.servesDiaspora);
 
   return (
     <article className={`card-lift flex h-full flex-col overflow-hidden ${cardClass}`}>
@@ -35,6 +39,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
             verified={listing.verified}
             verifiedPro={listing.owner.verifiedPro}
             shopBadges={listing.owner.storefront}
+            servesDiaspora={servesDiaspora}
             featured={listing.featured}
             featuredUntil={listing.featuredUntil}
             scamRisk={listing.scamRisk}
@@ -47,11 +52,21 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
           </p>
         </div>
       </Link>
-      {shopSlug ? (
-        <div className="border-t border-sand/80 px-4 py-2.5">
-          <Link href={`/b/${shopSlug}`} className="text-sm font-semibold text-lake-dark hover:text-lake">
-            Visit shop →
-          </Link>
+      {shopSlug || whatsapp ? (
+        <div className="grid gap-2 border-t border-sand/80 px-4 py-3">
+          {shopSlug ? (
+            <Link href={`/b/${shopSlug}`} className="text-sm font-semibold text-lake-dark hover:text-lake">
+              Visit shop →
+            </Link>
+          ) : null}
+          {whatsapp ? (
+            <FamilyOrderButton
+              phone={whatsapp}
+              subjectName={listing.title}
+              path={`/listings/${listing.id}`}
+              siteName={appName()}
+            />
+          ) : null}
         </div>
       ) : null}
     </article>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { OCCASION_DEFINITIONS } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { commitShopBadgeChange } from "@/lib/shop-badge-commit";
 import { requireAdmin } from "@/lib/session";
@@ -11,6 +12,8 @@ function refresh(id?: string) {
   revalidatePath("/admin");
   revalidatePath("/listings");
   revalidatePath("/");
+  revalidatePath("/occasions");
+  for (const item of OCCASION_DEFINITIONS) revalidatePath(`/occasions/${item.slug}`);
   if (id) revalidatePath(`/listings/${id}`);
 }
 
@@ -46,6 +49,18 @@ export async function setVerifiedPro(formData: FormData) {
   const verifiedPro = field(formData, "value") === "1";
   await prisma.user.update({ where: { id: userId }, data: { verifiedPro } });
   refresh();
+}
+
+export async function setServesDiaspora(formData: FormData) {
+  await requireAdmin();
+  const storefrontId = field(formData, "storefrontId");
+  const servesDiaspora = field(formData, "value") === "1";
+  const shop = await prisma.storefront.update({
+    where: { id: storefrontId },
+    data: { servesDiaspora },
+    select: { slug: true, userId: true },
+  });
+  await refreshShop(shop.userId, shop.slug);
 }
 
 export async function setShopBadge(formData: FormData) {

@@ -7,6 +7,7 @@ import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
 import { Flash, btnPrimary, btnSecondary, btnWhatsApp, cardClass, sectionTitleClass } from "@/components/ui";
 import { archiveOffering, createStorefront, moveOffering, publishStorefront, restoreOffering } from "@/lib/actions/storefront";
 import { FREE_OFFERING_CAP, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
+import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatOfferingPrice, one } from "@/lib/utils";
@@ -22,13 +23,21 @@ export default async function ManageStorefrontPage({
 }) {
   const user = await requireUser("/account/storefront");
   const sp = await searchParams;
-  const shop = await prisma.storefront.findUnique({
+  await ensureOccasionDefinitions(prisma);
+  const [shop, occasionChoices] = await Promise.all([
+    prisma.storefront.findUnique({
     where: { userId: user.id },
     include: {
       offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
       badgeEvents: { orderBy: { createdAt: "desc" } },
+      occasions: { select: { occasion: { select: { slug: true } } } },
     },
-  });
+  }),
+    prisma.occasion.findMany({
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+      select: { slug: true, title: true },
+    }),
+  ]);
 
   const cap = offeringCap(user.verifiedPro);
   const notice = one(sp.notice);
@@ -212,6 +221,9 @@ export default async function ManageStorefrontPage({
             bio={user.bio}
             published={shop.published}
             verifiedPro={user.verifiedPro}
+            servesDiaspora={shop.servesDiaspora}
+            occasions={occasionChoices}
+            selectedOccasions={shop.occasions.map((row) => row.occasion.slug)}
             emphasizePublish={readyToPublish}
           />
         </div>

@@ -13,6 +13,9 @@ export function Footer() {
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 font-medium text-ink/80">
+          <Link href="/occasions" className="hover:text-navy">
+            Occasions
+          </Link>
           <Link href="/listings?type=business" className="hover:text-navy">
             Directory
           </Link>
