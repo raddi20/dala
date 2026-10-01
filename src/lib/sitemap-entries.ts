@@ -29,6 +29,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/categories" },
     { path: "/occasions" },
     { path: "/pricing" },
+    { path: "/video-policy" },
     { path: "/listings" },
     { path: "/listings?type=business" },
     { path: "/listings?type=classifieds" },

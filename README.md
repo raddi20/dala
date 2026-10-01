@@ -65,6 +65,20 @@ Phone verified, Location verified, and Business verified are separate shop check
 
 Listing cards show **Shop**, and the listing page shows **Visit storefront**, when that seller's shop is published.
 
+## Shop videos
+
+A Pro shop can upload one MP4 or MOV, up to 45 seconds and 200 MB, including iPhone HEVC. The file goes from the phone to Mux. It does not pass through Vercel. It stays private until an admin approves it in `/admin`. A replacement stays in review while the current video remains on the shop. Approval swaps them and deletes the old Mux asset.
+
+If Pro is turned off, the video is hidden from the shop, from cards, and from link previews. The file is kept and shows again when Pro is back on. Nothing is deleted just because Pro lapsed.
+
+A rejected upload is deleted from Mux after 14 days. The audit note and poster stay. A clip over 45 seconds is deleted immediately. Taking down a live video hides it and deletes the Mux asset immediately. The audit row stays.
+
+Pending playback is signed. The public playback id is added only on approval, with a Mux referrer restriction for the site, its www and apex host, and localhost. The shop page does not use `og:video`. WhatsApp gets a 1200×630 JPEG of the poster with a play mark, from `/b/[slug]/video-card`.
+
+The seller sees the decision on Manage storefront. There is no email. The rules for sellers are at `/video-policy`.
+
+Leave the Mux variables unset and the rest of the site still builds and runs. Sellers then see “coming soon”. `MUX_MOCK=1` fakes the upload, the webhooks, and playback for local testing. Do not set that on Vercel. Do not call Mux from tests.
+
 ## Environment
 
 | Variable | Local | Production (Vercel) |
@@ -80,6 +94,13 @@ Listing cards show **Shop**, and the listing page shows **Visit storefront**, wh
 | `FLW_PUBLIC_KEY` | Optional. Stored next to the secret. The hosted checkout does not send it to the browser. | Same. |
 | `FLW_WEBHOOK_HASH` | Any long random string. The same value goes in the Flutterwave webhook settings. | Same value as the dashboard secret hash. |
 | `BLOB_READ_WRITE_TOKEN` | Omit. Device upload stays off; paste a photo URL. | Set when you connect a Blob store. See **Photos**. |
+| `MUX_TOKEN_ID` | Omit, or set with `MUX_MOCK=1` and no real calls. | Mux → Settings → Access Tokens. Video read and write. Production. |
+| `MUX_TOKEN_SECRET` | Omit. | Shown once with the access token. Production. |
+| `MUX_WEBHOOK_SECRET` | Any long string if you replay webhooks locally. | Signing secret for `https://www.rangach.co.ke/api/mux/webhook`. Production. |
+| `MUX_SIGNING_KEY_ID` | Omit in mock mode. | Mux → Settings → Signing Keys. Production. |
+| `MUX_SIGNING_PRIVATE_KEY` | Omit in mock mode. | Base64 private key Mux shows once. Production. |
+| `MUX_AI_MODERATION` | Omit. | Set to `1` only if the admin should see a Mux Robots advisory. A person still approves. |
+| `MUX_MOCK` | `1` to test without Mux. | Leave unset. |
 | `ADMIN_EMAIL` | Omit. | `admin@rangach.co.ke`. Production, and Preview if preview deploys use the same database. Comma-separated if you ever need more than one. |
 | `ADMIN_CLAIM_SECRET` | Omit. | 16 to 72 characters. The first login password for `ADMIN_EMAIL`. `openssl rand -base64 24` |
 | `ADMIN_CLAIM_RESET` | Omit. | Leave unset. Set to `1` for one production deploy only when you need to replace the admin password, then delete it. |

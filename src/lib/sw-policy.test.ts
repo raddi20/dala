@@ -7,6 +7,7 @@ import {
   OFFLINE_SHELL_HTML,
   cachesToDelete,
   imageKeysToEvict,
+  isMuxMediaHost,
   isNeverStorePath,
   isPricingPath,
   mayStoreAssetResponse,
@@ -72,6 +73,33 @@ test("encoded and trailing-slash variants of private routes stay excluded", () =
   assert.equal(isNeverStorePath("/%61dmin"), true);
   assert.equal(isNeverStorePath("/login/"), true);
   assert.equal(plan({ pathname: "/listings/admin", mode: "navigate", destination: "document" }).kind, "navigate");
+});
+
+test("mux streams and thumbnails are never cached", () => {
+  assert.equal(isMuxMediaHost("stream.mux.com"), true);
+  assert.equal(isMuxMediaHost("image.mux.com"), true);
+  assert.equal(isMuxMediaHost("STREAM.MUX.COM."), true);
+  assert.equal(isMuxMediaHost("evil-mux.com"), false);
+  for (const hostname of ["stream.mux.com", "image.mux.com", "chunk.mux.com"]) {
+    const segment = plan({
+      pathname: "/test/high.mp4",
+      sameOrigin: false,
+      hostname,
+      destination: "video",
+    });
+    assert.deepEqual(segment, { kind: "bypass", reason: "cross-origin" });
+    assert.equal(mayStoreResponse(segment), false);
+    const poster = plan({
+      pathname: "/thumb.jpg",
+      sameOrigin: false,
+      hostname,
+      destination: "image",
+    });
+    assert.equal(poster.kind, "bypass");
+    const ranged = plan({ pathname: "/test.m3u8", sameOrigin: false, hostname, hasRange: true });
+    assert.equal(ranged.kind, "bypass");
+    assert.equal(mayStoreResponse(ranged), false);
+  }
 });
 
 test("pricing is never served from cache", () => {
@@ -201,7 +229,8 @@ test("the built worker keeps the kill switch note and does not cache pages by UR
   assert.match(source, /Kill switch/);
   assert.match(source, /unregister/);
   assert.match(built, /Kill switch/);
-  assert.match(built, /SW_VERSION = "v1"/);
+  assert.match(built, /SW_VERSION = "v2"/);
+  assert.match(built, /stream\.mux\.com/);
   assert.match(built, /rangach-pwa-/);
   assert.match(built, /skipWaiting/);
   assert.match(built, /\/admin/);

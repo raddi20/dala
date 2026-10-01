@@ -134,6 +134,8 @@ model Storefront {
   offerings        Offering[]
   badgeEvents      ShopBadgeEvent[]
   occasions        ShopOccasion[]
+  videos           ShopVideo[]
+  videoEvents      ShopVideoEvent[]
 
   @@index([published])
   @@index([servesDiaspora])
@@ -202,6 +204,68 @@ model ShopBadgeEvent {
 
   @@index([storefrontId, createdAt])
   @@index([adminId])
+}
+
+// One shop can have a live video and, at the same time, a replacement that is still in review.
+// Rows are kept after rejection so the audit note and poster remain. Mux assets are deleted separately.
+model ShopVideo {
+  id               String     @id @default(cuid())
+  storefrontId     String
+  storefront       Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  // uploading, processing, pending, approved, rejected, errored, replaced
+  status           String     @default("uploading")
+  uploadId         String     @default("")
+  assetId          String     @default("")
+  // Signed playback id. Used for admin review. Empty until Mux finishes the asset.
+  playbackId       String     @default("")
+  // Public playback id. Set only when an admin approves. Empty keeps the video private.
+  publicPlaybackId String     @default("")
+  durationSeconds  Float?
+  sizeBytes        Int        @default(0)
+  caption          String     @default("")
+  posterUrl        String     @default("")
+  consentAt        DateTime?
+  consentVersion   String     @default("")
+  rejectReason     String     @default("")
+  rejectedAt       DateTime?
+  // Rejected assets are deleted from Mux once this time has passed. Null when already deleted or not rejected.
+  purgeAfter       DateTime?
+  muxDeletedAt     DateTime?
+  // Advisory AI check. Empty when the check is off. Never approves or rejects on its own.
+  aiStatus         String     @default("")
+  aiDetail         String     @default("")
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  @@index([storefrontId, status])
+  @@index([storefrontId, createdAt])
+  @@index([uploadId])
+  @@index([assetId])
+  @@index([status, purgeAfter])
+}
+
+// Append-only. The app only inserts rows. System events (too long, Mux error) leave the admin fields empty.
+model ShopVideoEvent {
+  id           String   @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  videoId      String   @default("")
+  // upload, approve, reject, replace, remove, error
+  action       String
+  note         String   @default("")
+  adminId      String   @default("")
+  adminEmail   String   @default("")
+  adminName    String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@index([storefrontId, createdAt])
+}
+
+// Mux webhook deliveries. The id is Mux's event id so a repeat delivery is ignored.
+model MuxEventReceipt {
+  id        String   @id
+  type      String   @default("")
+  createdAt DateTime @default(now())
 }
 
 model Offering {

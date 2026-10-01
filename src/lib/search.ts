@@ -19,6 +19,11 @@ const include = {
           locationVerified: true,
           businessVerified: true,
           servesDiaspora: true,
+          videos: {
+            where: { status: "approved", NOT: { publicPlaybackId: "" } },
+            select: { id: true },
+            take: 1,
+          },
         },
       },
     },

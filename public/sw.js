@@ -9,7 +9,7 @@
 "use strict";
 (() => {
   // src/lib/sw-policy.ts
-  var SW_VERSION = "v1";
+  var SW_VERSION = "v2";
   var CACHE_PREFIX = `rangach-pwa-${SW_VERSION}`;
   var STATIC_CACHE = `${CACHE_PREFIX}-static`;
   var IMAGE_CACHE = `${CACHE_PREFIX}-images`;
@@ -55,6 +55,10 @@
     const path = normalizePathname(pathname);
     return path === "/pricing" || path.startsWith("/pricing/");
   }
+  function isMuxMediaHost(hostname) {
+    const host = hostname.toLowerCase().replace(/\.$/, "");
+    return host === "stream.mux.com" || host === "image.mux.com" || host.endsWith(".mux.com");
+  }
   function isBlobImageHost(hostname) {
     const host = hostname.toLowerCase().replace(/\.$/, "");
     return host === "blob.vercel-storage.com" || host.endsWith(".blob.vercel-storage.com");
@@ -86,6 +90,7 @@
     if (navigation) return { kind: "navigate" };
     if (isPricingPath(path)) return { kind: "bypass", reason: "pricing" };
     if (!input.sameOrigin) {
+      if (input.hostname && isMuxMediaHost(input.hostname)) return { kind: "bypass", reason: "cross-origin" };
       if (method === "GET" && input.destination === "image" && input.hostname && isBlobImageHost(input.hostname)) {
         return { kind: "cache-first", cache: "image" };
       }

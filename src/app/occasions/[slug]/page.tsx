@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DiasporaOrdersTag } from "@/components/badges";
+import { VideoMark } from "@/components/video-mark";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState, btnSecondary, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
@@ -28,7 +29,12 @@ async function loadOccasion(slug: string) {
             select: {
               slug: true,
               servesDiaspora: true,
-              user: { select: { name: true, city: true } },
+              user: { select: { name: true, city: true, verifiedPro: true } },
+              videos: {
+                where: { status: "approved", NOT: { publicPlaybackId: "" } },
+                select: { id: true },
+                take: 1,
+              },
             },
           },
         },
@@ -115,7 +121,10 @@ export default async function OccasionPage({ params }: Props) {
                       ) : null}
                       {row.storefront.servesDiaspora ? <DiasporaOrdersTag /> : null}
                     </div>
-                    <h3 className="mt-3 font-serif text-2xl text-navy">{row.storefront.user.name}</h3>
+                    <h3 className="mt-3 flex flex-wrap items-center gap-2 font-serif text-2xl text-navy">
+                      {row.storefront.user.name}
+                      {row.storefront.user.verifiedPro && row.storefront.videos.length > 0 ? <VideoMark /> : null}
+                    </h3>
                     <p className="mt-1 text-sm text-ink/60">{row.storefront.user.city}</p>
                   </Link>
                 ))}

@@ -3,7 +3,7 @@
  * Navigations are network-only: nothing here stores an HTML document for replay.
  */
 
-export const SW_VERSION = "v1";
+export const SW_VERSION = "v2";
 export const CACHE_PREFIX = `rangach-pwa-${SW_VERSION}`;
 export const STATIC_CACHE = `${CACHE_PREFIX}-static`;
 export const IMAGE_CACHE = `${CACHE_PREFIX}-images`;
@@ -75,6 +75,15 @@ export function isPricingPath(pathname: string): boolean {
   return path === "/pricing" || path.startsWith("/pricing/");
 }
 
+/**
+ * Mux HLS and thumbnails must not be stored. Segments are large, signed URLs expire,
+ * and a cached stream would keep playing after a video is rejected or a plan lapses.
+ */
+export function isMuxMediaHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/\.$/, "");
+  return host === "stream.mux.com" || host === "image.mux.com" || host.endsWith(".mux.com");
+}
+
 export function isBlobImageHost(hostname: string): boolean {
   const host = hostname.toLowerCase().replace(/\.$/, "");
   return host === "blob.vercel-storage.com" || host.endsWith(".blob.vercel-storage.com");
@@ -113,6 +122,7 @@ export function planRequest(input: RequestPlanInput): RequestPlan {
   if (isPricingPath(path)) return { kind: "bypass", reason: "pricing" };
 
   if (!input.sameOrigin) {
+    if (input.hostname && isMuxMediaHost(input.hostname)) return { kind: "bypass", reason: "cross-origin" };
     if (method === "GET" && input.destination === "image" && input.hostname && isBlobImageHost(input.hostname)) {
       return { kind: "cache-first", cache: "image" };
     }

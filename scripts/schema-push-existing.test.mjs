@@ -56,6 +56,8 @@ test("db push adds diaspora and occasions on a database that already has rows", 
     const shop = after.prepare(`SELECT "slug", "servesDiaspora", "published" FROM "Storefront" WHERE "id" = 'shop_keep'`).get();
     const listing = after.prepare(`SELECT "title" FROM "Listing" WHERE "id" = 'listing_keep'`).get();
     const occasions = after.prepare(`SELECT COUNT(*) AS n FROM "Occasion"`).get();
+    const videos = after.prepare(`SELECT COUNT(*) AS n FROM "ShopVideo"`).get();
+    const receipts = after.prepare(`SELECT COUNT(*) AS n FROM "MuxEventReceipt"`).get();
     after.close();
 
     assert.equal(user.email, "keep@example.com");
@@ -65,6 +67,8 @@ test("db push adds diaspora and occasions on a database that already has rows", 
     assert.equal(Number(shop.servesDiaspora), 0);
     assert.equal(listing.title, "Kept listing");
     assert.equal(Number(occasions.n), 0);
+    assert.equal(Number(videos.n), 0);
+    assert.equal(Number(receipts.n), 0);
   } finally {
     try {
       db.close();

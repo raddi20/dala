@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import type { OgCardModel } from "@/lib/og-model";
 import { OG_IMAGE } from "@/lib/share-metadata";
@@ -19,7 +21,31 @@ function GateMark() {
   );
 }
 
-export function OgCard({ brand, kicker, title, subtitle, photoUrl }: OgCardModel) {
+function PlayMark() {
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: 200,
+        top: 255,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
+        background: "#1a2436",
+        color: "#fbf1dc",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 52,
+        paddingLeft: 8,
+      }}
+    >
+      ▶
+    </div>
+  );
+}
+
+export function OgCard({ brand, kicker, title, subtitle, photoUrl, showPlay }: OgCardModel) {
   return (
     <div
       style={{
@@ -32,10 +58,11 @@ export function OgCard({ brand, kicker, title, subtitle, photoUrl }: OgCardModel
       }}
     >
       {photoUrl ? (
-        <div style={{ width: 520, height: OG_IMAGE.height, display: "flex", overflow: "hidden" }}>
-          {/* next/og draws this img; it is the shop cover, logo, or listing photo. */}
+        <div style={{ width: 520, height: OG_IMAGE.height, display: "flex", position: "relative", overflow: "hidden" }}>
+          {/* next/og draws this img; it is the shop cover, logo, listing photo, or video poster. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={photoUrl} alt="" width={520} height={OG_IMAGE.height} style={{ width: 520, height: OG_IMAGE.height, objectFit: "cover" }} />
+          {showPlay ? <PlayMark /> : null}
         </div>
       ) : (
         <div style={{ width: 18, height: "100%", background: "#c8881a", display: "flex" }} />
@@ -81,7 +108,22 @@ export function OgCard({ brand, kicker, title, subtitle, photoUrl }: OgCardModel
   );
 }
 
+function inlinePublicFile(urlPath: string) {
+  if (!urlPath.startsWith("/mock/")) return "";
+  const relative = urlPath.replace(/^\/+/, "");
+  if (relative.includes("..")) return "";
+  try {
+    const bytes = readFileSync(join(process.cwd(), "public", relative));
+    if (bytes.byteLength < 32 || bytes.byteLength > 4_500_000) return "";
+    const type = relative.endsWith(".png") ? "image/png" : "image/jpeg";
+    return `data:${type};base64,${bytes.toString("base64")}`;
+  } catch {
+    return "";
+  }
+}
+
 async function inlineImage(url: string) {
+  if (url.startsWith("/")) return inlinePublicFile(url);
   try {
     const response = await fetch(url, {
       headers: { Accept: "image/*", "User-Agent": "RangachLinkPreview/1.0" },

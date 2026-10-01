@@ -13,6 +13,9 @@ import { requireUser } from "@/lib/session";
 import { formatOfferingPrice, one } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappOfferingText } from "@/lib/whatsapp";
+import { ShopVideoUpload } from "@/components/shop-video-upload";
+import { videoMode } from "@/lib/video/config";
+import { sellerVideoNotices } from "@/lib/video/display";
 
 export const metadata: Metadata = { title: "Manage storefront" };
 
@@ -31,6 +34,7 @@ export default async function ManageStorefrontPage({
       offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
       badgeEvents: { orderBy: { createdAt: "desc" } },
       occasions: { select: { occasion: { select: { slug: true } } } },
+      videos: { orderBy: { createdAt: "desc" } },
     },
   }),
     prisma.occasion.findMany({
@@ -139,6 +143,10 @@ export default async function ManageStorefrontPage({
           }}
           events={shop.badgeEvents}
         />
+      </section>
+      <section id="shop-video" className={`${cardClass} grid gap-3 p-5`}>
+        <h2 className="font-serif text-xl text-navy">Shop video</h2>
+        <ShopVideoPanel verifiedPro={user.verifiedPro} videos={shop.videos} />
       </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {notice === "published" ? (
@@ -314,6 +322,53 @@ export default async function ManageStorefrontPage({
           </ul>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function ShopVideoPanel({
+  verifiedPro,
+  videos,
+}: {
+  verifiedPro: boolean;
+  videos: { status: string; caption: string; rejectReason: string; publicPlaybackId: string }[];
+}) {
+  const mode = videoMode();
+  const live = videos.find((video) => video.status === "approved" && video.publicPlaybackId);
+  const review = videos.find((video) => video.status !== "approved" && video.status !== "replaced");
+  const notices = sellerVideoNotices({
+    mode,
+    verifiedPro,
+    live: live ? { caption: live.caption } : null,
+    review: review ? { status: review.status, rejectReason: review.rejectReason, caption: review.caption } : null,
+  });
+  const waiting = review?.status === "uploading" || review?.status === "processing" || review?.status === "pending";
+  const disabledReason = !verifiedPro
+    ? "Shop video is part of the Pro plan. Upload stays off until the plan is on."
+    : waiting
+      ? "A video is already uploading or waiting for review."
+      : "";
+
+  return (
+    <div className="grid gap-3">
+      <p className="text-sm text-ink/65">
+        One video, up to 45 seconds. It stays private until an admin approves it. A replacement does not take the current
+        video down until the new one is approved.
+      </p>
+      {notices.map((notice) => (
+        <p key={notice} className="rounded-xl bg-paper px-3 py-2 text-sm text-ink/80" role="status">
+          {notice}
+        </p>
+      ))}
+      {mode === "off" ? null : !verifiedPro ? (
+        <p className="text-sm">
+          <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
+            See the Pro plan
+          </Link>
+        </p>
+      ) : (
+        <ShopVideoUpload disabledReason={disabledReason} />
+      )}
     </div>
   );
 }
