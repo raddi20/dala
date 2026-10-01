@@ -30,13 +30,13 @@ export type DraftResult = DraftSuccess | DraftFailure;
 export type ListingDraftStore = {
   user: { id: string } | null;
   consentAt: Date | null;
-  saveConsent(userId: string, at: Date): Promise<void>;
+  saveConsent(userId: string, at: Date, language?: string): Promise<void>;
   saveDraft(row: {
     userId: string;
     inputText: string;
     language: string;
     photoUrl: string;
-    outputJson: string;
+    suggestionJson: string;
     createdAt: Date;
   }): Promise<void>;
 };
@@ -70,15 +70,19 @@ export function prismaListingDraftStore(): ListingDraftStore {
   return {
     user: null,
     consentAt: null,
-    async saveConsent(userId, at) {
+    async saveConsent(userId, at, language = "en") {
       await prisma.sellerAiPrefs.upsert({
         where: { userId },
-        create: { userId, aiConsentAt: at },
-        update: { aiConsentAt: at },
+        create: { userId, aiConsentAt: at, language },
+        update: { aiConsentAt: at, language },
       });
     },
     async saveDraft(row) {
       await prisma.aiListingDraft.create({ data: row });
+      await prisma.sellerAiPrefs.updateMany({
+        where: { userId: row.userId },
+        data: { language: row.language },
+      });
     },
   };
 }
@@ -124,7 +128,7 @@ export async function createListingDraft(
   const userId = deps.store.user.id;
   if (!deps.store.consentAt) {
     try {
-      await deps.store.saveConsent(userId, now);
+      await deps.store.saveConsent(userId, now, body.language);
     } catch {
       return { ok: false, status: 503, error: UNAVAILABLE };
     }
@@ -164,7 +168,7 @@ export async function createListingDraft(
       inputText: body.text,
       language: body.language,
       photoUrl,
-      outputJson: JSON.stringify(suggestion),
+      suggestionJson: JSON.stringify(suggestion),
       createdAt: now,
     });
   } catch {

@@ -31,13 +31,13 @@ function memoryCache(): SearchCache & { saved: SearchParse[] } {
   const saved: SearchParse[] = [];
   return {
     saved,
-    async get(queryHash, now) {
-      const row = rows.get(queryHash);
+    async get(queryKey, now) {
+      const row = rows.get(queryKey);
       if (!row || row.expiresAt.getTime() <= now.getTime()) return null;
       return row.value;
     },
-    async put(queryHash, _queryNorm, value, expiresAt) {
-      rows.set(queryHash, { value, expiresAt });
+    async put(queryKey, value, expiresAt) {
+      rows.set(queryKey, { value, expiresAt });
       saved.push(value);
     },
   };
