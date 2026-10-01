@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
+import { cronAuthorized } from "@/lib/ai/cron-auth";
 import { runWeeklySellerTips } from "@/lib/ai/seller-tips";
-import { cronAuthorized } from "@/lib/ai/zeptomail";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-export async function handleSellerTipsCron(
+export async function handleWeeklyTips(
   request: Request,
   deps: { env?: NodeJS.ProcessEnv; run?: typeof runWeeklySellerTips } = {},
 ): Promise<Response> {
@@ -23,9 +23,5 @@ export async function handleSellerTipsCron(
 }
 
 export function GET(request: Request) {
-  return handleSellerTipsCron(request);
-}
-
-export function POST(request: Request) {
-  return handleSellerTipsCron(request);
+  return handleWeeklyTips(request);
 }

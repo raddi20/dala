@@ -5,14 +5,18 @@ export type TipEmail = {
   text: string;
 };
 
-export function canSendTips(env: NodeJS.ProcessEnv = process.env): boolean {
-  return env.TIPS_EMAIL === "1" && Boolean(env.ZEPTOMAIL_TOKEN?.trim()) && Boolean(env.EMAIL_FROM?.trim());
+export function parseEmailFrom(value: string): { address: string; name: string } | null {
+  const trimmed = value.trim();
+  const wrapped = trimmed.match(/^(.*)<([^>]+)>$/);
+  const address = (wrapped?.[2] ?? trimmed).trim();
+  const name = (wrapped?.[1] ?? "Rangach").trim().replace(/^"|"$/g, "") || "Rangach";
+  if (!address.includes("@")) return null;
+  return { address, name };
 }
 
-export function cronAuthorized(request: Request, env: NodeJS.ProcessEnv = process.env): boolean {
-  const secret = env.CRON_SECRET?.trim() ?? "";
-  if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+export function canSendTips(env: NodeJS.ProcessEnv = process.env): boolean {
+  const from = parseEmailFrom(env.EMAIL_FROM ?? "");
+  return env.TIPS_EMAIL === "1" && Boolean(env.ZEPTOMAIL_TOKEN?.trim()) && Boolean(from);
 }
 
 /** Sends one plain-text email. Returns skipped when the flag or ZeptoMail settings are missing. */
@@ -22,8 +26,8 @@ export async function sendTipEmail(
 ): Promise<"sent" | "skipped" | "failed"> {
   const env = deps.env ?? process.env;
   const token = env.ZEPTOMAIL_TOKEN?.trim() ?? "";
-  const from = env.EMAIL_FROM?.trim() ?? "";
-  if (!canSendTips(env)) return "skipped";
+  const from = parseEmailFrom(env.EMAIL_FROM ?? "");
+  if (!canSendTips(env) || !from) return "skipped";
   const fetchImpl = deps.fetchImpl ?? fetch;
   try {
     const response = await fetchImpl("https://api.zeptomail.com/v1.1/email", {
@@ -33,7 +37,7 @@ export async function sendTipEmail(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: { address: from, name: "Rangach" },
+        from: { address: from.address, name: from.name },
         to: [{ email_address: { address: message.to, name: message.name || message.to } }],
         subject: message.subject,
         textbody: message.text,

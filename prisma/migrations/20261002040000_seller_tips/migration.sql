@@ -1,17 +1,16 @@
--- Weekly seller tip log. New empty table only.
+-- Weekly seller tips. New empty table only.
 -- CreateTable
-CREATE TABLE "AiSellerTip" (
+CREATE TABLE "SellerTip" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "userId" TEXT NOT NULL DEFAULT '',
-    "weekStart" TEXT NOT NULL,
-    "summary" TEXT NOT NULL DEFAULT '',
-    "tipsJson" TEXT NOT NULL DEFAULT '[]',
-    "emailed" BOOLEAN NOT NULL DEFAULT false,
+    "userId" TEXT NOT NULL,
+    "storefrontId" TEXT NOT NULL DEFAULT '',
+    "weekStart" DATETIME NOT NULL,
+    "statsJson" TEXT NOT NULL,
+    "tipsJson" TEXT NOT NULL DEFAULT '',
+    "source" TEXT NOT NULL DEFAULT 'ai',
+    "emailedAt" DATETIME,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "AiSellerTip_userId_weekStart_key" ON "AiSellerTip"("userId", "weekStart");
-
--- CreateIndex
-CREATE INDEX "AiSellerTip_createdAt_idx" ON "AiSellerTip"("createdAt");
+CREATE UNIQUE INDEX "SellerTip_userId_weekStart_key" ON "SellerTip"("userId", "weekStart");

@@ -65,7 +65,7 @@ test("db push adds AI tables without rewriting existing rows", () => {
     const moderationFlags = after.prepare(`SELECT COUNT(*) AS n FROM "ModerationFlag"`).get();
     const reviews = after.prepare(`SELECT COUNT(*) AS n FROM "ModerationReview"`).get();
     const hashes = after.prepare(`SELECT COUNT(*) AS n FROM "MediaHash"`).get();
-    const tips = after.prepare(`SELECT COUNT(*) AS n FROM "AiSellerTip"`).get();
+    const tips = after.prepare(`SELECT COUNT(*) AS n FROM "SellerTip"`).get();
     after.close();
 
     assert.equal(user.email, "keep@example.com");
