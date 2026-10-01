@@ -238,6 +238,43 @@ test("over budget makes no provider call", async () => {
   assert.equal(store.rows.length, 0);
 });
 
+test("production with no Gemini key and unset flags stays disabled and makes no call", async () => {
+  const primary = provider("gemini", async () => okResult("gemini"));
+  const result = await runAi(
+    smartSearchPrompt,
+    { query: "chairs in Siaya" },
+    { actorHash: "visitor" },
+    {
+      env: { NODE_ENV: "production", VERCEL_ENV: "production" } as NodeJS.ProcessEnv,
+      providers: { gemini: primary },
+      featureOn: async () => {
+        throw new Error("flags must not be read after a missing key disables AI");
+      },
+    },
+  );
+  assert.deepEqual(result, { ok: false, kind: "disabled" });
+  assert.equal(primary.calls, 0);
+});
+
+test("unset flags disable a feature even when a key is present", async () => {
+  const primary = provider("gemini", async () => okResult("gemini"));
+  const result = await runAi(
+    smartSearchPrompt,
+    { query: "chairs in Siaya" },
+    { actorHash: "visitor" },
+    {
+      env: {
+        NODE_ENV: "production",
+        VERCEL_ENV: "production",
+        GEMINI_API_KEY: "test-key",
+      } as NodeJS.ProcessEnv,
+      providers: { gemini: primary },
+    },
+  );
+  assert.deepEqual(result, { ok: false, kind: "disabled" });
+  assert.equal(primary.calls, 0);
+});
+
 test("one usage row is written per attempt", async () => {
   const store = memoryStore();
   let first = true;
