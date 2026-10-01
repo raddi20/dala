@@ -91,7 +91,7 @@ export default async function AdminAiFlagsPage() {
                 ) : null}
                 {duplicates.length > 0 ? (
                   <p>
-                    Same photo as{" "}
+                    Similar photo to{" "}
                     {duplicates.map((id, index) => (
                       <span key={id}>
                         {index > 0 ? ", " : null}

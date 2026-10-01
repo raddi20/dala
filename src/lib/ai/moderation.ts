@@ -2,7 +2,7 @@ import { after as runAfterResponse } from "next/server";
 import { isCategory } from "@/lib/categories";
 import { isAiFeatureOn } from "@/lib/ai/flags";
 import { isDebounced, MODERATION_DEBOUNCE_MS } from "@/lib/ai/limits";
-import { photoFingerprint, photoHashSecret } from "@/lib/ai/photo-hash";
+import { dHash, matchingListingIds, photoHashEnabled } from "@/lib/ai/photo-hash";
 import { moderationPrompt, type ModerationResult } from "@/lib/ai/prompts/moderation";
 import { downloadListingPhoto, isAllowedListingPhotoUrl, resizeListingPhoto } from "@/lib/ai/resize-photo";
 import { runAi } from "@/lib/ai/run";
@@ -37,7 +37,7 @@ export type SuggestionRow = {
 export type ModerationStore = {
   listing(id: string): Promise<ListingSnapshot | null>;
   lastCheckedAt(listingId: string): Promise<Date | null>;
-  duplicates(photoHash: string, listingId: string): Promise<string[]>;
+  knownFingerprints(): Promise<{ listingId: string; photoHash: string }[]>;
   saveFingerprint(listingId: string, photoHash: string, createdAt: Date): Promise<void>;
   save(row: SuggestionRow): Promise<void>;
 };
@@ -110,13 +110,12 @@ export function prismaModerationStore(): ModerationStore {
       });
       return row?.createdAt ?? null;
     },
-    async duplicates(photoHash, listingId) {
-      const rows = await prisma.aiPhotoFingerprint.findMany({
-        where: { photoHash, NOT: { listingId } },
-        select: { listingId: true },
-        take: 20,
+    async knownFingerprints() {
+      return prisma.aiPhotoFingerprint.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 5000,
+        select: { listingId: true, photoHash: true },
       });
-      return [...new Set(rows.map((row) => row.listingId).filter(Boolean))].slice(0, 5);
     },
     async saveFingerprint(listingId, photoHash, createdAt) {
       await prisma.aiPhotoFingerprint.create({ data: { listingId, photoHash, createdAt } });
@@ -137,6 +136,7 @@ export async function suggestListingModeration(
     run?: ModerationRunner;
     download?: (url: string) => Promise<Uint8Array>;
     resize?: (bytes: Uint8Array) => Promise<Uint8Array>;
+    fingerprint?: (bytes: Uint8Array) => Promise<string | null>;
   } = {},
 ): Promise<SuggestResult> {
   const store = deps.store ?? prismaModerationStore();
@@ -145,34 +145,53 @@ export async function suggestListingModeration(
 
   const env = deps.env ?? process.env;
   const featureOn = deps.featureOn ?? ((feature) => isAiFeatureOn(feature, { env }));
-  if (!(await featureOn("moderation"))) return { status: "skipped" };
+  const aiOn = await featureOn("moderation");
+  const hashOn = photoHashEnabled(env);
+  if (!aiOn && !hashOn) return { status: "skipped" };
 
   const now = deps.now ?? new Date();
   const last = await store.lastCheckedAt(listing.id);
-  if (isDebounced(last ? last.getTime() : null, now.getTime(), MODERATION_DEBOUNCE_MS)) {
-    return { status: "debounced" };
-  }
+  const debounced = isDebounced(last ? last.getTime() : null, now.getTime(), MODERATION_DEBOUNCE_MS);
+  if (debounced && !hashOn) return { status: "debounced" };
 
   let photoHash = "";
   let duplicateIds: string[] = [];
   let photo: ImagePart | null = null;
-  const secret = photoHashSecret(env);
-  if (listing.photoUrl && isAllowedListingPhotoUrl(listing.photoUrl)) {
+  if (listing.photoUrl && isAllowedListingPhotoUrl(listing.photoUrl) && (hashOn || aiOn)) {
     try {
       const download = deps.download ?? downloadListingPhoto;
       const resize = deps.resize ?? resizeListingPhoto;
       const bytes = await download(listing.photoUrl);
-      const hash = secret ? photoFingerprint(bytes, secret) : null;
-      if (hash) {
-        photoHash = hash;
-        duplicateIds = await store.duplicates(hash, listing.id);
-        await store.saveFingerprint(listing.id, hash, now);
+      if (hashOn) {
+        const hash = await (deps.fingerprint ?? dHash)(bytes);
+        if (hash) {
+          photoHash = hash;
+          duplicateIds = matchingListingIds(hash, await store.knownFingerprints(), listing.id);
+          await store.saveFingerprint(listing.id, hash, now);
+        }
       }
-      const jpeg = await resize(bytes);
-      photo = { mimeType: "image/jpeg", data: jpeg };
+      if (aiOn && !debounced) {
+        const jpeg = await resize(bytes);
+        photo = { mimeType: "image/jpeg", data: jpeg };
+      }
     } catch {
       photo = null;
     }
+  }
+
+  if (!aiOn || debounced) {
+    if (duplicateIds.length === 0) return { status: debounced ? "debounced" : "clean" };
+    await store.save({
+      listingId: listing.id,
+      userId: listing.ownerId,
+      status: "open",
+      flagsJson: "[]",
+      suggestedCategory: "",
+      photoHash,
+      duplicateIds: duplicateIds.join(","),
+      createdAt: now,
+    });
+    return { status: "open" };
   }
 
   const run = deps.run ?? runAi;
@@ -182,7 +201,20 @@ export async function suggestListingModeration(
     { userId: listing.ownerId },
     { env },
   );
-  if (!result.ok) return { status: "unavailable" };
+  if (!result.ok) {
+    if (duplicateIds.length === 0) return { status: "unavailable" };
+    await store.save({
+      listingId: listing.id,
+      userId: listing.ownerId,
+      status: "open",
+      flagsJson: "[]",
+      suggestedCategory: "",
+      photoHash,
+      duplicateIds: duplicateIds.join(","),
+      createdAt: now,
+    });
+    return { status: "open" };
+  }
 
   const flags = result.data.flags.slice(0, 5);
   const suggested =
@@ -214,7 +246,7 @@ export function scheduleListingModeration(
   } = {},
 ) {
   const env = deps.env ?? process.env;
-  if (env.AI_MODERATION !== "1") return;
+  if (env.AI_MODERATION !== "1" && env.MOD_PHOTO_HASH !== "1") return;
   const later = deps.after ?? runAfterResponse;
   try {
     later(() => (deps.suggest ?? suggestListingModeration)(listingId).then(() => undefined));

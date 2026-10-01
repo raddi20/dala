@@ -23,7 +23,10 @@ const flag: ModerationResult["flags"][number] = {
   evidence: "Pay first",
 };
 
-function memory(source: ListingSnapshot | null, extras?: { last?: Date | null; duplicates?: string[] }) {
+function memory(
+  source: ListingSnapshot | null,
+  extras?: { last?: Date | null; known?: { listingId: string; photoHash: string }[] },
+) {
   const saved: SuggestionRow[] = [];
   const fingerprints: string[] = [];
   const store: ModerationStore = {
@@ -33,8 +36,8 @@ function memory(source: ListingSnapshot | null, extras?: { last?: Date | null; d
     async lastCheckedAt() {
       return extras?.last ?? null;
     },
-    async duplicates() {
-      return extras?.duplicates ?? [];
+    async knownFingerprints() {
+      return extras?.known ?? [];
     },
     async saveFingerprint(_listingId, photoHash) {
       fingerprints.push(photoHash);
@@ -64,7 +67,7 @@ function runWith(data: ModerationResult) {
 }
 
 const clean: ModerationResult = { flags: [], suggestedCategory: null };
-const env = { MOD_PHOTO_HASH: "mod-photo-hash-secret", AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv;
+const env = { MOD_PHOTO_HASH: "1", AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv;
 
 test("a switched-off check does not call the model or write a suggestion", async () => {
   const box = memory(listing);
@@ -104,7 +107,7 @@ test("no model key leaves the listing untouched", async () => {
 });
 
 test("a suggestion is queued and never hides, rejects, or verifies the listing", async () => {
-  const box = memory(listing, { duplicates: ["listing_older"] });
+  const box = memory(listing, { known: [{ listingId: "listing_older", photoHash: "0000000000000001" }] });
   const writer = runWith({ flags: [flag], suggestedCategory: "Food & restaurants" });
   const result = await suggestListingModeration(listing.id, {
     now: new Date("2026-10-01T12:00:00Z"),
@@ -114,6 +117,7 @@ test("a suggestion is queued and never hides, rejects, or verifies the listing",
     run: writer.run,
     download: async () => new Uint8Array([4, 5, 6, 7]),
     resize: async (bytes) => bytes,
+    fingerprint: async () => "0000000000000000",
   });
   assert.equal(result.status, "open");
   assert.equal(box.saved.length, 1);
@@ -121,6 +125,7 @@ test("a suggestion is queued and never hides, rejects, or verifies the listing",
   assert.equal(box.saved[0]?.suggestedCategory, "Food & restaurants");
   assert.equal(box.saved[0]?.duplicateIds, "listing_older");
   assert.equal(box.fingerprints.length, 1);
+  assert.equal(box.fingerprints[0], "0000000000000000");
   assert.equal(JSON.stringify(box.saved[0]).includes("hidden"), false);
   assert.equal(listing.hidden, false);
   assert.equal(listing.verified, false);
@@ -131,8 +136,26 @@ test("a suggestion is queued and never hides, rejects, or verifies the listing",
   assert.equal(patch.status, "dismissed");
 });
 
+test("fingerprints run without the model and a one-bit difference still matches", async () => {
+  const box = memory(listing, { known: [{ listingId: "listing_older", photoHash: "0000000000000001" }] });
+  const writer = runWith(clean);
+  const result = await suggestListingModeration(listing.id, {
+    env: { MOD_PHOTO_HASH: "1" } as unknown as NodeJS.ProcessEnv,
+    store: box.store,
+    featureOn: async () => false,
+    run: writer.run,
+    download: async () => new Uint8Array([8]),
+    fingerprint: async () => "0000000000000000",
+  });
+  assert.equal(result.status, "open");
+  assert.equal(writer.calls(), 0);
+  assert.equal(box.saved[0]?.duplicateIds, "listing_older");
+  assert.equal(box.saved[0]?.flagsJson, "[]");
+  assert.equal(listing.hidden, false);
+});
+
 test("the same photo is noted even when the model finds nothing, and a recent check is skipped", async () => {
-  const box = memory({ ...listing, photoUrl: "" }, { duplicates: [] });
+  const box = memory({ ...listing, photoUrl: "" });
   const writer = runWith(clean);
   const textOnly = await suggestListingModeration(listing.id, {
     env: { AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv,
@@ -155,10 +178,10 @@ test("the same photo is noted even when the model finds nothing, and a recent ch
   assert.equal(writer.calls(), 1);
 });
 
-test("scheduling stays idle unless the moderation flag is exactly 1", async () => {
+test("scheduling stays idle unless moderation or photo fingerprints are on", async () => {
   const tasks: Array<() => Promise<void>> = [];
   scheduleListingModeration(listing.id, {
-    env: { AI_MODERATION: "" } as unknown as NodeJS.ProcessEnv,
+    env: { AI_MODERATION: "", MOD_PHOTO_HASH: "" } as unknown as NodeJS.ProcessEnv,
     after() {
       throw new Error("should not schedule");
     },
