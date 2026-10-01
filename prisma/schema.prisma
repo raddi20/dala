@@ -357,4 +357,33 @@ model StatEvent {
   @@index([createdAt])
 }
 
+model AiSearchCache {
+  queryHash  String   @id
+  queryNorm  String
+  resultJson String
+  createdAt  DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+}
+
+model AiListingDraft {
+  id         String   @id @default(cuid())
+  userId     String   @default("")
+  listingId  String   @default("")
+  inputText  String
+  language   String   @default("en")
+  photoUrl   String   @default("")
+  outputJson String
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SellerAiPrefs {
+  userId      String    @id
+  aiConsentAt DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
 // ===== end AI block =====
