@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { btnDanger, btnSecondary } from "@/components/ui";
-import { resolveReport, setListingHidden, setListingVerified, setVerifiedPro } from "@/lib/actions/admin";
+import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
+import { resolveReport, setListingHidden, setListingVerified, setShopBadge, setVerifiedPro } from "@/lib/actions/admin";
 import { prisma } from "@/lib/prisma";
+import {
+  DOCUMENTS_SEEN_NOTE,
+  SHOP_BADGES,
+  SHOP_BADGE_METHODS,
+  shopBadgeActionWord,
+  shopBadgeDefinition,
+  shopBadgeMethodLabel,
+} from "@/lib/shop-badges";
 import { requireAdmin } from "@/lib/session";
 import { formatWhen } from "@/lib/utils";
 
@@ -10,7 +18,7 @@ export const metadata: Metadata = { title: "Admin" };
 
 export default async function AdminPage() {
   await requireAdmin();
-  const [listings, reports, users] = await Promise.all([
+  const [listings, reports, users, shops] = await Promise.all([
     prisma.listing.findMany({
       include: { owner: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
@@ -27,6 +35,13 @@ export default async function AdminPage() {
       select: { id: true, name: true, email: true, role: true, city: true, verifiedPro: true, kind: true },
       orderBy: { name: "asc" },
     }),
+    prisma.storefront.findMany({
+      include: {
+        user: { select: { id: true, name: true, email: true, city: true, verifiedPro: true } },
+        badgeEvents: { orderBy: { createdAt: "desc" } },
+      },
+      orderBy: { user: { name: "asc" } },
+    }),
   ]);
 
   const rank: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -36,8 +51,113 @@ export default async function AdminPage() {
     <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8">
       <div>
         <h1 className="font-serif text-3xl">Moderation</h1>
-        <p className="mt-1 text-sm text-ink/70">Hide listings, grant the verified badge, and close reports. Verified Pro is paid on Promote. You can still grant or remove it here.</p>
+        <p className="mt-1 text-sm text-ink/70">
+          Hide listings and close reports. Shop checks (phone, location, business) are granted here, and each change is
+          kept in the audit trail. Pro plan is paid on Promote and does not verify a shop. The listing verified flag is
+          separate from those checks.
+        </p>
       </div>
+
+      <section id="shop-badges" className="grid gap-3">
+        <h2 className="font-serif text-2xl">Shop checks</h2>
+        <p className="text-sm text-ink/70">
+          Grant or remove each badge on its own. A grant needs a method: Call, Video, Visit, or Documents seen. A note is
+          optional. {DOCUMENTS_SEEN_NOTE}
+        </p>
+        {shops.length === 0 ? <p className="text-sm text-ink/70">No shops yet.</p> : null}
+        {shops.map((shop) => (
+          <article key={shop.id} className="grid gap-4 rounded-2xl border border-sand bg-card p-4 text-sm">
+            <div>
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <Link href={`/b/${shop.slug}`} className="font-semibold">
+                  {shop.user.name}
+                </Link>
+                <span className="text-ink/60">{shop.published ? "Published" : "Draft"}</span>
+              </div>
+              <p className="text-ink/70">
+                /b/{shop.slug} · {shop.user.city} · {shop.user.email}
+                {shop.user.verifiedPro ? " · Pro plan (paid, not a shop check)" : ""}
+              </p>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-3">
+              {SHOP_BADGES.map((badge) => {
+                const on = shop[badge.field];
+                const noteId = `${shop.id}-${badge.key}-note`;
+                const methodId = `${shop.id}-${badge.key}-method`;
+                return (
+                  <form key={badge.key} action={setShopBadge} className="grid gap-2 rounded-xl border border-sand bg-white p-3">
+                    <input type="hidden" name="storefrontId" value={shop.id} />
+                    <input type="hidden" name="badge" value={badge.key} />
+                    <input type="hidden" name="action" value={on ? "remove" : "grant"} />
+                    <p className="font-semibold">{badge.label}</p>
+                    <p className="text-ink/70">{badge.explanation}</p>
+                    <p className={on ? "font-semibold text-lake-dark" : "text-ink/55"}>{on ? "Granted" : "Not granted"}</p>
+                    {on ? null : (
+                      <label htmlFor={methodId} className="text-ink/80">
+                        How you checked
+                        <select id={methodId} name="method" required defaultValue="" className={fieldClass}>
+                          <option value="" disabled>
+                            Choose one
+                          </option>
+                          {SHOP_BADGE_METHODS.map((method) => (
+                            <option key={method.key} value={method.key}>
+                              {method.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+                    <label htmlFor={noteId} className="text-ink/80">
+                      Note <span className="font-normal text-ink/50">(optional)</span>
+                      <input
+                        id={noteId}
+                        name="note"
+                        maxLength={280}
+                        placeholder="Why you are granting or removing this"
+                        className={fieldClass}
+                      />
+                    </label>
+                    <button className={btnSecondary} type="submit">
+                      {on ? `Remove ${badge.label.toLowerCase()}` : `Grant ${badge.label.toLowerCase()}`}
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+            <div className="grid gap-2">
+              <h3 className="font-semibold">Audit trail</h3>
+              {shop.badgeEvents.length === 0 ? <p className="text-ink/60">No badge changes yet.</p> : null}
+              <ol className="grid gap-2">
+                {shop.badgeEvents.map((event) => {
+                  const defined = shopBadgeDefinition(event.badge);
+                  const when = event.createdAt.toLocaleString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "UTC",
+                  });
+                  const method = event.action === "grant" ? shopBadgeMethodLabel(event.method) : "";
+                  return (
+                    <li key={event.id} className="rounded-xl bg-paper px-3 py-2">
+                      <p>
+                        <time dateTime={event.createdAt.toISOString()}>{when}</time>
+                        {" · "}
+                        {defined?.label ?? event.badge} {shopBadgeActionWord(event.action)}
+                        {method ? ` · ${method}` : ""} by {event.adminName || "Admin"}
+                        {event.adminEmail ? ` (${event.adminEmail})` : ""}
+                      </p>
+                      {event.note ? <p className="mt-1 text-ink/75">{event.note}</p> : null}
+                      {event.method === "documents" ? <p className="mt-1 text-ink/60">{DOCUMENTS_SEEN_NOTE}</p> : null}
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </article>
+        ))}
+      </section>
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Reports</h2>
@@ -96,6 +216,7 @@ export default async function AdminPage() {
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Listings</h2>
+        <p className="text-sm text-ink/70">This verified flag marks the directory listing. It is separate from shop checks.</p>
         {ordered.map((listing) => (
           <article key={listing.id} className="rounded-2xl border border-sand bg-card p-4 text-sm">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -136,13 +257,13 @@ export default async function AdminPage() {
               <p className="text-ink/70">
                 {person.email} · {person.kind} · {person.city}
                 {person.role === "admin" ? " · admin" : ""}
-                {person.verifiedPro ? " · Verified Pro" : ""}
+                {person.verifiedPro ? " · Pro plan" : ""}
               </p>
             </div>
             <form action={setVerifiedPro}>
               <input type="hidden" name="userId" value={person.id} />
               <input type="hidden" name="value" value={person.verifiedPro ? "0" : "1"} />
-              <button className={btnSecondary}>{person.verifiedPro ? "Remove Pro" : "Grant Pro"}</button>
+              <button className={btnSecondary}>{person.verifiedPro ? "Remove Pro plan" : "Grant Pro plan"}</button>
             </form>
           </article>
         ))}

@@ -34,6 +34,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
             type={listing.type}
             verified={listing.verified}
             verifiedPro={listing.owner.verifiedPro}
+            shopBadges={listing.owner.storefront}
             featured={listing.featured}
             featuredUntil={listing.featuredUntil}
             scamRisk={listing.scamRisk}

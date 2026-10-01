@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ProPlanChip, ShopBadgeChips } from "@/components/badges";
 import { ListingCard } from "@/components/listing-card";
 import { ReportForm } from "@/components/report-form";
 import { blockUser } from "@/lib/actions/social";
@@ -44,7 +45,13 @@ export default async function PersonPage({ params }: Props) {
   const region = person.city === "London" ? "diaspora" : "homeland";
   const shop = await prisma.storefront.findUnique({
     where: { userId: person.id },
-    select: { slug: true, published: true },
+    select: {
+      slug: true,
+      published: true,
+      phoneVerified: true,
+      locationVerified: true,
+      businessVerified: true,
+    },
   });
   const showShop = Boolean(shop?.published) && !blocked;
 
@@ -55,8 +62,19 @@ export default async function PersonPage({ params }: Props) {
           {person.kind === "business" ? "Business" : "Person"} · {person.city} · {regionLabel(region)}
         </p>
         <h1 className="mt-1 font-serif text-4xl">{person.name}</h1>
-        {person.verifiedPro ? (
-          <p className="mt-2 inline-block rounded-full bg-clay px-2 py-0.5 text-xs font-semibold text-white">Verified Pro</p>
+        {shop?.phoneVerified || shop?.locationVerified || shop?.businessVerified || person.verifiedPro ? (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {shop ? (
+              <ShopBadgeChips
+                flags={{
+                  phoneVerified: shop.phoneVerified,
+                  locationVerified: shop.locationVerified,
+                  businessVerified: shop.businessVerified,
+                }}
+              />
+            ) : null}
+            {person.verifiedPro ? <ProPlanChip /> : null}
+          </div>
         ) : null}
         {person.bio ? <p className="mt-3 whitespace-pre-wrap">{person.bio}</p> : null}
         <div className="mt-3 text-sm text-ink/70">

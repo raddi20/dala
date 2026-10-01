@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
@@ -46,6 +47,7 @@ export default async function StorefrontPage({ params }: Props) {
         where: { archived: false },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
+      badgeEvents: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!shop) notFound();
@@ -70,6 +72,11 @@ export default async function StorefrontPage({ params }: Props) {
   const callUrl = telHref(shop.user.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const bannerSrc = shop.user.verifiedPro ? shop.bannerUrl : "";
+  const shopBadges = {
+    phoneVerified: shop.phoneVerified,
+    locationVerified: shop.locationVerified,
+    businessVerified: shop.businessVerified,
+  };
 
   return (
     <article className="mx-auto grid max-w-3xl gap-6 px-4 py-8 pb-28 sm:pb-10">
@@ -113,19 +120,21 @@ export default async function StorefrontPage({ params }: Props) {
               Shop
             </span>
             {signals.verified ? (
-              <span className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20">
+              <span
+                title="An admin marked a directory listing for this shop as verified. Separate from the shop checks below."
+                aria-label="Verified. An admin marked a directory listing for this shop as verified. Separate from the shop checks."
+                className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20"
+              >
                 Verified
               </span>
             ) : null}
-            {shop.user.verifiedPro ? (
-              <span className="inline-flex items-center rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-semibold text-clay-dark ring-1 ring-clay/25">
-                Verified Pro
-              </span>
-            ) : null}
+            <ShopBadgeChips flags={shopBadges} events={shop.badgeEvents} />
+            {shop.user.verifiedPro ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
               {shop.user.city}
             </span>
           </div>
+          <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
           <h1 className="mt-3 font-serif text-3xl leading-tight text-navy sm:text-4xl">{shop.user.name}</h1>
           <p className="mt-1 text-ink/65">
             {regionLabel(region)}

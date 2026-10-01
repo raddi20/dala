@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { shopBadgeWhere } from "@/lib/shop-badges";
 import { isFeatured } from "@/lib/utils";
 
 const include = {
@@ -9,7 +10,15 @@ const include = {
       id: true,
       name: true,
       verifiedPro: true,
-      storefront: { select: { slug: true, published: true } },
+      storefront: {
+        select: {
+          slug: true,
+          published: true,
+          phoneVerified: true,
+          locationVerified: true,
+          businessVerified: true,
+        },
+      },
     },
   },
 } satisfies Prisma.ListingInclude;
@@ -21,6 +30,7 @@ export async function searchListings(filters: {
   category?: string;
   type?: string;
   verified?: boolean;
+  badge?: string;
   ownerId?: string;
   viewerId?: string | null;
   includeHidden?: boolean;
@@ -33,6 +43,12 @@ export async function searchListings(filters: {
   if (filters.type === "classifieds") where.type = { not: "business" };
   else if (filters.type) where.type = filters.type;
   if (filters.verified) where.verified = true;
+  const badgeWhere = shopBadgeWhere(filters.badge);
+  if (badgeWhere) {
+    const current = where.AND;
+    const list = Array.isArray(current) ? current : current ? [current] : [];
+    where.AND = [...list, badgeWhere];
+  }
   if (filters.q) {
     where.OR = [
       { title: { contains: filters.q } },

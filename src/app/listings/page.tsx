@@ -12,6 +12,7 @@ import {
   sectionTitleClass,
 } from "@/components/ui";
 import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
+import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { parseNlQuery } from "@/lib/nl-query";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
@@ -46,6 +47,7 @@ export default async function ListingsPage({
     category: one(sp.category) || parsed?.category || "",
     type: one(sp.type) || parsed?.type || "",
     verified: one(sp.verified) === "1" || parsed?.verified === true,
+    badge: parseShopBadgeFilter(one(sp.badge)) ?? "",
   };
   const chipBase: Record<string, string> = {
     q: filters.q,
@@ -54,11 +56,12 @@ export default async function ListingsPage({
     category: filters.category,
     type: filters.type,
     verified: filters.verified ? "1" : "",
+    badge: filters.badge,
   };
   const user = await getSessionUser();
   const listings = await searchListings({ ...filters, viewerId: user?.id });
   const hasFilters = Boolean(
-    filters.q || filters.city || filters.region || filters.category || filters.type || filters.verified || nlRaw,
+    filters.q || filters.city || filters.region || filters.category || filters.type || filters.verified || filters.badge || nlRaw,
   );
 
   return (
@@ -129,6 +132,15 @@ export default async function ListingsPage({
           >
             Verified only
           </Link>
+          {SHOP_BADGE_FILTERS.map((filter) => (
+            <Link
+              key={filter.value}
+              href={chipHref(chipBase, "badge", filter.value)}
+              className={filters.badge === filter.value ? chipActiveClass : chipClass}
+            >
+              {filter.label}
+            </Link>
+          ))}
           {hasFilters ? (
             <Link href="/listings" className={`${chipClass} border-dashed`}>
               Clear all
@@ -191,9 +203,20 @@ export default async function ListingsPage({
               ))}
             </select>
           </label>
+          <label className="block text-sm font-medium text-ink/80">
+            Shop badge
+            <select name="badge" defaultValue={filters.badge} className={fieldClass}>
+              <option value="">Any</option>
+              {SHOP_BADGE_FILTERS.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
             <input type="checkbox" name="verified" value="1" defaultChecked={filters.verified} className="size-4 rounded border-sand" />
-            Verified only
+            Verified listing only
           </label>
           <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
             <button className={btnPrimary}>Apply filters</button>

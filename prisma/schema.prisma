@@ -34,6 +34,7 @@ model User {
   blocksReceived   Block[]   @relation("Blocked")
   payments         Payment[]
   storefront       Storefront?
+  shopBadgeEvents  ShopBadgeEvent[]
 }
 
 model Listing {
@@ -115,17 +116,45 @@ model Block {
 }
 
 model Storefront {
-  id        String     @id @default(cuid())
-  userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  slug      String     @unique
-  bannerUrl String     @default("")
-  published Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  offerings Offering[]
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug             String   @unique
+  bannerUrl        String   @default("")
+  published        Boolean  @default(false)
+  // Admin-granted shop checks. Independent of the paid Pro plan (User.verifiedPro).
+  phoneVerified    Boolean  @default(false)
+  locationVerified Boolean  @default(false)
+  businessVerified Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  offerings        Offering[]
+  badgeEvents      ShopBadgeEvent[]
 
   @@index([published])
+}
+
+// Append-only record of shop badge grants and removals. The app only inserts rows.
+model ShopBadgeEvent {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  // phone, location, or business
+  badge        String
+  // grant or remove
+  action       String
+  // call, video, visit, or documents on a grant. Empty on a removal.
+  // documents means the admin looked at papers. Nothing is uploaded or stored.
+  method       String     @default("")
+  note         String     @default("")
+  adminId      String
+  admin        User       @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  adminEmail   String     @default("")
+  adminName    String     @default("")
+  createdAt    DateTime   @default(now())
+
+  @@index([storefrontId, createdAt])
+  @@index([adminId])
 }
 
 model Offering {

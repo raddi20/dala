@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShopBadgeStatus } from "@/components/badges";
 import { PaymentSetup } from "@/components/payment-setup";
 import { ProfileForm } from "@/components/profile-form";
 import { SellerSteps } from "@/components/seller-steps";
@@ -26,6 +27,13 @@ export default async function AccountPage({
     select: {
       slug: true,
       published: true,
+      phoneVerified: true,
+      locationVerified: true,
+      businessVerified: true,
+      badgeEvents: {
+        select: { badge: true, action: true, method: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+      },
       _count: { select: { offerings: { where: { archived: false } } } },
     },
   });
@@ -66,7 +74,7 @@ export default async function AccountPage({
         <h1 className="font-serif text-3xl">Account</h1>
         <p className="mt-1 text-sm text-ink/70">
           {user.kind === "business" ? "Business" : "Person"} profile
-          {user.verifiedPro ? " · Verified Pro" : ""}
+          {user.verifiedPro ? " · Pro plan" : ""}
           {user.role === "admin" ? " · Admin" : ""}
         </p>
         <Link href={`/people/${user.id}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark">
@@ -139,6 +147,20 @@ export default async function AccountPage({
               </Link>
             </div>
           </>
+        )}
+        {storefront ? (
+          <ShopBadgeStatus
+            flags={{
+              phoneVerified: storefront.phoneVerified,
+              locationVerified: storefront.locationVerified,
+              businessVerified: storefront.businessVerified,
+            }}
+            events={storefront.badgeEvents}
+          />
+        ) : (
+          <p className="text-sm text-ink/60">
+            Shop checks (phone, location, and business) show here after you open a shop. An admin grants them.
+          </p>
         )}
       </section>
 

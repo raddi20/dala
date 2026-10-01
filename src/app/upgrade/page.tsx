@@ -30,7 +30,7 @@ export default async function UpgradePage({
       <div>
         <h1 className="font-serif text-3xl">Promote</h1>
         <p className="mt-2 text-sm text-ink/70">
-          Featured listings stay raised for {FEATURED_DAYS} days ({PRICES.featured.Nairobi} / {PRICES.featured.London}). That is a directory boost, separate from a shop. Verified Pro ({PRICES.verified_pro.Nairobi} / {PRICES.verified_pro.London}) adds the paid badge, a shop banner, and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. The green Verified badge is still granted by an admin. Card numbers stay on Flutterwave.
+          Featured listings stay raised for {FEATURED_DAYS} days ({PRICES.featured.Nairobi} / {PRICES.featured.London}). That is a directory boost, separate from a shop. Verified Pro ({PRICES.verified_pro.Nairobi} / {PRICES.verified_pro.London}) is a paid plan: a shop banner and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. It is shown as Pro plan and does not grant Phone, Location, or Business verified. An admin grants those shop checks. The green listing Verified badge stays an admin action too. Card numbers stay on Flutterwave.
         </p>
       </div>
       <PayForm

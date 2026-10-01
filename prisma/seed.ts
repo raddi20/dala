@@ -644,11 +644,16 @@ const shops: {
   owner: string;
   slug: string;
   bannerUrl?: string;
+  badges?: Partial<Record<"phone" | "location" | "business", { note: string; method: "call" | "video" | "visit" | "documents" }>>;
   offerings: SeedOffering[];
 }[] = [
   {
     owner: "atieno@dala.local",
     slug: "mama-atieno",
+    badges: {
+      phone: { note: "Called +254711000101 and spoke with Atieno.", method: "call" },
+      location: { note: "Address matches Argwings Kodhek Road, Kilimani.", method: "video" },
+    },
     offerings: [
       {
         title: "Lunch plate",
@@ -683,6 +688,9 @@ const shops: {
   {
     owner: "peter@dala.local",
     slug: "peckham-grocer",
+    badges: {
+      business: { note: "Confirmed the Peckham grocer trades under this name.", method: "documents" },
+    },
     offerings: [
       {
         title: "Dried omena, 500g",
@@ -893,15 +901,38 @@ async function main() {
     },
   });
 
+  const admin = createdUsers.get("akinyi@dala.local");
+  if (!admin) throw new Error("Missing admin seed user");
+
   for (const shop of shops) {
     const owner = createdUsers.get(shop.owner);
     if (!owner) throw new Error(`Missing shop owner ${shop.owner}`);
+    const badgeRows = (["phone", "location", "business"] as const).flatMap((badge) => {
+      const grant = shop.badges?.[badge];
+      if (!grant) return [];
+      const day = badge === "phone" ? "2026-09-12" : badge === "location" ? "2026-09-18" : "2026-09-20";
+      return [
+        {
+          badge,
+          action: "grant",
+          method: grant.method,
+          note: grant.note,
+          adminId: admin.id,
+          adminEmail: "akinyi@dala.local",
+          adminName: "Akinyi Admin",
+          createdAt: new Date(`${day}T12:00:00.000Z`),
+        },
+      ];
+    });
     await prisma.storefront.create({
       data: {
         userId: owner.id,
         slug: shop.slug,
         bannerUrl: shop.bannerUrl ?? "",
         published: true,
+        phoneVerified: Boolean(shop.badges?.phone),
+        locationVerified: Boolean(shop.badges?.location),
+        businessVerified: Boolean(shop.badges?.business),
         offerings: {
           create: shop.offerings.map((offering, index) => ({
             title: offering.title,
@@ -912,6 +943,7 @@ async function main() {
             sortOrder: index,
           })),
         },
+        badgeEvents: badgeRows.length > 0 ? { create: badgeRows } : undefined,
       },
     });
   }

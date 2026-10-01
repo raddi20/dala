@@ -35,7 +35,19 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const listing = await prisma.listing.findUnique({
     where: { id },
     include: {
-      owner: { include: { storefront: { select: { slug: true, published: true } } } },
+      owner: {
+        include: {
+          storefront: {
+            select: {
+              slug: true,
+              published: true,
+              phoneVerified: true,
+              locationVerified: true,
+              businessVerified: true,
+            },
+          },
+        },
+      },
       reviews: {
         where: { hidden: false },
         include: { author: { select: { id: true, name: true } } },
@@ -87,6 +99,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           type={listing.type}
           verified={listing.verified}
           verifiedPro={listing.owner.verifiedPro}
+          shopBadges={listing.owner.storefront}
           featured={listing.featured}
           featuredUntil={listing.featuredUntil}
           scamRisk={listing.scamRisk}

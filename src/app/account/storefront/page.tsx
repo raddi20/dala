@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShopBadgeStatus } from "@/components/badges";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
@@ -23,7 +24,10 @@ export default async function ManageStorefrontPage({
   const sp = await searchParams;
   const shop = await prisma.storefront.findUnique({
     where: { userId: user.id },
-    include: { offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] } },
+    include: {
+      offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      badgeEvents: { orderBy: { createdAt: "desc" } },
+    },
   });
 
   const cap = offeringCap(user.verifiedPro);
@@ -111,12 +115,22 @@ export default async function ManageStorefrontPage({
         <h1 className={sectionTitleClass}>Manage storefront</h1>
         <p className="mt-1 text-sm text-ink/65">
           {shop.published ? "Published" : "Draft"} · {active.length} of {cap} offerings
-          {user.verifiedPro ? " · Verified Pro" : ""}
+          {user.verifiedPro ? " · Pro plan" : ""}
         </p>
         <Link href={`/b/${shop.slug}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
           {shop.published ? "View shop" : "Preview shop"}
         </Link>
       </div>
+      <section className={`${cardClass} p-5`}>
+        <ShopBadgeStatus
+          flags={{
+            phoneVerified: shop.phoneVerified,
+            locationVerified: shop.locationVerified,
+            businessVerified: shop.businessVerified,
+          }}
+          events={shop.badgeEvents}
+        />
+      </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {notice === "published" ? (
         <div className="flex flex-wrap gap-2">

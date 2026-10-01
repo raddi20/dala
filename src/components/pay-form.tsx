@@ -83,9 +83,10 @@ export function PayForm({
           <span>
             <span className="font-semibold">Verified Pro</span>
             <span className="mt-1 block text-ink/70">
-              A paid badge on your profile and listings, a cover banner, and up to {PRO_OFFERING_CAP} offerings on your shop.
-              Free shops list {FREE_OFFERING_CAP}. {chargeFor("verified_pro", "Nairobi").label} in Nairobi,{" "}
-              {chargeFor("verified_pro", "London").label} in London. The green Verified badge is still an admin action.
+              Paid plan, shown as Pro plan. It adds a cover banner and up to {PRO_OFFERING_CAP} offerings. Free shops list{" "}
+              {FREE_OFFERING_CAP}. {chargeFor("verified_pro", "Nairobi").label} in Nairobi,{" "}
+              {chargeFor("verified_pro", "London").label} in London. It does not grant Phone, Location, or Business verified.
+              An admin grants those shop checks, and the green listing Verified badge.
               {verifiedPro ? " You already have this." : ""}
             </span>
           </span>
