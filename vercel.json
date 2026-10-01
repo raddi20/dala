@@ -5,6 +5,10 @@
     {
       "path": "/api/ai/cron/moderation-sweep",
       "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/cron/seller-tips",
+      "schedule": "0 6 * * 1"
     }
   ]
 }

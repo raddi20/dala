@@ -435,4 +435,17 @@ model MediaHash {
   @@index([ownerType, ownerId])
 }
 
+model AiSellerTip {
+  id        String   @id @default(cuid())
+  userId    String   @default("")
+  weekStart String
+  summary   String   @default("")
+  tipsJson  String   @default("[]")
+  emailed   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
+  @@index([createdAt])
+}
+
 // ===== end AI block =====
