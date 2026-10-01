@@ -385,4 +385,32 @@ model SellerAiPrefs {
   updatedAt      DateTime  @updatedAt
 }
 
+model AiModerationSuggestion {
+  id                 String    @id @default(cuid())
+  listingId          String    @default("")
+  userId             String    @default("")
+  status             String    @default("open")
+  flagsJson          String    @default("[]")
+  suggestedCategory  String    @default("")
+  photoHash          String    @default("")
+  duplicateIds       String    @default("")
+  createdAt          DateTime  @default(now())
+  dismissedAt        DateTime?
+  dismissedById      String    @default("")
+
+  @@index([status, createdAt])
+  @@index([listingId, createdAt])
+  @@index([photoHash])
+}
+
+model AiPhotoFingerprint {
+  id        String   @id @default(cuid())
+  listingId String   @default("")
+  photoHash String
+  createdAt DateTime @default(now())
+
+  @@index([photoHash])
+  @@index([listingId])
+}
+
 // ===== end AI block =====

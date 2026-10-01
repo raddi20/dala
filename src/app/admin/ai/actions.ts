@@ -20,3 +20,14 @@ export async function setAiKillSwitch(formData: FormData) {
   });
   revalidatePath("/admin/ai");
 }
+
+export async function dismissModerationSuggestion(formData: FormData) {
+  const admin = await requireAdmin();
+  const id = field(formData, "id");
+  if (!id) return;
+  await prisma.aiModerationSuggestion.updateMany({
+    where: { id, status: "open" },
+    data: { status: "dismissed", dismissedAt: new Date(), dismissedById: admin.id },
+  });
+  revalidatePath("/admin/ai/flags");
+}

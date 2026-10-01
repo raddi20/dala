@@ -62,6 +62,8 @@ test("db push adds AI tables without rewriting existing rows", () => {
     const cache = after.prepare(`SELECT COUNT(*) AS n FROM "AiSearchCache"`).get();
     const drafts = after.prepare(`SELECT COUNT(*) AS n FROM "AiListingDraft"`).get();
     const prefs = after.prepare(`SELECT COUNT(*) AS n FROM "SellerAiPrefs"`).get();
+    const suggestions = after.prepare(`SELECT COUNT(*) AS n FROM "AiModerationSuggestion"`).get();
+    const fingerprints = after.prepare(`SELECT COUNT(*) AS n FROM "AiPhotoFingerprint"`).get();
     after.close();
 
     assert.equal(user.email, "keep@example.com");
@@ -78,6 +80,8 @@ test("db push adds AI tables without rewriting existing rows", () => {
     assert.equal(Number(cache.n), 0);
     assert.equal(Number(drafts.n), 0);
     assert.equal(Number(prefs.n), 0);
+    assert.equal(Number(suggestions.n), 0);
+    assert.equal(Number(fingerprints.n), 0);
   } finally {
     try {
       db.close();

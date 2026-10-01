@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState } from "react";
+import { FamilyAssist, type FamilyAssistFields } from "@/components/ai/family-assist";
 import { FAMILY_PAYERS, familyOrderMessage, familyOrderWhatsappLink } from "@/lib/family-order";
 import { btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
 
@@ -23,6 +24,18 @@ export function FamilyOrderButton({
   const [town, setTown] = useState("");
   const [dateNeeded, setDateNeeded] = useState("");
   const [payer, setPayer] = useState("");
+  const [item, setItem] = useState("");
+  const [notes, setNotes] = useState("");
+  const [helperOn, setHelperOn] = useState(false);
+
+  function applyHelper(fields: FamilyAssistFields) {
+    if (fields.recipientName) setRecipientName(fields.recipientName);
+    if (fields.town) setTown(fields.town);
+    if (fields.dateNeeded) setDateNeeded(fields.dateNeeded);
+    if (fields.payer) setPayer(fields.payer);
+    setItem(fields.item);
+    setNotes(fields.notes);
+  }
 
   const origin = open && typeof window !== "undefined" ? window.location.origin : "";
 
@@ -50,8 +63,10 @@ export function FamilyOrderButton({
       town,
       dateNeeded,
       payer,
+      item,
+      notes,
     }),
-    [subjectName, url, siteName, recipientName, town, dateNeeded, payer],
+    [subjectName, url, siteName, recipientName, town, dateNeeded, payer, item, notes],
   );
   const message = familyOrderMessage(draft);
   const link = familyOrderWhatsappLink(phone, draft);
@@ -86,6 +101,7 @@ export function FamilyOrderButton({
               Rangach, and there is no payment or booking here.
             </p>
             <div className="mt-4 grid gap-3">
+              <FamilyAssist subjectName={subjectName} onAvailable={() => setHelperOn(true)} onApply={applyHelper} />
               <label className="block text-sm font-medium text-ink/80">
                 Recipient&apos;s name <span className="font-normal text-ink/50">(optional)</span>
                 <input
@@ -129,6 +145,18 @@ export function FamilyOrderButton({
                   ))}
                 </select>
               </label>
+              {helperOn ? (
+                <>
+                  <label className="block text-sm font-medium text-ink/80">
+                    What you need <span className="font-normal text-ink/50">(optional)</span>
+                    <input value={item} onChange={(event) => setItem(event.target.value)} maxLength={120} className={fieldClass} />
+                  </label>
+                  <label className="block text-sm font-medium text-ink/80">
+                    Notes <span className="font-normal text-ink/50">(optional)</span>
+                    <input value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={200} className={fieldClass} />
+                  </label>
+                </>
+              ) : null}
             </div>
             <div className="mt-4 rounded-2xl bg-paper px-3.5 py-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-ink/45">Message the seller will see</p>
