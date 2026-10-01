@@ -1,15 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DiasporaOrdersTag, ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
+import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
+import { appName } from "@/lib/brand";
 import { regionForCity, regionLabel } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
 import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -18,22 +22,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const shop = await prisma.storefront.findUnique({
     where: { slug },
-    select: { published: true, userId: true, user: { select: { name: true, bio: true } } },
+    select: {
+      published: true,
+      bannerUrl: true,
+      userId: true,
+      user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true } },
+    },
   });
-  if (!shop) return { title: "Shop" };
-  if (!shop.published) {
-    const viewer = await getSessionUser();
-    if (viewer?.id !== shop.userId) return { title: "Shop" };
-  }
-  const title = shop.user.name;
-  const description = shop.user.bio.slice(0, 160);
-  const path = `/b/${slug}`;
-  return {
-    title,
+  if (!shop) return privateMetadata("Shop");
+  const viewer = await getSessionUser();
+  const isOwner = viewer?.id === shop.userId;
+  if (!shop.published && !isOwner) return privateMetadata("Shop");
+  if (!shop.published) return { title: shop.user.name, robots: { index: false, follow: false } };
+  const origin = await publicOrigin();
+  const preview = shopPreviewImage({
+    origin,
+    slug,
+    published: true,
+    verifiedPro: shop.user.verifiedPro,
+    bannerUrl: shop.bannerUrl,
+    avatarUrl: shop.user.avatarUrl,
+  });
+  if (!preview) return privateMetadata("Shop");
+  const description = clipText(shop.user.bio) || `${shop.user.name} in ${shop.user.city}. A shop on ${appName()}. Chat stays on WhatsApp.`;
+  return buildShareMetadata({
+    origin,
+    path: `/b/${slug}`,
+    title: shop.user.name,
     description,
-    alternates: { canonical: path },
-    openGraph: { title, description, url: path },
-  };
+    image: preview.url,
+    imageAlt: shop.user.name,
+    imageType: preview.generated ? "image/png" : null,
+  });
 }
 
 export default async function StorefrontPage({ params }: Props) {
@@ -46,6 +66,7 @@ export default async function StorefrontPage({ params }: Props) {
         where: { archived: false },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
+      badgeEvents: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!shop) notFound();
@@ -70,9 +91,14 @@ export default async function StorefrontPage({ params }: Props) {
   const callUrl = telHref(shop.user.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const bannerSrc = shop.user.verifiedPro ? shop.bannerUrl : "";
+  const shopBadges = {
+    phoneVerified: shop.phoneVerified,
+    locationVerified: shop.locationVerified,
+    businessVerified: shop.businessVerified,
+  };
 
   return (
-    <article className="mx-auto grid max-w-3xl gap-6 px-4 py-8 pb-28 sm:pb-10">
+    <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {!shop.published && isOwner ? (
         <div className="grid gap-2">
           <Flash>This shop is a draft. Only you can see this preview.</Flash>
@@ -113,19 +139,22 @@ export default async function StorefrontPage({ params }: Props) {
               Shop
             </span>
             {signals.verified ? (
-              <span className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20">
+              <span
+                title="An admin marked a directory listing for this shop as verified. Separate from the shop checks below."
+                aria-label="Verified. An admin marked a directory listing for this shop as verified. Separate from the shop checks."
+                className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20"
+              >
                 Verified
               </span>
             ) : null}
-            {shop.user.verifiedPro ? (
-              <span className="inline-flex items-center rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-semibold text-clay-dark ring-1 ring-clay/25">
-                Verified Pro
-              </span>
-            ) : null}
+            <ShopBadgeChips flags={shopBadges} events={shop.badgeEvents} />
+            {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
+            {shop.user.verifiedPro ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
               {shop.user.city}
             </span>
           </div>
+          <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
           <h1 className="mt-3 font-serif text-3xl leading-tight text-navy sm:text-4xl">{shop.user.name}</h1>
           <p className="mt-1 text-ink/65">
             {regionLabel(region)}
@@ -171,6 +200,14 @@ export default async function StorefrontPage({ params }: Props) {
             <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
               WhatsApp
             </a>
+          ) : null}
+          {phone ? (
+            <FamilyOrderButton
+              phone={phone}
+              subjectName={shop.user.name}
+              path={`/b/${shop.slug}`}
+              siteName={appName()}
+            />
           ) : null}
           {callUrl ? (
             <a href={callUrl} className={btnSecondary}>
@@ -274,9 +311,20 @@ export default async function StorefrontPage({ params }: Props) {
 
       {chatUrl ? (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">
-          <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-            WhatsApp this shop
-          </a>
+          <div className="grid gap-2">
+            {phone ? (
+              <FamilyOrderButton
+                variant="bar"
+                phone={phone}
+                subjectName={shop.user.name}
+                path={`/b/${shop.slug}`}
+                siteName={appName()}
+              />
+            ) : null}
+            <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+              WhatsApp this shop
+            </a>
+          </div>
         </div>
       ) : null}
     </article>

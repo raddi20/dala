@@ -27,6 +27,9 @@ try {
     console.log("Database is empty. Loading the demo seed.");
     execFileSync(process.execPath, [tsx, "prisma/seed.ts"], { stdio: "inherit" });
   }
+
+  // Occasion pages are created when missing. Titles and intros already saved are left alone.
+  execFileSync(process.execPath, [tsx, "scripts/ensure-occasions.ts"], { stdio: "inherit" });
 } finally {
   await prisma.$disconnect();
 }

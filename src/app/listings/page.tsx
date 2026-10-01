@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
+import { CategoryOptions } from "@/components/category-options";
 import {
   EmptyState,
   btnPrimary,
@@ -11,13 +12,55 @@ import {
   fieldClass,
   sectionTitleClass,
 } from "@/components/ui";
-import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
+import { appName } from "@/lib/brand";
+import { categoryHref, isCategory } from "@/lib/categories";
+import { CITIES, LISTING_TYPES, isCityName } from "@/lib/constants";
+import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
+import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata } from "@/lib/share-metadata";
+import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { parseNlQuery } from "@/lib/nl-query";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { one } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Browse" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const category = one(sp.category);
+  const city = one(sp.city);
+  const origin = await publicOrigin();
+  const name = appName();
+  if (isCategory(category)) {
+    return buildShareMetadata({
+      origin,
+      path: categoryHref(category),
+      title: category,
+      description: `${category} from Luo shops and classifieds in Nairobi and London on ${name}.`,
+      image: `/og/category/${encodeURIComponent(category)}`,
+      imageAlt: `${category} on ${name}`,
+    });
+  }
+  const title = isCityName(city) ? city : "Browse";
+  const description = isCityName(city)
+    ? `Luo shops and classifieds in ${city} on ${name}.`
+    : `Directory and classifieds in Nairobi and London on ${name}.`;
+  const region = one(sp.region);
+  const path = isCityName(city)
+    ? `/listings?city=${encodeURIComponent(city)}${region === "homeland" || region === "diaspora" ? `&region=${region}` : ""}`
+    : "/listings";
+  return buildShareMetadata({
+    origin,
+    path,
+    title,
+    description,
+    image: "/listings/opengraph-image",
+    imageAlt: `${title} on ${name}`,
+  });
+}
 
 function chipHref(base: Record<string, string>, key: string, value: string) {
   const next = { ...base };
@@ -46,6 +89,8 @@ export default async function ListingsPage({
     category: one(sp.category) || parsed?.category || "",
     type: one(sp.type) || parsed?.type || "",
     verified: one(sp.verified) === "1" || parsed?.verified === true,
+    badge: parseShopBadgeFilter(one(sp.badge)) ?? "",
+    diaspora: wantsDiasporaOrders(one(sp.diaspora)),
   };
   const chipBase: Record<string, string> = {
     q: filters.q,
@@ -54,11 +99,21 @@ export default async function ListingsPage({
     category: filters.category,
     type: filters.type,
     verified: filters.verified ? "1" : "",
+    badge: filters.badge,
+    diaspora: filters.diaspora ? "1" : "",
   };
   const user = await getSessionUser();
   const listings = await searchListings({ ...filters, viewerId: user?.id });
   const hasFilters = Boolean(
-    filters.q || filters.city || filters.region || filters.category || filters.type || filters.verified || nlRaw,
+    filters.q ||
+      filters.city ||
+      filters.region ||
+      filters.category ||
+      filters.type ||
+      filters.verified ||
+      filters.badge ||
+      filters.diaspora ||
+      nlRaw,
   );
 
   return (
@@ -129,6 +184,21 @@ export default async function ListingsPage({
           >
             Verified only
           </Link>
+          {SHOP_BADGE_FILTERS.map((filter) => (
+            <Link
+              key={filter.value}
+              href={chipHref(chipBase, "badge", filter.value)}
+              className={filters.badge === filter.value ? chipActiveClass : chipClass}
+            >
+              {filter.label}
+            </Link>
+          ))}
+          <Link
+            href={chipHref(chipBase, "diaspora", "1")}
+            className={filters.diaspora ? chipActiveClass : chipClass}
+          >
+            {DIASPORA_ORDERS_LABEL}
+          </Link>
           {hasFilters ? (
             <Link href="/listings" className={`${chipClass} border-dashed`}>
               Clear all
@@ -171,12 +241,7 @@ export default async function ListingsPage({
           <label className="block text-sm font-medium text-ink/80">
             Category
             <select name="category" defaultValue={filters.category} className={fieldClass}>
-              <option value="">Any</option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              <CategoryOptions blank="Any" />
             </select>
           </label>
           <label className="block text-sm font-medium text-ink/80">
@@ -191,9 +256,24 @@ export default async function ListingsPage({
               ))}
             </select>
           </label>
+          <label className="block text-sm font-medium text-ink/80">
+            Shop badge
+            <select name="badge" defaultValue={filters.badge} className={fieldClass}>
+              <option value="">Any</option>
+              {SHOP_BADGE_FILTERS.map((filter) => (
+                <option key={filter.value} value={filter.value}>
+                  {filter.label}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
             <input type="checkbox" name="verified" value="1" defaultChecked={filters.verified} className="size-4 rounded border-sand" />
-            Verified only
+            Verified listing only
+          </label>
+          <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
+            <input type="checkbox" name="diaspora" value="1" defaultChecked={filters.diaspora} className="size-4 rounded border-sand" />
+            {DIASPORA_ORDERS_LABEL}
           </label>
           <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
             <button className={btnPrimary}>Apply filters</button>

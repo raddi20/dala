@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ShopBadgeStatus } from "@/components/badges";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
 import { Flash, btnPrimary, btnSecondary, btnWhatsApp, cardClass, sectionTitleClass } from "@/components/ui";
 import { archiveOffering, createStorefront, moveOffering, publishStorefront, restoreOffering } from "@/lib/actions/storefront";
 import { FREE_OFFERING_CAP, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
+import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatOfferingPrice, one } from "@/lib/utils";
@@ -21,10 +23,21 @@ export default async function ManageStorefrontPage({
 }) {
   const user = await requireUser("/account/storefront");
   const sp = await searchParams;
-  const shop = await prisma.storefront.findUnique({
+  await ensureOccasionDefinitions(prisma);
+  const [shop, occasionChoices] = await Promise.all([
+    prisma.storefront.findUnique({
     where: { userId: user.id },
-    include: { offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] } },
-  });
+    include: {
+      offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      badgeEvents: { orderBy: { createdAt: "desc" } },
+      occasions: { select: { occasion: { select: { slug: true } } } },
+    },
+  }),
+    prisma.occasion.findMany({
+      orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
+      select: { slug: true, title: true },
+    }),
+  ]);
 
   const cap = offeringCap(user.verifiedPro);
   const notice = one(sp.notice);
@@ -111,12 +124,22 @@ export default async function ManageStorefrontPage({
         <h1 className={sectionTitleClass}>Manage storefront</h1>
         <p className="mt-1 text-sm text-ink/65">
           {shop.published ? "Published" : "Draft"} · {active.length} of {cap} offerings
-          {user.verifiedPro ? " · Verified Pro" : ""}
+          {user.verifiedPro ? " · Pro plan" : ""}
         </p>
         <Link href={`/b/${shop.slug}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
           {shop.published ? "View shop" : "Preview shop"}
         </Link>
       </div>
+      <section className={`${cardClass} p-5`}>
+        <ShopBadgeStatus
+          flags={{
+            phoneVerified: shop.phoneVerified,
+            locationVerified: shop.locationVerified,
+            businessVerified: shop.businessVerified,
+          }}
+          events={shop.badgeEvents}
+        />
+      </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {notice === "published" ? (
         <div className="flex flex-wrap gap-2">
@@ -198,6 +221,9 @@ export default async function ManageStorefrontPage({
             bio={user.bio}
             published={shop.published}
             verifiedPro={user.verifiedPro}
+            servesDiaspora={shop.servesDiaspora}
+            occasions={occasionChoices}
+            selectedOccasions={shop.occasions.map((row) => row.occasion.slug)}
             emphasizePublish={readyToPublish}
           />
         </div>
@@ -249,9 +275,15 @@ export default async function ManageStorefrontPage({
                 ? `This shop is at the Verified Pro limit of ${cap}. Archive one to add another.`
                 : `This shop is at the free limit of ${FREE_OFFERING_CAP}. Archive one, or get Verified Pro for ${PRO_OFFERING_CAP}.`}{" "}
               {!user.verifiedPro ? (
-                <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-                  See Promote
-                </Link>
+                <>
+                  <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
+                    See prices
+                  </Link>
+                  {" · "}
+                  <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
+                    See Promote
+                  </Link>
+                </>
               ) : null}
             </p>
           ) : (

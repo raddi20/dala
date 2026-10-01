@@ -34,6 +34,7 @@ model User {
   blocksReceived   Block[]   @relation("Blocked")
   payments         Payment[]
   storefront       Storefront?
+  shopBadgeEvents  ShopBadgeEvent[]
 }
 
 model Listing {
@@ -61,6 +62,7 @@ model Listing {
   reviews         Review[]
   reports         Report[]
   payments        Payment[]
+  occasions       ListingOccasion[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -115,17 +117,91 @@ model Block {
 }
 
 model Storefront {
-  id        String     @id @default(cuid())
-  userId    String     @unique
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  slug      String     @unique
-  bannerUrl String     @default("")
-  published Boolean    @default(false)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  offerings Offering[]
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug             String   @unique
+  bannerUrl        String   @default("")
+  published        Boolean  @default(false)
+  // Admin-granted shop checks. Independent of the paid Pro plan (User.verifiedPro).
+  phoneVerified    Boolean  @default(false)
+  locationVerified Boolean  @default(false)
+  businessVerified Boolean  @default(false)
+  // Seller opt-in: this shop will take a WhatsApp order from abroad for family at home.
+  servesDiaspora   Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  offerings        Offering[]
+  badgeEvents      ShopBadgeEvent[]
+  occasions        ShopOccasion[]
 
   @@index([published])
+  @@index([servesDiaspora])
+}
+
+// A public collection such as weddings or Christmas at home.
+// Bootstrap inserts a row only when the slug is missing. It never rewrites title or intro.
+model Occasion {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  intro     String   @default("")
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  shops     ShopOccasion[]
+  listings  ListingOccasion[]
+}
+
+model ShopOccasion {
+  id           String     @id @default(cuid())
+  occasionId   String
+  storefrontId String
+  pinned       Boolean    @default(false)
+  pinOrder     Int        @default(0)
+  createdAt    DateTime   @default(now())
+  occasion     Occasion   @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+
+  @@unique([occasionId, storefrontId])
+  @@index([occasionId, pinned])
+}
+
+model ListingOccasion {
+  id         String   @id @default(cuid())
+  occasionId String
+  listingId  String
+  pinned     Boolean  @default(false)
+  pinOrder   Int      @default(0)
+  createdAt  DateTime @default(now())
+  occasion   Occasion @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([occasionId, listingId])
+  @@index([occasionId, pinned])
+}
+
+// Append-only record of shop badge grants and removals. The app only inserts rows.
+model ShopBadgeEvent {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  // phone, location, or business
+  badge        String
+  // grant or remove
+  action       String
+  // call, video, visit, or documents on a grant. Empty on a removal.
+  // documents means the admin looked at papers. Nothing is uploaded or stored.
+  method       String     @default("")
+  note         String     @default("")
+  adminId      String
+  admin        User       @relation(fields: [adminId], references: [id], onDelete: Restrict)
+  adminEmail   String     @default("")
+  adminName    String     @default("")
+  createdAt    DateTime   @default(now())
+
+  @@index([storefrontId, createdAt])
+  @@index([adminId])
 }
 
 model Offering {

@@ -2,31 +2,47 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badges } from "@/components/badges";
+import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
 import { ReviewForm } from "@/components/review-form";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
+import { appName } from "@/lib/brand";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { averageRating, formatWhen, one, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const listing = await prisma.listing.findUnique({ where: { id }, select: { title: true, description: true } });
-  const title = listing?.title ?? "Listing";
-  const description = listing?.description.slice(0, 160);
-  const path = `/listings/${id}`;
-  return {
-    title,
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    select: { title: true, description: true, hidden: true, photoUrl: true, city: true, category: true, ownerId: true },
+  });
+  if (!listing) return privateMetadata("Listing");
+  const viewer = await getSessionUser();
+  const allowed = viewer?.id === listing.ownerId || viewer?.role === "admin";
+  if (listing.hidden && !allowed) return privateMetadata("Listing");
+  if (listing.hidden) return { title: listing.title, robots: { index: false, follow: false } };
+  const origin = await publicOrigin();
+  const preview = listingPreviewImage({ origin, id, hidden: false, photoUrl: listing.photoUrl });
+  if (!preview) return privateMetadata("Listing");
+  const description =
+    clipText(listing.description) || `${listing.title} in ${listing.city}. ${listing.category} on ${appName()}.`;
+  return buildShareMetadata({
+    origin,
+    path: `/listings/${id}`,
+    title: listing.title,
     description,
-    alternates: { canonical: path },
-    openGraph: { title, description, url: path },
-  };
+    image: preview.url,
+    imageAlt: listing.title,
+    imageType: preview.generated ? "image/png" : null,
+  });
 }
 
 export default async function ListingPage({ params, searchParams }: Props) {
@@ -35,7 +51,20 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const listing = await prisma.listing.findUnique({
     where: { id },
     include: {
-      owner: { include: { storefront: { select: { slug: true, published: true } } } },
+      owner: {
+        include: {
+          storefront: {
+            select: {
+              slug: true,
+              published: true,
+              phoneVerified: true,
+              locationVerified: true,
+              businessVerified: true,
+              servesDiaspora: true,
+            },
+          },
+        },
+      },
       reviews: {
         where: { hidden: false },
         include: { author: { select: { id: true, name: true } } },
@@ -64,7 +93,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
 
   return (
-    <article className="mx-auto grid max-w-3xl gap-6 px-4 py-8 pb-28 sm:pb-10">
+    <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {notice ? <Flash>{notice}</Flash> : null}
       {listing.hidden ? <Flash>This listing is hidden from browse. Only you and moderators can open it.</Flash> : null}
 
@@ -87,6 +116,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
           type={listing.type}
           verified={listing.verified}
           verifiedPro={listing.owner.verifiedPro}
+          shopBadges={listing.owner.storefront}
+          servesDiaspora={Boolean(listing.owner.storefront?.servesDiaspora)}
           featured={listing.featured}
           featuredUntil={listing.featuredUntil}
           scamRisk={listing.scamRisk}
@@ -119,6 +150,14 @@ export default async function ListingPage({ params, searchParams }: Props) {
           <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
             WhatsApp the seller
           </a>
+        ) : null}
+        {listing.contactWhatsapp ? (
+          <FamilyOrderButton
+            phone={listing.contactWhatsapp}
+            subjectName={listing.title}
+            path={`/listings/${listing.id}`}
+            siteName={appName()}
+          />
         ) : null}
         <a href={shareUrl} className={btnSecondary} target="_blank" rel="noreferrer">
           Share on WhatsApp
@@ -252,9 +291,18 @@ export default async function ListingPage({ params, searchParams }: Props) {
 
       {chatUrl ? (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">
-          <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-            WhatsApp the seller
-          </a>
+          <div className="grid gap-2">
+            <FamilyOrderButton
+              variant="bar"
+              phone={listing.contactWhatsapp}
+              subjectName={listing.title}
+              path={`/listings/${listing.id}`}
+              siteName={appName()}
+            />
+            <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+              WhatsApp the seller
+            </a>
+          </div>
         </div>
       ) : (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">

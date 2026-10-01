@@ -1,19 +1,4 @@
-export const CATEGORIES = [
-  "Food & restaurants",
-  "Professional services",
-  "Beauty & personal care",
-  "Construction & trades",
-  "Transport & logistics",
-  "Education & tutoring",
-  "Events & entertainment",
-  "Real estate / housing",
-  "Auto & mechanics",
-  "Faith & community orgs",
-  "Retail / shops",
-  "Health & wellness",
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
+export { CATEGORIES, isCategory, type Category } from "@/lib/categories";
 
 export const LISTING_TYPES = [
   { value: "business", label: "Business", blurb: "A shop, practice, or organisation" },
@@ -119,10 +104,6 @@ export function productLabel(product: string) {
 
 export function isCityName(value: string): value is CityName {
   return CITIES.some((city) => city.name === value);
-}
-
-export function isCategory(value: string): value is Category {
-  return (CATEGORIES as readonly string[]).includes(value);
 }
 
 export function isListingType(value: string): value is ListingType {

@@ -1,0 +1,76 @@
+import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import test from "node:test";
+import { DatabaseSync } from "node:sqlite";
+
+const root = join(import.meta.dirname, "..");
+const migrationsDir = join(root, "prisma", "migrations");
+
+function applyExistingMigrations(db) {
+  const folders = readdirSync(migrationsDir)
+    .filter((name) => /^\d/.test(name) && name !== "20261001190000_diaspora_occasions")
+    .sort();
+  assert.ok(folders.length >= 4, "expected the earlier migrations");
+  for (const folder of folders) {
+    const sql = readFileSync(join(migrationsDir, folder, "migration.sql"), "utf8");
+    db.exec(sql);
+  }
+}
+
+test("db push adds diaspora and occasions on a database that already has rows", () => {
+  const dir = mkdtempSync(join(tmpdir(), "rangach-push-"));
+  const file = join(dir, "existing.db");
+  const db = new DatabaseSync(file);
+  try {
+    db.exec("PRAGMA foreign_keys = ON;");
+    applyExistingMigrations(db);
+    db.exec(`
+      INSERT INTO "User" ("id", "email", "name", "passwordHash", "updatedAt")
+      VALUES ('user_keep', 'keep@example.com', 'Keep Me', 'hash', CURRENT_TIMESTAMP);
+      INSERT INTO "Storefront" ("id", "userId", "slug", "published", "updatedAt")
+      VALUES ('shop_keep', 'user_keep', 'keep-me', 1, CURRENT_TIMESTAMP);
+      INSERT INTO "Listing" (
+        "id", "type", "title", "description", "category", "city", "region", "ownerId", "updatedAt"
+      ) VALUES (
+        'listing_keep', 'business', 'Kept listing', 'Already here.', 'Food & restaurants',
+        'Nairobi', 'homeland', 'user_keep', CURRENT_TIMESTAMP
+      );
+    `);
+    db.close();
+
+    const pushed = spawnSync(process.execPath, ["scripts/db-push.mjs"], {
+      cwd: root,
+      encoding: "utf8",
+      env: { ...process.env, DATABASE_URL: `file:${file}` },
+    });
+    const output = `${pushed.stdout ?? ""}\n${pushed.stderr ?? ""}`;
+    assert.equal(pushed.status, 0, output);
+    assert.equal(output.includes("--accept-data-loss"), false, output);
+    assert.match(output, /already in sync|Your database is now in sync/i);
+
+    const after = new DatabaseSync(file);
+    const user = after.prepare(`SELECT "email", "name" FROM "User" WHERE "id" = 'user_keep'`).get();
+    const shop = after.prepare(`SELECT "slug", "servesDiaspora", "published" FROM "Storefront" WHERE "id" = 'shop_keep'`).get();
+    const listing = after.prepare(`SELECT "title" FROM "Listing" WHERE "id" = 'listing_keep'`).get();
+    const occasions = after.prepare(`SELECT COUNT(*) AS n FROM "Occasion"`).get();
+    after.close();
+
+    assert.equal(user.email, "keep@example.com");
+    assert.equal(user.name, "Keep Me");
+    assert.equal(shop.slug, "keep-me");
+    assert.equal(Number(shop.published), 1);
+    assert.equal(Number(shop.servesDiaspora), 0);
+    assert.equal(listing.title, "Kept listing");
+    assert.equal(Number(occasions.n), 0);
+  } finally {
+    try {
+      db.close();
+    } catch {
+      // already closed after the push
+    }
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

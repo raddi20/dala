@@ -59,7 +59,9 @@ Sign in as the seller and open **Manage storefront** from Account, the header (*
 
 With no shop yet, Manage storefront shows three steps: create the shop from your profile, add a first offering, then publish. After the first offering, that page asks you to publish and shows the WhatsApp line buyers will send. From there you can change the address, write the about text, add or edit offerings, archive them, move them up or down, and publish. Unpublished shops return a not-found page to everyone except the owner, who can still preview.
 
-Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro`, already used by the paid badge) raises that to 20 and unlocks the cover banner. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
+Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro`, already used by the paid plan) raises that to 20 and unlocks the cover banner. On the shop and on listing cards that plan is labelled **Pro plan**, so it is not read as a verification badge. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
+
+Phone verified, Location verified, and Business verified are separate shop checks. An admin grants or removes each one from `/admin`. A grant must say how it was checked: Call, Video, Visit, or Documents seen. Documents seen means the admin looked at papers. Nothing is uploaded or stored. Every change is appended to an audit trail with the admin, the time, the method on a grant, and an optional note. The shop page shows the latest grant for each active badge, for example “Phone checked 12 Sep 2026 by call”. Paying for Verified Pro does not grant them, and granting them does not turn on Verified Pro. A fresh seed gives Mama Atieno phone (call) and location (video) checks, and the Peckham grocer a business check (documents seen). Okello & Co stays on Verified Pro with none of those checks. Seed does not add checks to a database that already has users.
 
 Listing cards show **Shop**, and the listing page shows **Visit storefront**, when that seller's shop is published.
 
@@ -107,7 +109,7 @@ There is no cart. Shop goods are still arranged on WhatsApp.
 | Product | Price | What it unlocks |
 | --- | --- | --- |
 | Featured listing | KES 1,500 in Nairobi, £12 in London | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
-| Verified Pro | KES 2,500 in Nairobi, £20 in London | `user.verifiedPro`. The paid badge, the shop cover banner, and 20 offerings instead of 5. It does not grant the green Verified badge. That stays an admin action. |
+| Verified Pro | KES 2,500 in Nairobi, £20 in London | `user.verifiedPro`. The paid plan (shown as Pro plan), the shop cover banner, and 20 offerings instead of 5. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
 
 M-Pesa is only offered when the price is in Kenyan shillings. London prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro`).
 
@@ -270,10 +272,10 @@ See **Deploy on Vercel** for the Neon connection string. A local Postgres databa
 - Person and business profiles, with email/password sign-in.
 - Create, edit, and delete listings. Photos upload from the device (JPEG, PNG, or WebP) and are stored as an `https` URL. A pasted URL still works. Blank photos use a placeholder.
 - Listing types: business directory, plus classifieds (`for_sale`, `wanted`, `housing`, `services`).
-- Filters: words, city, homeland vs diaspora, category, type, verified only. A sentence search maps onto those filters locally.
-- Verified badge, granted by an admin. Verified Pro is a separate paid badge.
+- Filters: words, city, homeland vs diaspora, category, type, verified listing only, and shop badge (any, phone, location, or business). A sentence search still maps onto the older filters, including verified listings. It does not guess a shop badge.
+- Listing Verified badge, granted by an admin. Phone, Location, and Business verified on a shop, also granted by an admin, with an audit trail. Shown on the shop, listing cards, and the seller account. Verified Pro stays the paid plan and is labelled Pro plan next to those checks.
 - Star reviews. Report a listing or profile. Block a person (their listings drop out of your browse).
-- Admin: list and hide listings, grant or remove Verified, grant or remove Pro, dismiss or act on reports.
+- Admin: list and hide listings, grant or remove listing Verified, grant or remove shop checks, grant or remove Pro plan, dismiss or act on reports.
 - WhatsApp: chat the contact, or share the listing, both via `wa.me` with the listing URL in the text.
 - Shop pages at `/b/[slug]` with offerings, a WhatsApp draft that names the offering, and seller publish controls. See **Shops** above.
 - Featured listing and Verified Pro checkout through Flutterwave (M-Pesa and card). Disabled until keys are set. See **Payments**.

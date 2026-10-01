@@ -6,6 +6,11 @@ function waMe(phone: string, text: string) {
   return `${base}?text=${encodeURIComponent(text)}`;
 }
 
+/** Opens WhatsApp with an exact message. Nothing is stored. */
+export function whatsappPrefillLink(phone: string, text: string) {
+  return waMe(phone, text);
+}
+
 export function whatsappChatLink(phone: string, title: string) {
   return waMe(phone, `Hello, I found ${title} on ${appName()}.`);
 }

@@ -136,7 +136,10 @@ export function parseStorefrontForm(formData: FormData) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
   const published = formData.getAll("published").map(String).includes("1");
-  return { ok: true as const, data: { ...parsed.data, published } };
+  const servesDiaspora = formData.getAll("servesDiaspora").map(String).includes("1");
+  const occasionsPresent = formData.getAll("occasionsPresent").map(String).includes("1");
+  const occasionSlugs = formData.getAll("occasion").flatMap((value) => (typeof value === "string" ? [value] : []));
+  return { ok: true as const, data: { ...parsed.data, published, servesDiaspora, occasionsPresent, occasionSlugs } };
 }
 
 export function parsePriceCents(raw: string) {

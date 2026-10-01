@@ -17,6 +17,9 @@ export function StorefrontSettingsForm({
   bio,
   published,
   verifiedPro,
+  servesDiaspora,
+  occasions,
+  selectedOccasions,
   emphasizePublish = false,
 }: {
   slug: string;
@@ -24,6 +27,9 @@ export function StorefrontSettingsForm({
   bio: string;
   published: boolean;
   verifiedPro: boolean;
+  servesDiaspora: boolean;
+  occasions: { slug: string; title: string }[];
+  selectedOccasions: string[];
   emphasizePublish?: boolean;
 }) {
   const [state, action] = useActionState(updateStorefront, initial);
@@ -57,11 +63,48 @@ export function StorefrontSettingsForm({
       ) : (
         <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
           A cover banner is included with Verified Pro, along with {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}.{" "}
+          <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
+            See prices
+          </Link>
+          {" · "}
           <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
             See Promote
           </Link>
         </p>
       )}
+      <label className="flex items-start gap-2 text-sm">
+        <input type="hidden" name="servesDiaspora" value="0" />
+        <input type="checkbox" name="servesDiaspora" value="1" defaultChecked={servesDiaspora} className="mt-1" />
+        <span>
+          <span className="font-semibold">Serves diaspora orders</span>
+          <span className="mt-1 block text-ink/70">
+            People in London, or elsewhere abroad, can see that you will take a WhatsApp order for family at home. You
+            still arrange it in the chat. Rangach does not take payment.
+          </span>
+        </span>
+      </label>
+      {occasions.length > 0 ? (
+        <fieldset className="grid gap-2">
+          <input type="hidden" name="occasionsPresent" value="1" />
+          <legend className="text-sm font-semibold text-navy">Occasions you can help with</legend>
+          <p className="text-sm text-ink/70">
+            Tick the moments you take work for. Your shop can then show on that occasion page. Buyers still message you
+            on WhatsApp.
+          </p>
+          {occasions.map((occasion) => (
+            <label key={occasion.slug} className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="occasion"
+                value={occasion.slug}
+                defaultChecked={selectedOccasions.includes(occasion.slug)}
+                className="mt-1"
+              />
+              <span>{occasion.title}</span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       <label
         id="published"
         className={
