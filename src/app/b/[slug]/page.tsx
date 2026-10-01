@@ -5,12 +5,14 @@ import { ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
+import { appName } from "@/lib/brand";
 import { regionForCity, regionLabel } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
 import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -19,22 +21,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const shop = await prisma.storefront.findUnique({
     where: { slug },
-    select: { published: true, userId: true, user: { select: { name: true, bio: true } } },
+    select: {
+      published: true,
+      bannerUrl: true,
+      userId: true,
+      user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true } },
+    },
   });
-  if (!shop) return { title: "Shop" };
-  if (!shop.published) {
-    const viewer = await getSessionUser();
-    if (viewer?.id !== shop.userId) return { title: "Shop" };
-  }
-  const title = shop.user.name;
-  const description = shop.user.bio.slice(0, 160);
-  const path = `/b/${slug}`;
-  return {
-    title,
+  if (!shop) return privateMetadata("Shop");
+  const viewer = await getSessionUser();
+  const isOwner = viewer?.id === shop.userId;
+  if (!shop.published && !isOwner) return privateMetadata("Shop");
+  if (!shop.published) return { title: shop.user.name, robots: { index: false, follow: false } };
+  const origin = await publicOrigin();
+  const preview = shopPreviewImage({
+    origin,
+    slug,
+    published: true,
+    verifiedPro: shop.user.verifiedPro,
+    bannerUrl: shop.bannerUrl,
+    avatarUrl: shop.user.avatarUrl,
+  });
+  if (!preview) return privateMetadata("Shop");
+  const description = clipText(shop.user.bio) || `${shop.user.name} in ${shop.user.city}. A shop on ${appName()}. Chat stays on WhatsApp.`;
+  return buildShareMetadata({
+    origin,
+    path: `/b/${slug}`,
+    title: shop.user.name,
     description,
-    alternates: { canonical: path },
-    openGraph: { title, description, url: path },
-  };
+    image: preview.url,
+    imageAlt: shop.user.name,
+    imageType: preview.generated ? "image/png" : null,
+  });
 }
 
 export default async function StorefrontPage({ params }: Props) {

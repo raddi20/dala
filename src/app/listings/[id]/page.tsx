@@ -7,26 +7,41 @@ import { ReviewForm } from "@/components/review-form";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
+import { appName } from "@/lib/brand";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { averageRating, formatWhen, one, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const listing = await prisma.listing.findUnique({ where: { id }, select: { title: true, description: true } });
-  const title = listing?.title ?? "Listing";
-  const description = listing?.description.slice(0, 160);
-  const path = `/listings/${id}`;
-  return {
-    title,
+  const listing = await prisma.listing.findUnique({
+    where: { id },
+    select: { title: true, description: true, hidden: true, photoUrl: true, city: true, category: true, ownerId: true },
+  });
+  if (!listing) return privateMetadata("Listing");
+  const viewer = await getSessionUser();
+  const allowed = viewer?.id === listing.ownerId || viewer?.role === "admin";
+  if (listing.hidden && !allowed) return privateMetadata("Listing");
+  if (listing.hidden) return { title: listing.title, robots: { index: false, follow: false } };
+  const origin = await publicOrigin();
+  const preview = listingPreviewImage({ origin, id, hidden: false, photoUrl: listing.photoUrl });
+  if (!preview) return privateMetadata("Listing");
+  const description =
+    clipText(listing.description) || `${listing.title} in ${listing.city}. ${listing.category} on ${appName()}.`;
+  return buildShareMetadata({
+    origin,
+    path: `/listings/${id}`,
+    title: listing.title,
     description,
-    alternates: { canonical: path },
-    openGraph: { title, description, url: path },
-  };
+    image: preview.url,
+    imageAlt: listing.title,
+    imageType: preview.generated ? "image/png" : null,
+  });
 }
 
 export default async function ListingPage({ params, searchParams }: Props) {

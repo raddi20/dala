@@ -3,7 +3,8 @@ import { ListingCard } from "@/components/listing-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
 import { GateMark } from "@/components/wordmark";
 import { APP_TAGLINE, appName } from "@/lib/brand";
-import { CATEGORIES, CITIES } from "@/lib/constants";
+import { HOME_CATEGORIES, categoryHref } from "@/lib/categories";
+import { CITIES } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
@@ -91,7 +92,11 @@ export default async function HomePage() {
         <section>
           <h2 className={sectionTitleClass}>Where to start</h2>
           <p className="mt-2 max-w-xl text-ink/65">
-            Browse the directory, or open a shop in three steps: create it from your profile, add an offering, then publish.
+            Browse the directory, or open a shop in three steps: create it from your profile, add an offering, then publish.{" "}
+            <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
+              See Featured and Pro prices
+            </Link>
+            .
           </p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href={shopHref} className={btnPrimary}>
@@ -128,12 +133,18 @@ export default async function HomePage() {
         </section>
 
         <section>
-          <h2 className={sectionTitleClass}>Categories</h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className={sectionTitleClass}>Categories</h2>
+            <Link href="/categories" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
+              See all
+            </Link>
+          </div>
+          <p className="mt-2 text-ink/65">A few places to start. The full list is grouped on its own page.</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            {CATEGORIES.map((category) => (
+            {HOME_CATEGORIES.map((category) => (
               <Link
                 key={category}
-                href={`/listings?category=${encodeURIComponent(category)}`}
+                href={categoryHref(category)}
                 className="rounded-full border border-sand bg-card px-3.5 py-2 text-sm font-medium text-ink/80 shadow-sm transition-colors hover:border-navy/20 hover:bg-white hover:text-navy"
               >
                 {category}

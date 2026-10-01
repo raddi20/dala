@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
+import { CategoryOptions } from "@/components/category-options";
 import {
   EmptyState,
   btnPrimary,
@@ -11,14 +12,54 @@ import {
   fieldClass,
   sectionTitleClass,
 } from "@/components/ui";
-import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
+import { appName } from "@/lib/brand";
+import { CITIES, LISTING_TYPES, isCityName } from "@/lib/constants";
+import { categoryHref, isCategory } from "@/lib/categories";
+import { publicOrigin } from "@/lib/payments/origin";
+import { buildShareMetadata } from "@/lib/share-metadata";
 import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { parseNlQuery } from "@/lib/nl-query";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { one } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Browse" };
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
+  const category = one(sp.category);
+  const city = one(sp.city);
+  const origin = await publicOrigin();
+  const name = appName();
+  if (isCategory(category)) {
+    return buildShareMetadata({
+      origin,
+      path: categoryHref(category),
+      title: category,
+      description: `${category} from Luo shops and classifieds in Nairobi and London on ${name}.`,
+      image: `/og/category/${encodeURIComponent(category)}`,
+      imageAlt: `${category} on ${name}`,
+    });
+  }
+  const title = isCityName(city) ? city : "Browse";
+  const description = isCityName(city)
+    ? `Luo shops and classifieds in ${city} on ${name}.`
+    : `Directory and classifieds in Nairobi and London on ${name}.`;
+  const region = one(sp.region);
+  const path = isCityName(city)
+    ? `/listings?city=${encodeURIComponent(city)}${region === "homeland" || region === "diaspora" ? `&region=${region}` : ""}`
+    : "/listings";
+  return buildShareMetadata({
+    origin,
+    path,
+    title,
+    description,
+    image: "/listings/opengraph-image",
+    imageAlt: `${title} on ${name}`,
+  });
+}
 
 function chipHref(base: Record<string, string>, key: string, value: string) {
   const next = { ...base };
@@ -183,12 +224,7 @@ export default async function ListingsPage({
           <label className="block text-sm font-medium text-ink/80">
             Category
             <select name="category" defaultValue={filters.category} className={fieldClass}>
-              <option value="">Any</option>
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
+              <CategoryOptions blank="Any" />
             </select>
           </label>
           <label className="block text-sm font-medium text-ink/80">
