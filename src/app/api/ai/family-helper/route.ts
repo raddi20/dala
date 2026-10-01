@@ -5,6 +5,8 @@ import { isAiFeatureOn } from "@/lib/ai/flags";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const blank = { item: "", recipientName: "", town: "", dateNeeded: "", payer: "", notes: "" };
+
 export async function GET() {
   const enabled = await isAiFeatureOn("family_helper");
   return NextResponse.json({ enabled });
@@ -15,7 +17,7 @@ export async function POST(request: Request) {
   try {
     raw = await request.json();
   } catch {
-    return NextResponse.json({ error: "Describe the order in a short sentence." }, { status: 400 });
+    return NextResponse.json(blank);
   }
   try {
     const actorHash = actorFromRequestCookie(request.headers.get("cookie"));

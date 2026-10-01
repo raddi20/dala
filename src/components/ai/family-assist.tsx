@@ -28,7 +28,7 @@ export function FamilyAssist({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/ai/family-draft")
+    fetch("/api/ai/family-helper")
       .then((response) => (response.ok ? response.json() : null))
       .then((body: { enabled?: boolean } | null) => {
         if (cancelled || !body?.enabled) return;
@@ -49,7 +49,7 @@ export function FamilyAssist({
     setNote("");
     setPending(true);
     try {
-      const response = await fetch("/api/ai/family-draft", {
+      const response = await fetch("/api/ai/family-helper", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ text, subjectName }),

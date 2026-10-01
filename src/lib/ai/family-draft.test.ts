@@ -85,4 +85,9 @@ test("a sentence fills the form, drops a past date, and does not open WhatsApp",
   });
   assert.match(withItem, /What I need: plastic chairs/);
   assert.equal(withItem.includes("https://wa.me"), false);
+
+  const empty = await draftFamilyOrder({ text: "" }, { actorHash: "visitor-hash", run: writer.run });
+  assert.equal(empty.ok, true);
+  if (empty.ok) assert.equal(empty.fields.item, "");
+  assert.equal(writer.calls(), 1);
 });

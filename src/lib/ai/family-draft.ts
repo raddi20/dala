@@ -5,7 +5,7 @@ import { runAi } from "@/lib/ai/run";
 import type { AiActor, RunResult } from "@/lib/ai/types";
 
 export const familyDraftBody = z.object({
-  text: z.string().trim().min(1).max(400),
+  text: z.string().trim().min(1).max(300),
   subjectName: z.string().trim().max(120).optional().default(""),
 });
 
@@ -46,7 +46,12 @@ export async function draftFamilyOrder(
   } = {},
 ): Promise<FamilyDraftResult> {
   const parsed = familyDraftBody.safeParse(raw);
-  if (!parsed.success) return { ok: false, status: 400, error: "Describe the order in a short sentence." };
+  if (!parsed.success) {
+    return {
+      ok: true,
+      fields: { item: "", recipientName: "", town: "", dateNeeded: "", payer: "", notes: "" },
+    };
+  }
 
   const now = deps.now ?? new Date();
   const today = nairobiToday(now);

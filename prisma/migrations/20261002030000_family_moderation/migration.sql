@@ -1,39 +1,67 @@
--- Moderation suggestions and photo fingerprints.
+-- Moderation flags, reviews, and photo fingerprints.
 -- New empty tables only. No columns or foreign keys on existing tables.
 -- CreateTable
-CREATE TABLE "AiModerationSuggestion" (
+CREATE TABLE "ModerationFlag" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "listingId" TEXT NOT NULL DEFAULT '',
-    "userId" TEXT NOT NULL DEFAULT '',
+    "targetType" TEXT NOT NULL,
+    "targetId" TEXT NOT NULL,
+    "source" TEXT NOT NULL,
+    "kind" TEXT NOT NULL,
+    "severity" TEXT NOT NULL DEFAULT 'medium',
+    "reason" TEXT NOT NULL DEFAULT '',
+    "evidenceJson" TEXT NOT NULL DEFAULT '{}',
     "status" TEXT NOT NULL DEFAULT 'open',
-    "flagsJson" TEXT NOT NULL DEFAULT '[]',
-    "suggestedCategory" TEXT NOT NULL DEFAULT '',
-    "photoHash" TEXT NOT NULL DEFAULT '',
-    "duplicateIds" TEXT NOT NULL DEFAULT '',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "dismissedAt" DATETIME,
-    "dismissedById" TEXT NOT NULL DEFAULT ''
+    "resolvedAt" DATETIME
 );
 
 -- CreateTable
-CREATE TABLE "AiPhotoFingerprint" (
+CREATE TABLE "ModerationReview" (
     "id" TEXT NOT NULL PRIMARY KEY,
-    "listingId" TEXT NOT NULL DEFAULT '',
-    "photoHash" TEXT NOT NULL,
+    "flagId" TEXT NOT NULL,
+    "action" TEXT NOT NULL,
+    "note" TEXT NOT NULL DEFAULT '',
+    "adminId" TEXT NOT NULL,
+    "adminEmail" TEXT NOT NULL DEFAULT '',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
+CREATE TABLE "MediaHash" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "mediaType" TEXT NOT NULL,
+    "ownerType" TEXT NOT NULL,
+    "ownerId" TEXT NOT NULL,
+    "ownerUser" TEXT NOT NULL DEFAULT '',
+    "url" TEXT NOT NULL,
+    "dhash" TEXT NOT NULL,
+    "h0" TEXT NOT NULL,
+    "h1" TEXT NOT NULL,
+    "h2" TEXT NOT NULL,
+    "h3" TEXT NOT NULL,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- CreateIndex
-CREATE INDEX "AiModerationSuggestion_status_createdAt_idx" ON "AiModerationSuggestion"("status", "createdAt");
+CREATE INDEX "ModerationFlag_status_createdAt_idx" ON "ModerationFlag"("status", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "AiModerationSuggestion_listingId_createdAt_idx" ON "AiModerationSuggestion"("listingId", "createdAt");
+CREATE INDEX "ModerationFlag_targetType_targetId_idx" ON "ModerationFlag"("targetType", "targetId");
 
 -- CreateIndex
-CREATE INDEX "AiModerationSuggestion_photoHash_idx" ON "AiModerationSuggestion"("photoHash");
+CREATE INDEX "ModerationReview_flagId_createdAt_idx" ON "ModerationReview"("flagId", "createdAt");
 
 -- CreateIndex
-CREATE INDEX "AiPhotoFingerprint_photoHash_idx" ON "AiPhotoFingerprint"("photoHash");
+CREATE INDEX "MediaHash_h0_idx" ON "MediaHash"("h0");
 
 -- CreateIndex
-CREATE INDEX "AiPhotoFingerprint_listingId_idx" ON "AiPhotoFingerprint"("listingId");
+CREATE INDEX "MediaHash_h1_idx" ON "MediaHash"("h1");
+
+-- CreateIndex
+CREATE INDEX "MediaHash_h2_idx" ON "MediaHash"("h2");
+
+-- CreateIndex
+CREATE INDEX "MediaHash_h3_idx" ON "MediaHash"("h3");
+
+-- CreateIndex
+CREATE INDEX "MediaHash_ownerType_ownerId_idx" ON "MediaHash"("ownerType", "ownerId");

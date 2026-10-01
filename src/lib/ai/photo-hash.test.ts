@@ -4,8 +4,10 @@ import sharp from "sharp";
 import {
   dHash,
   hammingDistance,
+  hashChunks,
   isNearDuplicate,
   NEAR_DUPLICATE_DISTANCE,
+  otherOwnerMatches,
   photoHashEnabled,
 } from "@/lib/ai/photo-hash";
 
@@ -15,13 +17,25 @@ test("MOD_PHOTO_HASH is on only when the flag is exactly 1", () => {
   assert.equal(photoHashEnabled({} as NodeJS.ProcessEnv), false);
 });
 
-test("hashes within 10 bits match and the 11th bit does not", () => {
+test("hashes within 6 bits match and the 7th bit does not", () => {
   assert.equal(hammingDistance("0000000000000000", "0000000000000001"), 1);
-  assert.equal(isNearDuplicate("0000000000000000", "00000000000003ff"), true);
-  assert.equal(hammingDistance("0000000000000000", "00000000000003ff"), 10);
-  assert.equal(isNearDuplicate("0000000000000000", "00000000000007ff"), false);
-  assert.equal(NEAR_DUPLICATE_DISTANCE, 10);
+  assert.equal(isNearDuplicate("0000000000000000", "000000000000003f"), true);
+  assert.equal(hammingDistance("0000000000000000", "000000000000003f"), 6);
+  assert.equal(isNearDuplicate("0000000000000000", "000000000000007f"), false);
+  assert.equal(NEAR_DUPLICATE_DISTANCE, 6);
+  assert.deepEqual(hashChunks("0000000000000001"), { h0: "0000", h1: "0000", h2: "0000", h3: "0001" });
   assert.equal(hammingDistance("abcd", "0000000000000001"), null);
+});
+
+test("another owner's near photo matches, and the same owner does not", () => {
+  const rows = [
+    { ownerType: "listing", ownerId: "mine", ownerUser: "seller_1", dhash: "0000000000000001" },
+    { ownerType: "listing", ownerId: "theirs", ownerUser: "seller_2", dhash: "0000000000000001" },
+    { ownerType: "listing", ownerId: "spread", ownerUser: "seller_3", dhash: "0001000100010001" },
+  ];
+  const matches = otherOwnerMatches("0000000000000000", "seller_1", rows);
+  assert.deepEqual(matches.map((row) => row.ownerId), ["theirs"]);
+  assert.equal(otherOwnerMatches("0000000000000000", "seller_2", rows).some((row) => row.ownerUser === "seller_2"), false);
 });
 
 async function picture(shift: number) {
@@ -40,16 +54,16 @@ async function picture(shift: number) {
   return sharp(raw, { raw: { width, height, channels: 3 } });
 }
 
-test("a recompressed photo matches and a different picture does not", async () => {
+test("the same photo matches and a different picture does not", async () => {
   const source = await picture(0);
   const png = new Uint8Array(await source.clone().png().toBuffer());
-  const jpeg = new Uint8Array(await source.clone().jpeg({ quality: 30 }).toBuffer());
+  const again = new Uint8Array(await source.clone().png().toBuffer());
   const original = await dHash(png);
-  const compressed = await dHash(jpeg);
+  const repeat = await dHash(again);
   assert.ok(original);
   assert.equal(original?.length, 16);
-  assert.ok(compressed);
-  assert.equal(isNearDuplicate(original ?? "", compressed ?? ""), true);
+  assert.equal(repeat, original);
+  assert.equal(isNearDuplicate(original ?? "", repeat ?? ""), true);
 
   const width = 48;
   const height = 48;

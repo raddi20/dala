@@ -1,8 +1,8 @@
 import sharp from "sharp";
 
-/** 64-bit difference hash. A distance of 10 or less is the same photo or a close variant. */
+/** 64-bit difference hash. Six differing bits or fewer is the same photo. */
 export const DHASH_BITS = 64;
-export const NEAR_DUPLICATE_DISTANCE = 10;
+export const NEAR_DUPLICATE_DISTANCE = 6;
 
 const HEX_64 = /^[0-9a-f]{16}$/i;
 
@@ -57,17 +57,39 @@ export async function dHash(bytes: Uint8Array): Promise<string | null> {
   }
 }
 
-export function matchingListingIds(
-  photoHash: string,
-  rows: { listingId: string; photoHash: string }[],
-  listingId: string,
-): string[] {
-  const ids: string[] = [];
+export type HashChunks = { h0: string; h1: string; h2: string; h3: string };
+
+/** Four 16-bit pieces of a 64-bit dHash, used to look up candidates. */
+export function hashChunks(dhash: string): HashChunks | null {
+  if (!HEX_64.test(dhash)) return null;
+  const hex = dhash.toLowerCase();
+  return { h0: hex.slice(0, 4), h1: hex.slice(4, 8), h2: hex.slice(8, 12), h3: hex.slice(12, 16) };
+}
+
+export type HashCandidate = {
+  ownerType: string;
+  ownerId: string;
+  ownerUser: string;
+  dhash: string;
+};
+
+/**
+ * Near-duplicates of another owner. A candidate must share one 16-bit chunk, then sit within 6 bits.
+ * The same owner's photos are ignored.
+ */
+export function otherOwnerMatches(dhash: string, ownerUser: string, rows: HashCandidate[]): HashCandidate[] {
+  const chunks = hashChunks(dhash);
+  if (!chunks || !ownerUser) return [];
+  const matches: HashCandidate[] = [];
   for (const row of rows) {
-    if (!row.listingId || row.listingId === listingId) continue;
-    if (!isNearDuplicate(photoHash, row.photoHash)) continue;
-    if (!ids.includes(row.listingId)) ids.push(row.listingId);
-    if (ids.length >= 5) break;
+    if (!row.ownerUser || row.ownerUser === ownerUser) continue;
+    const parts = hashChunks(row.dhash);
+    if (!parts) continue;
+    const shares =
+      parts.h0 === chunks.h0 || parts.h1 === chunks.h1 || parts.h2 === chunks.h2 || parts.h3 === chunks.h3;
+    if (!shares || !isNearDuplicate(dhash, row.dhash)) continue;
+    matches.push(row);
+    if (matches.length >= 5) break;
   }
-  return ids;
+  return matches;
 }

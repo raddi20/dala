@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { FEATURE_ENV } from "@/lib/ai/config";
+import { reviewModerationFlag } from "@/lib/ai/moderation";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { field } from "@/lib/validators";
@@ -21,13 +22,17 @@ export async function setAiKillSwitch(formData: FormData) {
   revalidatePath("/admin/ai");
 }
 
-export async function dismissModerationSuggestion(formData: FormData) {
+export async function reviewModerationFlagAction(formData: FormData) {
   const admin = await requireAdmin();
   const id = field(formData, "id");
-  if (!id) return;
-  await prisma.aiModerationSuggestion.updateMany({
-    where: { id, status: "open" },
-    data: { status: "dismissed", dismissedAt: new Date(), dismissedById: admin.id },
+  const action = field(formData, "action");
+  if (!id || (action !== "dismiss" && action !== "actioned")) return;
+  await reviewModerationFlag({
+    flagId: id,
+    action,
+    note: field(formData, "note"),
+    adminId: admin.id,
+    adminEmail: admin.email,
   });
   revalidatePath("/admin/ai/flags");
 }

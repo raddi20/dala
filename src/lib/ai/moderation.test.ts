@@ -1,6 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { dismissPatch, scheduleListingModeration, suggestListingModeration, type ListingSnapshot, type ModerationStore, type SuggestionRow } from "@/lib/ai/moderation";
+import {
+  categoryMedian,
+  isPriceOutlier,
+  parsePriceAmount,
+  runModeration,
+  scheduleListingModeration,
+  unhashedPhotoTargets,
+  type FlagDraft,
+  type HashDraft,
+  type ListingSnapshot,
+} from "@/lib/ai/moderation";
+import type { HashCandidate } from "@/lib/ai/photo-hash";
 import type { ModerationResult } from "@/lib/ai/prompts/moderation";
 import type { RunResult } from "@/lib/ai/types";
 
@@ -12,8 +23,7 @@ const listing: ListingSnapshot = Object.freeze({
   category: "Retail / shops",
   priceLabel: "KES 25,000",
   photoUrl: "https://store.public.blob.vercel-storage.com/sofa.jpg",
-  hidden: false,
-  verified: false,
+  scamFired: true,
 });
 
 const flag: ModerationResult["flags"][number] = {
@@ -23,30 +33,28 @@ const flag: ModerationResult["flags"][number] = {
   evidence: "Pay first",
 };
 
-function memory(
-  source: ListingSnapshot | null,
-  extras?: { last?: Date | null; known?: { listingId: string; photoHash: string }[] },
-) {
-  const saved: SuggestionRow[] = [];
-  const fingerprints: string[] = [];
-  const store: ModerationStore = {
-    async listing() {
-      return source;
-    },
-    async lastCheckedAt() {
-      return extras?.last ?? null;
-    },
-    async knownFingerprints() {
-      return extras?.known ?? [];
-    },
-    async saveFingerprint(_listingId, photoHash) {
-      fingerprints.push(photoHash);
-    },
-    async save(row) {
-      saved.push(row);
+function harness(source: ListingSnapshot | null, hashes: HashCandidate[] = []) {
+  const saved: FlagDraft[] = [];
+  const fingerprints: HashDraft[] = [];
+  return {
+    saved,
+    fingerprints,
+    base: {
+      listing: source,
+      hashes,
+      categoryPrices: [] as number[],
+      lastAiAt: null as Date | null,
+      saveFlag: async (row: FlagDraft) => {
+        saved.push(row);
+      },
+      saveHash: async (row: HashDraft) => {
+        fingerprints.push(row);
+      },
+      download: async () => new Uint8Array([4, 5, 6]),
+      resize: async (bytes: Uint8Array) => bytes,
+      fingerprint: async () => "0000000000000000",
     },
   };
-  return { store, saved, fingerprints };
 }
 
 function runWith(data: ModerationResult) {
@@ -66,116 +74,137 @@ function runWith(data: ModerationResult) {
   return { run, calls: () => calls };
 }
 
-const clean: ModerationResult = { flags: [], suggestedCategory: null };
 const env = { MOD_PHOTO_HASH: "1", AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv;
 
-test("a switched-off check does not call the model or write a suggestion", async () => {
-  const box = memory(listing);
+test("a price far from the category median is an outlier only when eight prices exist", () => {
+  assert.equal(parsePriceAmount("KES 25,000"), 25000);
+  assert.equal(parsePriceAmount("500"), 500);
+  const few = [100, 200, 300, 400, 500, 600, 700];
+  assert.equal(categoryMedian(few), null);
+  const usual = [40000, 42000, 45000, 48000, 50000, 52000, 55000, 60000];
+  assert.equal(isPriceOutlier(500, usual), true);
+  assert.equal(isPriceOutlier(50000, usual), false);
+});
+
+test("a switched-off check does not call the model or write a flag", async () => {
+  const box = harness(listing);
   const writer = runWith({ flags: [flag], suggestedCategory: null });
-  let downloads = 0;
-  const result = await suggestListingModeration(listing.id, {
-    store: box.store,
-    run: writer.run,
-    featureOn: async () => false,
-    download: async () => {
-      downloads += 1;
-      return new Uint8Array([1, 2, 3]);
-    },
-  });
+  const result = await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    { ...box.base, run: writer.run, featureOn: async () => false, env: {} as NodeJS.ProcessEnv },
+  );
   assert.equal(result.status, "skipped");
   assert.equal(writer.calls(), 0);
-  assert.equal(downloads, 0);
   assert.equal(box.saved.length, 0);
-  assert.equal(listing.hidden, false);
-  assert.equal(listing.verified, false);
 });
 
-test("no model key leaves the listing untouched", async () => {
-  const box = memory(listing);
-  const result = await suggestListingModeration(listing.id, {
-    store: box.store,
-    featureOn: async () => true,
-    env,
-    run: async () => ({ ok: false, kind: "disabled" }),
-    download: async () => new Uint8Array([9, 9, 9]),
-    resize: async (bytes) => bytes,
-  });
-  assert.equal(result.status, "unavailable");
-  assert.equal(box.saved.length, 0);
-  assert.equal(listing.hidden, false);
-  assert.equal(listing.verified, false);
+test("another seller's photo is flagged and the same seller's photo is not", async () => {
+  const other = harness(listing, [
+    { ownerType: "listing", ownerId: "listing_older", ownerUser: "seller_2", dhash: "0000000000000001" },
+  ]);
+  const writer = runWith({ flags: [], suggestedCategory: null });
+  const flagged = await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    { ...other.base, env, featureOn: async () => true, run: writer.run },
+  );
+  assert.equal(flagged.status, "open");
+  assert.equal(other.saved.some((row) => row.kind === "duplicate_photo" && row.source === "phash"), true);
+  assert.equal(other.fingerprints[0]?.h3, "0000");
+
+  const own = harness(listing, [
+    { ownerType: "listing", ownerId: "listing_mine", ownerUser: "seller_1", dhash: "0000000000000001" },
+  ]);
+  const quiet = await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    { ...own.base, env: { MOD_PHOTO_HASH: "1" } as unknown as NodeJS.ProcessEnv, featureOn: async () => false },
+  );
+  assert.equal(quiet.flags, 0);
+  assert.equal(own.saved.some((row) => row.kind === "duplicate_photo"), false);
+  assert.equal(own.fingerprints.length, 1);
 });
 
-test("a suggestion is queued and never hides, rejects, or verifies the listing", async () => {
-  const box = memory(listing, { known: [{ listingId: "listing_older", photoHash: "0000000000000001" }] });
-  const writer = runWith({ flags: [flag], suggestedCategory: "Food & restaurants" });
-  const result = await suggestListingModeration(listing.id, {
-    now: new Date("2026-10-01T12:00:00Z"),
-    env,
-    store: box.store,
-    featureOn: async () => true,
-    run: writer.run,
-    download: async () => new Uint8Array([4, 5, 6, 7]),
-    resize: async (bytes) => bytes,
-    fingerprint: async () => "0000000000000000",
-  });
-  assert.equal(result.status, "open");
-  assert.equal(box.saved.length, 1);
-  assert.equal(box.saved[0]?.status, "open");
-  assert.equal(box.saved[0]?.suggestedCategory, "Food & restaurants");
-  assert.equal(box.saved[0]?.duplicateIds, "listing_older");
-  assert.equal(box.fingerprints.length, 1);
-  assert.equal(box.fingerprints[0], "0000000000000000");
-  assert.equal(JSON.stringify(box.saved[0]).includes("hidden"), false);
-  assert.equal(listing.hidden, false);
-  assert.equal(listing.verified, false);
-  assert.equal(writer.calls(), 1);
+test("a low-severity note is kept only when the scam rules also fired", async () => {
+  const low = { kind: "misleading" as const, severity: "low" as const, reason: "Vague", evidence: "sofa" };
+  const fired = harness(listing);
+  await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    {
+      ...fired.base,
+      env: { AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv,
+      featureOn: async () => true,
+      fingerprint: async () => null,
+      run: runWith({ flags: [low], suggestedCategory: null }).run,
+    },
+  );
+  assert.equal(fired.saved.some((row) => row.kind === "misleading" && row.status === "open"), true);
 
-  const patch = dismissPatch("admin_1", new Date("2026-10-01T13:00:00Z"));
-  assert.deepEqual(Object.keys(patch).sort(), ["dismissedAt", "dismissedById", "status"]);
-  assert.equal(patch.status, "dismissed");
+  const calm = harness({ ...listing, description: "A used sofa.", scamFired: false, photoUrl: "" });
+  await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    {
+      ...calm.base,
+      env: { AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv,
+      featureOn: async () => true,
+      run: runWith({ flags: [low], suggestedCategory: null }).run,
+    },
+  );
+  assert.equal(calm.saved.some((row) => row.status === "open"), false);
+  assert.equal(calm.saved.some((row) => row.source === "ai" && row.status === "dismissed"), true);
 });
 
-test("fingerprints run without the model and a one-bit difference still matches", async () => {
-  const box = memory(listing, { known: [{ listingId: "listing_older", photoHash: "0000000000000001" }] });
-  const writer = runWith(clean);
-  const result = await suggestListingModeration(listing.id, {
-    env: { MOD_PHOTO_HASH: "1" } as unknown as NodeJS.ProcessEnv,
-    store: box.store,
-    featureOn: async () => false,
-    run: writer.run,
-    download: async () => new Uint8Array([8]),
-    fingerprint: async () => "0000000000000000",
-  });
-  assert.equal(result.status, "open");
-  assert.equal(writer.calls(), 0);
-  assert.equal(box.saved[0]?.duplicateIds, "listing_older");
-  assert.equal(box.saved[0]?.flagsJson, "[]");
-  assert.equal(listing.hidden, false);
-});
-
-test("the same photo is noted even when the model finds nothing, and a recent check is skipped", async () => {
-  const box = memory({ ...listing, photoUrl: "" });
-  const writer = runWith(clean);
-  const textOnly = await suggestListingModeration(listing.id, {
-    env: { AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv,
-    store: box.store,
-    featureOn: async () => true,
-    run: writer.run,
-  });
-  assert.equal(textOnly.status, "clean");
-  assert.equal(box.fingerprints.length, 0);
-  assert.equal(box.saved[0]?.status, "clean");
-
-  const again = memory(listing, { last: new Date("2026-10-01T12:05:00Z") });
-  const skipped = await suggestListingModeration(listing.id, {
-    now: new Date("2026-10-01T12:10:00Z"),
-    store: again.store,
-    featureOn: async () => true,
-    run: writer.run,
-  });
+test("a recent model check is not repeated", async () => {
+  const box = harness({ ...listing, photoUrl: "" });
+  const writer = runWith({ flags: [], suggestedCategory: null });
+  const skipped = await runModeration(
+    { targetType: "listing", targetId: listing.id },
+    {
+      ...box.base,
+      now: new Date("2026-10-01T12:10:00Z"),
+      lastAiAt: new Date("2026-10-01T12:05:00Z"),
+      env: { AI_MODERATION: "1" } as unknown as NodeJS.ProcessEnv,
+      featureOn: async () => true,
+      run: writer.run,
+    },
+  );
   assert.equal(skipped.status, "debounced");
-  assert.equal(writer.calls(), 1);
+  assert.equal(writer.calls(), 0);
+});
+
+test("an iPhone priced at 500 is a price outlier when the category has enough sales", async () => {
+  const phone: ListingSnapshot = {
+    ...listing,
+    title: "iPhone 16",
+    description: "Phone",
+    category: "Electronics",
+    priceLabel: "KES 500",
+    photoUrl: "",
+    scamFired: false,
+  };
+  const box = harness(phone);
+  const usual = [40000, 42000, 45000, 48000, 50000, 52000, 55000, 60000];
+  const result = await runModeration(
+    { targetType: "listing", targetId: phone.id },
+    {
+      ...box.base,
+      categoryPrices: usual,
+      env: { MOD_PHOTO_HASH: "1" } as unknown as NodeJS.ProcessEnv,
+      featureOn: async () => false,
+    },
+  );
+  assert.equal(result.status, "open");
+  assert.equal(box.saved.some((row) => row.kind === "price_outlier" && row.source === "stats"), true);
+});
+
+test("the backfill takes at most 200 photos that have no fingerprint yet", () => {
+  const existing = new Set(["listing:done"]);
+  const rows = [
+    { ownerType: "listing", ownerId: "done", url: "https://example.com/a.jpg" },
+    { ownerType: "listing", ownerId: "new", url: "https://example.com/b.jpg" },
+    { ownerType: "offering", ownerId: "blank", url: "  " },
+  ];
+  assert.deepEqual(unhashedPhotoTargets(existing, rows, 200), [
+    { ownerType: "listing", ownerId: "new", url: "https://example.com/b.jpg" },
+  ]);
 });
 
 test("scheduling stays idle unless moderation or photo fingerprints are on", async () => {

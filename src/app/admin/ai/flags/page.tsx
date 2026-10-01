@@ -1,60 +1,56 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { dismissModerationSuggestion } from "@/app/admin/ai/actions";
-import { btnSecondary } from "@/components/ui";
-import { readStoredFlags } from "@/lib/ai/moderation";
+import { reviewModerationFlagAction } from "@/app/admin/ai/actions";
+import { btnSecondary, fieldClass } from "@/components/ui";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 
-export const metadata: Metadata = { title: "Moderation suggestions" };
+export const metadata: Metadata = { title: "Moderation flags" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminAiFlagsPage() {
+function one(value: string | string[] | undefined): string {
+  return Array.isArray(value) ? value[0] ?? "" : value ?? "";
+}
+
+export default async function AdminAiFlagsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireAdmin();
+  const params = await searchParams;
+  const status = one(params.status) || "open";
+  const kind = one(params.kind);
+  const targetType = one(params.target);
   let rows: {
     id: string;
-    listingId: string;
-    suggestedCategory: string;
-    duplicateIds: string;
-    flagsJson: string;
+    targetType: string;
+    targetId: string;
+    source: string;
+    kind: string;
+    severity: string;
+    reason: string;
+    evidenceJson: string;
     createdAt: Date;
   }[] = [];
   try {
-    rows = await prisma.aiModerationSuggestion.findMany({
-      where: { status: "open" },
+    rows = await prisma.moderationFlag.findMany({
+      where: {
+        status,
+        ...(kind ? { kind } : {}),
+        ...(targetType ? { targetType } : {}),
+      },
       orderBy: { createdAt: "desc" },
       take: 50,
-      select: {
-        id: true,
-        listingId: true,
-        suggestedCategory: true,
-        duplicateIds: true,
-        flagsJson: true,
-        createdAt: true,
-      },
     });
   } catch {
     rows = [];
   }
 
-  const ids = [...new Set(rows.map((row) => row.listingId).filter(Boolean))];
-  let titles = new Map<string, string>();
-  if (ids.length > 0) {
-    try {
-      const listings = await prisma.listing.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, title: true },
-      });
-      titles = new Map(listings.map((listing) => [listing.id, listing.title]));
-    } catch {
-      titles = new Map();
-    }
-  }
-
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-8">
       <div>
-        <h1 className="font-serif text-3xl">Moderation suggestions</h1>
+        <h1 className="font-serif text-3xl">Moderation flags</h1>
         <p className="mt-2 text-sm text-ink/70">
           These are notes for a person to read. Nothing on this page hides, deletes, rejects, or verifies a listing. Use
           the main moderation page when you decide to hide one.
@@ -70,51 +66,64 @@ export default async function AdminAiFlagsPage() {
         </p>
       </div>
 
+      <form className="flex flex-wrap gap-2 text-sm" method="get">
+        <select name="status" defaultValue={status} className={fieldClass}>
+          <option value="open">Open</option>
+          <option value="dismissed">Dismissed</option>
+          <option value="actioned">Actioned</option>
+        </select>
+        <select name="kind" defaultValue={kind} className={fieldClass}>
+          <option value="">Any kind</option>
+          <option value="duplicate_photo">Similar photo</option>
+          <option value="price_outlier">Price outlier</option>
+          <option value="scam_text">Scam text</option>
+          <option value="prohibited_item">Prohibited item</option>
+          <option value="misleading">Misleading</option>
+          <option value="contact_bypass">Contact bypass</option>
+          <option value="off_category">Category</option>
+          <option value="other">Other</option>
+        </select>
+        <select name="target" defaultValue={targetType} className={fieldClass}>
+          <option value="">Any target</option>
+          <option value="listing">Listing</option>
+          <option value="offering">Offering</option>
+          <option value="storefront">Shop</option>
+        </select>
+        <button className={btnSecondary}>Filter</button>
+      </form>
+
       {rows.length === 0 ? (
-        <p className="text-sm text-ink/70">No open suggestions.</p>
+        <p className="text-sm text-ink/70">No flags for this filter.</p>
       ) : (
         <ul className="grid gap-4">
           {rows.map((row) => {
-            const flags = readStoredFlags(row.flagsJson);
-            const duplicates = row.duplicateIds.split(",").map((id) => id.trim()).filter(Boolean);
-            const title = titles.get(row.listingId) || "Listing";
+            const href = row.targetType === "listing" ? `/listings/${row.targetId}` : "/admin";
             return (
               <li key={row.id} className="grid gap-2 rounded-2xl border border-sand bg-card p-4 text-sm">
                 <p className="font-semibold text-navy">
-                  <Link href={`/listings/${row.listingId}`} className="underline">
-                    {title}
+                  <Link href={href} className="underline">
+                    {row.targetType} {row.targetId.slice(0, 8)}
                   </Link>
                 </p>
                 <p className="text-ink/50">{row.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC</p>
-                {row.suggestedCategory ? (
-                  <p>Suggested category: {row.suggestedCategory}. The listing category is unchanged.</p>
+                <p>
+                  <span className="font-semibold">{row.severity}</span> {row.kind} ({row.source})
+                  {row.reason ? `: ${row.reason}` : null}
+                </p>
+                {status === "open" ? (
+                  <form action={reviewModerationFlagAction} className="grid gap-2">
+                    <input type="hidden" name="id" value={row.id} />
+                    <input name="note" placeholder="Note (optional)" className={fieldClass} maxLength={500} />
+                    <div className="flex flex-wrap gap-2">
+                      <button name="action" value="dismiss" className={btnSecondary}>
+                        Dismiss
+                      </button>
+                      <button name="action" value="actioned" className={btnSecondary}>
+                        Mark actioned
+                      </button>
+                    </div>
+                  </form>
                 ) : null}
-                {duplicates.length > 0 ? (
-                  <p>
-                    Similar photo to{" "}
-                    {duplicates.map((id, index) => (
-                      <span key={id}>
-                        {index > 0 ? ", " : null}
-                        <Link href={`/listings/${id}`} className="font-semibold text-lake-dark underline">
-                          {id.slice(0, 8)}
-                        </Link>
-                      </span>
-                    ))}
-                    .
-                  </p>
-                ) : null}
-                <ul className="grid gap-1">
-                  {flags.map((flag, index) => (
-                    <li key={`${flag.kind}-${index}`}>
-                      <span className="font-semibold">{flag.severity}</span> {flag.kind}: {flag.reason}
-                      {flag.evidence ? <span className="text-ink/60"> — {flag.evidence}</span> : null}
-                    </li>
-                  ))}
-                </ul>
-                <form action={dismissModerationSuggestion}>
-                  <input type="hidden" name="id" value={row.id} />
-                  <button className={btnSecondary}>Dismiss suggestion</button>
-                </form>
               </li>
             );
           })}

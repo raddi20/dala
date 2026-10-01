@@ -27,3 +27,10 @@ test("provider SDKs are imported only from the AI layer", () => {
   }
   assert.deepEqual(offenders, []);
 });
+
+test("moderation code does not assign listing visibility", () => {
+  const found: string[] = [];
+  files(join(root, "src", "lib", "ai"), found);
+  const hits = found.filter((path) => /hidden\s*:/.test(readFileSync(path, "utf8")));
+  assert.deepEqual(hits, []);
+});
