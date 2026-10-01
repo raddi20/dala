@@ -106,16 +106,18 @@ export function InstallPrompt({ appName }: { appName: string }) {
         setMode(null);
         return;
       }
-      if (deferredPrompt) {
-        setMode("android");
-        return;
-      }
+      // iPhone and iPad Safari never fire beforeinstallprompt. Prefer that hint when the
+      // browser claims to be iOS Safari, including when desktop Chrome is emulating an iPhone.
       const ios = isIosSafari({
         userAgent: navigator.userAgent,
         platform: navigator.platform,
         maxTouchPoints: navigator.maxTouchPoints ?? 0,
       });
-      setMode(ios ? "ios" : null);
+      if (ios) {
+        setMode("ios");
+        return;
+      }
+      setMode(deferredPrompt ? "android" : null);
     };
 
     listeners.add(sync);
