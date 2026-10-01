@@ -58,7 +58,8 @@ test("db push adds AI tables without rewriting existing rows", () => {
     const usage = after.prepare(`SELECT COUNT(*) AS n FROM "AiUsage"`).get();
     const flags = after.prepare(`SELECT COUNT(*) AS n FROM "AiFlag"`).get();
     const stats = after.prepare(`SELECT COUNT(*) AS n FROM "StatEvent"`).get();
-    const tables = after.prepare(`SELECT name FROM sqlite_master WHERE type = 'table'`).all().map((row) => row.name);
+    const videos = after.prepare(`SELECT COUNT(*) AS n FROM "ShopVideo"`).get();
+    const receipts = after.prepare(`SELECT COUNT(*) AS n FROM "MuxEventReceipt"`).get();
     after.close();
 
     assert.equal(user.email, "keep@example.com");
@@ -70,8 +71,8 @@ test("db push adds AI tables without rewriting existing rows", () => {
     assert.equal(Number(usage.n), 0);
     assert.equal(Number(flags.n), 0);
     assert.equal(Number(stats.n), 0);
-    assert.equal(tables.includes("ShopVideo"), false);
-    assert.equal(tables.includes("MuxEventReceipt"), false);
+    assert.equal(Number(videos.n), 0);
+    assert.equal(Number(receipts.n), 0);
   } finally {
     try {
       db.close();
