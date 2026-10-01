@@ -5,6 +5,7 @@ import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PwaRegister } from "@/components/pwa-register";
+import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
 import { publicOrigin } from "@/lib/payments/origin";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
@@ -75,6 +76,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </a>
         <Header />
         <PwaRegister />
+        <StatBeacon />
         <main id="main" className="page-enter flex-1">
           <InstallPrompt appName={installName} />
           {children}
