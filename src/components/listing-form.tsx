@@ -2,9 +2,10 @@
 
 import { useActionState, useState } from "react";
 import { createListing, updateListing } from "@/lib/actions/listings";
-import { CATEGORIES, CITIES, LISTING_TYPES } from "@/lib/constants";
+import { CITIES, LISTING_TYPES } from "@/lib/constants";
 import { draftListing } from "@/lib/draft";
 import { btnPrimary, btnSecondary, ErrorNote, fieldClass } from "@/components/ui";
+import { CategoryOptions } from "@/components/category-options";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
@@ -107,11 +108,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           <label className="block text-sm">
             Category
             <select name="category" value={category} onChange={(event) => setCategory(event.target.value)} className={fieldClass}>
-              {CATEGORIES.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
+              <CategoryOptions />
             </select>
           </label>
           <label className="block text-sm">

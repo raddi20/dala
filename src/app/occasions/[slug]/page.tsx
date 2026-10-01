@@ -4,11 +4,14 @@ import { notFound } from "next/navigation";
 import { DiasporaOrdersTag } from "@/components/badges";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState, btnSecondary, cardClass } from "@/components/ui";
+import { appName } from "@/lib/brand";
 import { continueHref } from "@/lib/utils";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
+import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
+import { buildShareMetadata, clipText, privateMetadata } from "@/lib/share-metadata";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -42,15 +45,18 @@ async function loadOccasion(slug: string) {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const occasion = await loadOccasion(slug);
-  if (!occasion) return { title: "Occasion" };
-  const description = occasion.intro.slice(0, 160);
-  const path = `/occasions/${occasion.slug}`;
-  return {
+  if (!occasion) return privateMetadata("Occasion");
+  const origin = await publicOrigin();
+  const name = appName();
+  const description = clipText(occasion.intro) || `${occasion.title} on ${name}. Chat stays on WhatsApp.`;
+  return buildShareMetadata({
+    origin,
+    path: `/occasions/${occasion.slug}`,
     title: occasion.title,
     description,
-    alternates: { canonical: path },
-    openGraph: { title: occasion.title, description, url: path },
-  };
+    image: `/occasions/${encodeURIComponent(occasion.slug)}/opengraph-image`,
+    imageAlt: `${occasion.title} on ${name}`,
+  });
 }
 
 export default async function OccasionPage({ params }: Props) {

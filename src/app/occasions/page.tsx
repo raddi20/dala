@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cardClass, sectionTitleClass } from "@/components/ui";
+import { appName } from "@/lib/brand";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
+import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
+import { buildShareMetadata } from "@/lib/share-metadata";
 
-export const metadata: Metadata = {
-  title: "Occasions",
-  description:
-    "Shops and listings for homecomings, weddings and ayie, funerals, Christmas at home, and a house back home. Chat stays on WhatsApp.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const origin = await publicOrigin();
+  const name = appName();
+  return buildShareMetadata({
+    origin,
+    path: "/occasions",
+    title: "Occasions",
+    description: `Homecomings, weddings and ayie, funerals, Christmas at home, and a house back home on ${name}. Chat stays on WhatsApp.`,
+    image: "/occasions/opengraph-image",
+    imageAlt: `Occasions on ${name}`,
+  });
+}
 
 export default async function OccasionsPage() {
   await ensureOccasionDefinitions(prisma);

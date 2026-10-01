@@ -188,9 +188,14 @@ export default async function AccountPage({
             </li>
           ))}
         </ul>
-        <Link href="/upgrade" className="text-sm font-semibold text-lake-dark">
-          Feature a listing or get Verified Pro
-        </Link>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          <Link href="/pricing" className="text-sm font-semibold text-lake-dark">
+            Prices
+          </Link>
+          <Link href="/upgrade" className="text-sm font-semibold text-lake-dark">
+            Feature a listing or get Verified Pro
+          </Link>
+        </div>
       </section>
 
       <section className="grid gap-3">

@@ -63,6 +63,10 @@ export function StorefrontSettingsForm({
       ) : (
         <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
           A cover banner is included with Verified Pro, along with {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}.{" "}
+          <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
+            See prices
+          </Link>
+          {" · "}
           <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
             See Promote
           </Link>

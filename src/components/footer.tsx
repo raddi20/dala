@@ -16,6 +16,12 @@ export function Footer() {
           <Link href="/occasions" className="hover:text-navy">
             Occasions
           </Link>
+          <Link href="/categories" className="hover:text-navy">
+            Categories
+          </Link>
+          <Link href="/pricing" className="hover:text-navy">
+            Pricing
+          </Link>
           <Link href="/listings?type=business" className="hover:text-navy">
             Directory
           </Link>
