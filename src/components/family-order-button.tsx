@@ -110,9 +110,11 @@ export function FamilyOrderButton({
               <label className="block text-sm font-medium text-ink/80">
                 Date needed <span className="font-normal text-ink/50">(optional)</span>
                 <input
-                  type="date"
                   value={dateNeeded}
                   onChange={(event) => setDateNeeded(event.target.value)}
+                  maxLength={40}
+                  placeholder="e.g. 20 December 2026"
+                  autoComplete="off"
                   className={fieldClass}
                 />
               </label>
