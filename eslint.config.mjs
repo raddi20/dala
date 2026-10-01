@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Generated from src/pwa/sw.ts. The worker source is typechecked by the bundle step.
+    "public/sw.js",
+    "src/pwa/**",
   ]),
 ]);
 
