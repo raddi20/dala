@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
+import { normalizeEmail, passwordLoginAllowed } from "@/lib/admin-access";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -16,9 +17,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const email = String(credentials?.email ?? "").toLowerCase().trim();
+        const email = normalizeEmail(String(credentials?.email ?? ""));
         const password = String(credentials?.password ?? "");
         if (!email || !password) return null;
+        if (!passwordLoginAllowed(email, process.env)) return null;
 
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;

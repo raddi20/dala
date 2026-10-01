@@ -7,6 +7,7 @@ const prisma = new PrismaClient();
 const tsx = join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "tsx", "dist", "cli.mjs");
 
 try {
+  // Exact bio sentence from the Dala rebrand only. Does not change passwords or roles.
   const renamed = await prisma.user.updateMany({
     where: {
       bio: "Moderates the Dala demo. This account can hide listings and grant the verified badge.",

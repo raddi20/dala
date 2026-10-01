@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth-forms";
 import { Wordmark } from "@/components/wordmark";
 import { cardClass } from "@/components/ui";
+import { showDemoCredentials } from "@/lib/admin-access";
 import { getSessionUser } from "@/lib/session";
 import { authContinueCopy, one, safePath } from "@/lib/utils";
 
@@ -18,6 +19,7 @@ export default async function LoginPage({
   const user = await getSessionUser();
   if (user) redirect(next);
   const queryError = one(sp.error) === "CredentialsSignin" ? "Email or password is wrong." : "";
+  const showDemo = showDemoCredentials(process.env);
 
   return (
     <div className="mx-auto flex max-w-md flex-col justify-center gap-6 px-4 py-12 sm:py-16">
@@ -27,19 +29,22 @@ export default async function LoginPage({
         </div>
         <h1 className="mt-2 text-xl font-semibold text-ink">Sign in</h1>
         <p className="mt-2 text-sm text-ink/60">
-          {authContinueCopy(next) || "Email and password. No email provider is required for this demo."}
+          {authContinueCopy(next) ||
+            (showDemo ? "Email and password. No email provider is required for this demo." : "Email and password.")}
         </p>
       </div>
       <div className={`${cardClass} grid gap-5 p-6`}>
-        <div className="rounded-xl bg-amber-soft/80 px-3.5 py-3 text-sm text-ink/80">
-          <p className="font-semibold text-clay-dark">Demo password for every seeded account: demo1234</p>
-          <ul className="mt-2 grid gap-1 text-ink/70">
-            <li>akinyi@dala.local — admin</li>
-            <li>atieno@dala.local — Nairobi restaurant</li>
-            <li>okello@dala.local — London solicitor</li>
-            <li>james@dala.local — London resident</li>
-          </ul>
-        </div>
+        {showDemo ? (
+          <div className="rounded-xl bg-amber-soft/80 px-3.5 py-3 text-sm text-ink/80">
+            <p className="font-semibold text-clay-dark">Demo password for every seeded account: demo1234</p>
+            <ul className="mt-2 grid gap-1 text-ink/70">
+              <li>akinyi@dala.local — admin</li>
+              <li>atieno@dala.local — Nairobi restaurant</li>
+              <li>okello@dala.local — London solicitor</li>
+              <li>james@dala.local — London resident</li>
+            </ul>
+          </div>
+        ) : null}
         <LoginForm nextPath={next} queryError={queryError} />
       </div>
     </div>
