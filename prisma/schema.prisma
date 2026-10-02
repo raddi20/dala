@@ -357,4 +357,96 @@ model StatEvent {
   @@index([createdAt])
 }
 
+model AiSearchCache {
+  queryKey   String   @id
+  resultJson String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+}
+
+model AiListingDraft {
+  id             String   @id @default(cuid())
+  userId         String   @default("")
+  listingId      String   @default("")
+  inputText      String
+  photoUrl       String   @default("")
+  language       String   @default("en")
+  suggestionJson String
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model SellerAiPrefs {
+  userId         String    @id
+  aiConsentAt    DateTime?
+  language       String    @default("en")
+  tipsEmailOptIn Boolean   @default(false)
+  updatedAt      DateTime  @updatedAt
+}
+
+model ModerationFlag {
+  id           String    @id @default(cuid())
+  targetType   String
+  targetId     String
+  source       String
+  kind         String
+  severity     String    @default("medium")
+  reason       String    @default("")
+  evidenceJson String    @default("{}")
+  status       String    @default("open")
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ModerationReview {
+  id         String   @id @default(cuid())
+  flagId     String
+  action     String
+  note       String   @default("")
+  adminId    String
+  adminEmail String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([flagId, createdAt])
+}
+
+model MediaHash {
+  id        String   @id @default(cuid())
+  mediaType String
+  ownerType String
+  ownerId   String
+  ownerUser String   @default("")
+  url       String
+  dhash     String
+  h0        String
+  h1        String
+  h2        String
+  h3        String
+  createdAt DateTime @default(now())
+
+  @@index([h0])
+  @@index([h1])
+  @@index([h2])
+  @@index([h3])
+  @@index([ownerType, ownerId])
+}
+
+model SellerTip {
+  id           String    @id @default(cuid())
+  userId       String
+  storefrontId String    @default("")
+  weekStart    DateTime
+  statsJson    String
+  tipsJson     String    @default("")
+  source       String    @default("ai")
+  emailedAt    DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, weekStart])
+}
+
 // ===== end AI block =====

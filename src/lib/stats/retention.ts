@@ -16,7 +16,7 @@ export async function purgeStatEventsBefore(cutoff: Date): Promise<number> {
 
 let lastPurge = 0;
 
-/** Best-effort cleanup until the weekly cron in a later stage calls the same cutoff. */
+/** Hourly best-effort cleanup. The Monday seller-tips cron calls the same cutoff. */
 export async function maybePurgeStatEvents(now = Date.now()): Promise<void> {
   if (now - lastPurge < PURGE_GAP_MS) return;
   lastPurge = now;

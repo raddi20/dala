@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { offeringCap } from "@/lib/constants";
 import { OCCASION_DEFINITIONS, ensureOccasionDefinitions, syncShopOccasionSlugs } from "@/lib/occasions";
+import { scheduleModeration } from "@/lib/ai/moderation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { uniqueSlug } from "@/lib/storefront";
@@ -104,6 +105,7 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
     await syncShopOccasionSlugs(prisma, storefront.id, parsed.data.occasionSlugs);
   }
 
+  if (bannerUrl) scheduleModeration({ targetType: "storefront", targetId: storefront.id });
   await revalidateShop(user.id, parsed.data.slug, storefront.slug);
   redirect("/account/storefront?notice=saved");
 }
@@ -122,7 +124,7 @@ export async function createOffering(_prev: ActionState, formData: FormData): Pr
     _max: { sortOrder: true },
   });
 
-  await prisma.offering.create({
+  const offering = await prisma.offering.create({
     data: {
       storefrontId: storefront.id,
       title: parsed.data.title,
@@ -133,6 +135,7 @@ export async function createOffering(_prev: ActionState, formData: FormData): Pr
       sortOrder: (max._max.sortOrder ?? -1) + 1,
     },
   });
+  if (offering.imageUrl) scheduleModeration({ targetType: "offering", targetId: offering.id });
 
   await revalidateShop(user.id, storefront.slug);
   redirect(`/account/storefront?notice=${active === 0 ? "first" : "offering"}`);
@@ -163,6 +166,7 @@ export async function updateOffering(_prev: ActionState, formData: FormData): Pr
       imageUrl: parsed.data.imageUrl,
     },
   });
+  if (parsed.data.imageUrl) scheduleModeration({ targetType: "offering", targetId: offering.id });
 
   await revalidateShop(user.id, storefront.slug);
   redirect("/account/storefront?notice=offering");

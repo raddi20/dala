@@ -6,11 +6,24 @@ import { tapKindForHref, viewKindForPath } from "@/lib/stats/events";
 
 const STORAGE_KEY = "rangach_visitor";
 
+function rememberVisitor(id: string) {
+  sessionStorage.setItem(STORAGE_KEY, id);
+  document.cookie = `rangach_visitor=${id}; Path=/; SameSite=Lax; Max-Age=31536000`;
+}
+
 function visitorId(): string {
+  const fromCookie = document.cookie.match(/(?:^|; )rangach_visitor=([A-Za-z0-9_-]{16,80})/)?.[1];
+  if (fromCookie) {
+    rememberVisitor(fromCookie);
+    return fromCookie;
+  }
   const existing = sessionStorage.getItem(STORAGE_KEY);
-  if (existing && /^[A-Za-z0-9_-]{16,80}$/.test(existing)) return existing;
+  if (existing && /^[A-Za-z0-9_-]{16,80}$/.test(existing)) {
+    rememberVisitor(existing);
+    return existing;
+  }
   const created = crypto.randomUUID().replace(/-/g, "");
-  sessionStorage.setItem(STORAGE_KEY, created);
+  rememberVisitor(created);
   return created;
 }
 

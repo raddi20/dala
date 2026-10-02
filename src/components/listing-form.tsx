@@ -6,6 +6,7 @@ import { CITIES, LISTING_TYPES } from "@/lib/constants";
 import { draftListing } from "@/lib/draft";
 import { btnPrimary, btnSecondary, ErrorNote, fieldClass } from "@/components/ui";
 import { CategoryOptions } from "@/components/category-options";
+import { ListingAssist, type ListingAssistDraft } from "@/components/ai/listing-assist";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
@@ -37,6 +38,22 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
   const [category, setCategory] = useState(initial.category);
   const [city, setCity] = useState(initial.city);
   const [type, setType] = useState(initial.type);
+  const [priceLabel, setPriceLabel] = useState(initial.priceLabel);
+  const [aiReview, setAiReview] = useState("");
+
+  function markEdited() {
+    setAiReview("");
+  }
+
+  function applyAiDraft(draft: ListingAssistDraft) {
+    setTitle(draft.title);
+    setDescription(draft.description);
+    setCategory(draft.category);
+    setType(draft.type);
+    if (draft.priceLabel) setPriceLabel(draft.priceLabel);
+    const extra = draft.warnings.filter(Boolean).slice(0, 2).join(" ");
+    setAiReview(extra ? `AI draft, please check. ${extra}` : "AI draft, please check.");
+  }
 
   function applyDraft() {
     const draft = draftListing(prompt);
@@ -75,12 +92,23 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
         {note ? <p className="mt-2 text-sm text-ink/80">{note}</p> : null}
       </div>
 
+      <ListingAssist onApply={applyAiDraft} />
+
       <form action={formAction} className="grid gap-4">
         <ErrorNote>{state.error}</ErrorNote>
+        {aiReview ? <p className="rounded-xl bg-teal-soft px-3.5 py-2.5 text-sm text-lake-dark">{aiReview}</p> : null}
         {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
         <label className="block text-sm">
           Type
-          <select name="type" value={type} onChange={(event) => setType(event.target.value)} className={fieldClass}>
+          <select
+            name="type"
+            value={type}
+            onChange={(event) => {
+              setType(event.target.value);
+              markEdited();
+            }}
+            className={fieldClass}
+          >
             {LISTING_TYPES.map((item) => (
               <option key={item.value} value={item.value}>
                 {item.label} — {item.blurb}
@@ -90,14 +118,27 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
         </label>
         <label className="block text-sm">
           Title
-          <input name="title" value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={80} className={fieldClass} />
+          <input
+            name="title"
+            value={title}
+            onChange={(event) => {
+              setTitle(event.target.value);
+              markEdited();
+            }}
+            required
+            maxLength={80}
+            className={fieldClass}
+          />
         </label>
         <label className="block text-sm">
           Description
           <textarea
             name="description"
             value={description}
-            onChange={(event) => setDescription(event.target.value)}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              markEdited();
+            }}
             required
             rows={6}
             maxLength={4000}
@@ -107,13 +148,29 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
             Category
-            <select name="category" value={category} onChange={(event) => setCategory(event.target.value)} className={fieldClass}>
+            <select
+              name="category"
+              value={category}
+              onChange={(event) => {
+                setCategory(event.target.value);
+                markEdited();
+              }}
+              className={fieldClass}
+            >
               <CategoryOptions />
             </select>
           </label>
           <label className="block text-sm">
             City
-            <select name="city" value={city} onChange={(event) => setCity(event.target.value)} className={fieldClass}>
+            <select
+              name="city"
+              value={city}
+              onChange={(event) => {
+                setCity(event.target.value);
+                markEdited();
+              }}
+              className={fieldClass}
+            >
               {CITIES.map((item) => (
                 <option key={item.name} value={item.name}>
                   {item.name} ({item.region})
@@ -128,7 +185,17 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
         </label>
         <label className="block text-sm">
           Price <span className="text-ink/60">(optional, shown as you type it)</span>
-          <input name="priceLabel" defaultValue={initial.priceLabel} maxLength={40} placeholder="KES 1,500 or £40" className={fieldClass} />
+          <input
+            name="priceLabel"
+            value={priceLabel}
+            onChange={(event) => {
+              setPriceLabel(event.target.value);
+              markEdited();
+            }}
+            maxLength={40}
+            placeholder="KES 1,500 or £40"
+            className={fieldClass}
+          />
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">

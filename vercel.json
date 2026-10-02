@@ -1,4 +1,14 @@
 {
   "framework": "nextjs",
-  "buildCommand": "npm run build:vercel"
+  "buildCommand": "npm run build:vercel",
+  "crons": [
+    {
+      "path": "/api/ai/cron/moderation-sweep",
+      "schedule": "30 3 * * *"
+    },
+    {
+      "path": "/api/ai/cron/weekly-tips",
+      "schedule": "0 5 * * 1"
+    }
+  ]
 }
