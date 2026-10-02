@@ -80,6 +80,9 @@ export default async function AccountPage({
         <Link href={`/people/${user.id}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark">
           View public profile
         </Link>
+        <Link href="/account/insights" className="mt-1 block text-sm font-semibold text-lake-dark underline">
+          Your week
+        </Link>
       </div>
       {flash ? <Flash>{flash}</Flash> : null}
       <ProfileForm
