@@ -52,8 +52,8 @@ export default async function AdminAiFlagsPage({
       <div>
         <h1 className="font-serif text-3xl">Moderation flags</h1>
         <p className="mt-2 text-sm text-ink/70">
-          These are notes for a person to read. Nothing on this page hides, deletes, rejects, or verifies a listing. Use
-          the main moderation page when you decide to hide one.
+          These are notes for a person to read. Nothing on this page hides, deletes, rejects, or verifies a listing or a
+          shop video. A similar-video note stays here. Use the main moderation page when you decide to hide a listing.
         </p>
         <p className="mt-3 text-sm">
           <Link href="/admin/ai" className="font-semibold text-lake-dark underline">
@@ -75,6 +75,7 @@ export default async function AdminAiFlagsPage({
         <select name="kind" defaultValue={kind} className={fieldClass}>
           <option value="">Any kind</option>
           <option value="duplicate_photo">Similar photo</option>
+          <option value="duplicate_video">Similar video</option>
           <option value="price_outlier">Price outlier</option>
           <option value="scam_text">Scam text</option>
           <option value="prohibited_item">Prohibited item</option>
@@ -88,6 +89,7 @@ export default async function AdminAiFlagsPage({
           <option value="listing">Listing</option>
           <option value="offering">Offering</option>
           <option value="storefront">Shop</option>
+          <option value="video">Video</option>
         </select>
         <button className={btnSecondary}>Filter</button>
       </form>

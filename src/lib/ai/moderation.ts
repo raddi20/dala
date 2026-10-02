@@ -5,6 +5,7 @@ import { isDebounced, MODERATION_DEBOUNCE_MS } from "@/lib/ai/limits";
 import { dHash, hashChunks, otherOwnerMatches, photoHashEnabled, type HashCandidate } from "@/lib/ai/photo-hash";
 import { moderationPrompt, type ModerationResult } from "@/lib/ai/prompts/moderation";
 import { downloadListingPhoto, isAllowedListingPhotoUrl, resizeListingPhoto } from "@/lib/ai/resize-photo";
+import { downloadPublicMuxThumbnail, isPublicMuxThumbnailUrl } from "@/lib/ai/video-thumb";
 import { runAi } from "@/lib/ai/run";
 import type { AiActor, ImagePart, RunResult } from "@/lib/ai/types";
 import { prisma } from "@/lib/prisma";
@@ -88,12 +89,12 @@ export function listingModerationText(listing: ListingSnapshot): string {
     .slice(0, 4000);
 }
 
-export function unhashedPhotoTargets(
+export function unhashedPhotoTargets<T extends { ownerType: string; ownerId: string; url: string }>(
   existingKeys: Set<string>,
-  rows: { ownerType: string; ownerId: string; url: string }[],
+  rows: T[],
   limit = SWEEP_BATCH,
-): { ownerType: string; ownerId: string; url: string }[] {
-  const out: { ownerType: string; ownerId: string; url: string }[] = [];
+): T[] {
+  const out: T[] = [];
   for (const row of rows) {
     if (!row.url.trim()) continue;
     const key = `${row.ownerType}:${row.ownerId}`;
@@ -164,8 +165,8 @@ export async function runModeration(
       loadHashes: deps.loadHashes,
       saveHash: deps.saveHash,
     });
-    if (duplicate) await saveFlag(duplicate);
-    return { status: duplicate ? "open" : "clean", flags: duplicate ? 1 : 0 };
+    if (duplicate.flag) await saveFlag(duplicate.flag);
+    return { status: duplicate.flag ? "open" : "clean", flags: duplicate.flag ? 1 : 0 };
   }
   const flags: FlagDraft[] = [];
 
@@ -184,7 +185,7 @@ export async function runModeration(
       loadHashes: deps.loadHashes,
       saveHash: deps.saveHash,
     });
-    if (duplicate) flags.push(duplicate);
+    if (duplicate.flag) flags.push(duplicate.flag);
   }
 
   const prices = deps.categoryPrices ?? (await (deps.loadPrices ?? loadCategoryPrices)(listing.category, listing.id));
@@ -298,18 +299,21 @@ async function rememberPhoto(input: {
   ownerId: string;
   ownerUser: string;
   targetType: string;
+  flagKind?: string;
+  flagReason?: string;
   download?: (url: string) => Promise<Uint8Array>;
   fingerprint?: (bytes: Uint8Array) => Promise<string | null>;
   hashes?: HashCandidate[];
   loadHashes?: (chunks: { h0: string; h1: string; h2: string; h3: string }) => Promise<HashCandidate[]>;
   saveHash?: (row: HashDraft) => Promise<void>;
-}): Promise<FlagDraft | null> {
+}): Promise<{ flag: FlagDraft | null; stored: boolean }> {
+  const missed = { flag: null, stored: false };
   try {
     const download = input.download ?? downloadListingPhoto;
     const bytes = await download(input.url);
     const dhash = await (input.fingerprint ?? dHash)(bytes);
     const chunks = dhash ? hashChunks(dhash) : null;
-    if (!dhash || !chunks) return null;
+    if (!dhash || !chunks) return missed;
     const known = input.hashes ?? (await (input.loadHashes ?? loadHashCandidates)(chunks));
     const matches = otherOwnerMatches(dhash, input.ownerUser, known).filter(
       (row) => !(row.ownerType === input.ownerType && row.ownerId === input.ownerId),
@@ -324,24 +328,67 @@ async function rememberPhoto(input: {
       dhash: dhash.toLowerCase(),
       createdAt: input.now,
     });
-    if (matches.length === 0) return null;
-    return openFlag(
-      {
-        targetType: input.targetType,
-        targetId: input.ownerId,
-        source: "phash",
-        kind: "duplicate_photo",
-        severity: "medium",
-        reason: "Similar photo to another seller.",
-        evidenceJson: JSON.stringify({
-          matches: matches.map((row) => ({ ownerType: row.ownerType, ownerId: row.ownerId, ownerUser: row.ownerUser })),
-        }),
-      },
-      input.now,
-    );
+    if (matches.length === 0) return { flag: null, stored: true };
+    return {
+      stored: true,
+      flag: openFlag(
+        {
+          targetType: input.targetType,
+          targetId: input.ownerId,
+          source: "phash",
+          kind: input.flagKind ?? "duplicate_photo",
+          severity: "medium",
+          reason: input.flagReason ?? "Similar photo to another seller.",
+          evidenceJson: JSON.stringify({
+            matches: matches.map((row) => ({ ownerType: row.ownerType, ownerId: row.ownerId, ownerUser: row.ownerUser })),
+          }),
+        },
+        input.now,
+      ),
+    };
   } catch {
-    return null;
+    return missed;
   }
+}
+
+/**
+ * Fingerprint a public Mux thumbnail. Reads the image only. Does not call a model
+ * and does not change the shop video row.
+ */
+export async function fingerprintPublicVideoThumb(input: {
+  videoId: string;
+  url: string;
+  ownerUser: string;
+  now?: Date;
+  env?: NodeJS.ProcessEnv;
+  hashes?: HashCandidate[];
+  download?: (url: string) => Promise<Uint8Array>;
+  fingerprint?: (bytes: Uint8Array) => Promise<string | null>;
+  loadHashes?: (chunks: { h0: string; h1: string; h2: string; h3: string }) => Promise<HashCandidate[]>;
+  saveHash?: (row: HashDraft) => Promise<void>;
+  saveFlag?: (row: FlagDraft) => Promise<void>;
+}): Promise<{ hashed: boolean; flagged: boolean }> {
+  const env = input.env ?? process.env;
+  if (!photoHashEnabled(env)) return { hashed: false, flagged: false };
+  if (!isPublicMuxThumbnailUrl(input.url) || !input.ownerUser.trim()) return { hashed: false, flagged: false };
+  const saved = await rememberPhoto({
+    now: input.now ?? new Date(),
+    url: input.url,
+    mediaType: "video_thumb",
+    ownerType: "video",
+    ownerId: input.videoId,
+    ownerUser: input.ownerUser,
+    targetType: "video",
+    flagKind: "duplicate_video",
+    flagReason: "Similar shop video to another seller.",
+    download: input.download ?? downloadPublicMuxThumbnail,
+    fingerprint: input.fingerprint,
+    hashes: input.hashes,
+    loadHashes: input.loadHashes,
+    saveHash: input.saveHash,
+  });
+  if (saved.flag) await (input.saveFlag ?? saveFlagRow)(saved.flag);
+  return { hashed: saved.stored, flagged: Boolean(saved.flag) };
 }
 
 async function fingerprintOwnedPhoto(
@@ -369,8 +416,8 @@ async function fingerprintOwnedPhoto(
     fingerprint: deps.fingerprint,
     saveHash: deps.saveHash,
   });
-  if (!flag) return 0;
-  await (deps.saveFlag ?? saveFlagRow)(flag);
+  if (!flag.flag) return 0;
+  await (deps.saveFlag ?? saveFlagRow)(flag.flag);
   return 1;
 }
 
