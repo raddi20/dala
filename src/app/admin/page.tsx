@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminOccasions } from "@/components/admin-occasions";
+import { AdminVideoQueue } from "@/components/admin-video-queue";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
 import {
   resolveReport,
@@ -24,8 +25,14 @@ import { formatWhen } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin" };
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireAdmin();
+  const notice = (await searchParams).videoNotice;
+  const videoNotice = typeof notice === "string" ? notice : "";
   const [listings, reports, users, shops] = await Promise.all([
     prisma.listing.findMany({
       include: { owner: { select: { name: true, email: true } } },
@@ -65,6 +72,8 @@ export default async function AdminPage() {
           separate from those checks.
         </p>
       </div>
+
+      <AdminVideoQueue notice={videoNotice} />
 
       <section id="shop-badges" className="grid gap-3">
         <h2 className="font-serif text-2xl">Shop checks</h2>

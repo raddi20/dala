@@ -7,6 +7,8 @@ export type OgCardModel = {
   title: string;
   subtitle: string;
   photoUrl: string;
+  /** Draw a play mark on the photo. Used when the shop has a public video. */
+  showPlay?: boolean;
 };
 
 export function brandOgModel(brand: string): OgCardModel {
@@ -25,6 +27,12 @@ function clipTitle(value: string) {
   return `${clean.slice(0, 89).trimEnd()}…`;
 }
 
+function posterPhoto(url: string) {
+  const trimmed = url.trim();
+  if (trimmed.startsWith("/mock/")) return trimmed;
+  return publicImageUrl(trimmed);
+}
+
 export function shopOgModel(input: {
   brand: string;
   published: boolean;
@@ -34,17 +42,20 @@ export function shopOgModel(input: {
   coverUrl: string;
   logoUrl: string;
   verifiedPro: boolean;
+  videoPosterUrl?: string;
 }): OgCardModel {
   if (!input.published) return brandOgModel(input.brand);
+  const poster = input.videoPosterUrl ? posterPhoto(input.videoPosterUrl) : "";
   const cover = input.verifiedPro ? publicImageUrl(input.coverUrl) : "";
   const logo = publicImageUrl(input.logoUrl);
   const place = [input.city, input.category].filter(Boolean).join(" · ");
   return {
     brand: input.brand,
-    kicker: place || "Shop",
+    kicker: poster ? "Video" : place || "Shop",
     title: clipTitle(input.name),
     subtitle: APP_TAGLINE,
-    photoUrl: cover || logo,
+    photoUrl: poster || cover || logo,
+    showPlay: Boolean(poster),
   };
 }
 

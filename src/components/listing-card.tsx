@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badges, CityBadge } from "@/components/badges";
+import { VideoMark } from "@/components/video-mark";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
@@ -12,6 +13,9 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
   const shopSlug = listing.owner.storefront?.published ? listing.owner.storefront.slug : "";
   const whatsapp = listing.contactWhatsapp.trim();
   const servesDiaspora = Boolean(listing.owner.storefront?.servesDiaspora);
+  const hasVideo = Boolean(
+    listing.owner.verifiedPro && listing.owner.storefront?.published && (listing.owner.storefront.videos?.length ?? 0) > 0,
+  );
 
   return (
     <article className={`card-lift flex h-full flex-col overflow-hidden ${cardClass}`}>
@@ -32,6 +36,11 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
           <div className="absolute left-3 top-3">
             <CityBadge city={listing.city} />
           </div>
+          {hasVideo ? (
+            <div className="absolute bottom-3 left-3">
+              <VideoMark />
+            </div>
+          ) : null}
         </div>
         <div className="flex flex-1 flex-col gap-2 p-4">
           <Badges

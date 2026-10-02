@@ -15,6 +15,9 @@ import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/u
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
+import { ShopVideoPoster } from "@/components/shop-video-poster";
+import { videoMode } from "@/lib/video/config";
+import { shopVideoIsPublic } from "@/lib/video/machine";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -27,6 +30,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       bannerUrl: true,
       userId: true,
       user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true } },
+      videos: {
+        where: { status: "approved", NOT: { publicPlaybackId: "" } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true, publicPlaybackId: true },
+      },
     },
   });
   if (!shop) return privateMetadata("Shop");
@@ -35,6 +44,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!shop.published && !isOwner) return privateMetadata("Shop");
   if (!shop.published) return { title: shop.user.name, robots: { index: false, follow: false } };
   const origin = await publicOrigin();
+  const clip = shop.videos[0];
+  const hasPublicVideo = clip
+    ? shopVideoIsPublic({
+        verifiedPro: shop.user.verifiedPro,
+        published: true,
+        status: clip.status,
+        publicPlaybackId: clip.publicPlaybackId,
+      })
+    : false;
   const preview = shopPreviewImage({
     origin,
     slug,
@@ -42,6 +60,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     verifiedPro: shop.user.verifiedPro,
     bannerUrl: shop.bannerUrl,
     avatarUrl: shop.user.avatarUrl,
+    hasPublicVideo,
   });
   if (!preview) return privateMetadata("Shop");
   const description = clipText(shop.user.bio) || `${shop.user.name} in ${shop.user.city}. A shop on ${appName()}. Chat stays on WhatsApp.`;
@@ -52,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     image: preview.url,
     imageAlt: shop.user.name,
-    imageType: preview.generated ? "image/png" : null,
+    imageType: preview.contentType,
   });
 }
 
@@ -67,6 +86,7 @@ export default async function StorefrontPage({ params }: Props) {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       },
       badgeEvents: { orderBy: { createdAt: "desc" } },
+      videos: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!shop) notFound();
@@ -91,6 +111,15 @@ export default async function StorefrontPage({ params }: Props) {
   const callUrl = telHref(shop.user.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const bannerSrc = shop.user.verifiedPro ? shop.bannerUrl : "";
+  const publicVideo = shop.videos.find((video) =>
+    shopVideoIsPublic({
+      verifiedPro: shop.user.verifiedPro,
+      published: shop.published || isOwner,
+      status: video.status,
+      publicPlaybackId: video.publicPlaybackId,
+    }),
+  );
+  const showVideo = Boolean(publicVideo && (shop.published || isOwner) && shop.user.verifiedPro);
   const shopBadges = {
     phoneVerified: shop.phoneVerified,
     locationVerified: shop.locationVerified,
@@ -184,6 +213,17 @@ export default async function StorefrontPage({ params }: Props) {
           ) : null}
         </div>
       </header>
+
+      {showVideo && publicVideo ? (
+        <section aria-label="Shop video">
+          <ShopVideoPoster
+            playbackId={publicVideo.publicPlaybackId}
+            posterUrl={publicVideo.posterUrl}
+            caption={publicVideo.caption}
+            mock={videoMode() === "mock" || publicVideo.publicPlaybackId.startsWith("mock")}
+          />
+        </section>
+      ) : null}
 
       {shop.user.bio ? (
         <section className={`${cardClass} p-5`}>

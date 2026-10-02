@@ -12,6 +12,7 @@
  *
  * Caching rules live in src/lib/sw-policy.ts. HTML navigations are network-only.
  * The offline page is the only document this worker stores, and only under /offline.
+ * Mux playback (stream.mux.com) and posters (image.mux.com) are never cached.
  */
 
 import {

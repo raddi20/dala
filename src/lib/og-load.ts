@@ -3,6 +3,7 @@ import { isCategory } from "@/lib/categories";
 import { brandOgModel, categoryOgModel, listingOgModel, occasionOgModel, shopOgModel } from "@/lib/og-model";
 import { prisma } from "@/lib/prisma";
 import { shopSignals } from "@/lib/storefront";
+import { shopVideoIsPublic } from "@/lib/video/machine";
 
 export async function loadShopOg(slug: string) {
   const brand = appName();
@@ -13,10 +14,25 @@ export async function loadShopOg(slug: string) {
       bannerUrl: true,
       userId: true,
       user: { select: { name: true, city: true, avatarUrl: true, verifiedPro: true } },
+      videos: {
+        where: { status: "approved", NOT: { publicPlaybackId: "" } },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true, publicPlaybackId: true, posterUrl: true },
+      },
     },
   });
   if (!shop?.published) return brandOgModel(brand);
   const signals = await shopSignals(shop.userId);
+  const video = shop.videos[0];
+  const hasVideo = video
+    ? shopVideoIsPublic({
+        verifiedPro: shop.user.verifiedPro,
+        published: true,
+        status: video.status,
+        publicPlaybackId: video.publicPlaybackId,
+      })
+    : false;
   return shopOgModel({
     brand,
     published: true,
@@ -26,6 +42,7 @@ export async function loadShopOg(slug: string) {
     coverUrl: shop.bannerUrl,
     logoUrl: shop.user.avatarUrl,
     verifiedPro: shop.user.verifiedPro,
+    videoPosterUrl: hasVideo ? video?.posterUrl : "",
   });
 }
 

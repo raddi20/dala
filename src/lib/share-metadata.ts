@@ -135,15 +135,24 @@ export function shopPreviewImage(input: {
   verifiedPro: boolean;
   bannerUrl: string;
   avatarUrl: string;
+  hasPublicVideo?: boolean;
 }) {
   if (!input.published) return null;
+  if (input.hasPublicVideo) {
+    return {
+      url: absoluteUrl(input.origin, `/b/${encodeURIComponent(input.slug)}/video-card`),
+      generated: true as const,
+      contentType: "image/jpeg" as const,
+    };
+  }
   const cover = input.verifiedPro ? publicImageUrl(input.bannerUrl) : "";
   const logo = publicImageUrl(input.avatarUrl);
   const photo = cover || logo;
-  if (photo) return { url: photo, generated: false as const };
+  if (photo) return { url: photo, generated: false as const, contentType: null };
   return {
     url: absoluteUrl(input.origin, `/b/${encodeURIComponent(input.slug)}/opengraph-image`),
     generated: true as const,
+    contentType: undefined,
   };
 }
 
