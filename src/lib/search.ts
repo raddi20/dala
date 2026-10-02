@@ -39,6 +39,7 @@ export async function searchListings(filters: {
   verified?: boolean;
   badge?: string;
   diaspora?: boolean;
+  occasion?: string;
   ids?: string[];
   ownerId?: string;
   viewerId?: string | null;
@@ -53,6 +54,7 @@ export async function searchListings(filters: {
   if (filters.type === "classifieds") where.type = { not: "business" };
   else if (filters.type) where.type = filters.type;
   if (filters.verified) where.verified = true;
+  if (filters.occasion) where.occasions = { some: { occasion: { slug: filters.occasion } } };
   const badgeWhere = shopBadgeWhere(filters.badge);
   const diasporaWhere = diasporaOrdersWhere(filters.diaspora);
   const extra = [badgeWhere, diasporaWhere].filter((item) => item !== null);

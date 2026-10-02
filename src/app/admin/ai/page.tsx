@@ -57,7 +57,7 @@ export default async function AdminAiPage() {
         </p>
         <p className="mt-3 text-sm">
           <Link href="/admin/ai/flags" className="font-semibold text-lake-dark underline">
-            AI flags
+            Moderation suggestions
           </Link>
           <span className="text-ink/40"> · </span>
           <Link href="/admin" className="font-semibold text-lake-dark underline">
