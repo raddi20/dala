@@ -44,6 +44,14 @@ test("blank form fields still name the shop and the link", () => {
   assert.equal(message.includes("Who is paying:"), false);
 });
 
+test("an item or note is added only when the buyer filled it", () => {
+  assert.equal(familyOrderMessage(shop).includes("What I need:"), false);
+  assert.equal(familyOrderMessage(shop).includes("Notes:"), false);
+  const message = familyOrderMessage({ ...shop, item: "plastic chairs", notes: "Saturday morning" });
+  assert.match(message, /What I need: plastic chairs/);
+  assert.match(message, /Notes: Saturday morning/);
+});
+
 test("who is paying uses the three choices and ignores anything else", () => {
   assert.match(familyOrderMessage({ ...shop, payer: "recipient" }), /The recipient will pay\./);
   assert.match(familyOrderMessage({ ...shop, payer: "other" }), /Someone else is paying\./);

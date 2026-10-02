@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { scheduleListingModeration } from "@/lib/ai/moderation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { assessScam } from "@/lib/scam";
@@ -35,6 +36,7 @@ export async function createListing(_prev: ActionState, formData: FormData): Pro
     },
   });
 
+  scheduleListingModeration(listing.id);
   revalidateListing(listing.id);
   redirect(`/listings/${listing.id}?posted=1`);
 }
@@ -63,6 +65,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
     },
   });
 
+  scheduleListingModeration(id);
   revalidateListing(id);
   redirect(`/listings/${id}?updated=1`);
 }

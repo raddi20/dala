@@ -385,4 +385,54 @@ model SellerAiPrefs {
   updatedAt      DateTime  @updatedAt
 }
 
+model ModerationFlag {
+  id           String    @id @default(cuid())
+  targetType   String
+  targetId     String
+  source       String
+  kind         String
+  severity     String    @default("medium")
+  reason       String    @default("")
+  evidenceJson String    @default("{}")
+  status       String    @default("open")
+  createdAt    DateTime  @default(now())
+  resolvedAt   DateTime?
+
+  @@index([status, createdAt])
+  @@index([targetType, targetId])
+}
+
+model ModerationReview {
+  id         String   @id @default(cuid())
+  flagId     String
+  action     String
+  note       String   @default("")
+  adminId    String
+  adminEmail String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([flagId, createdAt])
+}
+
+model MediaHash {
+  id        String   @id @default(cuid())
+  mediaType String
+  ownerType String
+  ownerId   String
+  ownerUser String   @default("")
+  url       String
+  dhash     String
+  h0        String
+  h1        String
+  h2        String
+  h3        String
+  createdAt DateTime @default(now())
+
+  @@index([h0])
+  @@index([h1])
+  @@index([h2])
+  @@index([h3])
+  @@index([ownerType, ownerId])
+}
+
 // ===== end AI block =====

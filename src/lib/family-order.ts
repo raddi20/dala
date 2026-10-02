@@ -17,6 +17,8 @@ export type FamilyOrderInput = {
   town?: string;
   dateNeeded?: string;
   payer?: string;
+  item?: string;
+  notes?: string;
 };
 
 function clean(value: string | undefined, max: number) {
@@ -61,7 +63,11 @@ export function familyOrderMessage(input: FamilyOrderInput) {
   const needed = dateLine(input.dateNeeded);
   const payer = FAMILY_PAYERS.find((item) => item.value === clean(input.payer, 20));
 
+  const item = clean(input.item, 120);
+  const notes = clean(input.notes, 200);
   const lines = [`Hello, I found ${name} on ${site}${url ? ` (${url})` : ""}.`, "", "I am buying for family back home."];
+  if (item) lines.push(`What I need: ${item}`);
+  if (notes) lines.push(`Notes: ${notes}`);
   if (recipient) lines.push(`Recipient: ${recipient}`);
   if (town) lines.push(`Town or area: ${town}`);
   if (needed) lines.push(`Needed by: ${needed}`);
