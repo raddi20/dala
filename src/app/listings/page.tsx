@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { ListingCard } from "@/components/listing-card";
 import { CategoryOptions } from "@/components/category-options";
 import {
@@ -19,7 +20,8 @@ import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
 import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
-import { parseNlQuery } from "@/lib/nl-query";
+import { visitorActorHash } from "@/lib/ai/actor";
+import { interpretSearch } from "@/lib/ai/search-parse";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { one } from "@/lib/utils";
@@ -81,7 +83,9 @@ export default async function ListingsPage({
 }) {
   const sp = await searchParams;
   const nlRaw = one(sp.nl).trim();
-  const parsed = nlRaw ? parseNlQuery(nlRaw) : null;
+  const jar = await cookies();
+  const actorHash = visitorActorHash(jar.get("rangach_visitor")?.value ?? "") ?? undefined;
+  const parsed = nlRaw ? await interpretSearch(nlRaw, { actorHash }) : null;
   const filters = {
     q: one(sp.q) || parsed?.q || "",
     city: one(sp.city) || parsed?.city || "",
@@ -91,6 +95,7 @@ export default async function ListingsPage({
     verified: one(sp.verified) === "1" || parsed?.verified === true,
     badge: parseShopBadgeFilter(one(sp.badge)) ?? "",
     diaspora: wantsDiasporaOrders(one(sp.diaspora)),
+    occasion: one(sp.occasion) || parsed?.occasion || "",
   };
   const chipBase: Record<string, string> = {
     q: filters.q,
@@ -101,6 +106,7 @@ export default async function ListingsPage({
     verified: filters.verified ? "1" : "",
     badge: filters.badge,
     diaspora: filters.diaspora ? "1" : "",
+    occasion: filters.occasion,
   };
   const user = await getSessionUser();
   const listings = await searchListings({ ...filters, viewerId: user?.id });
@@ -139,6 +145,11 @@ export default async function ListingsPage({
       {parsed ? (
         <p className="rounded-xl bg-teal-soft px-3.5 py-2.5 text-sm text-lake-dark">
           Read as: {parsed.summary}.{" "}
+          {parsed.smart ? (
+            <span className="mx-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-lake-dark">
+              Smart search
+            </span>
+          ) : null}{" "}
           <Link href="/listings" className="font-semibold underline-offset-2 hover:underline">
             Clear
           </Link>
@@ -215,6 +226,7 @@ export default async function ListingsPage({
           </span>
         </summary>
         <form action="/listings" method="get" className="grid gap-3 border-t border-sand/80 p-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filters.occasion ? <input type="hidden" name="occasion" value={filters.occasion} /> : null}
           <label className="block text-sm font-medium text-ink/80">
             Words
             <input name="q" defaultValue={filters.q} className={fieldClass} />
