@@ -71,6 +71,15 @@ export default async function AdminPage({
           kept in the audit trail. Pro plan is paid on Promote and does not verify a shop. The listing verified flag is
           separate from those checks.
         </p>
+        <p className="mt-3 text-sm">
+          <Link href="/admin/ai" className="font-semibold text-lake-dark underline">
+            AI usage
+          </Link>
+          <span className="text-ink/40"> · </span>
+          <Link href="/admin/ai/flags" className="font-semibold text-lake-dark underline">
+            AI flags
+          </Link>
+        </p>
       </div>
 
       <AdminVideoQueue notice={videoNotice} />

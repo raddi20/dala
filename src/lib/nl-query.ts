@@ -25,7 +25,7 @@ const CATEGORY_KEYS: { category: string; keys: string[] }[] = [
   { category: "Health & wellness", keys: ["wellness", "clinic", "herbal", "health", "doctor"] },
 ];
 
-const PLACES: { term: string; city: string; region: string }[] = [
+export const PLACES: { term: string; city: string; region: string }[] = [
   { term: "nairobi", city: "Nairobi", region: "homeland" },
   { term: "kilimani", city: "Nairobi", region: "homeland" },
   { term: "eastleigh", city: "Nairobi", region: "homeland" },
