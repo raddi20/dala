@@ -11,7 +11,12 @@ const migrationsDir = join(root, "prisma", "migrations");
 
 function applyMigrationsExceptAi(db) {
   const folders = readdirSync(migrationsDir)
-    .filter((name) => /^\d/.test(name) && !name.startsWith("20261002"))
+    .filter(
+      (name) =>
+        /^\d/.test(name) &&
+        !name.startsWith("20261002") &&
+        !name.includes("ai_usage"),
+    )
     .sort();
   assert.ok(folders.length >= 5, "expected the earlier migrations");
   for (const folder of folders) {
@@ -55,6 +60,7 @@ test("db push adds AI tables without rewriting existing rows", () => {
     const shop = after.prepare(`SELECT "slug", "published" FROM "Storefront" WHERE "id" = 'shop_keep'`).get();
     const listing = after.prepare(`SELECT "title", "hidden" FROM "Listing" WHERE "id" = 'listing_keep'`).get();
     const usage = after.prepare(`SELECT COUNT(*) AS n FROM "AiUsage"`).get();
+    const errorDetail = after.prepare(`SELECT COUNT(*) AS n FROM pragma_table_info('AiUsage') WHERE name = 'errorDetail'`).get();
     const flags = after.prepare(`SELECT COUNT(*) AS n FROM "AiFlag"`).get();
     const stats = after.prepare(`SELECT COUNT(*) AS n FROM "StatEvent"`).get();
     const videos = after.prepare(`SELECT COUNT(*) AS n FROM "ShopVideo"`).get();
@@ -75,6 +81,7 @@ test("db push adds AI tables without rewriting existing rows", () => {
     assert.equal(listing.title, "Kept listing");
     assert.equal(Number(listing.hidden), 0);
     assert.equal(Number(usage.n), 0);
+    assert.equal(Number(errorDetail.n), 1);
     assert.equal(Number(flags.n), 0);
     assert.equal(Number(stats.n), 0);
     assert.equal(Number(videos.n), 0);

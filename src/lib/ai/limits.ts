@@ -66,7 +66,9 @@ export type RateCount = (query: {
 
 export async function isRateCapped(feature: AiFeature, actor: AiActor, now: number, count: RateCount): Promise<boolean> {
   for (const window of rateWindows(feature)) {
-    if (window.scope === "actor" && !actor.actorHash) return true;
+    // A missing visitor cookie used to refuse smart search before the model ran, and wrote no usage row.
+    // The daily global cap still applies. Signed-in features still require a user id.
+    if (window.scope === "actor" && !actor.actorHash) continue;
     if (window.scope === "user" && !actor.userId) return true;
     const hits = await count({
       feature,

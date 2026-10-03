@@ -32,6 +32,8 @@ const include = {
 
 export async function searchListings(filters: {
   q?: string;
+  /** Any of these words may match. Used when a sentence left no category or place. */
+  words?: string[];
   city?: string;
   region?: string;
   category?: string;
@@ -63,12 +65,19 @@ export async function searchListings(filters: {
     const list = Array.isArray(current) ? current : current ? [current] : [];
     where.AND = [...list, ...extra];
   }
+  const words = (filters.words ?? []).map((word) => word.trim()).filter((word) => word.length > 2).slice(0, 6);
   if (filters.q) {
     where.OR = [
       { title: { contains: filters.q } },
       { description: { contains: filters.q } },
       { address: { contains: filters.q } },
     ];
+  } else if (words.length > 0) {
+    where.OR = words.flatMap((word) => [
+      { title: { contains: word } },
+      { description: { contains: word } },
+      { address: { contains: word } },
+    ]);
   }
   const blockedIds = filters.viewerId
     ? (

@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { FEATURE_ENV } from "@/lib/ai/config";
 import { reviewModerationFlag } from "@/lib/ai/moderation";
+import { probeGeminiConnection } from "@/lib/ai/probe";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
 import { field } from "@/lib/validators";
@@ -20,6 +22,24 @@ export async function setAiKillSwitch(formData: FormData) {
     update: { enabled, updatedById: admin.id },
   });
   revalidatePath("/admin/ai");
+}
+
+export async function clearSearchCacheAction() {
+  await requireAdmin();
+  await prisma.aiSearchCache.deleteMany();
+  revalidatePath("/admin/ai");
+  redirect("/admin/ai?cache=cleared");
+}
+
+export async function probeGeminiAction() {
+  const admin = await requireAdmin();
+  const result = await probeGeminiConnection({ userId: admin.id });
+  const params = new URLSearchParams({
+    probe: result.kind,
+    probeModel: result.model,
+    probeDetail: result.detail.slice(0, 300),
+  });
+  redirect(`/admin/ai?${params.toString()}`);
 }
 
 export async function reviewModerationFlagAction(formData: FormData) {

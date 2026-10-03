@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { countInWindow, isDebounced, MODERATION_DEBOUNCE_MS, overWindow, rateWindows } from "@/lib/ai/limits";
+import { countInWindow, isDebounced, isRateCapped, MODERATION_DEBOUNCE_MS, overWindow, rateWindows } from "@/lib/ai/limits";
 
 test("rate windows drop events that are older than the window", () => {
   const now = Date.parse("2026-10-01T12:00:00Z");
@@ -23,6 +23,16 @@ test("rate windows drop events that are older than the window", () => {
   assert.equal(rateWindows("listing_writer")[1]?.limit, 100);
   assert.equal(rateWindows("moderation")[0]?.limit, 50);
   assert.equal(rateWindows("seller_tips").length, 0);
+});
+
+test("a search with no visitor cookie still runs and the daily cap still applies", async () => {
+  const now = Date.parse("2026-10-01T12:00:00Z");
+  const open = await isRateCapped("smart_search", {}, now, async () => 0);
+  assert.equal(open, false);
+  const capped = await isRateCapped("smart_search", {}, now, async (query) => (query.actorHash ? 0 : 3000));
+  assert.equal(capped, true);
+  const signedOut = await isRateCapped("listing_writer", {}, now, async () => 0);
+  assert.equal(signedOut, true);
 });
 
 test("a moderation check inside ten minutes is debounced", () => {

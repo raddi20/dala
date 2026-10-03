@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { setAiKillSwitch } from "@/app/admin/ai/actions";
+import { clearSearchCacheAction, probeGeminiAction, setAiKillSwitch } from "@/app/admin/ai/actions";
 import { btnSecondary } from "@/components/ui";
 import { FEATURE_ENV, readAiConfig } from "@/lib/ai/config";
+import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
 import { budgetTier, monthStartUtc } from "@/lib/ai/budget";
 import { runtimeWarnings } from "@/lib/ai/status";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
+import { one } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "AI" };
 export const dynamic = "force-dynamic";
@@ -15,11 +17,20 @@ function usd(micro: number): string {
   return `$${(micro / 1_000_000).toFixed(4)}`;
 }
 
-export default async function AdminAiPage() {
+export default async function AdminAiPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   await requireAdmin();
+  const params = await searchParams;
+  const cacheNote = one(params.cache);
+  const probeKind = one(params.probe);
+  const probeModel = one(params.probeModel);
+  const probeDetail = one(params.probeDetail);
   const config = readAiConfig();
   const start = monthStartUtc(new Date());
-  const [usage, flags] = await Promise.all([
+  const [usage, flags, failures, cacheRows] = await Promise.all([
     prisma.aiUsage.groupBy({
       by: ["feature", "provider", "ok"],
       where: { createdAt: { gte: start } },
@@ -27,11 +38,25 @@ export default async function AdminAiPage() {
       _count: { _all: true },
     }),
     prisma.aiFlag.findMany(),
+    prisma.aiUsage.findMany({
+      where: { createdAt: { gte: start }, ok: false },
+      orderBy: { createdAt: "desc" },
+      take: 60,
+      select: { feature: true, model: true, error: true, errorDetail: true, createdAt: true },
+    }),
+    prisma.aiSearchCache.count(),
   ]);
   const spent = usage.reduce((sum, row) => sum + (row._sum.costMicroUsd ?? 0), 0);
   const tier = budgetTier(spent, config.monthlyBudgetUsd);
   const killed = new Map(flags.map((flag) => [flag.key, flag.enabled]));
   const warnings = [...config.warnings, ...runtimeWarnings()];
+  const errorsByFeature = new Map<string, typeof failures>();
+  for (const row of failures) {
+    const list = errorsByFeature.get(row.feature) ?? [];
+    if (list.length >= 10) continue;
+    list.push(row);
+    errorsByFeature.set(row.feature, list);
+  }
 
   const byFeature = new Map<string, { calls: number; errors: number; cost: number }>();
   const byProvider = new Map<string, { calls: number; cost: number }>();
@@ -77,6 +102,11 @@ export default async function AdminAiPage() {
           {config.monthlyBudgetUsd.toFixed(2)}).
         </p>
       ) : null}
+      {probeKind ? (
+        <p className="rounded-xl border border-sand bg-card px-3 py-2 text-sm" role="status">
+          Gemini test{probeModel ? ` (${probeModel})` : ""}: {probeKind}. {probeDetail}
+        </p>
+      ) : null}
       {config.disabledReason ? <p className="text-sm text-ink/70">{config.disabledReason}</p> : null}
       {warnings.map((warning) => (
         <p key={warning} className="text-sm text-ink/70">
@@ -96,11 +126,53 @@ export default async function AdminAiPage() {
           </p>
         ))}
         {byFeature.size === 0 ? <p className="text-ink/70">No AI calls yet.</p> : null}
+        {[...errorsByFeature.entries()].map(([feature, rows]) => (
+          <div key={feature} className="mt-2 grid gap-1">
+            <p className="font-semibold">{feature} errors</p>
+            {rows.map((row, index) => (
+              <p key={`${row.createdAt.toISOString()}-${index}`} className="text-ink/70">
+                {row.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC · {row.model || "no model"} · {row.error || "unknown"}
+                {row.errorDetail ? ` · ${row.errorDetail}` : " · no detail stored"}
+              </p>
+            ))}
+          </div>
+        ))}
         {[...byProvider.entries()].map(([provider, row]) => (
           <p key={provider} className="text-ink/70">
             {provider}: {row.calls} calls, {usd(row.cost)}
           </p>
         ))}
+      </section>
+
+      <section className="grid gap-2 text-sm">
+        <h2 className="font-serif text-2xl">Smart-search cache</h2>
+        <p className="text-ink/70">
+          A successful answer is reused for {SEARCH_CACHE_MS / (24 * 60 * 60 * 1000)} days and does not add a usage row.
+          Failed calls and weak answers are not saved. {cacheRows} saved {cacheRows === 1 ? "answer" : "answers"}.
+        </p>
+        {cacheNote === "cleared" ? (
+          <p className="rounded-xl border border-sand bg-card px-3 py-2" role="status">
+            Smart-search cache cleared. The next sentence calls the model.
+          </p>
+        ) : null}
+        <form action={clearSearchCacheAction}>
+          <button className={btnSecondary} type="submit">
+            Clear smart-search cache
+          </button>
+        </form>
+      </section>
+
+      <section className="grid gap-2 text-sm">
+        <h2 className="font-serif text-2xl">Gemini connection</h2>
+        <p className="text-ink/70">
+          Sends one short call on the fast model and records it here. It counts toward the monthly cap. The message is the
+          provider error, not the prompt.
+        </p>
+        <form action={probeGeminiAction}>
+          <button className={btnSecondary} type="submit">
+            Test Gemini connection
+          </button>
+        </form>
       </section>
 
       <section className="grid gap-3">

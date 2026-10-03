@@ -323,7 +323,10 @@ model AiUsage {
   outputTokens  Int      @default(0)
   costMicroUsd  Int      @default(0)
   ok            Boolean  @default(true)
+  // Short kind: timeout, model_not_found, bad_request, auth, and the other AiError kinds.
   error         String   @default("")
+  // Provider status and message for a failed call. Null on success. Never the key or the prompt.
+  errorDetail   String?
   latencyMs     Int      @default(0)
   attempt       Int      @default(1)
   isFallback    Boolean  @default(false)
