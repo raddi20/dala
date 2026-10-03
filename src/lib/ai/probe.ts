@@ -1,25 +1,9 @@
-import { z } from "zod/v4";
 import { readAiConfig } from "@/lib/ai/config";
+import { smartSearchPrompt } from "@/lib/ai/prompts/smart-search";
 import { resolveModel } from "@/lib/ai/registry";
 import { runAi } from "@/lib/ai/run";
-import type { PromptSpec } from "@/lib/ai/prompts/types";
 import type { AiErrorKind } from "@/lib/ai/types";
 import { prismaUsageStore, type UsageStore } from "@/lib/ai/usage";
-
-const probeSchema = z.object({ ok: z.literal(true) });
-
-const probePrompt: PromptSpec<{ query: string }, { ok: true }> = {
-  feature: "smart_search",
-  version: "gemini_probe@1",
-  tier: "fast",
-  system: "Reply with the JSON object only.",
-  schema: probeSchema,
-  schemaName: "probe",
-  maxOutputTokens: 32,
-  render() {
-    return { text: "Return ok true." };
-  },
-};
 
 function plain(kind: AiErrorKind): string {
   if (kind === "disabled") return "AI is off, or the provider config is disabled. No call was sent.";
@@ -27,10 +11,11 @@ function plain(kind: AiErrorKind): string {
   if (kind === "rate_capped") return "The rate limit stopped this call before it was sent.";
   if (kind === "timeout") return "The model timed out.";
   if (kind === "model_not_found") return "The model id was not found.";
+  if (kind === "schema") return "The response schema was rejected.";
   return "The call failed.";
 }
 
-/** One short fast-model call for an admin. It uses the same path as smart search and counts toward the cap. */
+/** One short fast-model call for an admin. It uses the smart-search schema and counts toward the cap. */
 export async function probeGeminiConnection(
   actor: { userId: string },
   deps?: { store?: UsageStore },
@@ -47,7 +32,12 @@ export async function probeGeminiConnection(
     monthSpendMicro: (since) => inner.monthSpendMicro(since),
     countSince: (query) => inner.countSince(query),
   };
-  const result = await runAi(probePrompt, { query: "ping" }, { userId: actor.userId, actorHash: `admin:${actor.userId}` }, { store });
+  const result = await runAi(
+    smartSearchPrompt,
+    { query: "ping" },
+    { userId: actor.userId, actorHash: `admin:${actor.userId}` },
+    { store },
+  );
   if (result.ok) return { ok: true, kind: "ok", model: result.model || model, detail: "Connected." };
   return { ok: false, kind: result.kind, model, detail: notes[0] || plain(result.kind) };
 }
