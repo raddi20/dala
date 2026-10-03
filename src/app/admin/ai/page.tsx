@@ -17,6 +17,20 @@ function usd(micro: number): string {
   return `$${(micro / 1_000_000).toFixed(4)}`;
 }
 
+function eatStamp(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Nairobi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const pick = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+  return `${pick("year")}-${pick("month")}-${pick("day")} ${pick("hour")}:${pick("minute")} EAT`;
+}
+
 export default async function AdminAiPage({
   searchParams,
 }: {
@@ -131,7 +145,7 @@ export default async function AdminAiPage({
             <p className="font-semibold">{feature} errors</p>
             {rows.map((row, index) => (
               <p key={`${row.createdAt.toISOString()}-${index}`} className="text-ink/70">
-                {row.createdAt.toISOString().slice(0, 16).replace("T", " ")} UTC · {row.model || "no model"} · {row.error || "unknown"}
+                {eatStamp(row.createdAt)} · {row.model || "no model"} · {row.error || "unknown"}
                 {row.errorDetail ? ` · ${row.errorDetail}` : " · no detail stored"}
               </p>
             ))}
@@ -165,8 +179,8 @@ export default async function AdminAiPage({
       <section className="grid gap-2 text-sm">
         <h2 className="font-serif text-2xl">Gemini connection</h2>
         <p className="text-ink/70">
-          Sends one short call on the fast model and records it here. It counts toward the monthly cap. The message is the
-          provider error, not the prompt.
+          Sends one short call on the fast model using the smart-search response schema and records it here. It counts
+          toward the monthly cap. The message is the provider error, not the prompt.
         </p>
         <form action={probeGeminiAction}>
           <button className={btnSecondary} type="submit">

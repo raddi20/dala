@@ -7,10 +7,15 @@ export function isAbortError(error: unknown): boolean {
   return name === "AbortError" || name === "TimeoutError" || message.toLowerCase().includes("aborted");
 }
 
+export function isSchemaMessage(text: string): boolean {
+  return /unsupported json schema keyword|invalid json schema|responsejsonschema|response schema/i.test(text);
+}
+
 export function kindFromStatus(status: number, code = "", text = ""): { kind: AiErrorKind; retryable: boolean } {
   if (status === 429) return { kind: "rate_limited", retryable: true };
   if (status === 401 || status === 403) return { kind: "auth", retryable: false };
   if (isModelNotFound(status, code, text)) return { kind: "model_not_found", retryable: false };
+  if (isSchemaMessage(`${code} ${text}`)) return { kind: "schema", retryable: false };
   if (status >= 400 && status < 500) return { kind: "bad_request", retryable: false };
   if (status >= 500) return { kind: "server", retryable: true };
   return { kind: "server", retryable: true };
@@ -70,6 +75,9 @@ export function asAiError(error: unknown, retryAfter: string | null, now: number
   if (isAbortError(error)) return new AiError("timeout", "The model timed out.", true);
   const status = error && typeof error === "object" && "status" in error ? Number(error.status) : NaN;
   const raw = error instanceof Error ? error.message : "";
+  if (isSchemaMessage(raw) && !(Number.isInteger(status) && status >= 400)) {
+    return new AiError("schema", sanitizeProviderDetail(undefined, "", raw), false);
+  }
   if (Number.isInteger(status) && status >= 400) return httpError(status, retryAfter, now, raw);
   const detail = sanitizeProviderDetail(undefined, "", raw || "The model could not be reached.");
   return new AiError("network", detail, true);
