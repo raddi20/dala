@@ -6,7 +6,10 @@ export type NlParse = {
   category: string;
   type: string;
   verified: boolean;
+  /** Hard text filter. Empty for sentence search; leftovers are hints, not a required phrase. */
   q: string;
+  /** Words that rank matches. They are not required, so they cannot zero a category or place. */
+  hints: string[];
   summary: string;
 };
 
@@ -50,7 +53,21 @@ export const PLACES: { term: string; city: string; region: string }[] = [
 const STOP = new Set([
   "in", "the", "a", "an", "for", "near", "me", "find", "show", "with", "and", "or", "of", "to", "on",
   "please", "looking", "want", "needed", "some", "any", "around", "from", "at", "my", "i", "we", "is", "are",
+  "someone", "somebody", "something", "mum", "mom", "next", "month", "week", "today", "tomorrow",
+  "tonight", "yesterday", "soon", "weekend", "year", "just", "really",
 ]);
+
+/** Catalogue cities are only Nairobi and London. These towns still mean homeland, not a text search. */
+const HOMELAND_TOWNS = ["homa bay", "kendu bay", "kisumu", "siaya", "migori", "bondo", "kisii"];
+
+const OCCASION_TERMS = ["homecomings", "homecoming", "weddings", "wedding", "funerals", "funeral", "christmas", "dowry", "ayie"];
+
+const TIME_PHRASES = ["next month", "next week", "next year", "this month", "this week", "this weekend", "this year"];
+
+export function isHomelandTown(value: string): boolean {
+  const text = value.trim().toLowerCase();
+  return HOMELAND_TOWNS.some((term) => term === text);
+}
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -107,13 +124,42 @@ function stripTerms(text: string, terms: string[]) {
   return next;
 }
 
+function earliestTerm(text: string, terms: string[]) {
+  let best: { index: number; term: string } | null = null;
+  for (const term of terms) {
+    const match = termPattern(term, "i").exec(text);
+    if (match && (best === null || match.index < best.index)) best = { index: match.index, term };
+  }
+  return best;
+}
+
+function hintTokens(text: string, matched: string[]): string[] {
+  const leftover = stripTerms(text, matched);
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const token of leftover.split(/[^a-z0-9]+/)) {
+    if (token.length <= 2 || STOP.has(token) || seen.has(token)) continue;
+    seen.add(token);
+    out.push(token);
+    if (out.length >= 6) break;
+  }
+  return out;
+}
+
 export function parseNlQuery(input: string): NlParse {
   const text = input.trim().toLowerCase();
   const matched: string[] = [];
   const place = earliestPlace(text);
   const city = place?.city ?? "";
-  const region = place?.region ?? "";
+  let region = place?.region ?? "";
   if (place) matched.push(place.term);
+  if (!region) {
+    const town = earliestTerm(text, HOMELAND_TOWNS);
+    if (town) {
+      region = "homeland";
+      matched.push(town.term);
+    }
+  }
 
   let category = "";
   let categoryKey = "";
@@ -132,25 +178,18 @@ export function parseNlQuery(input: string): NlParse {
   const verified = hasTerm(text, "verified") || hasTerm(text, "trusted");
   if (verified) matched.push(hasTerm(text, "verified") ? "verified" : "trusted");
 
-  const filtersUsed = Boolean(city || region || category || typeHit.type || verified);
-  let q = "";
-  if (!filtersUsed) {
-    q = input.trim();
-  } else {
-    const leftover = stripTerms(text, matched);
-    q = leftover
-      .split(/[^a-z0-9]+/)
-      .filter((token) => token.length > 2 && !STOP.has(token))
-      .join(" ");
+  for (const phrase of [...TIME_PHRASES, ...OCCASION_TERMS]) {
+    if (hasTerm(text, phrase)) matched.push(phrase);
   }
 
+  const hints = hintTokens(text, matched);
   const parts: string[] = [];
   if (city) parts.push(city);
   if (region) parts.push(regionLabel(region));
   if (category) parts.push(category);
   if (typeHit.type) parts.push(typeLabel(typeHit.type));
   if (verified) parts.push("Verified only");
-  if (q) parts.push(`Text "${q}"`);
+  if (hints.length > 0) parts.push(`Ordering by “${hints.join(" ")}”`);
 
   return {
     city,
@@ -158,7 +197,20 @@ export function parseNlQuery(input: string): NlParse {
     category,
     type: typeHit.type,
     verified,
-    q,
-    summary: parts.length > 0 ? parts.join(" · ") : "No filters detected. Searching the words you typed.",
+    q: "",
+    hints,
+    summary: parts.length > 0 ? parts.join(" · ") : "No filters detected.",
   };
+}
+
+export function rankByHints<T extends { title: string; description: string; address?: string }>(rows: T[], hints: string[]): T[] {
+  if (hints.length === 0) return rows;
+  return rows
+    .map((row, index) => {
+      const hay = `${row.title}\n${row.description}\n${row.address ?? ""}`.toLowerCase();
+      const score = hints.reduce((sum, hint) => sum + (hay.includes(hint) ? 1 : 0), 0);
+      return { row, score, index };
+    })
+    .sort((left, right) => right.score - left.score || left.index - right.index)
+    .map((item) => item.row);
 }

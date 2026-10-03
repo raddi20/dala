@@ -22,6 +22,7 @@ import { buildShareMetadata } from "@/lib/share-metadata";
 import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { visitorActorHash } from "@/lib/ai/actor";
 import { interpretSearch } from "@/lib/ai/search-parse";
+import { rankByHints } from "@/lib/nl-query";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { one } from "@/lib/utils";
@@ -86,8 +87,9 @@ export default async function ListingsPage({
   const jar = await cookies();
   const actorHash = visitorActorHash(jar.get("rangach_visitor")?.value ?? "") ?? undefined;
   const parsed = nlRaw ? await interpretSearch(nlRaw, { actorHash }) : null;
+  const explicitQ = one(sp.q).trim();
   const filters = {
-    q: one(sp.q) || parsed?.q || "",
+    q: explicitQ,
     city: one(sp.city) || parsed?.city || "",
     region: one(sp.region) || parsed?.region || "",
     category: one(sp.category) || parsed?.category || "",
@@ -97,6 +99,11 @@ export default async function ListingsPage({
     diaspora: wantsDiasporaOrders(one(sp.diaspora)),
     occasion: one(sp.occasion) || parsed?.occasion || "",
   };
+  const hints = explicitQ ? [] : parsed?.hints ?? [];
+  const structured = Boolean(
+    filters.city || filters.region || filters.category || filters.type || filters.verified || filters.badge || filters.diaspora || filters.occasion,
+  );
+  const optionalWords = !explicitQ && !structured ? hints : [];
   const chipBase: Record<string, string> = {
     q: filters.q,
     city: filters.city,
@@ -109,7 +116,13 @@ export default async function ListingsPage({
     occasion: filters.occasion,
   };
   const user = await getSessionUser();
-  const listings = await searchListings({ ...filters, viewerId: user?.id });
+  let listings = await searchListings({ ...filters, words: optionalWords, viewerId: user?.id });
+  let droppedWords = false;
+  if (listings.length === 0 && optionalWords.length > 0) {
+    listings = await searchListings({ ...filters, viewerId: user?.id });
+    droppedWords = true;
+  }
+  if (structured && hints.length > 0) listings = rankByHints(listings, hints);
   const hasFilters = Boolean(
     filters.q ||
       filters.city ||
@@ -145,11 +158,17 @@ export default async function ListingsPage({
       {parsed ? (
         <p className="rounded-xl bg-teal-soft px-3.5 py-2.5 text-sm text-lake-dark">
           Read as: {parsed.summary}.{" "}
-          {parsed.smart ? (
+          {parsed.assist === "smart" ? (
             <span className="mx-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-lake-dark">
               Smart search
             </span>
-          ) : null}{" "}
+          ) : null}
+          {parsed.assist === "fallback" ? (
+            <span className="mx-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-clay">
+              Smart search did not answer. Showing the plain reading.
+            </span>
+          ) : null}
+          {droppedWords ? <span> Those extra words matched nothing, so they were left out.</span> : null}{" "}
           <Link href="/listings" className="font-semibold underline-offset-2 hover:underline">
             Clear
           </Link>

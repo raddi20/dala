@@ -36,7 +36,7 @@ export function createGeminiProvider(options: { apiKey: string; fetchImpl?: type
           contents: [{ role: "user", parts }],
           config: {
             systemInstruction: req.system,
-            temperature: req.temperature ?? 0.2,
+            // Gemini 3.x is tuned for the default sampling. Sending temperature is no longer recommended.
             maxOutputTokens: req.maxOutputTokens,
             responseMimeType: "application/json",
             responseJsonSchema: toProviderJsonSchema(req.schema),

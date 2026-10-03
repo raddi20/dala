@@ -133,6 +133,7 @@ test("a timeout uses the fallback provider and then the non-AI result when that 
   assert.equal(store.rows[0]?.isFallback, false);
   assert.equal(store.rows[0]?.attempt, 1);
   assert.equal(store.rows[0]?.error, "timeout");
+  assert.equal(store.rows[0]?.errorDetail, "The model timed out.");
   assert.equal(store.rows[1]?.isFallback, true);
   assert.equal(store.rows[1]?.attempt, 2);
   assert.equal(store.rows[1]?.ok, true);

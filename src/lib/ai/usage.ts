@@ -12,6 +12,7 @@ export type UsageRow = {
   costMicroUsd: number;
   ok: boolean;
   error: string;
+  errorDetail?: string | null;
   latencyMs: number;
   attempt: number;
   isFallback: boolean;

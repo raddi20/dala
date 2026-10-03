@@ -205,7 +205,10 @@ async function attemptProvider<I, O>(
   let lastKind: AiErrorKind = "timeout";
   while (args.clock.now() < args.deadline) {
     if (!args.isFallback && circuitOpen(args.circuit, args.clock.now())) break;
-    const timeoutMs = Math.min(args.deadline - args.clock.now(), perAttemptMs(args.spec.feature));
+    // Interactive calls use AI_TIMEOUT_MS for the attempt. The shorter per-feature cap
+    // was aborting smart search at 4s even when the env timeout was 8s, then retrying.
+    const attemptCap = args.batch ? perAttemptMs(args.spec.feature) : args.config.timeoutMs;
+    const timeoutMs = Math.min(args.deadline - args.clock.now(), attemptCap);
     if (timeoutMs <= 0) break;
     const attempt = args.nextAttempt();
     const started = args.clock.now();
@@ -254,6 +257,7 @@ async function attemptProvider<I, O>(
         attempt,
         ok: false,
         error: ai.kind,
+        errorDetail: ai.message.slice(0, 300),
         usage: ai.usage,
         costMicroUsd: failureCost(args, ai.usage),
         latencyMs: Math.max(1, args.clock.now() - started),
@@ -292,7 +296,15 @@ function failureCost<I, O>(args: AttemptArgs<I, O>, usage: Usage | undefined): n
 
 async function writeRow<I, O>(
   args: AttemptArgs<I, O>,
-  row: { attempt: number; ok: boolean; error: string; usage?: Usage; costMicroUsd: number; latencyMs: number },
+  row: {
+    attempt: number;
+    ok: boolean;
+    error: string;
+    errorDetail?: string | null;
+    usage?: Usage;
+    costMicroUsd: number;
+    latencyMs: number;
+  },
 ) {
   const stored: UsageRow = {
     feature: args.spec.feature,
@@ -305,6 +317,7 @@ async function writeRow<I, O>(
     costMicroUsd: row.costMicroUsd,
     ok: row.ok,
     error: row.error,
+    errorDetail: row.ok ? null : row.errorDetail?.slice(0, 300) || null,
     latencyMs: row.latencyMs,
     attempt: row.attempt,
     isFallback: args.isFallback,

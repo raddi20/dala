@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { isCategory } from "@/lib/categories";
 import { isCityName, isListingType, regionLabel, typeLabel } from "@/lib/constants";
-import { parseNlQuery, type NlParse } from "@/lib/nl-query";
+import { isHomelandTown, parseNlQuery, type NlParse } from "@/lib/nl-query";
 import { occasionDefinition } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { runAi } from "@/lib/ai/run";
@@ -23,8 +23,12 @@ const OCCASION_WORDS = [
   "weddings",
 ];
 
+export type SearchAssist = "rules" | "smart" | "fallback";
+
 export type SearchInterpretation = NlParse & {
   smart: boolean;
+  /** rules: the model was not asked. smart: its reading was used. fallback: it was asked and did not answer. */
+  assist: SearchAssist;
   occasion: string;
 };
 
@@ -71,7 +75,7 @@ export function shouldAskSmartSearch(input: string, rules: NlParse): boolean {
   return false;
 }
 
-function summaryFor(parsed: Omit<SearchInterpretation, "summary" | "smart">): string {
+function summaryFor(parsed: Omit<SearchInterpretation, "summary" | "smart" | "assist">): string {
   const parts: string[] = [];
   if (parsed.city) parts.push(parsed.city);
   if (parsed.region) parts.push(regionLabel(parsed.region));
@@ -82,36 +86,46 @@ function summaryFor(parsed: Omit<SearchInterpretation, "summary" | "smart">): st
     const occasion = occasionDefinition(parsed.occasion);
     if (occasion) parts.push(occasion.title);
   }
-  if (parsed.q) parts.push(`Text "${parsed.q}"`);
-  return parts.length > 0 ? parts.join(" · ") : "No filters detected. Searching the words you typed.";
+  if (parsed.hints.length > 0) parts.push(`Ordering by “${parsed.hints.join(" ")}”`);
+  return parts.length > 0 ? parts.join(" · ") : "No filters detected.";
 }
 
-function fromRules(rules: NlParse): SearchInterpretation {
-  return { ...rules, smart: false, occasion: "" };
+function fromRules(rules: NlParse, assist: "rules" | "fallback"): SearchInterpretation {
+  return { ...rules, q: "", smart: false, assist, occasion: "" };
+}
+
+function hintList(value: string): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const token of value.toLowerCase().split(/[^a-z0-9]+/)) {
+    if (token.length <= 2 || seen.has(token)) continue;
+    seen.add(token);
+    out.push(token);
+    if (out.length >= 6) break;
+  }
+  return out;
 }
 
 export function applySearchParse(rules: NlParse, ai: SearchParse): SearchInterpretation {
-  if (ai.confidence < MIN_CONFIDENCE) return fromRules(rules);
+  if (ai.confidence < MIN_CONFIDENCE) return fromRules(rules, "fallback");
   const city = ai.city && isCityName(ai.city) ? ai.city : rules.city;
-  const region = ai.region === "homeland" || ai.region === "diaspora" ? ai.region : rules.region;
+  let region = ai.region === "homeland" || ai.region === "diaspora" ? ai.region : rules.region;
+  if (ai.city && !isCityName(ai.city) && isHomelandTown(ai.city) && region !== "diaspora") region = "homeland";
   const category = ai.category && isCategory(ai.category) ? ai.category : rules.category;
   const type = ai.type && isListingType(ai.type) ? ai.type : rules.type;
   const occasion = ai.occasion && occasionDefinition(ai.occasion) ? ai.occasion : "";
-  let q = ai.keywords.trim().slice(0, 60);
-  if (ai.city && !isCityName(ai.city) && !q.toLowerCase().includes(ai.city.toLowerCase())) {
-    q = `${q} ${ai.city}`.trim().slice(0, 60);
-  }
-  if (!q) q = rules.q;
+  const fromModel = hintList(ai.keywords).filter((token) => !isHomelandTown(token));
   const next = {
     city,
     region,
     category,
     type,
     verified: rules.verified,
-    q,
+    q: "",
+    hints: fromModel.length > 0 ? fromModel : rules.hints.filter((token) => !isHomelandTown(token)),
     occasion,
   };
-  return { ...next, smart: true, summary: summaryFor(next) };
+  return { ...next, smart: true, assist: "smart", summary: summaryFor(next) };
 }
 
 export function prismaSearchCache(): SearchCache {
@@ -154,7 +168,7 @@ export async function interpretSearch(
   const rules = parseNlQuery(input);
   try {
     const queryNorm = normalizeSearchQuery(input);
-    if (!queryNorm || !shouldAskSmartSearch(input, rules)) return fromRules(rules);
+    if (!queryNorm || !shouldAskSmartSearch(input, rules)) return fromRules(rules, "rules");
 
     const now = deps.now ?? new Date();
     const cache = deps.cache ?? prismaSearchCache();
@@ -169,10 +183,10 @@ export async function interpretSearch(
       { actorHash: deps.actorHash },
       deps.env ? { env: deps.env } : {},
     );
-    if (!result.ok) return fromRules(rules);
+    if (!result.ok) return fromRules(rules, "fallback");
     await cache.put(queryKey, result.data, new Date(now.getTime() + SEARCH_CACHE_MS));
     return applySearchParse(rules, result.data);
   } catch {
-    return fromRules(rules);
+    return fromRules(rules, "fallback");
   }
 }
