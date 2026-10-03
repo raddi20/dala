@@ -46,6 +46,7 @@ export type AiErrorKind =
   | "network"
   | "auth"
   | "bad_request"
+  | "schema"
   | "model_not_found"
   | "refused"
   | "invalid_output"

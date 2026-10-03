@@ -30,6 +30,23 @@ test("a missing model is not stored as a timeout", () => {
   const timed = asAiError(Object.assign(new Error("The operation was aborted"), { name: "AbortError" }), null, Date.now());
   assert.equal(timed.kind, "timeout");
   assert.equal(timed.message, "The model timed out.");
+
+  const schema = asAiError(new Error('Unsupported JSON Schema keyword "const".'), null, Date.now());
+  assert.equal(schema.kind, "schema");
+  assert.equal(schema.retryable, false);
+  assert.match(schema.message, /const/);
+
+  const rejected = asAiError(
+    Object.assign(new Error(JSON.stringify({ error: { code: 400, status: "INVALID_ARGUMENT", message: "Invalid JSON schema" } })), {
+      status: 400,
+    }),
+    null,
+    Date.now(),
+  );
+  assert.equal(rejected.kind, "schema");
+
+  const offline = asAiError(new TypeError("fetch failed"), null, Date.now());
+  assert.equal(offline.kind, "network");
 });
 
 test("provider details drop keys and stay short", () => {
