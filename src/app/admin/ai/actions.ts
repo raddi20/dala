@@ -24,6 +24,13 @@ export async function setAiKillSwitch(formData: FormData) {
   revalidatePath("/admin/ai");
 }
 
+export async function clearSearchCacheAction() {
+  await requireAdmin();
+  await prisma.aiSearchCache.deleteMany();
+  revalidatePath("/admin/ai");
+  redirect("/admin/ai?cache=cleared");
+}
+
 export async function probeGeminiAction() {
   const admin = await requireAdmin();
   const result = await probeGeminiConnection({ userId: admin.id });

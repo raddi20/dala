@@ -174,7 +174,8 @@ export async function interpretSearch(
     const cache = deps.cache ?? prismaSearchCache();
     const queryKey = searchQueryHash(queryNorm);
     const cached = await cache.get(queryKey, now);
-    if (cached) return applySearchParse(rules, cached);
+    // A weak cached answer is ignored so the model can be asked again. Failures are never stored.
+    if (cached && cached.confidence >= MIN_CONFIDENCE) return applySearchParse(rules, cached);
 
     const run = deps.run ?? runAi;
     const result = await run(
@@ -184,7 +185,9 @@ export async function interpretSearch(
       deps.env ? { env: deps.env } : {},
     );
     if (!result.ok) return fromRules(rules, "fallback");
-    await cache.put(queryKey, result.data, new Date(now.getTime() + SEARCH_CACHE_MS));
+    if (result.data.confidence >= MIN_CONFIDENCE) {
+      await cache.put(queryKey, result.data, new Date(now.getTime() + SEARCH_CACHE_MS));
+    }
     return applySearchParse(rules, result.data);
   } catch {
     return fromRules(rules, "fallback");

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { probeGeminiAction, setAiKillSwitch } from "@/app/admin/ai/actions";
+import { clearSearchCacheAction, probeGeminiAction, setAiKillSwitch } from "@/app/admin/ai/actions";
 import { btnSecondary } from "@/components/ui";
 import { FEATURE_ENV, readAiConfig } from "@/lib/ai/config";
+import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
 import { budgetTier, monthStartUtc } from "@/lib/ai/budget";
 import { runtimeWarnings } from "@/lib/ai/status";
 import { prisma } from "@/lib/prisma";
@@ -23,12 +24,13 @@ export default async function AdminAiPage({
 }) {
   await requireAdmin();
   const params = await searchParams;
+  const cacheNote = one(params.cache);
   const probeKind = one(params.probe);
   const probeModel = one(params.probeModel);
   const probeDetail = one(params.probeDetail);
   const config = readAiConfig();
   const start = monthStartUtc(new Date());
-  const [usage, flags, failures] = await Promise.all([
+  const [usage, flags, failures, cacheRows] = await Promise.all([
     prisma.aiUsage.groupBy({
       by: ["feature", "provider", "ok"],
       where: { createdAt: { gte: start } },
@@ -42,6 +44,7 @@ export default async function AdminAiPage({
       take: 60,
       select: { feature: true, model: true, error: true, errorDetail: true, createdAt: true },
     }),
+    prisma.aiSearchCache.count(),
   ]);
   const spent = usage.reduce((sum, row) => sum + (row._sum.costMicroUsd ?? 0), 0);
   const tier = budgetTier(spent, config.monthlyBudgetUsd);
@@ -139,6 +142,24 @@ export default async function AdminAiPage({
             {provider}: {row.calls} calls, {usd(row.cost)}
           </p>
         ))}
+      </section>
+
+      <section className="grid gap-2 text-sm">
+        <h2 className="font-serif text-2xl">Smart-search cache</h2>
+        <p className="text-ink/70">
+          A successful answer is reused for {SEARCH_CACHE_MS / (24 * 60 * 60 * 1000)} days and does not add a usage row.
+          Failed calls and weak answers are not saved. {cacheRows} saved {cacheRows === 1 ? "answer" : "answers"}.
+        </p>
+        {cacheNote === "cleared" ? (
+          <p className="rounded-xl border border-sand bg-card px-3 py-2" role="status">
+            Smart-search cache cleared. The next sentence calls the model.
+          </p>
+        ) : null}
+        <form action={clearSearchCacheAction}>
+          <button className={btnSecondary} type="submit">
+            Clear smart-search cache
+          </button>
+        </form>
       </section>
 
       <section className="grid gap-2 text-sm">

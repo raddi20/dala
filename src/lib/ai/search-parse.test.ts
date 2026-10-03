@@ -138,13 +138,47 @@ test("rules are used when the model is off, and a cache hit does not call it aga
   assert.equal(calls, 1);
   assert.equal(searchQueryHash(normalizeSearchQuery("chairs in Siaya")), searchQueryHash("chairs in siaya"));
 
+  const failedCache = memoryCache();
   const disabled = await interpretSearch("tents for a funeral", {
     now,
-    cache: memoryCache(),
+    cache: failedCache,
+    actorHash: "abc",
     run: async () => ({ ok: false, kind: "disabled" }),
   });
   assert.equal(disabled.smart, false);
   assert.equal(disabled.assist, "fallback");
+  assert.equal(failedCache.saved.length, 0);
+});
+
+test("a weak answer is not cached and does not block the next call", async () => {
+  const now = new Date("2026-10-01T12:00:00Z");
+  const cache = memoryCache();
+  const query = "chairs in Siaya";
+  await cache.put(
+    searchQueryHash(normalizeSearchQuery(query)),
+    { ...chairs, confidence: 0.2 },
+    new Date(now.getTime() + 60_000),
+  );
+  let calls = 0;
+  const run = async () => {
+    calls += 1;
+    const result: RunResult<SearchParse> = {
+      ok: true,
+      data: { ...chairs, confidence: 0.2 },
+      provider: "mock",
+      model: "mock",
+      costMicroUsd: 0,
+      latencyMs: 1,
+    };
+    return result;
+  };
+  const seeded = cache.saved.length;
+  const first = await interpretSearch(query, { now, run, cache, actorHash: "abc" });
+  assert.equal(first.assist, "fallback");
+  assert.equal(calls, 1);
+  assert.equal(cache.saved.length, seeded);
+  await interpretSearch(query, { now, run, cache, actorHash: "abc" });
+  assert.equal(calls, 2);
 });
 
 test("the visitor hash is not the raw cookie", () => {
