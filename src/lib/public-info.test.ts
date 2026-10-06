@@ -12,9 +12,11 @@ import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP } from "@/lib/constants";
 import {
   CONTACT_EMAIL,
   LEGAL_ENTITY_NAME,
+  LEGAL_ENTITY_REG_NO,
   PUBLIC_INFO_PAGES,
   PUBLIC_PAGES_UPDATED,
   featuredDurationCopy,
+  legalEntityLabel,
   paidPriceLine,
   verifiedProDayCount,
   verifiedProDurationCopy,
@@ -65,13 +67,21 @@ test("the four pages render, name themselves, and show the last-updated date", a
   }
 });
 
-test("terms and privacy show the legal-entity placeholder in one shared constant", async () => {
-  assert.equal(LEGAL_ENTITY_NAME, "[Rangach legal entity, TBC]");
+test("terms and privacy name Rangach Ltd and hide the company number until it is set", async () => {
+  assert.equal(LEGAL_ENTITY_NAME, "Rangach Ltd");
+  assert.equal(LEGAL_ENTITY_REG_NO, "");
+  assert.equal(legalEntityLabel(), "Rangach Ltd");
+  assert.equal(legalEntityLabel("Rangach Ltd", "PVT-123456"), "Rangach Ltd (company no. PVT-123456)");
+  assert.equal(legalEntityLabel("Rangach Ltd", "  "), "Rangach Ltd");
+
   const terms = renderToStaticMarkup(await TermsPage());
   const privacy = renderToStaticMarkup(await PrivacyPage());
-  assert.ok(terms.includes(LEGAL_ENTITY_NAME));
-  assert.ok(privacy.includes(LEGAL_ENTITY_NAME));
-  assert.equal(terms.split(LEGAL_ENTITY_NAME).length - 1 >= 1, true);
+  assert.ok(terms.includes("Rangach Ltd"));
+  assert.ok(privacy.includes("Rangach Ltd"));
+  assert.equal(terms.includes("company no."), false);
+  assert.equal(privacy.includes("company no."), false);
+  assert.equal(terms.includes("[Rangach legal entity, TBC]"), false);
+  assert.equal(privacy.includes("[Rangach legal entity, TBC]"), false);
 });
 
 test("faq and terms use checkout prices and do not hardcode them", async () => {

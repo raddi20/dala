@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
 import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
-import { CONTACT_EMAIL, LEGAL_ENTITY_NAME, publicInfoPage } from "@/lib/public-info";
+import { CONTACT_EMAIL, legalEntityLabel, publicInfoPage } from "@/lib/public-info";
 import { STAT_RETENTION_DAYS } from "@/lib/stats/retention";
 import { VIEW_DEDUPE_MS } from "@/lib/stats/track";
 import { REJECT_PURGE_DAYS } from "@/lib/video/constants";
@@ -43,11 +43,11 @@ export default function PrivacyPage() {
       path="/privacy"
       kicker="Privacy"
       title="Privacy"
-      lede={`${LEGAL_ENTITY_NAME} is the controller for personal data on ${name}. The name in brackets is a placeholder until the legal name is settled. This note is written for the Kenya Data Protection Act 2019, and for the UK GDPR where you use ${name} from the United Kingdom.`}
+      lede={`${legalEntityLabel()} is the controller for personal data on ${name}. This note is written for the Kenya Data Protection Act 2019, and for the UK GDPR where you use ${name} from the United Kingdom.`}
     >
       <InfoSection title="Who we are">
         <p>
-          The product is called {name}. The controller is {LEGAL_ENTITY_NAME}. For privacy questions, including a
+          The product is called {name}. The controller is {legalEntityLabel()}. For privacy questions, including a
           request to see, correct, or delete your data, write to{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
             {CONTACT_EMAIL}
@@ -213,7 +213,7 @@ export default function PrivacyPage() {
 
       <InfoSection title="Contact">
         <p>
-          {LEGAL_ENTITY_NAME}
+          {legalEntityLabel()}
           <br />
           <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
             {CONTACT_EMAIL}

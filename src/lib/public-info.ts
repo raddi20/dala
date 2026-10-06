@@ -12,10 +12,23 @@ export const PUBLIC_PAGES_UPDATED = {
 } as const;
 
 /**
- * Controller name. Kevin is choosing between a business name and Rangach Ltd.
- * Replace this one string. It is shown on the Terms and Privacy pages.
+ * Controller name. Shown on the Terms and Privacy pages.
+ * Keep the name in this one constant.
  */
-export const LEGAL_ENTITY_NAME = "[Rangach legal entity, TBC]";
+export const LEGAL_ENTITY_NAME = "Rangach Ltd";
+
+/**
+ * Company registration number. Leave this empty until incorporation.
+ * Terms and Privacy show "Rangach Ltd (company no. X)" only once it is set.
+ */
+export const LEGAL_ENTITY_REG_NO = "";
+
+/** Name, plus the registration number only when LEGAL_ENTITY_REG_NO is filled in. */
+export function legalEntityLabel(name = LEGAL_ENTITY_NAME, regNo = LEGAL_ENTITY_REG_NO) {
+  const number = regNo.trim();
+  if (!number) return name;
+  return `${name} (company no. ${number})`;
+}
 
 export const CONTACT_EMAIL = "info@rangach.co.ke";
 

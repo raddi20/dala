@@ -5,8 +5,8 @@ import { appName } from "@/lib/brand";
 import { FEATURED_DAYS, productLabel } from "@/lib/constants";
 import {
   CONTACT_EMAIL,
-  LEGAL_ENTITY_NAME,
   featuredDurationCopy,
+  legalEntityLabel,
   paidPriceLine,
   publicInfoPage,
   verifiedProDurationCopy,
@@ -28,7 +28,7 @@ export default function TermsPage() {
       path="/terms"
       kicker="Seller and user terms"
       title="Terms"
-      lede={`These terms cover how people use ${name}. ${LEGAL_ENTITY_NAME} operates the site. If that name is still in brackets, it is a placeholder while the legal name is chosen.`}
+      lede={`These terms cover how people use ${name}. ${legalEntityLabel()} operates the site.`}
     >
       <InfoSection title="What this site is">
         <p>
@@ -158,7 +158,7 @@ export default function TermsPage() {
 
       <InfoSection title="Contact">
         <p>
-          {LEGAL_ENTITY_NAME}
+          {legalEntityLabel()}
           <br />
           <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
             {CONTACT_EMAIL}
