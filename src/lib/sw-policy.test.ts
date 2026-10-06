@@ -120,7 +120,7 @@ test("pricing is never served from cache", () => {
 });
 
 test("HTML navigations are network-only and only /offline may refresh the fallback", () => {
-  for (const pathname of ["/", "/listings", "/categories", "/occasions", "/b/mama", "/offline"]) {
+  for (const pathname of ["/", "/listings", "/categories", "/occasions", "/about", "/faq", "/terms", "/privacy", "/b/mama", "/offline"]) {
     const result = plan({ pathname, mode: "navigate", destination: "document" });
     assert.equal(result.kind, "navigate", pathname);
     assert.equal(mayStoreResponse(result), false, pathname);

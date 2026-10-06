@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { CITIES } from "@/lib/constants";
+import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
@@ -30,6 +31,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/occasions" },
     { path: "/pricing" },
     { path: "/video-policy" },
+    ...PUBLIC_INFO_PAGES.map((page) => ({ path: page.path, updatedAt: publicPagesUpdatedAt() })),
     { path: "/listings" },
     { path: "/listings?type=business" },
     { path: "/listings?type=classifieds" },
@@ -56,9 +58,16 @@ export function buildSitemap(input: {
   };
 
   for (const path of staticPublicPaths()) {
+    const info = isPublicInfoPath(path.path);
     const priority =
-      path.path === "/" ? 1 : path.path === "/categories" || path.path === "/occasions" || path.path === "/pricing" ? 0.8 : 0.7;
-    push(entry(input.origin, path.path, undefined, "weekly", priority));
+      path.path === "/"
+        ? 1
+        : path.path === "/categories" || path.path === "/occasions" || path.path === "/pricing"
+          ? 0.8
+          : info
+            ? 0.5
+            : 0.7;
+    push(entry(input.origin, path.path, path.updatedAt, info ? "monthly" : "weekly", priority));
   }
   for (const shop of input.shops) {
     if (!shop.slug) continue;
