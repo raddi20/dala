@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
 import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
-import { CONTACT_EMAIL, legalEntityLabel, publicInfoPage } from "@/lib/public-info";
+import { CONTACT_EMAIL, legalEntityLabel, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
 import { STAT_RETENTION_DAYS } from "@/lib/stats/retention";
 import { VIEW_DEDUPE_MS } from "@/lib/stats/track";
 import { REJECT_PURGE_DAYS } from "@/lib/video/constants";
@@ -143,8 +143,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Accounts, listings, photos, shop pages, payment records, and AI listing drafts stay while the account is in
-          use. We have not set a shorter automatic deletion date for those. An approved shop video is hidden when the
-          Pro plan is off, and the file is kept so it can be shown again if the plan is on. Email{" "}
+          use. We have not set a shorter automatic deletion date for those. {verifiedProDurationCopy()} Email{" "}
           <a href={`mailto:${CONTACT_EMAIL}`} className="font-semibold text-lake-dark hover:text-lake">
             {CONTACT_EMAIL}
           </a>{" "}

@@ -1,4 +1,4 @@
-import { chargeFor, FEATURED_DAYS, type PaidProduct } from "@/lib/constants";
+import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/constants";
 
 /**
  * Public info pages. Edit the date and the legal name here.
@@ -34,13 +34,10 @@ export const CONTACT_EMAIL = "info@rangach.co.ke";
 
 /**
  * How many days a Verified Pro payment lasts.
- *
- * Checkout on this branch sets the Pro flag and does not store an end date,
- * so this stays null and the pages use the wording that is still true if Pro
- * becomes a renewable day-count. Set a positive whole number here when checkout
- * starts that clock. Do not hardcode the number in the page copy.
+ * Same constant checkout uses (PRO_DAYS). Renewing before the end date adds
+ * this many days onto the current end date. Do not hardcode the number in the page copy.
  */
-export const VERIFIED_PRO_DAYS: number | null = null;
+export const VERIFIED_PRO_DAYS: number | null = PRO_DAYS;
 
 export const PUBLIC_INFO_PAGES = [
   {
@@ -93,21 +90,23 @@ function isDayCount(value: unknown): value is number {
   return typeof value === "number" && Number.isInteger(value) && value > 0;
 }
 
-/** Day count when configured. Null means checkout does not set a Pro end date. */
+/** Day count checkout uses for one Verified Pro payment. */
 export function verifiedProDayCount(): number | null {
   return isDayCount(VERIFIED_PRO_DAYS) ? VERIFIED_PRO_DAYS : null;
 }
 
 /**
  * Pro length for the public pages.
- * With no day count, the sentence stays true whether Pro is an open plan or a
- * later renewable period. With a day count, it states that period.
+ * A payment lasts the day count. Renewing before the end date adds that many
+ * days onto the current end date. A lapse hides the extra perks; it does not delete them.
  */
 export function verifiedProDurationCopy(days: number | null = verifiedProDayCount()) {
+  const lapse =
+    "When the plan lapses, the cover, the shop video, and offerings past the free limit are hidden, not deleted, and they show again when the plan is renewed.";
   if (days) {
-    return `Verified Pro is a paid plan, not a verification badge. It lasts ${days} days from the payment. A new payment starts another ${days} days.`;
+    return `Verified Pro is a paid plan, not a verification badge. It lasts ${days} days. Renewing before the end date adds another ${days} days to that date. ${lapse}`;
   }
-  return "Verified Pro is a paid plan, not a verification badge. How long it lasts is the period checkout applies when you pay. If the plan is open-ended, it stays on until Rangach turns it off. If it is sold for a set number of days, you get that many days, and a new payment can start another period of the same length.";
+  return `Verified Pro is a paid plan, not a verification badge. It lasts the period checkout applies. Renewing before the end date adds another period of the same length to that date. ${lapse}`;
 }
 
 export function featuredDurationCopy() {

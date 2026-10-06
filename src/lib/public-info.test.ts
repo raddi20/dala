@@ -8,13 +8,14 @@ import FaqPage, { metadata as faqMeta } from "@/app/faq/page";
 import PrivacyPage, { metadata as privacyMeta } from "@/app/privacy/page";
 import TermsPage, { metadata as termsMeta } from "@/app/terms/page";
 import { Footer } from "@/components/footer";
-import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP } from "@/lib/constants";
+import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS } from "@/lib/constants";
 import {
   CONTACT_EMAIL,
   LEGAL_ENTITY_NAME,
   LEGAL_ENTITY_REG_NO,
   PUBLIC_INFO_PAGES,
   PUBLIC_PAGES_UPDATED,
+  VERIFIED_PRO_DAYS,
   featuredDurationCopy,
   legalEntityLabel,
   paidPriceLine,
@@ -106,19 +107,34 @@ test("faq and terms use checkout prices and do not hardcode them", async () => {
   }
 });
 
-test("pro duration stays true with or without a day count", () => {
-  assert.equal(verifiedProDayCount(), null);
-  const open = verifiedProDurationCopy(null);
-  assert.match(open, /paid plan, not a verification badge/);
-  assert.match(open, /open-ended/);
-  assert.match(open, /set number of days/);
-  assert.equal(open.includes("30 days"), false);
+test("pro duration is the renewable 30-day plan, and a lapse hides extras", async () => {
+  assert.equal(PRO_DAYS, 30);
+  assert.equal(VERIFIED_PRO_DAYS, PRO_DAYS);
+  assert.equal(verifiedProDayCount(), 30);
 
-  const renewable = verifiedProDurationCopy(30);
-  assert.match(renewable, /paid plan, not a verification badge/);
-  assert.match(renewable, /lasts 30 days/);
-  assert.match(renewable, /another 30 days/);
+  const copy = verifiedProDurationCopy();
+  assert.match(copy, /paid plan, not a verification badge/);
+  assert.match(copy, /lasts 30 days/);
+  assert.match(copy, /adds another 30 days to that date/);
+  assert.match(copy, /hidden, not deleted/);
+  assert.equal(/open-ended|no end date|turns it off|starts another 30 days/i.test(copy), false);
+
+  const unset = verifiedProDurationCopy(null);
+  assert.match(unset, /paid plan, not a verification badge/);
+  assert.match(unset, /adds another period of the same length to that date/);
+  assert.match(unset, /hidden, not deleted/);
+  assert.equal(/open-ended|no end date|turns it off/i.test(unset), false);
+
   assert.match(featuredDurationCopy(), new RegExp(`${FEATURED_DAYS} days`));
+
+  const faq = renderToStaticMarkup(await FaqPage());
+  const terms = renderToStaticMarkup(await TermsPage());
+  const privacy = renderToStaticMarkup(await PrivacyPage());
+  for (const html of [faq, terms, privacy]) {
+    assert.ok(html.includes(copy));
+    assert.equal(/open-ended|no end date|until Rangach turns it off/i.test(html), false);
+  }
+  assert.match(faq, /Renewing before the end date adds another 30 days to that date/);
 });
 
 test("the info pages stay network-only so the offline fallback is unchanged", () => {

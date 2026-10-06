@@ -8,6 +8,7 @@ import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { regionForCity, regionLabel } from "@/lib/constants";
+import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       published: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true } },
+      user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -44,10 +45,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!shop.published && !isOwner) return privateMetadata("Shop");
   if (!shop.published) return { title: shop.user.name, robots: { index: false, follow: false } };
   const origin = await publicOrigin();
+  const proActive = isProActive(shop.user);
   const clip = shop.videos[0];
   const hasPublicVideo = clip
     ? shopVideoIsPublic({
-        verifiedPro: shop.user.verifiedPro,
+        verifiedPro: proActive,
         published: true,
         status: clip.status,
         publicPlaybackId: clip.publicPlaybackId,
@@ -57,7 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     origin,
     slug,
     published: true,
-    verifiedPro: shop.user.verifiedPro,
+    verifiedPro: proActive,
     bannerUrl: shop.bannerUrl,
     avatarUrl: shop.user.avatarUrl,
     hasPublicVideo,
@@ -110,16 +112,18 @@ export default async function StorefrontPage({ params }: Props) {
   const chatUrl = phone ? whatsappShopLink(phone, url) : "";
   const callUrl = telHref(shop.user.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
-  const bannerSrc = shop.user.verifiedPro ? shop.bannerUrl : "";
+  const proActive = isProActive(shop.user);
+  const publicOfferings = visibleOfferings(shop.offerings, proActive);
+  const bannerSrc = proActive ? shop.bannerUrl : "";
   const publicVideo = shop.videos.find((video) =>
     shopVideoIsPublic({
-      verifiedPro: shop.user.verifiedPro,
+      verifiedPro: proActive,
       published: shop.published || isOwner,
       status: video.status,
       publicPlaybackId: video.publicPlaybackId,
     }),
   );
-  const showVideo = Boolean(publicVideo && (shop.published || isOwner) && shop.user.verifiedPro);
+  const showVideo = Boolean(publicVideo && (shop.published || isOwner) && proActive);
   const shopBadges = {
     phoneVerified: shop.phoneVerified,
     locationVerified: shop.locationVerified,
@@ -178,7 +182,7 @@ export default async function StorefrontPage({ params }: Props) {
             ) : null}
             <ShopBadgeChips flags={shopBadges} events={shop.badgeEvents} />
             {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
-            {shop.user.verifiedPro ? <ProPlanChip /> : null}
+            {proActive ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
               {shop.user.city}
             </span>
@@ -193,7 +197,7 @@ export default async function StorefrontPage({ params }: Props) {
 
           <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-paper/80 p-3 text-center">
             <div>
-              <p className="font-serif text-xl text-navy">{shop.offerings.length}</p>
+              <p className="font-serif text-xl text-navy">{publicOfferings.length}</p>
               <p className="text-xs text-ink/55">Offerings</p>
             </div>
             <div>
@@ -269,11 +273,11 @@ export default async function StorefrontPage({ params }: Props) {
 
       <section className="grid gap-4">
         <h2 className="font-serif text-2xl text-navy">Offerings</h2>
-        {shop.offerings.length === 0 ? (
+        {publicOfferings.length === 0 ? (
           <EmptyState title="No offerings yet" body="This shop has not listed products or services." />
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {shop.offerings.map((offering) => {
+            {publicOfferings.map((offering) => {
               const price = formatOfferingPrice(offering.priceCents, offering.currency);
               const offeringChat = phone ? whatsappOfferingLink(phone, offering.title, url) : "";
               const letter = offering.title.trim().charAt(0).toUpperCase() || "D";

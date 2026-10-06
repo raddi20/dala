@@ -8,6 +8,7 @@ import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
 import { appName, defaultSiteUrl } from "@/lib/brand";
 import { productLabel } from "@/lib/constants";
+import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
@@ -74,7 +75,13 @@ export default async function AccountPage({
         <h1 className="font-serif text-3xl">Account</h1>
         <p className="mt-1 text-sm text-ink/70">
           {user.kind === "business" ? "Business" : "Person"} profile
-          {user.verifiedPro ? " · Pro plan" : ""}
+          {isProActive(user) && user.verifiedProUntil
+            ? ` · Pro plan until ${formatPlanDate(user.verifiedProUntil)}`
+            : isProActive(user)
+              ? " · Pro plan"
+              : proLapsed(user)
+                ? " · Pro plan ended"
+                : ""}
           {user.role === "admin" ? " · Admin" : ""}
         </p>
         <Link href={`/people/${user.id}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark">
@@ -83,6 +90,11 @@ export default async function AccountPage({
         <Link href="/account/insights" className="mt-1 block text-sm font-semibold text-lake-dark underline">
           Your week
         </Link>
+        {isProActive(user) || proLapsed(user) ? (
+          <Link href="/upgrade?product=verified_pro" className="mt-1 block text-sm font-semibold text-lake-dark underline">
+            Renew Pro
+          </Link>
+        ) : null}
       </div>
       {flash ? <Flash>{flash}</Flash> : null}
       <ProfileForm

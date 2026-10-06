@@ -6,6 +6,7 @@ import { ListingCard } from "@/components/listing-card";
 import { ReportForm } from "@/components/report-form";
 import { blockUser } from "@/lib/actions/social";
 import { regionLabel } from "@/lib/constants";
+import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
@@ -62,7 +63,7 @@ export default async function PersonPage({ params }: Props) {
           {person.kind === "business" ? "Business" : "Person"} · {person.city} · {regionLabel(region)}
         </p>
         <h1 className="mt-1 font-serif text-4xl">{person.name}</h1>
-        {shop?.phoneVerified || shop?.locationVerified || shop?.businessVerified || person.verifiedPro ? (
+        {shop?.phoneVerified || shop?.locationVerified || shop?.businessVerified || isProActive(person) ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {shop ? (
               <ShopBadgeChips
@@ -73,7 +74,7 @@ export default async function PersonPage({ params }: Props) {
                 }}
               />
             ) : null}
-            {person.verifiedPro ? <ProPlanChip /> : null}
+            {isProActive(person) ? <ProPlanChip /> : null}
           </div>
         ) : null}
         {person.bio ? <p className="mt-3 whitespace-pre-wrap">{person.bio}</p> : null}

@@ -11,7 +11,9 @@ import {
   setShopBadge,
   setVerifiedPro,
 } from "@/lib/actions/admin";
+import { PRO_DAYS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { formatPlanDate, isProActive } from "@/lib/pro";
 import {
   DOCUMENTS_SEEN_NOTE,
   SHOP_BADGES,
@@ -47,12 +49,21 @@ export default async function AdminPage({
       orderBy: { createdAt: "desc" },
     }),
     prisma.user.findMany({
-      select: { id: true, name: true, email: true, role: true, city: true, verifiedPro: true, kind: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        city: true,
+        verifiedPro: true,
+        verifiedProUntil: true,
+        kind: true,
+      },
       orderBy: { name: "asc" },
     }),
     prisma.storefront.findMany({
       include: {
-        user: { select: { id: true, name: true, email: true, city: true, verifiedPro: true } },
+        user: { select: { id: true, name: true, email: true, city: true, verifiedPro: true, verifiedProUntil: true } },
         badgeEvents: { orderBy: { createdAt: "desc" } },
       },
       orderBy: { user: { name: "asc" } },
@@ -68,8 +79,8 @@ export default async function AdminPage({
         <h1 className="font-serif text-3xl">Moderation</h1>
         <p className="mt-1 text-sm text-ink/70">
           Hide listings and close reports. Shop checks (phone, location, business) are granted here, and each change is
-          kept in the audit trail. Pro plan is paid on Promote and does not verify a shop. The listing verified flag is
-          separate from those checks.
+          kept in the audit trail. Pro plan is paid on Promote for {PRO_DAYS} days and does not verify a shop. Granting
+          it here adds {PRO_DAYS} days. The listing verified flag is separate from those checks.
         </p>
         <p className="mt-3 text-sm">
           <Link href="/admin/ai" className="font-semibold text-lake-dark underline">
@@ -102,7 +113,11 @@ export default async function AdminPage({
               </div>
               <p className="text-ink/70">
                 /b/{shop.slug} · {shop.user.city} · {shop.user.email}
-                {shop.user.verifiedPro ? " · Pro plan (paid, not a shop check)" : ""}
+                {isProActive(shop.user)
+                  ? ` · Pro plan${shop.user.verifiedProUntil ? ` until ${formatPlanDate(shop.user.verifiedProUntil)}` : ""} (paid, not a shop check)`
+                  : shop.user.verifiedProUntil
+                    ? ` · Pro plan ended ${formatPlanDate(shop.user.verifiedProUntil)} (not a shop check)`
+                    : ""}
               </p>
               <form action={setServesDiaspora} className="mt-2 flex flex-wrap items-center gap-2">
                 <input type="hidden" name="storefrontId" value={shop.id} />
@@ -286,25 +301,48 @@ export default async function AdminPage({
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">People</h2>
-        {users.map((person) => (
-          <article key={person.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sand bg-card p-4 text-sm">
-            <div>
-              <Link href={`/people/${person.id}`} className="font-semibold">
-                {person.name}
-              </Link>
-              <p className="text-ink/70">
-                {person.email} · {person.kind} · {person.city}
-                {person.role === "admin" ? " · admin" : ""}
-                {person.verifiedPro ? " · Pro plan" : ""}
-              </p>
-            </div>
-            <form action={setVerifiedPro}>
-              <input type="hidden" name="userId" value={person.id} />
-              <input type="hidden" name="value" value={person.verifiedPro ? "0" : "1"} />
-              <button className={btnSecondary}>{person.verifiedPro ? "Remove Pro plan" : "Grant Pro plan"}</button>
-            </form>
-          </article>
-        ))}
+        <p className="text-sm text-ink/70">
+          Grant Pro plan adds {PRO_DAYS} days, or adds {PRO_DAYS} days onto a plan that is still running. Remove turns it
+          off. Phone, Location, and Business verified are not changed.
+        </p>
+        {users.map((person) => {
+          const proOn = isProActive(person);
+          const proNote = proOn
+            ? person.verifiedProUntil
+              ? ` · Pro plan until ${formatPlanDate(person.verifiedProUntil)}`
+              : " · Pro plan"
+            : person.verifiedProUntil
+              ? ` · Pro plan ended ${formatPlanDate(person.verifiedProUntil)}`
+              : "";
+          return (
+            <article key={person.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-sand bg-card p-4 text-sm">
+              <div>
+                <Link href={`/people/${person.id}`} className="font-semibold">
+                  {person.name}
+                </Link>
+                <p className="text-ink/70">
+                  {person.email} · {person.kind} · {person.city}
+                  {person.role === "admin" ? " · admin" : ""}
+                  {proNote}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <form action={setVerifiedPro}>
+                  <input type="hidden" name="userId" value={person.id} />
+                  <input type="hidden" name="value" value="1" />
+                  <button className={btnSecondary}>{proOn ? `Add ${PRO_DAYS} days` : "Grant Pro plan"}</button>
+                </form>
+                {person.verifiedPro || person.verifiedProUntil ? (
+                  <form action={setVerifiedPro}>
+                    <input type="hidden" name="userId" value={person.id} />
+                    <input type="hidden" name="value" value="0" />
+                    <button className={btnSecondary}>Remove Pro plan</button>
+                  </form>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
       </section>
     </div>
   );

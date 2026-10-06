@@ -3,7 +3,7 @@ import type { Prisma } from "@prisma/client";
 /** Paid plan chip. Not a verification badge. */
 export const PRO_PLAN_LABEL = "Pro plan";
 export const PRO_PLAN_EXPLANATION =
-  "Paid plan: cover banner and up to 20 offerings. This is not a verification badge.";
+  "Paid plan for 30 days: cover banner, shop video, and up to 20 offerings. This is not a verification badge.";
 
 export const SHOP_BADGE_NOTE_MAX = 280;
 

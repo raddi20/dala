@@ -23,6 +23,10 @@ model User {
   city         String   @default("Nairobi")
   avatarUrl    String   @default("")
   verifiedPro  Boolean  @default(false)
+  // End of the paid Pro plan. Null while verifiedPro is on means a shop that
+  // paid before expiry existed. The deploy backfill writes a 30-day grace date.
+  // Until that runs, isProActive treats the row as still on so nobody loses Pro.
+  verifiedProUntil DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

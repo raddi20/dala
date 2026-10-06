@@ -5,6 +5,7 @@ import { FamilyOrderButton } from "@/components/family-order-button";
 import { cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import type { ListingCardData } from "@/lib/search";
+import { isProActive } from "@/lib/pro";
 import { averageRating } from "@/lib/utils";
 
 export function ListingCard({ listing }: { listing: ListingCardData }) {
@@ -13,8 +14,9 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
   const shopSlug = listing.owner.storefront?.published ? listing.owner.storefront.slug : "";
   const whatsapp = listing.contactWhatsapp.trim();
   const servesDiaspora = Boolean(listing.owner.storefront?.servesDiaspora);
+  const proActive = isProActive(listing.owner);
   const hasVideo = Boolean(
-    listing.owner.verifiedPro && listing.owner.storefront?.published && (listing.owner.storefront.videos?.length ?? 0) > 0,
+    proActive && listing.owner.storefront?.published && (listing.owner.storefront.videos?.length ?? 0) > 0,
   );
 
   return (
@@ -46,7 +48,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
           <Badges
             type={listing.type}
             verified={listing.verified}
-            verifiedPro={listing.owner.verifiedPro}
+            verifiedPro={proActive}
             shopBadges={listing.owner.storefront}
             servesDiaspora={servesDiaspora}
             featured={listing.featured}

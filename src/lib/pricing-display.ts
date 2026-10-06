@@ -2,6 +2,7 @@ import {
   CHARGE,
   FEATURED_DAYS,
   FREE_OFFERING_CAP,
+  PRO_DAYS,
   PRO_OFFERING_CAP,
   type PaidProduct,
 } from "@/lib/constants";
@@ -102,6 +103,8 @@ export type PricingPlan = {
   prices: PlanPrices;
   includes: string[];
   notIncluded: string[];
+  /** Shown under the Nairobi price. Featured has none. Pro is per 30 days. */
+  period?: string;
 };
 
 export function pricingPlans(env?: RateEnv): PricingPlan[] {
@@ -124,13 +127,15 @@ export function pricingPlans(env?: RateEnv): PricingPlan[] {
     {
       product: "verified_pro",
       name: "Verified Pro",
-      summary: `The paid Pro plan. Shown as ${PRO_PLAN_LABEL}. It is not a verification badge.`,
+      summary: `The paid Pro plan, ${CHARGE.verified_pro.Nairobi.label} / ${CHARGE.verified_pro.London.label} per ${PRO_DAYS} days. Renewable. Shown as ${PRO_PLAN_LABEL}. It is not a verification badge.`,
+      period: `per ${PRO_DAYS} days`,
       prices: planPriceLines("verified_pro", env),
       includes: [
         `Up to ${PRO_OFFERING_CAP} active offerings, instead of ${FREE_OFFERING_CAP} on a free shop`,
         "A cover banner on the shop",
         "One shop video, up to 45 seconds, after an admin reviews it",
         `Labelled ${PRO_PLAN_LABEL} on the shop and on listings`,
+        `Lasts ${PRO_DAYS} days. Renewing before the end date adds another ${PRO_DAYS} days to that date`,
       ],
       notIncluded: [
         "Does not mean the shop is verified",

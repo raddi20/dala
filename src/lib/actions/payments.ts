@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { redirect } from "next/navigation";
 import { appName } from "@/lib/brand";
-import { chargeFor, isPaidProduct } from "@/lib/constants";
+import { chargeFor, isPaidProduct, PRO_DAYS } from "@/lib/constants";
 import { paymentConfig } from "@/lib/payments/config";
 import { createFlutterwaveCheckout } from "@/lib/payments/flutterwave";
 import { publicOrigin } from "@/lib/payments/origin";
@@ -42,8 +42,6 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
     }
     city = listing.city;
     linkedListingId = listing.id;
-  } else if (user.verifiedPro) {
-    return { error: "You already have Verified Pro." };
   }
 
   const charge = chargeFor(product, city);
@@ -87,7 +85,10 @@ export async function startPayment(_prev: ActionState, formData: FormData): Prom
     email: user.email,
     name: user.name,
     phone,
-    description: product === "featured" ? `${appName()} — Featured listing for 30 days` : `${appName()} — Verified Pro`,
+    description:
+      product === "featured"
+        ? `${appName()} — Featured listing for 30 days`
+        : `${appName()} — Verified Pro for ${PRO_DAYS} days`,
     meta: {
       payment_id: payment.id,
       product,

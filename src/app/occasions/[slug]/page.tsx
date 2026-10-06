@@ -6,6 +6,7 @@ import { VideoMark } from "@/components/video-mark";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState, btnSecondary, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { isProActive } from "@/lib/pro";
 import { continueHref } from "@/lib/utils";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { publicOrigin } from "@/lib/payments/origin";
@@ -29,7 +30,7 @@ async function loadOccasion(slug: string) {
             select: {
               slug: true,
               servesDiaspora: true,
-              user: { select: { name: true, city: true, verifiedPro: true } },
+              user: { select: { name: true, city: true, verifiedPro: true, verifiedProUntil: true } },
               videos: {
                 where: { status: "approved", NOT: { publicPlaybackId: "" } },
                 select: { id: true },
@@ -123,7 +124,7 @@ export default async function OccasionPage({ params }: Props) {
                     </div>
                     <h3 className="mt-3 flex flex-wrap items-center gap-2 font-serif text-2xl text-navy">
                       {row.storefront.user.name}
-                      {row.storefront.user.verifiedPro && row.storefront.videos.length > 0 ? <VideoMark /> : null}
+                      {isProActive(row.storefront.user) && row.storefront.videos.length > 0 ? <VideoMark /> : null}
                     </h3>
                     <p className="mt-1 text-sm text-ink/60">{row.storefront.user.city}</p>
                   </Link>

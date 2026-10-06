@@ -140,6 +140,15 @@ test("decideUpload requires a shop, and Pro, before a cover photo", () => {
   assert.equal(freeBanner.ok, false);
   if (!freeBanner.ok) assert.equal(freeBanner.status, 403);
 
+  const lapsed = decideUpload({
+    user: { ...pro, verifiedProUntil: new Date("2020-01-01T00:00:00.000Z") },
+    purpose: "banner",
+    resourceId: "",
+    ownStorefront: { id: "shop1" },
+  });
+  assert.equal(lapsed.ok, false);
+  if (!lapsed.ok) assert.equal(lapsed.status, 403);
+
   const adminBanner = decideUpload({
     user: admin,
     purpose: "banner",

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_OFFERING_CAP } from "@/lib/constants";
+import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
 import {
   DEFAULT_KES_PER_GBP,
   DEFAULT_KES_PER_USD,
@@ -67,6 +67,12 @@ test("plan copy uses the real offering caps and says Pro is not verified", () =>
   assert.match(featured.includes.join(" "), new RegExp(String(FEATURED_DAYS)));
   assert.match(pro.includes.join(" "), new RegExp(String(PRO_OFFERING_CAP)));
   assert.match(pro.includes.join(" "), new RegExp(String(FREE_OFFERING_CAP)));
+  assert.match(pro.includes.join(" "), new RegExp(String(PRO_DAYS)));
+  assert.match(pro.summary, /per 30 days/i);
+  assert.match(pro.summary, /KES 2,500/);
+  assert.match(pro.summary, /£20/);
+  assert.equal(pro.period, `per ${PRO_DAYS} days`);
+  assert.match(pro.includes.join(" "), /adds another 30 days/i);
   assert.match(pro.summary, /not a verification badge/i);
   assert.match(pro.notIncluded.join(" "), /does not mean the shop is verified/i);
   assert.match(pricingRateNote({}), new RegExp(String(DEFAULT_KES_PER_USD)));

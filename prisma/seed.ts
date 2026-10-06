@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { roleForSeedUser, seedShouldSkip } from "../src/lib/admin-access";
 import { ensureOccasionDefinitions } from "../src/lib/occasions";
-import { CATEGORIES, regionForCity, type Category } from "../src/lib/constants";
+import { CATEGORIES, PRO_DAYS, regionForCity, type Category } from "../src/lib/constants";
 import { assessScam } from "../src/lib/scam";
 
 const prisma = new PrismaClient();
@@ -802,6 +802,7 @@ async function main() {
         whatsapp: user.whatsapp,
         bio: user.bio,
         verifiedPro: user.verifiedPro ?? false,
+        verifiedProUntil: user.verifiedPro ? new Date(Date.now() + PRO_DAYS * 86_400_000) : null,
       },
     });
     createdUsers.set(user.email, {

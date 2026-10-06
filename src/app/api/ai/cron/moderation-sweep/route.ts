@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cronAuthorized } from "@/lib/ai/cron-auth";
 import { fingerprintPublicVideoThumb, runModeration, SWEEP_BATCH, unhashedPhotoTargets } from "@/lib/ai/moderation";
 import { publicVideoThumbTargets } from "@/lib/ai/video-thumb";
+import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -26,7 +27,9 @@ async function handle(request: Request) {
           id: true,
           status: true,
           publicPlaybackId: true,
-          storefront: { select: { published: true, userId: true, user: { select: { verifiedPro: true } } } },
+          storefront: {
+            select: { published: true, userId: true, user: { select: { verifiedPro: true, verifiedProUntil: true } } },
+          },
         },
         take: 1000,
       }),
@@ -39,7 +42,7 @@ async function handle(request: Request) {
         status: row.status,
         publicPlaybackId: row.publicPlaybackId,
         published: row.storefront.published,
-        verifiedPro: row.storefront.user.verifiedPro,
+        verifiedPro: isProActive(row.storefront.user),
         ownerUser: row.storefront.userId,
       })),
     );
