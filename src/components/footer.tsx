@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
+import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
 
 export function Footer() {
   return (
@@ -37,6 +38,11 @@ export function Footer() {
           <Link href="/account/storefront" className="hover:text-navy">
             Open a shop
           </Link>
+          {PUBLIC_INFO_PAGES.map((page) => (
+            <Link key={page.path} href={page.path} className="hover:text-navy">
+              {page.label}
+            </Link>
+          ))}
         </div>
       </div>
     </footer>
