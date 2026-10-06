@@ -59,7 +59,7 @@ Sign in as the seller and open **Manage storefront** from Account, the header (*
 
 With no shop yet, Manage storefront shows three steps: create the shop from your profile, add a first offering, then publish. After the first offering, that page asks you to publish and shows the WhatsApp line buyers will send. From there you can change the address, write the about text, add or edit offerings, archive them, move them up or down, and publish. Unpublished shops return a not-found page to everyone except the owner, who can still preview.
 
-Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro`, already used by the paid plan) raises that to 20 and unlocks the cover banner. On the shop and on listing cards that plan is labelled **Pro plan**, so it is not read as a verification badge. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
+Free shops list up to 5 offerings. Verified Pro (`user.verifiedPro` plus `user.verifiedProUntil`) lasts 30 days, raises that to 20, and unlocks the cover banner and shop video. Renewing before the end date adds 30 days to it. When the date passes, the extra offerings, the banner, and the video are hidden, not deleted, and they come back on renewal. The first 5 offerings in the seller's shop order stay public. On the shop and on listing cards that plan is labelled **Pro plan**, so it is not read as a verification badge. Featured listing is unchanged: it is a directory boost, separate from the shop. A "featured shop" flag is left for later.
 
 Phone verified, Location verified, and Business verified are separate shop checks. An admin grants or removes each one from `/admin`. A grant must say how it was checked: Call, Video, Visit, or Documents seen. Documents seen means the admin looked at papers. Nothing is uploaded or stored. Every change is appended to an audit trail with the admin, the time, the method on a grant, and an optional note. The shop page shows the latest grant for each active badge, for example “Phone checked 12 Sep 2026 by call”. Paying for Verified Pro does not grant them, and granting them does not turn on Verified Pro. A fresh seed gives Mama Atieno phone (call) and location (video) checks, and the Peckham grocer a business check (documents seen). Okello & Co stays on Verified Pro with none of those checks. Seed does not add checks to a database that already has users.
 
@@ -69,7 +69,7 @@ Listing cards show **Shop**, and the listing page shows **Visit storefront**, wh
 
 A Pro shop can upload one MP4 or MOV, up to 45 seconds and 200 MB, including iPhone HEVC. The file goes from the phone to Mux. It does not pass through Vercel. It stays private until an admin approves it in `/admin`. A replacement stays in review while the current video remains on the shop. Approval swaps them and deletes the old Mux asset.
 
-If Pro is turned off, the video is hidden from the shop, from cards, and from link previews. The file is kept and shows again when Pro is back on. Nothing is deleted just because Pro lapsed.
+If Pro is turned off, or `verifiedProUntil` has passed, the video is hidden from the shop, from cards, and from link previews. The file is kept and shows again when Pro is back on. Nothing is deleted just because Pro lapsed.
 
 A rejected upload is deleted from Mux after 14 days. The audit note and poster stay. A clip over 45 seconds is deleted immediately. Taking down a live video hides it and deletes the Mux asset immediately. The audit row stays.
 
@@ -130,9 +130,9 @@ There is no cart. Shop goods are still arranged on WhatsApp.
 | Product | Price | What it unlocks |
 | --- | --- | --- |
 | Featured listing | KES 1,500 in Nairobi, £12 in London | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
-| Verified Pro | KES 2,500 in Nairobi, £20 in London | `user.verifiedPro`. The paid plan (shown as Pro plan), the shop cover banner, and 20 offerings instead of 5. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
+| Verified Pro | KES 2,500 in Nairobi, £20 in London, per 30 days | `user.verifiedPro` and `user.verifiedProUntil`. The paid plan (shown as Pro plan), the shop cover banner, the shop video, and 20 offerings instead of 5, while that date is in the future. Paying again before it ends adds 30 days to the current end date. A webhook retry for the same payment does not. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
 
-M-Pesa is only offered when the price is in Kenyan shillings. London prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro`).
+M-Pesa is only offered when the price is in Kenyan shillings. London prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro for 30 days`).
 
 ### How a payment completes
 
@@ -140,7 +140,7 @@ M-Pesa is only offered when the price is in Kenyan shillings. London prices use 
 2. The server calls Flutterwave `POST /v3/payments` and redirects to the hosted page.
 3. Flutterwave sends the buyer back to `/upgrade/return` with `status`, `tx_ref`, and `transaction_id`.
 4. The server calls `GET /v3/transactions/{id}/verify`. Amount, currency, and reference must match the pending row. Only then is the listing featured or Verified Pro turned on, in the same database transaction as marking the row `paid`.
-5. Flutterwave also `POST`s `/api/payments/flutterwave` with the `verif-hash` header. The handler checks that header against `FLW_WEBHOOK_HASH`, verifies the transaction again, and calls the same fulfillment. If the row is already `paid`, it returns 200 and does not move `featuredUntil`.
+5. Flutterwave also `POST`s `/api/payments/flutterwave` with the `verif-hash` header. The handler checks that header against `FLW_WEBHOOK_HASH`, verifies the transaction again, and calls the same fulfillment. If the row is already `paid`, it returns 200 and does not move `featuredUntil` or `verifiedProUntil`.
 
 If the buyer closes the tab, the webhook still completes the upgrade. If the webhook hash is not set yet, the return URL can still complete it, and the webhook answers 503.
 

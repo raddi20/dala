@@ -5,7 +5,7 @@ import { startPayment } from "@/lib/actions/payments";
 import { PaymentSetup } from "@/components/payment-setup";
 import { SubmitButton } from "@/components/submit-button";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
-import { chargeFor, FREE_OFFERING_CAP, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { chargeFor, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/payments/rules";
 import type { ActionState } from "@/lib/validators";
 
@@ -16,7 +16,9 @@ export function PayForm({
   defaultListingId,
   defaultProduct,
   userCity,
-  verifiedPro,
+  proActive,
+  proLapsed,
+  proUntilLabel,
   mode,
   webhookReady,
   brandName,
@@ -26,7 +28,9 @@ export function PayForm({
   defaultListingId: string;
   defaultProduct: PaidProduct;
   userCity: string;
-  verifiedPro: boolean;
+  proActive: boolean;
+  proLapsed: boolean;
+  proUntilLabel: string;
   mode: PaymentMode;
   webhookReady: boolean;
   brandName: string;
@@ -54,8 +58,7 @@ export function PayForm({
   const configured = mode === "test" || mode === "live";
   const blocked =
     !configured ||
-    (product === "featured" && listings.length === 0) ||
-    (product === "verified_pro" && verifiedPro);
+    (product === "featured" && listings.length === 0);
 
   return (
     <form action={action} className="grid gap-4">
@@ -83,11 +86,16 @@ export function PayForm({
           <span>
             <span className="font-semibold">Verified Pro</span>
             <span className="mt-1 block text-ink/70">
-              Paid plan, shown as Pro plan. It adds a cover banner and up to {PRO_OFFERING_CAP} offerings. Free shops list{" "}
-              {FREE_OFFERING_CAP}. {chargeFor("verified_pro", "Nairobi").label} in Nairobi,{" "}
-              {chargeFor("verified_pro", "London").label} in London. It does not grant Phone, Location, or Business verified.
-              An admin grants those shop checks, and the green listing Verified badge.
-              {verifiedPro ? " You already have this." : ""}
+              {chargeFor("verified_pro", "Nairobi").label} / {chargeFor("verified_pro", "London").label} per {PRO_DAYS}{" "}
+              days. Paid plan, shown as Pro plan. It adds a cover banner, a shop video, and up to {PRO_OFFERING_CAP}{" "}
+              offerings. Free shops list {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date.
+              It does not grant Phone, Location, or Business verified. An admin grants those shop checks, and the green
+              listing Verified badge.
+              {proActive && proUntilLabel
+                ? ` Your plan runs until ${proUntilLabel}. Paying now adds ${PRO_DAYS} days to that date.`
+                : proLapsed
+                  ? ` Your plan has ended. Paying starts another ${PRO_DAYS} days from today.`
+                  : ""}
             </span>
           </span>
         </label>
@@ -151,6 +159,7 @@ export function PayForm({
 
       <p className="text-sm font-semibold text-navy">
         {product === "featured" ? "Featured listing" : "Verified Pro"} · {charge.label}
+        {product === "verified_pro" ? ` per ${PRO_DAYS} days` : ""}
       </p>
       <SubmitButton className={btnPrimary} pendingLabel="Opening checkout…" disabled={blocked}>
         {configured ? `Pay ${charge.label}` : "Checkout needs Flutterwave keys"}

@@ -25,6 +25,7 @@ export type VideoRow = {
 
 export type VideoFailure = { ok: false; code: string; error: string };
 
+/** `verifiedPro` means the plan is active now (`isProActive`), not the stored flag on its own. */
 export function shopVideoIsPublic(input: {
   verifiedPro: boolean;
   published: boolean;

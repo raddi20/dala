@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { OCCASION_DEFINITIONS } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
+import { setUserPro } from "@/lib/pro";
 import { commitShopBadgeChange } from "@/lib/shop-badge-commit";
 import { requireAdmin } from "@/lib/session";
 import { field } from "@/lib/validators";
@@ -46,9 +47,15 @@ export async function setListingVerified(formData: FormData) {
 export async function setVerifiedPro(formData: FormData) {
   await requireAdmin();
   const userId = field(formData, "userId");
-  const verifiedPro = field(formData, "value") === "1";
-  await prisma.user.update({ where: { id: userId }, data: { verifiedPro } });
+  const grant = field(formData, "value") === "1";
+  await setUserPro(prisma, userId, grant);
+  const shop = await prisma.storefront.findUnique({ where: { userId }, select: { slug: true } });
   refresh();
+  revalidatePath(`/people/${userId}`);
+  revalidatePath("/account");
+  revalidatePath("/account/storefront");
+  revalidatePath("/upgrade");
+  if (shop) revalidatePath(`/b/${shop.slug}`);
 }
 
 export async function setServesDiaspora(formData: FormData) {

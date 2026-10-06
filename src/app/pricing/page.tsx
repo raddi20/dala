@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { btnPrimary, btnSecondary, cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { FREE_OFFERING_CAP } from "@/lib/constants";
+import { FEATURED_DAYS, FREE_OFFERING_CAP, PRICES, PRO_DAYS } from "@/lib/constants";
 import { pricingPlans, pricingRateNote } from "@/lib/pricing-display";
 import { publicOrigin } from "@/lib/payments/origin";
 import { getSessionUser } from "@/lib/session";
@@ -33,7 +33,7 @@ export default async function PricingPage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-lake">Nairobi and London</p>
         <h1 className={`${sectionTitleClass} mt-2`}>Pricing</h1>
         <p className="mt-3 max-w-2xl text-ink/70">
-          Listing a business is free. A free shop lists {FREE_OFFERING_CAP} offerings. These two plans are how a seller stands out. There is no cart. Payment for goods stays on WhatsApp, between buyer and seller.
+          Listing a business is free. A free shop lists {FREE_OFFERING_CAP} offerings. Featured is a directory boost for {FEATURED_DAYS} days. Verified Pro is {PRICES.verified_pro.Nairobi} / {PRICES.verified_pro.London} per {PRO_DAYS} days, and renewing early adds {PRO_DAYS} days to the current end date. There is no cart. Payment for goods stays on WhatsApp, between buyer and seller.
         </p>
       </div>
 
@@ -45,6 +45,7 @@ export default async function PricingPage() {
               <h2 className="font-serif text-2xl text-navy">{plan.name}</h2>
               <p className="mt-2 text-sm text-ink/70">{plan.summary}</p>
               <p className="mt-5 font-serif text-4xl text-navy">{plan.prices.kes.label}</p>
+              {plan.period ? <p className="text-sm font-semibold text-navy">{plan.period}</p> : null}
               <p className="text-sm text-ink/60">Nairobi price. This is what checkout charges in Kenya.</p>
               <ul className="mt-4 grid gap-2 text-sm">
                 <li className="flex items-baseline justify-between gap-3 rounded-xl bg-paper px-3 py-2">
@@ -79,7 +80,7 @@ export default async function PricingPage() {
       <section className={`${cardClass} border-lake/30 bg-teal-soft/60 p-5`}>
         <h2 className="font-serif text-xl text-navy">Verified Pro is not “verified”</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink/80">
-          Paying for Verified Pro turns on the Pro plan: the cover banner and the higher offering limit. It does not check a phone, a place, or a business, and it does not add the green Verified badge on a listing. An admin grants those. The price above is the plan, not a promise that someone inspected the shop.
+          Paying for Verified Pro turns on the Pro plan for {PRO_DAYS} days: the cover banner, the shop video, and the higher offering limit. Renewing before it ends adds {PRO_DAYS} days to the current end date. It does not check a phone, a place, or a business, and it does not add the green Verified badge on a listing. An admin grants those. The price above is the plan, not a promise that someone inspected the shop.
         </p>
       </section>
 

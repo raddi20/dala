@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
-import { offeringCap } from "@/lib/constants";
+import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
+import { isProActive, proLapsed } from "@/lib/pro";
 import { OCCASION_DEFINITIONS, ensureOccasionDefinitions, syncShopOccasionSlugs } from "@/lib/occasions";
 import { scheduleModeration } from "@/lib/ai/moderation";
 import { prisma } from "@/lib/prisma";
@@ -43,10 +44,14 @@ async function requireOwnedOffering(id: string) {
   return { user, storefront, offering };
 }
 
-function capMessage(verifiedPro: boolean) {
-  const cap = offeringCap(verifiedPro);
-  if (verifiedPro) return `Verified Pro shops can list ${cap} offerings.`;
-  return `Free shops can list ${cap} offerings. Verified Pro raises that to 20.`;
+function capMessage(user: { verifiedPro: boolean; verifiedProUntil: Date | null }) {
+  const proActive = isProActive(user);
+  const cap = offeringCap(proActive);
+  if (proActive) return `Verified Pro shops can list ${cap} offerings.`;
+  if (proLapsed(user)) {
+    return `Verified Pro has ended, so this shop can list ${FREE_OFFERING_CAP} offerings until you renew. Offerings already saved stay hidden and come back when you renew.`;
+  }
+  return `Free shops can list ${cap} offerings. Verified Pro raises that to ${PRO_OFFERING_CAP} for ${PRO_DAYS} days.`;
 }
 
 export async function createStorefront() {
@@ -75,7 +80,7 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
   const taken = await prisma.storefront.findUnique({ where: { slug: parsed.data.slug } });
   if (taken && taken.id !== storefront.id) return { error: "That shop address is already taken." };
 
-  const bannerUrl = user.verifiedPro ? parsed.data.bannerUrl : storefront.bannerUrl;
+  const bannerUrl = isProActive(user) ? parsed.data.bannerUrl : storefront.bannerUrl;
 
   try {
     await prisma.$transaction([
@@ -115,9 +120,9 @@ export async function createOffering(_prev: ActionState, formData: FormData): Pr
   const parsed = parseOfferingForm(formData);
   if (!parsed.ok) return { error: parsed.error };
 
-  const cap = offeringCap(user.verifiedPro);
+  const cap = offeringCap(isProActive(user));
   const active = await prisma.offering.count({ where: { storefrontId: storefront.id, archived: false } });
-  if (active >= cap) return { error: capMessage(user.verifiedPro) };
+  if (active >= cap) return { error: capMessage(user) };
 
   const max = await prisma.offering.aggregate({
     where: { storefrontId: storefront.id },
@@ -184,7 +189,7 @@ export async function archiveOffering(formData: FormData) {
 export async function restoreOffering(formData: FormData) {
   const { user, storefront, offering } = await requireOwnedOffering(field(formData, "id"));
   if (offering.archived) {
-    const cap = offeringCap(user.verifiedPro);
+    const cap = offeringCap(isProActive(user));
     const active = await prisma.offering.count({ where: { storefrontId: storefront.id, archived: false } });
     if (active >= cap) redirect("/account/storefront?notice=cap");
     const max = await prisma.offering.aggregate({

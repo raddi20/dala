@@ -6,7 +6,8 @@ import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
 import { Flash, btnPrimary, btnSecondary, btnWhatsApp, cardClass, sectionTitleClass } from "@/components/ui";
 import { archiveOffering, createStorefront, moveOffering, publishStorefront, restoreOffering } from "@/lib/actions/storefront";
-import { FREE_OFFERING_CAP, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
+import { FREE_OFFERING_CAP, PRICES, PRO_DAYS, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
+import { formatPlanDate, hiddenOfferings, isProActive, proLapsed } from "@/lib/pro";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
@@ -43,7 +44,9 @@ export default async function ManageStorefrontPage({
     }),
   ]);
 
-  const cap = offeringCap(user.verifiedPro);
+  const proActive = isProActive(user);
+  const lapsed = proLapsed(user);
+  const cap = offeringCap(proActive);
   const notice = one(sp.notice);
   const flash =
     notice === "created"
@@ -63,9 +66,11 @@ export default async function ManageStorefrontPage({
                 : notice === "restored"
                   ? "Offering restored."
                   : notice === "cap"
-                    ? user.verifiedPro
+                    ? proActive
                       ? `Verified Pro shops can list ${cap} offerings.`
-                      : `Free shops can list ${FREE_OFFERING_CAP} offerings. Verified Pro raises that to ${PRO_OFFERING_CAP}.`
+                      : lapsed
+                        ? `Verified Pro has ended, so this shop can list ${FREE_OFFERING_CAP} offerings until you renew.`
+                        : `Free shops can list ${FREE_OFFERING_CAP} offerings. Verified Pro raises that to ${PRO_OFFERING_CAP} for ${PRO_DAYS} days.`
                     : "";
 
   if (!shop) {
@@ -114,6 +119,8 @@ export default async function ManageStorefrontPage({
 
   const active = shop.offerings.filter((offering) => !offering.archived);
   const archived = shop.offerings.filter((offering) => offering.archived);
+  const hidden = hiddenOfferings(active, proActive);
+  const proUntilLabel = user.verifiedProUntil ? formatPlanDate(user.verifiedProUntil) : "";
   const currencyDefault = user.city === "London" ? "GBP" : "KES";
   const readyToPublish = !shop.published && active.length > 0;
   const phone = user.whatsapp || user.phone;
@@ -127,13 +134,51 @@ export default async function ManageStorefrontPage({
       <div>
         <h1 className={sectionTitleClass}>Manage storefront</h1>
         <p className="mt-1 text-sm text-ink/65">
-          {shop.published ? "Published" : "Draft"} · {active.length} of {cap} offerings
-          {user.verifiedPro ? " · Pro plan" : ""}
+          {shop.published ? "Published" : "Draft"} · {Math.min(active.length, cap)} of {cap} public
+          {active.length > cap ? ` · ${active.length} saved` : ""}
+          {proActive && proUntilLabel ? ` · Pro plan until ${proUntilLabel}` : proActive ? " · Pro plan" : lapsed ? " · Pro plan ended" : ""}
         </p>
         <Link href={`/b/${shop.slug}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
           {shop.published ? "View shop" : "Preview shop"}
         </Link>
       </div>
+      <section className={`${cardClass} grid gap-3 p-5`}>
+        <h2 className="font-serif text-xl text-navy">Verified Pro</h2>
+        {proActive && proUntilLabel ? (
+          <p className="text-sm text-ink/75">
+            Active until <time dateTime={user.verifiedProUntil?.toISOString()}>{proUntilLabel}</time>.{" "}
+            {PRICES.verified_pro.Nairobi} / {PRICES.verified_pro.London} per {PRO_DAYS} days. Renewing early adds {PRO_DAYS}{" "}
+            days to that date. The cover, shop video, and all {PRO_OFFERING_CAP} offerings stay available while this date
+            is still ahead.
+          </p>
+        ) : proActive ? (
+          <p className="text-sm text-ink/75">
+            Pro is on. The end date is written when this version is deployed. It will be {PRO_DAYS} days from that deploy,
+            and renewing early adds another {PRO_DAYS} days.
+          </p>
+        ) : lapsed ? (
+          <p className="text-sm text-ink/75">
+            {proUntilLabel ? (
+              <>
+                Ended on <time dateTime={user.verifiedProUntil?.toISOString()}>{proUntilLabel}</time>.{" "}
+              </>
+            ) : (
+              "Verified Pro has ended. "
+            )}
+            The cover banner and shop video are hidden. Offerings after the first {FREE_OFFERING_CAP} in the list below
+            are hidden on the public shop. Nothing was deleted. A renewal starts another {PRO_DAYS} days
+            {proUntilLabel ? " from today, because this date has passed" : ""}.
+          </p>
+        ) : (
+          <p className="text-sm text-ink/75">
+            This shop is on the free plan: {FREE_OFFERING_CAP} offerings. Verified Pro is {PRICES.verified_pro.Nairobi} /{" "}
+            {PRICES.verified_pro.London} per {PRO_DAYS} days, with a cover, a shop video, and {PRO_OFFERING_CAP} offerings.
+          </p>
+        )}
+        <Link href="/upgrade?product=verified_pro" className={btnPrimary}>
+          {proActive || lapsed ? "Renew" : "Get Verified Pro"}
+        </Link>
+      </section>
       <section className={`${cardClass} p-5`}>
         <ShopBadgeStatus
           flags={{
@@ -146,7 +191,7 @@ export default async function ManageStorefrontPage({
       </section>
       <section id="shop-video" className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-xl text-navy">Shop video</h2>
-        <ShopVideoPanel verifiedPro={user.verifiedPro} videos={shop.videos} />
+        <ShopVideoPanel verifiedPro={proActive} lapsed={lapsed} videos={shop.videos} />
       </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {notice === "published" ? (
@@ -176,7 +221,7 @@ export default async function ManageStorefrontPage({
           <h2 className="font-serif text-xl text-navy">Add your first offering</h2>
           <p className="text-sm text-ink/65">
             This is step 2. A photo is optional — drop one in, or choose it from this phone or computer. You can list {cap} active offerings
-            {user.verifiedPro ? " on Verified Pro" : ` on the free plan, or ${PRO_OFFERING_CAP} with Verified Pro`}.
+            {proActive ? " on Verified Pro" : ` on the free plan, or ${PRO_OFFERING_CAP} with Verified Pro for ${PRO_DAYS} days`}.
           </p>
           <OfferingForm mode="create" currencyDefault={currencyDefault} />
         </section>
@@ -228,7 +273,7 @@ export default async function ManageStorefrontPage({
             bannerUrl={shop.bannerUrl}
             bio={user.bio}
             published={shop.published}
-            verifiedPro={user.verifiedPro}
+            verifiedPro={proActive}
             servesDiaspora={shop.servesDiaspora}
             occasions={occasionChoices}
             selectedOccasions={shop.occasions.map((row) => row.occasion.slug)}
@@ -240,10 +285,23 @@ export default async function ManageStorefrontPage({
       {active.length > 0 ? (
         <section className="grid gap-3">
           <h2 className="font-serif text-2xl text-navy">Offerings</h2>
+          {hidden.length > 0 ? (
+            <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
+              {hidden.length} offering{hidden.length === 1 ? " is" : "s are"} hidden on the public shop because Verified Pro
+              has ended. The first {FREE_OFFERING_CAP} in this list stay visible. That is your shop order. Move one up if
+              you want a different offering to stay public. Hidden offerings are not deleted, and they are left off the
+              public shop, so they are not on search, cards, or the sitemap. Renew and they come back.
+            </p>
+          ) : null}
           <ul className="grid gap-2">
             {active.map((offering, index) => (
               <li key={offering.id} className={`${cardClass} p-4 text-sm`}>
-                <p className="font-semibold text-navy">{offering.title}</p>
+                <p className="font-semibold text-navy">
+                  {offering.title}
+                  {index >= FREE_OFFERING_CAP && !proActive ? (
+                    <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-clay">Hidden on the public shop</span>
+                  ) : null}
+                </p>
                 <p className="text-ink/60">{formatOfferingPrice(offering.priceCents, offering.currency) || "No price"}</p>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                   <Link href={`/account/storefront/offerings/${offering.id}`} className="font-semibold text-lake-dark hover:text-lake">
@@ -279,17 +337,19 @@ export default async function ManageStorefrontPage({
           <h2 className="font-serif text-xl text-navy">Add an offering</h2>
           {active.length >= cap ? (
             <p className="text-sm text-ink/65">
-              {user.verifiedPro
+              {proActive
                 ? `This shop is at the Verified Pro limit of ${cap}. Archive one to add another.`
-                : `This shop is at the free limit of ${FREE_OFFERING_CAP}. Archive one, or get Verified Pro for ${PRO_OFFERING_CAP}.`}{" "}
-              {!user.verifiedPro ? (
+                : lapsed
+                  ? `Verified Pro has ended, so you cannot add past ${FREE_OFFERING_CAP} until you renew. Offerings already saved are hidden, not deleted.`
+                  : `This shop is at the free limit of ${FREE_OFFERING_CAP}. Archive one, or get Verified Pro for ${PRO_OFFERING_CAP} for ${PRO_DAYS} days.`}{" "}
+              {!proActive ? (
                 <>
                   <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
                     See prices
                   </Link>
                   {" · "}
                   <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-                    See Promote
+                    {lapsed ? "Renew" : "See Promote"}
                   </Link>
                 </>
               ) : null}
@@ -328,9 +388,11 @@ export default async function ManageStorefrontPage({
 
 function ShopVideoPanel({
   verifiedPro,
+  lapsed,
   videos,
 }: {
   verifiedPro: boolean;
+  lapsed: boolean;
   videos: { status: string; caption: string; rejectReason: string; publicPlaybackId: string }[];
 }) {
   const mode = videoMode();
@@ -363,7 +425,7 @@ function ShopVideoPanel({
       {mode === "off" ? null : !verifiedPro ? (
         <p className="text-sm">
           <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-            See the Pro plan
+            {lapsed ? "Renew" : "See the Pro plan"}
           </Link>
         </p>
       ) : (

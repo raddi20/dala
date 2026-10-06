@@ -361,6 +361,7 @@ test("paying for Verified Pro does not grant shop badges or write an audit row",
 
     assert.equal(result.ok, true);
     assert.equal(userAfter.verifiedPro, true);
+    assert.ok(userAfter.verifiedProUntil && userAfter.verifiedProUntil.getTime() > Date.now());
     assert.equal(shopAfter.phoneVerified, false);
     assert.equal(shopAfter.locationVerified, false);
     assert.equal(shopAfter.businessVerified, false);

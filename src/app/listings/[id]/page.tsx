@@ -11,6 +11,7 @@ import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { appName } from "@/lib/brand";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
+import { isProActive } from "@/lib/pro";
 import { averageRating, formatWhen, one, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
@@ -115,7 +116,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         <Badges
           type={listing.type}
           verified={listing.verified}
-          verifiedPro={listing.owner.verifiedPro}
+          verifiedPro={isProActive(listing.owner)}
           shopBadges={listing.owner.storefront}
           servesDiaspora={Boolean(listing.owner.storefront?.servesDiaspora)}
           featured={listing.featured}

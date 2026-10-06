@@ -28,6 +28,9 @@ export const REPORT_REASONS = [
 
 export const FEATURED_DAYS = 30;
 
+/** How long one Verified Pro payment lasts. Renewing early adds this onto the current end date. */
+export const PRO_DAYS = 30;
+
 /** Active (not archived) offerings on a free shop. */
 export const FREE_OFFERING_CAP = 5;
 

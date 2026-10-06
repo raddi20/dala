@@ -1,6 +1,7 @@
 import { revalidatePath } from "next/cache";
 import { FEATURED_DAYS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { extendProUntil } from "@/lib/pro";
 import { amountsMatch } from "@/lib/payments/rules";
 
 export type FulfillResult = { ok: true; already: boolean } | { ok: false; error: "unknown" | "mismatch" };
@@ -28,7 +29,8 @@ async function refreshPaid(payment: { userId: string; listingId: string | null; 
 
 /**
  * Marks a pending checkout paid and applies Featured or Verified Pro.
- * A repeat call for the same reference does not extend the featured window again.
+ * A repeat call for the same reference does not extend Featured or Pro again.
+ * A new Pro payment adds 30 days onto a plan that is still running, or starts 30 days from now.
  */
 export async function fulfillPaidPayment(input: {
   reference: string;
@@ -81,7 +83,15 @@ export async function fulfillPaidPayment(input: {
         });
       }
     } else if (payment.product === "verified_pro") {
-      await tx.user.update({ where: { id: payment.userId }, data: { verifiedPro: true } });
+      const buyer = await tx.user.findUnique({
+        where: { id: payment.userId },
+        select: { verifiedProUntil: true },
+      });
+      const verifiedProUntil = extendProUntil(buyer?.verifiedProUntil ?? null, new Date());
+      await tx.user.update({
+        where: { id: payment.userId },
+        data: { verifiedPro: true, verifiedProUntil },
+      });
     }
     return true;
   });

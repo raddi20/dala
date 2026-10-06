@@ -11,6 +11,7 @@ const include = {
       id: true,
       name: true,
       verifiedPro: true,
+      verifiedProUntil: true,
       storefront: {
         select: {
           slug: true,

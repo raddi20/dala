@@ -3,6 +3,7 @@ import { isCategory } from "@/lib/categories";
 import { brandOgModel, categoryOgModel, listingOgModel, occasionOgModel, shopOgModel } from "@/lib/og-model";
 import { prisma } from "@/lib/prisma";
 import { shopSignals } from "@/lib/storefront";
+import { isProActive } from "@/lib/pro";
 import { shopVideoIsPublic } from "@/lib/video/machine";
 
 export async function loadShopOg(slug: string) {
@@ -13,7 +14,7 @@ export async function loadShopOg(slug: string) {
       published: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, city: true, avatarUrl: true, verifiedPro: true } },
+      user: { select: { name: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -24,10 +25,11 @@ export async function loadShopOg(slug: string) {
   });
   if (!shop?.published) return brandOgModel(brand);
   const signals = await shopSignals(shop.userId);
+  const proActive = isProActive(shop.user);
   const video = shop.videos[0];
   const hasVideo = video
     ? shopVideoIsPublic({
-        verifiedPro: shop.user.verifiedPro,
+        verifiedPro: proActive,
         published: true,
         status: video.status,
         publicPlaybackId: video.publicPlaybackId,
@@ -41,7 +43,7 @@ export async function loadShopOg(slug: string) {
     category: signals.category,
     coverUrl: shop.bannerUrl,
     logoUrl: shop.user.avatarUrl,
-    verifiedPro: shop.user.verifiedPro,
+    verifiedPro: proActive,
     videoPosterUrl: hasVideo ? video?.posterUrl : "",
   });
 }

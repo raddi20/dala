@@ -23,7 +23,7 @@ function isUploadFile(value: unknown): value is File {
 }
 
 async function contextFor(
-  user: { id: string; role: string; verifiedPro: boolean },
+  user: { id: string; role: string; verifiedPro: boolean; verifiedProUntil: Date | null },
   purpose: string,
   resourceId: string,
 ): Promise<UploadContext> {
@@ -98,7 +98,12 @@ export async function POST(request: Request) {
   try {
     decision = decideUpload(
       await contextFor(
-        { id: user.id, role: user.role, verifiedPro: user.verifiedPro },
+        {
+          id: user.id,
+          role: user.role,
+          verifiedPro: user.verifiedPro,
+          verifiedProUntil: user.verifiedProUntil,
+        },
         purpose,
         resourceId,
       ),

@@ -1,9 +1,11 @@
+import { isProActive } from "@/lib/pro";
+
 export type UploadPurpose = "listing" | "offering" | "banner" | "avatar";
 
 const PURPOSES = new Set<UploadPurpose>(["listing", "offering", "banner", "avatar"]);
 const SAFE_ID = /^[a-z0-9]+$/i;
 
-export type UploadUser = { id: string; role: string; verifiedPro: boolean };
+export type UploadUser = { id: string; role: string; verifiedPro: boolean; verifiedProUntil?: Date | null };
 
 export type UploadContext = {
   user: UploadUser;
@@ -75,7 +77,7 @@ export function decideUpload(
   if (!ctx.ownStorefront) {
     return { ok: false, status: 403, error: "Start your shop before uploading a cover photo." };
   }
-  if (!ctx.user.verifiedPro && ctx.user.role !== "admin") {
+  if (!isProActive(ctx.user) && ctx.user.role !== "admin") {
     return { ok: false, status: 403, error: "A cover photo is included with Verified Pro." };
   }
   const pathname = ownerPath(ctx.user.id, "banner");

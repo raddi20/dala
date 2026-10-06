@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { updateStorefront } from "@/lib/actions/storefront";
-import { FREE_OFFERING_CAP, PRO_OFFERING_CAP } from "@/lib/constants";
+import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
@@ -62,7 +62,7 @@ export function StorefrontSettingsForm({
         />
       ) : (
         <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
-          A cover banner is included with Verified Pro, along with {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}.{" "}
+          A cover banner is included with Verified Pro ({PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}, per {PRO_DAYS} days).{" "}
           <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
             See prices
           </Link>
