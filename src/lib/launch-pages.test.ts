@@ -71,14 +71,20 @@ test("welcome and list render, link from the footer, and sit in the sitemap", ()
   assert.match(list, /List your business/);
   assert.ok(list.includes(`href="${LAUNCH_ROUTES.registerReturn}"`));
   assert.ok(list.includes(`href="${LAUNCH_ROUTES.shop}"`));
+  assert.ok(list.includes(`href="${LAUNCH_ROUTES.offering}"`));
+  assert.ok(list.includes("Add your first offering"));
+  assert.ok(list.includes("Selling a one-off item or listing housing?"));
+  assert.ok(list.includes("Post a classified instead"));
   assert.ok(list.includes(`href="${LAUNCH_ROUTES.listing}"`));
   assert.ok(list.includes(`href="${LAUNCH_ROUTES.whatsapp}"`));
   assert.ok(list.includes(`href="${LAUNCH_ROUTES.video}"`));
   assert.ok(list.includes("What you need"));
   assert.ok(list.includes("3–5 good photos"));
   assert.ok(list.includes("Photo tips"));
+  assert.ok(list.includes("offering form"));
   assert.ok(list.includes("Listing assist"));
   assert.equal(list.includes("Write it for me"), false);
+  assert.equal(list.includes("Add a listing"), false);
   assert.ok(list.includes(String(MAX_DURATION_SECONDS)));
   assert.ok(list.includes("Verified Pro"));
   assert.equal(list.includes('aria-current="step"'), false);
@@ -138,25 +144,25 @@ test("a signed-in seller is pointed at the unfinished step", () => {
     hasShop: false,
     hasOffering: false,
     shopPublished: false,
-    hasListing: false,
     hasWhatsapp: false,
   };
   assert.equal(guideCurrentStep(shopNext), "shop");
   const shopHtml = renderToStaticMarkup(createElement(ListGuide, { progress: shopNext, listingWriter: false }));
   assert.ok(shopHtml.includes('id="step-shop"'));
+  assert.ok(shopHtml.includes('id="step-offering"'));
   assert.match(shopHtml, /aria-current="step"/);
   assert.ok(shopHtml.includes("Start here"));
   assert.ok(shopHtml.includes("Set up the shop"));
   assert.ok(shopHtml.includes("Done"));
 
-  const listingNext: GuideProgress = { ...shopNext, hasShop: true, hasOffering: false };
-  assert.equal(guideCurrentStep(listingNext), "listing");
-  const listingHtml = renderToStaticMarkup(createElement(ListGuide, { progress: listingNext, listingWriter: false }));
-  assert.ok(listingHtml.includes(`href="${LAUNCH_ROUTES.offering}"`));
-  assert.ok(listingHtml.includes("Add your first offering"));
-  assert.ok(listingHtml.includes(`href="${LAUNCH_ROUTES.listing}"`));
+  const offeringNext: GuideProgress = { ...shopNext, hasShop: true };
+  assert.equal(guideCurrentStep(offeringNext), "offering");
+  const offeringHtml = renderToStaticMarkup(createElement(ListGuide, { progress: offeringNext, listingWriter: false }));
+  assert.ok(offeringHtml.includes(`href="${LAUNCH_ROUTES.offering}"`));
+  assert.ok(offeringHtml.includes("Add your first offering"));
+  assert.ok(offeringHtml.includes('id="step-offering" aria-current="step"') || offeringHtml.includes('aria-current="step"'));
 
-  const whatsappNext: GuideProgress = { ...listingNext, hasOffering: true, hasListing: true };
+  const whatsappNext: GuideProgress = { ...offeringNext, hasOffering: true };
   assert.equal(guideCurrentStep(whatsappNext), "whatsapp");
 
   const publishNext: GuideProgress = { ...whatsappNext, hasWhatsapp: true };
@@ -181,12 +187,14 @@ test("the admin table shows agent counts including none", () => {
   const html = renderToStaticMarkup(
     createElement(AgentCountTable, {
       rows: [
-        { code: "A1", signups: 4, shops: 3, firstListings: 2 },
-        { code: "none", signups: 1, shops: 0, firstListings: 0 },
+        { code: "A1", signups: 4, shops: 3, firstOfferings: 2, directoryListings: 1 },
+        { code: "none", signups: 1, shops: 0, firstOfferings: 0, directoryListings: 0 },
       ],
     }),
   );
   assert.match(html, /Field agents/);
+  assert.ok(html.includes("First offerings"));
+  assert.ok(html.includes("Directory listings"));
   assert.ok(html.includes("A1"));
   assert.ok(html.includes("none"));
   assert.ok(html.includes(">4<"));

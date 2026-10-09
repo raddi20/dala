@@ -11,6 +11,7 @@ import { formatPlanDate, hiddenOfferings, isProActive, proLapsed } from "@/lib/p
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { publishShopButtonVisible } from "@/lib/shop-publish";
 import { formatOfferingPrice, one } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappOfferingText } from "@/lib/whatsapp";
@@ -122,7 +123,7 @@ export default async function ManageStorefrontPage({
   const hidden = hiddenOfferings(active, proActive);
   const proUntilLabel = user.verifiedProUntil ? formatPlanDate(user.verifiedProUntil) : "";
   const currencyDefault = user.city === "London" ? "GBP" : "KES";
-  const readyToPublish = !shop.published && active.length > 0;
+  const readyToPublish = publishShopButtonVisible({ published: shop.published, activeOfferings: active.length });
   const phone = user.whatsapp || user.phone;
   const first = active[0];
   const shopUrl = `${await publicOrigin()}/b/${shop.slug}`;
@@ -333,7 +334,7 @@ export default async function ManageStorefrontPage({
       ) : null}
 
       {active.length > 0 ? (
-        <section className={`${cardClass} grid gap-3 p-5`}>
+        <section id="add-offering" className={`${cardClass} grid gap-3 p-5`}>
           <h2 className="font-serif text-xl text-navy">Add an offering</h2>
           {active.length >= cap ? (
             <p className="text-sm text-ink/65">

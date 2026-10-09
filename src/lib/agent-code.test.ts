@@ -122,20 +122,20 @@ test("a new account stores the code, and an existing account is not overwritten"
   assert.equal(rows.get("other@example.com")?.referralAgentAt, null);
 });
 
-test("admin counts sign-ups, shops, and first listings, including none", () => {
+test("admin counts sign-ups, shops, offerings, and directory listings, including none", () => {
   const rows = countAgentSignups([
-    { code: null, hasShop: false, hasListing: false },
-    { code: "  ", hasShop: true, hasListing: false },
-    { code: "A1", hasShop: true, hasListing: true },
-    { code: "A1", hasShop: true, hasListing: false },
-    { code: "A2", hasShop: false, hasListing: true },
+    { code: null, hasShop: false, hasOffering: false, hasListing: false },
+    { code: "  ", hasShop: true, hasOffering: false, hasListing: false },
+    { code: "A1", hasShop: true, hasOffering: true, hasListing: true },
+    { code: "A1", hasShop: true, hasOffering: true, hasListing: false },
+    { code: "A2", hasShop: false, hasOffering: false, hasListing: true },
   ]);
   assert.deepEqual(rows, [
-    { code: "A1", signups: 2, shops: 2, firstListings: 1 },
-    { code: "A2", signups: 1, shops: 0, firstListings: 1 },
-    { code: AGENT_NONE, signups: 2, shops: 1, firstListings: 0 },
+    { code: "A1", signups: 2, shops: 2, firstOfferings: 2, directoryListings: 1 },
+    { code: "A2", signups: 1, shops: 0, firstOfferings: 0, directoryListings: 1 },
+    { code: AGENT_NONE, signups: 2, shops: 1, firstOfferings: 0, directoryListings: 0 },
   ]);
 
   const empty = countAgentSignups([]);
-  assert.deepEqual(empty, [{ code: AGENT_NONE, signups: 0, shops: 0, firstListings: 0 }]);
+  assert.deepEqual(empty, [{ code: AGENT_NONE, signups: 0, shops: 0, firstOfferings: 0, directoryListings: 0 }]);
 });

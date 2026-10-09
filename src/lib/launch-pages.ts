@@ -12,7 +12,7 @@ export const WELCOME_DESCRIPTION =
 
 export const LIST_TITLE = "List your business";
 export const LIST_DESCRIPTION =
-  "Create an account, open a shop, add a listing with a photo, and a WhatsApp number. Listing on Rangach is free.";
+  "Create an account, open a shop, add an offering, and a WhatsApp number. Listing on Rangach is free.";
 
 export const LAUNCH_ROUTES = {
   register: "/register",
@@ -29,9 +29,10 @@ export const LAUNCH_ROUTES = {
 export type GuideProgress = {
   signedIn: boolean;
   hasShop: boolean;
+  /** Active (not archived) offerings. The Publish shop button needs at least one. */
   hasOffering: boolean;
   shopPublished: boolean;
-  hasListing: boolean;
+  /** WhatsApp, or a phone number, which the shop button uses when WhatsApp is empty. */
   hasWhatsapp: boolean;
 };
 
@@ -40,21 +41,21 @@ export const SIGNED_OUT_PROGRESS: GuideProgress = {
   hasShop: false,
   hasOffering: false,
   shopPublished: false,
-  hasListing: false,
   hasWhatsapp: false,
 };
 
-export type GuideStepId = "account" | "shop" | "listing" | "whatsapp" | "video" | "live";
+export type GuideStepId = "account" | "shop" | "offering" | "whatsapp" | "video" | "live";
 
-const REQUIRED_STEPS: GuideStepId[] = ["account", "shop", "listing", "whatsapp"];
+/** Same order a seller must follow for Publish shop to be on the page, then the number buyers use. */
+const REQUIRED_STEPS: GuideStepId[] = ["account", "shop", "offering", "whatsapp"];
 
 export function guideStepDone(id: GuideStepId, progress: GuideProgress) {
   if (!progress.signedIn) return false;
   if (id === "account") return true;
   if (id === "shop") return progress.hasShop;
-  if (id === "listing") return progress.hasListing;
+  if (id === "offering") return progress.hasOffering;
   if (id === "whatsapp") return progress.hasWhatsapp;
-  if (id === "live") return progress.shopPublished && progress.hasListing;
+  if (id === "live") return progress.shopPublished;
   return false;
 }
 
@@ -68,13 +69,17 @@ export function guideCurrentStep(progress: GuideProgress): GuideStepId | null {
 }
 
 export function shopStepLink(progress: GuideProgress) {
-  if (progress.signedIn && progress.hasShop && !progress.hasOffering) {
-    return { href: LAUNCH_ROUTES.offering, label: "Add your first offering" };
-  }
   if (progress.signedIn && progress.hasShop) {
     return { href: LAUNCH_ROUTES.shop, label: "Open your shop" };
   }
   return { href: LAUNCH_ROUTES.shop, label: "Set up the shop" };
+}
+
+export function offeringStepLink(progress: GuideProgress) {
+  if (progress.signedIn && progress.hasOffering) {
+    return { href: LAUNCH_ROUTES.offering, label: "Add an offering" };
+  }
+  return { href: LAUNCH_ROUTES.offering, label: "Add your first offering" };
 }
 
 export function liveStepLink(progress: GuideProgress) {

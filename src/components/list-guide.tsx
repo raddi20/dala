@@ -6,6 +6,7 @@ import {
   guideCurrentStep,
   guideStepDone,
   liveStepLink,
+  offeringStepLink,
   shopStepLink,
 } from "@/lib/launch-pages";
 import { FREE_OFFERING_CAP } from "@/lib/constants";
@@ -28,6 +29,7 @@ export function ListGuide({
   const name = appName();
   const current = guideCurrentStep(progress);
   const shop = shopStepLink(progress);
+  const offering = offeringStepLink(progress);
   const live = liveStepLink(progress);
   const phone = publicBusinessPhone();
   const tel = publicBusinessPhoneTel();
@@ -60,7 +62,7 @@ export function ListGuide({
           <li>Your prices</li>
         </ul>
         <p className="text-base leading-relaxed text-ink">
-          The listing form saves one photo, and each shop offering saves one. Bring a few and use the clearest.
+          The offering form saves one photo. Bring a few and use the clearest.
         </p>
       </section>
 
@@ -69,7 +71,7 @@ export function ListGuide({
         <ul className="grid gap-2 text-base leading-relaxed text-ink">
           <li>Shoot in daylight, close enough to see the food, the room, or the work.</li>
           <li>Skip blurry photos.</li>
-          <li>JPEG, PNG, or WebP. Large photos from the phone are resized before they upload.</li>
+          <li>JPEG, PNG, or WebP. The offering form resizes a large photo from the phone before it uploads.</li>
           <li>Do not photograph a child unless you have consent.</li>
         </ul>
       </section>
@@ -90,31 +92,24 @@ export function ListGuide({
 
         <Step n={2} id="shop" title="Set up the shop" state={stepState("shop", progress, current)} href={shop.href} label={shop.label}>
           <p>
-            The shop name starts from your profile name. Press Start your shop, then add a first offering: a title, a
-            price, and a photo if you have one. The shop stays a draft until you publish it. A free shop can list{" "}
-            {FREE_OFFERING_CAP} offerings.
+            The shop name starts from your profile name. Press Start your shop. The shop stays a draft. A free shop can
+            list {FREE_OFFERING_CAP} offerings.
           </p>
         </Step>
 
         <Step
           n={3}
-          id="listing"
-          title="Add the first listing"
-          state={stepState("listing", progress, current)}
-          href={LAUNCH_ROUTES.listing}
-          label={progress.hasListing ? "Add another listing" : "Add a listing"}
+          id="offering"
+          title="Add your first offering"
+          state={stepState("offering", progress, current)}
+          href={offering.href}
+          label={offering.label}
         >
           <p>
-            This is the directory listing, separate from the offerings on the shop. On Add a listing, choose Business,
-            then a title, a price, and a photo. Listing assist can fill the form from one sentence on this phone.
-            Nothing is public until you press Publish.
+            On the shop page, open Add your first offering. The form asks for a title, a short description, a price, a
+            currency, and one photo. The title and the short description are required. The price and the photo can be
+            left blank. Saving that offering is what makes Publish shop appear.
           </p>
-          {listingWriter ? (
-            <p>
-              On that same page, Write it for me can draft the listing after you agree. You check the draft before you
-              publish.
-            </p>
-          ) : null}
         </Step>
 
         <Step
@@ -126,8 +121,9 @@ export function ListGuide({
           label={progress.hasWhatsapp ? "Edit WhatsApp" : "Add WhatsApp"}
         >
           <p>
-            On your account, add the WhatsApp number buyers should message. A phone number there is for calls. The
-            shop button uses the WhatsApp number, or the phone number if WhatsApp is empty.
+            On your account, add the WhatsApp number buyers should message. A phone number there is for calls, and the
+            shop uses it when WhatsApp is empty. Publish shop does not wait for this number. The number is what makes
+            the WhatsApp button work for a buyer.
           </p>
         </Step>
 
@@ -141,15 +137,37 @@ export function ListGuide({
 
         <Step n={6} id="live" title="What happens next" state={stepState("live", progress, current)} href={live.href} label={live.label}>
           <p>
-            A directory listing is public after you press Publish. A shop stays a draft until you press Publish shop.
-            Then buyers can open it and message you.
+            Press Publish shop on the shop page. That button is there once the shop has one offering that is not
+            archived. Until you press it, only you can open the shop. After that, buyers can open it and message you.
           </p>
           <p>
             {badges} are granted by an admin after a check. They are not added when you sign up, and they are not
-            something you pay for. A green Verified mark on a listing is a separate admin check.
+            something you pay for.
           </p>
         </Step>
       </ol>
+
+      <section className={`${cardClass} grid gap-3 p-5`}>
+        <h2 className="font-serif text-2xl text-navy">Selling a one-off item or listing housing?</h2>
+        <p className="text-base leading-relaxed text-ink">
+          Post a classified instead. That is separate from the shop. It does not add an offering, and it does not show
+          Publish shop.
+        </p>
+        {listingWriter ? (
+          <p className="text-base leading-relaxed text-ink">
+            On that page, Write it for me can draft the classified after you agree. You check the draft before you
+            publish. Listing assist can also fill the form on this phone.
+          </p>
+        ) : (
+          <p className="text-base leading-relaxed text-ink">
+            Listing assist on that page fills the form from one sentence on this phone. Nothing is public until you
+            press Publish.
+          </p>
+        )}
+        <Link href={LAUNCH_ROUTES.listing} className={actionClass}>
+          Post a classified
+        </Link>
+      </section>
 
       <section className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-2xl text-navy">Need a hand?</h2>
@@ -169,7 +187,7 @@ export function ListGuide({
 function stepTitle(id: GuideStepId) {
   if (id === "account") return "create an account";
   if (id === "shop") return "set up the shop";
-  if (id === "listing") return "add the first listing";
+  if (id === "offering") return "add your first offering";
   if (id === "whatsapp") return "add a WhatsApp number";
   if (id === "video") return "the shop video";
   return "what happens next";

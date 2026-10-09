@@ -69,21 +69,24 @@ export type AgentCountRow = {
   code: string;
   signups: number;
   shops: number;
-  firstListings: number;
+  /** Shops with at least one offering that is not archived. */
+  firstOfferings: number;
+  /** Accounts with at least one directory listing (a classified, not a shop offering). */
+  directoryListings: number;
 };
 
 /**
- * Sign-ups, shops, and accounts that have posted at least one directory listing.
+ * Sign-ups, shops, shops with an offering, and accounts with a directory listing.
  * `none` is always present, including when every count is zero.
  */
 export function countAgentSignups(
-  rows: { code: string | null; hasShop: boolean; hasListing: boolean }[],
+  rows: { code: string | null; hasShop: boolean; hasOffering: boolean; hasListing: boolean }[],
 ): AgentCountRow[] {
   const buckets = new Map<string, AgentCountRow>();
   const bucket = (code: string) => {
     let row = buckets.get(code);
     if (!row) {
-      row = { code, signups: 0, shops: 0, firstListings: 0 };
+      row = { code, signups: 0, shops: 0, firstOfferings: 0, directoryListings: 0 };
       buckets.set(code, row);
     }
     return row;
@@ -94,7 +97,8 @@ export function countAgentSignups(
     const item = bucket(code);
     item.signups += 1;
     if (row.hasShop) item.shops += 1;
-    if (row.hasListing) item.firstListings += 1;
+    if (row.hasOffering) item.firstOfferings += 1;
+    if (row.hasListing) item.directoryListings += 1;
   }
   return [...buckets.values()].sort((a, b) => {
     if (a.code === AGENT_NONE) return 1;

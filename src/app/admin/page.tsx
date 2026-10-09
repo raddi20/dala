@@ -73,7 +73,12 @@ export default async function AdminPage({
     prisma.user.findMany({
       select: {
         referralAgentCode: true,
-        storefront: { select: { id: true } },
+        storefront: {
+          select: {
+            id: true,
+            _count: { select: { offerings: { where: { archived: false } } } },
+          },
+        },
         _count: { select: { listings: true } },
       },
     }),
@@ -82,6 +87,7 @@ export default async function AdminPage({
     agentUsers.map((person) => ({
       code: person.referralAgentCode,
       hasShop: person.storefront !== null,
+      hasOffering: (person.storefront?._count.offerings ?? 0) > 0,
       hasListing: person._count.listings > 0,
     })),
   );

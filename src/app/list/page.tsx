@@ -26,20 +26,19 @@ export default async function ListPage() {
   const listingWriter = await isAiFeatureOn("listing_writer");
   if (!user) return <ListGuide progress={SIGNED_OUT_PROGRESS} listingWriter={listingWriter} />;
 
-  const [shop, listings] = await Promise.all([
-    prisma.storefront.findUnique({
-      where: { userId: user.id },
-      select: { published: true, _count: { select: { offerings: true } } },
-    }),
-    prisma.listing.count({ where: { ownerId: user.id } }),
-  ]);
+  const shop = await prisma.storefront.findUnique({
+    where: { userId: user.id },
+    select: {
+      published: true,
+      _count: { select: { offerings: { where: { archived: false } } } },
+    },
+  });
 
   const progress: GuideProgress = {
     signedIn: true,
     hasShop: Boolean(shop),
     hasOffering: (shop?._count.offerings ?? 0) > 0,
     shopPublished: Boolean(shop?.published),
-    hasListing: listings > 0,
     hasWhatsapp: Boolean(user.whatsapp.trim() || user.phone.trim()),
   };
 

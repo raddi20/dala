@@ -49,10 +49,8 @@ export function WelcomeGuide() {
       <section className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-2xl text-navy">Why list</h2>
         <ul className="grid gap-3 text-base leading-relaxed text-ink">
-          <li>
-            It is free to list. A directory listing is free. A free shop can show {FREE_OFFERING_CAP} offerings.
-          </li>
-          <li>Buyers contact you directly on WhatsApp, or by phone when you put a number on the listing.</li>
+          <li>It is free to open a shop. A free shop can show {FREE_OFFERING_CAP} offerings.</li>
+          <li>Buyers contact you directly on WhatsApp, or by phone when you add a number on your account.</li>
           <li>
             Verification badges — {badges} — are granted by an admin after a check. They are not for sale, and they
             are not added on their own.
