@@ -5,7 +5,7 @@ import { startPayment } from "@/lib/actions/payments";
 import { PaymentSetup } from "@/components/payment-setup";
 import { SubmitButton } from "@/components/submit-button";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
-import { chargeFor, cityChoiceLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { chargeFor, cityChipLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/payments/rules";
 import type { ActionState } from "@/lib/validators";
 
@@ -71,7 +71,7 @@ export function PayForm({
           <span>
             <span className="font-semibold">Featured listing</span>
             <span className="mt-1 block text-ink/70">
-              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} in Nairobi, {chargeFor("featured", "London").label} for Diaspora shops.
+              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} for shops in Kenya and East Africa, {chargeFor("featured", "London").label} for Diaspora shops.
             </span>
           </span>
         </label>
@@ -115,7 +115,7 @@ export function PayForm({
             >
               {listings.map((listing) => (
                 <option key={listing.id} value={listing.id}>
-                  {listing.title} ({cityChoiceLabel(listing.city)})
+                  {listing.title} ({cityChipLabel(listing.city)})
                 </option>
               ))}
             </select>

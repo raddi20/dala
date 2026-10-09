@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
+import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, cityChipLabel, cityChoiceLabel, cityInPhrase } from "@/lib/constants";
 import {
   DEFAULT_KES_PER_GBP,
   DEFAULT_KES_PER_USD,
@@ -78,7 +78,9 @@ test("plan copy uses the real offering caps and says Pro is not verified", () =>
   assert.match(pro.notIncluded.join(" "), /does not mean the shop is verified/i);
   assert.match(pricingRateNote({}), new RegExp(String(DEFAULT_KES_PER_USD)));
   assert.match(pricingRateNote({}), /the Diaspora charge/);
+  assert.match(pricingRateNote({}), /Kenya and East Africa/);
   assert.equal(pricingRateNote({}).includes("London charge"), false);
+  assert.equal(pricingRateNote({}).includes("Nairobi charge"), false);
   assert.match(pricingRateNote({ FX_KES_PER_USD: "140" }), /140 shillings/);
 });
 
@@ -88,5 +90,13 @@ test("the pricing page and promote form name the pound price for Diaspora shops"
   assert.match(pricing, /Diaspora price/);
   assert.equal(pricing.includes("London price"), false);
   assert.match(promote, /for Diaspora shops/);
+  assert.match(promote, /for shops in Kenya and East Africa/);
   assert.equal(promote.includes("in London"), false);
+  assert.equal(promote.includes("in Nairobi"), false);
+  assert.equal(cityChoiceLabel("Nairobi"), "Kenya / East Africa");
+  assert.equal(cityChoiceLabel("London"), "Diaspora");
+  assert.equal(cityChipLabel("Nairobi"), "Kenya");
+  assert.equal(cityChipLabel("London"), "Diaspora");
+  assert.equal(cityInPhrase("Nairobi"), "in Kenya and East Africa");
+  assert.equal(cityInPhrase("London"), "in the Diaspora");
 });

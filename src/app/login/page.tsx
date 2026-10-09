@@ -39,7 +39,7 @@ export default async function LoginPage({
             <p className="font-semibold text-clay-dark">Demo password for every seeded account: demo1234</p>
             <ul className="mt-2 grid gap-1 text-ink/70">
               <li>akinyi@dala.local — admin</li>
-              <li>atieno@dala.local — Nairobi restaurant</li>
+              <li>atieno@dala.local — Kenya restaurant</li>
               <li>okello@dala.local — Diaspora solicitor</li>
               <li>james@dala.local — Diaspora resident</li>
             </ul>

@@ -1,4 +1,4 @@
-import { cityChoiceLabel, typeLabel } from "@/lib/constants";
+import { cityChipLabel, typeLabel } from "@/lib/constants";
 import { DIASPORA_ORDERS_EXPLANATION, DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
 import {
   PRO_PLAN_EXPLANATION,
@@ -189,5 +189,5 @@ export function Badges({
 }
 
 export function CityBadge({ city }: { city: string }) {
-  return <Chip tone="city">{cityChoiceLabel(city)}</Chip>;
+  return <Chip tone="city">{cityChipLabel(city)}</Chip>;
 }

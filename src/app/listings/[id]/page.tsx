@@ -9,7 +9,7 @@ import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/compo
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { appName } from "@/lib/brand";
-import { cityInPhrase } from "@/lib/constants";
+import { cityChipLabel, cityInPhrase } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { isProActive } from "@/lib/pro";
@@ -126,7 +126,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         />
         <h1 className="font-serif text-3xl leading-tight text-navy sm:text-4xl">{listing.title}</h1>
         <p className="text-ink/65">
-          {listing.region === "diaspora" ? "Diaspora" : `${listing.city} · Homeland`} · {listing.category}
+          {listing.region === "diaspora" ? "Diaspora" : `${cityChipLabel(listing.city)} · Homeland`} · {listing.category}
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
         {listing.priceLabel ? <p className="text-lg font-semibold text-ink">{listing.priceLabel}</p> : null}

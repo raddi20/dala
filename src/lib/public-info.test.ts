@@ -95,12 +95,14 @@ test("faq and terms use checkout prices and do not hardcode them", async () => {
   assert.ok(faq.includes(CHARGE.verified_pro.London.label));
   assert.equal(
     paidPriceLine("featured"),
-    `${CHARGE.featured.Nairobi.label} in Nairobi and ${CHARGE.featured.London.label} for Diaspora shops`,
+    `${CHARGE.featured.Nairobi.label} for shops in Kenya and East Africa and ${CHARGE.featured.London.label} for Diaspora shops`,
   );
   assert.equal(
     paidPriceLine("verified_pro"),
-    `${CHARGE.verified_pro.Nairobi.label} in Nairobi and ${CHARGE.verified_pro.London.label} for Diaspora shops`,
+    `${CHARGE.verified_pro.Nairobi.label} for shops in Kenya and East Africa and ${CHARGE.verified_pro.London.label} for Diaspora shops`,
   );
+  assert.match(faq, /for shops in Kenya and East Africa/);
+  assert.equal(faq.includes("in Nairobi"), false);
   assert.match(faq, /for Diaspora shops/);
   assert.match(faq, /Diaspora prices are pounds/);
   assert.match(faq, /a Diaspora price is paid by card/);

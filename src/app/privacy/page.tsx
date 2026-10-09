@@ -57,7 +57,7 @@ export default function PrivacyPage() {
       </InfoSection>
 
       <InfoSection title="What we collect">
-        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Nairobi or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo.</p>
+        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Kenya / East Africa or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo.</p>
         <p>
           Shop and listing content. That includes titles, descriptions, categories, cities, addresses you choose to
           publish, prices, contact names, and the offerings on a shop. Reviews you write are stored with your name.

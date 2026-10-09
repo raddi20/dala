@@ -45,7 +45,7 @@ export const PUBLIC_INFO_PAGES = [
     label: "About",
     title: "About",
     description:
-      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Nairobi, Kenya and the Diaspora.",
+      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Kenya, East Africa and the Diaspora.",
   },
   {
     path: "/faq",
@@ -117,5 +117,5 @@ export function featuredDurationCopy() {
 export function paidPriceLine(product: PaidProduct) {
   const nairobi = chargeFor(product, "Nairobi");
   const london = chargeFor(product, "London");
-  return `${nairobi.label} in Nairobi and ${london.label} for Diaspora shops`;
+  return `${nairobi.label} for shops in Kenya and East Africa and ${london.label} for Diaspora shops`;
 }

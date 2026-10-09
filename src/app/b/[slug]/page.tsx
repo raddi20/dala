@@ -7,7 +7,7 @@ import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { cityChoiceLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
+import { cityChipLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -184,7 +184,7 @@ export default async function StorefrontPage({ params }: Props) {
             {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
             {proActive ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
-              {cityChoiceLabel(shop.user.city)}
+              {cityChipLabel(shop.user.city)}
             </span>
           </div>
           <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
