@@ -21,18 +21,18 @@ try {
   }
 
   const users = await prisma.user.count();
-  const showDemo = /^(1|true|yes|on)$/i.test((process.env.SHOW_DEMO_SHOPS ?? "").trim());
+  const hideDemo = /^(1|true|yes|on)$/i.test((process.env.HIDE_DEMO_SHOPS ?? "").trim());
   // Seed only an empty database. Never update listing.hidden or storefront.published,
-  // so a later deploy cannot re-create demo rows or turn them public again.
+  // so a later deploy cannot re-create demo rows or flip their visibility.
   if (users > 0) {
     console.log(
-      `Database already has ${users} users. Skipping seed. Demo rows stay as they are. SHOW_DEMO_SHOPS is ${showDemo ? "on" : "off"}.`,
+      `Database already has ${users} users. Skipping seed. Demo rows stay as they are. HIDE_DEMO_SHOPS is ${hideDemo ? "on" : "off"}.`,
     );
   } else {
     console.log(
-      showDemo
-        ? "Database is empty. Loading the demo seed. SHOW_DEMO_SHOPS is on, so those rows are public."
-        : "Database is empty. Loading the demo seed. SHOW_DEMO_SHOPS is off, so public pages hide those rows until the flag is turned on.",
+      hideDemo
+        ? "Database is empty. Loading the demo seed. HIDE_DEMO_SHOPS is on, so public pages hide those rows."
+        : "Database is empty. Loading the demo seed. HIDE_DEMO_SHOPS is off, so those rows stay public. Placeholder phone numbers stay hidden.",
     );
     execFileSync(process.execPath, [tsx, "prisma/seed.ts"], { stdio: "inherit" });
   }

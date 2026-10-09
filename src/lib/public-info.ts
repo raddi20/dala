@@ -47,20 +47,22 @@ export function legalEntityOwnerLine(owner = LEGAL_ENTITY_OWNER) {
 
 export const CONTACT_EMAIL = "info@rangach.co.ke";
 
-/**
- * TODO(Kevin): Kenyan business phone. Leave this empty until it is a real number.
- * An empty value is not shown on the site.
- */
-export const BUSINESS_PHONE = "";
+/** Display form of the business phone. An empty value is not shown on the site. */
+export const BUSINESS_PHONE = "+254 729 217 350";
 
-/**
- * TODO(Kevin): Kenyan postal or physical address. Leave this empty until it is real.
- * An empty value is not shown on the site.
- */
-export const BUSINESS_ADDRESS = "";
+/** Digits for tel: links. Kept separate from the spaced display number. */
+export const BUSINESS_PHONE_TEL = "+254729217350";
+
+/** Postal address. An empty value is not shown on the site. */
+export const BUSINESS_ADDRESS = "P.O. Box 46799 - 00100 Nairobi, Kenya";
 
 /** Phone text for public pages. Empty when BUSINESS_PHONE is blank. */
 export function publicBusinessPhone(value = BUSINESS_PHONE) {
+  return value.trim();
+}
+
+/** Raw phone for a tel: link. Empty when BUSINESS_PHONE_TEL is blank. */
+export function publicBusinessPhoneTel(value = BUSINESS_PHONE_TEL) {
   return value.trim();
 }
 

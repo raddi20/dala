@@ -772,7 +772,7 @@ async function main() {
   const existingUsers = await prisma.user.count();
   if (seedShouldSkip(existingUsers)) {
     console.log(
-      `Refusing to seed: database already has ${existingUsers} users. Passwords, roles, shops, and listings were not changed. Demo rows are not re-created and their public visibility is left to SHOW_DEMO_SHOPS.`,
+      `Refusing to seed: database already has ${existingUsers} users. Passwords, roles, shops, and listings were not changed. Demo rows are not re-created and their public visibility is left to HIDE_DEMO_SHOPS.`,
     );
     return;
   }

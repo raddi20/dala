@@ -9,7 +9,13 @@ import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/compo
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { appName } from "@/lib/brand";
-import { isPublicDemoHidden } from "@/lib/demo-visibility";
+import {
+  DEMO_LISTING_CONTACT_NOTE,
+  isPublicDemoHidden,
+  publicSellerContacts,
+  publicTextWithoutDemoNumbers,
+} from "@/lib/demo-visibility";
+import { DemoContactNote } from "@/components/seller-contact";
 import { cityInPhrase } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -32,6 +38,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       photoUrl: true,
       city: true,
       category: true,
+      contactPhone: true,
+      contactWhatsapp: true,
       ownerId: true,
       owner: { select: { email: true } },
     },
@@ -44,8 +52,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const origin = await publicOrigin();
   const preview = listingPreviewImage({ origin, id, hidden: false, photoUrl: listing.photoUrl });
   if (!preview) return privateMetadata("Listing");
-  const description =
-    clipText(listing.description) || `${listing.title} ${cityInPhrase(listing.city)}. ${listing.category} on ${appName()}.`;
+  const description = publicTextWithoutDemoNumbers(
+    listing.owner.email,
+    clipText(listing.description) || `${listing.title} ${cityInPhrase(listing.city)}. ${listing.category} on ${appName()}.`,
+    [listing.contactPhone, listing.contactWhatsapp],
+  );
   return buildShareMetadata({
     origin,
     path: `/listings/${id}`,
@@ -98,9 +109,14 @@ export default async function ListingPage({ params, searchParams }: Props) {
     : null;
   const rating = averageRating(listing.reviews);
   const shareUrl = whatsappShareLink(listing.title, `${await publicOrigin()}/listings/${listing.id}`);
-  const chatUrl = listing.contactWhatsapp ? whatsappChatLink(listing.contactWhatsapp, listing.title) : "";
+  const contacts = publicSellerContacts({
+    email: listing.owner.email,
+    phone: listing.contactPhone,
+    whatsapp: listing.contactWhatsapp,
+  });
+  const chatUrl = contacts.whatsapp ? whatsappChatLink(contacts.whatsapp, listing.title) : "";
   const shop = listing.owner.storefront?.published ? listing.owner.storefront : null;
-  const callUrl = telHref(listing.contactPhone);
+  const callUrl = telHref(contacts.phone);
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
 
@@ -163,9 +179,9 @@ export default async function ListingPage({ params, searchParams }: Props) {
             WhatsApp the seller
           </a>
         ) : null}
-        {listing.contactWhatsapp ? (
+        {contacts.whatsapp ? (
           <FamilyOrderButton
-            phone={listing.contactWhatsapp}
+            phone={contacts.whatsapp}
             subjectName={listing.title}
             path={`/listings/${listing.id}`}
             siteName={appName()}
@@ -204,8 +220,14 @@ export default async function ListingPage({ params, searchParams }: Props) {
       <section className={`${cardClass} p-5`}>
         <h2 className="font-serif text-xl text-navy">Contact</h2>
         <p className="mt-1">{listing.contactName || listing.owner.name}</p>
-        {listing.contactPhone ? <p className="text-sm text-ink/70">{listing.contactPhone}</p> : null}
-        {listing.contactWhatsapp ? <p className="text-sm text-ink/70">WhatsApp {listing.contactWhatsapp}</p> : null}
+        {contacts.hidden ? (
+          <DemoContactNote note={DEMO_LISTING_CONTACT_NOTE} />
+        ) : (
+          <>
+            {contacts.phone ? <p className="text-sm text-ink/70">{contacts.phone}</p> : null}
+            {contacts.whatsapp ? <p className="text-sm text-ink/70">WhatsApp {contacts.whatsapp}</p> : null}
+          </>
+        )}
         <Link href={`/people/${listing.owner.id}`} className="mt-3 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
           View {listing.owner.kind === "business" ? "business" : "person"} profile
         </Link>
@@ -306,7 +328,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           <div className="grid gap-2">
             <FamilyOrderButton
               variant="bar"
-              phone={listing.contactWhatsapp}
+              phone={contacts.whatsapp}
               subjectName={listing.title}
               path={`/listings/${listing.id}`}
               siteName={appName()}

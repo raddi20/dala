@@ -5,9 +5,15 @@ import { DiasporaOrdersTag, ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
-import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
+import { EmptyState, Flash, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { isPublicDemoHidden } from "@/lib/demo-visibility";
+import {
+  DEMO_SHOP_CONTACT_NOTE,
+  isPublicDemoHidden,
+  publicSellerContacts,
+  publicTextWithoutDemoNumbers,
+} from "@/lib/demo-visibility";
+import { SellerContactChannels } from "@/components/seller-contact";
 import { cityChoiceLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
@@ -31,7 +37,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       published: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, email: true, bio: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
+      user: {
+        select: {
+          name: true,
+          email: true,
+          bio: true,
+          city: true,
+          avatarUrl: true,
+          phone: true,
+          whatsapp: true,
+          verifiedPro: true,
+          verifiedProUntil: true,
+        },
+      },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -66,7 +84,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     hasPublicVideo,
   });
   if (!preview) return privateMetadata("Shop");
-  const description = clipText(shop.user.bio) || `${shop.user.name} ${cityInPhrase(shop.user.city)}. A shop on ${appName()}. Chat stays on WhatsApp.`;
+  const description = publicTextWithoutDemoNumbers(
+    shop.user.email,
+    clipText(shop.user.bio) || `${shop.user.name} ${cityInPhrase(shop.user.city)}. A shop on ${appName()}. Chat stays on WhatsApp.`,
+    [shop.user.phone, shop.user.whatsapp],
+  );
   return buildShareMetadata({
     origin,
     path: `/b/${slug}`,
@@ -109,9 +131,10 @@ export default async function StorefrontPage({ params }: Props) {
   const region = regionForCity(shop.user.city);
   const rating = averageRating(reviews);
   const url = `${await publicOrigin()}/b/${shop.slug}`;
-  const phone = shop.user.whatsapp || shop.user.phone;
+  const contacts = publicSellerContacts(shop.user);
+  const phone = contacts.whatsapp || contacts.phone;
   const chatUrl = phone ? whatsappShopLink(phone, url) : "";
-  const callUrl = telHref(shop.user.phone);
+  const callUrl = telHref(contacts.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const proActive = isProActive(shop.user);
   const publicOfferings = visibleOfferings(shop.offerings, proActive);
@@ -239,37 +262,21 @@ export default async function StorefrontPage({ params }: Props) {
 
       <section className={`${cardClass} p-5`}>
         <h2 className="font-serif text-xl text-navy">Contact</h2>
-        <p className="mt-1 text-sm text-ink/60">Ask on WhatsApp. Payment for goods stays between you and the seller.</p>
-        <div className="mt-3 hidden flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap">
-          {chatUrl ? (
-            <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
-              WhatsApp
-            </a>
-          ) : null}
-          {phone ? (
-            <FamilyOrderButton
-              phone={phone}
-              subjectName={shop.user.name}
-              path={`/b/${shop.slug}`}
-              siteName={appName()}
-            />
-          ) : null}
-          {callUrl ? (
-            <a href={callUrl} className={btnSecondary}>
-              Call
-            </a>
-          ) : null}
-          {shop.user.email ? (
-            <a href={`mailto:${shop.user.email}`} className={btnSecondary}>
-              Email
-            </a>
-          ) : null}
-        </div>
-        <div className="mt-3 text-sm text-ink/65">
-          {shop.user.phone ? <p>Phone {shop.user.phone}</p> : null}
-          {shop.user.whatsapp ? <p>WhatsApp {shop.user.whatsapp}</p> : null}
-          {shop.user.email ? <p>{shop.user.email}</p> : null}
-        </div>
+        <SellerContactChannels
+          hidden={contacts.hidden}
+          note={DEMO_SHOP_CONTACT_NOTE}
+          intro="Ask on WhatsApp. Payment for goods stays between you and the seller."
+          phone={contacts.phone}
+          whatsapp={contacts.whatsapp}
+          email={contacts.hidden ? "" : shop.user.email}
+          chatUrl={chatUrl}
+          callUrl={callUrl}
+          family={
+            phone
+              ? { phone, subjectName: shop.user.name, path: `/b/${shop.slug}`, siteName: appName() }
+              : null
+          }
+        />
       </section>
 
       <section className="grid gap-4">

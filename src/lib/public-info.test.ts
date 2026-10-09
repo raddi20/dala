@@ -18,6 +18,7 @@ import { pricingRateNote } from "@/lib/pricing-display";
 import {
   BUSINESS_ADDRESS,
   BUSINESS_PHONE,
+  BUSINESS_PHONE_TEL,
   CONTACT_EMAIL,
   LEGAL_DRAFT_NOTE,
   LEGAL_ENTITY_NAME,
@@ -33,6 +34,7 @@ import {
   paidPriceLine,
   publicBusinessAddress,
   publicBusinessPhone,
+  publicBusinessPhoneTel,
   verifiedProDayCount,
   verifiedProDurationCopy,
 } from "@/lib/public-info";
@@ -176,39 +178,47 @@ test("pro duration is the renewable 30-day plan, and a lapse hides extras", asyn
   assert.match(faq, /Renewing before the end date adds another 30 days to that date/);
 });
 
-test("empty phone, address, and owner constants render nothing", async () => {
-  assert.equal(BUSINESS_PHONE, "");
-  assert.equal(BUSINESS_ADDRESS, "");
-  assert.equal(publicBusinessPhone(), "");
+test("phone and address render when set, and stay hidden when blank", async () => {
+  assert.equal(BUSINESS_PHONE, "+254 729 217 350");
+  assert.equal(BUSINESS_PHONE_TEL, "+254729217350");
+  assert.equal(BUSINESS_ADDRESS, "P.O. Box 46799 - 00100 Nairobi, Kenya");
+  assert.equal(LEGAL_ENTITY_OWNER, "");
+  assert.equal(publicBusinessPhone(), BUSINESS_PHONE);
   assert.equal(publicBusinessPhone("   "), "");
-  assert.equal(publicBusinessAddress(), "");
-  assert.equal(publicBusinessAddress("  P.O. Box 1  "), "P.O. Box 1");
-  assert.equal(publicBusinessPhone("+254700000111"), "+254700000111");
+  assert.equal(publicBusinessPhoneTel(), BUSINESS_PHONE_TEL);
+  assert.equal(publicBusinessPhoneTel("  "), "");
+  assert.equal(publicBusinessAddress(), BUSINESS_ADDRESS);
+  assert.equal(publicBusinessAddress("   "), "");
 
-  const blank = renderToStaticMarkup(createElement(EntityContact));
+  const blank = renderToStaticMarkup(
+    createElement(EntityContact, { owner: "", address: "", phone: "", phoneTel: "" }),
+  );
   assert.equal(blank.includes("TODO"), false);
   assert.equal(blank.includes("Owned by"), false);
   assert.equal(blank.includes("tel:"), false);
+  assert.equal(blank.includes("P.O. Box"), false);
   assert.match(blank, new RegExp(`mailto:${CONTACT_EMAIL}`));
   assert.ok(blank.includes(LEGAL_ENTITY_NAME));
 
-  const filled = renderToStaticMarkup(
-    createElement(EntityContact, {
-      owner: legalEntityOwnerLine("Kevin Okullo"),
-      address: "P.O. Box 1, Nairobi",
-      phone: "+254700000111",
-    }),
-  );
-  assert.match(filled, /Owned by Kevin Okullo/);
-  assert.match(filled, /P\.O\. Box 1, Nairobi/);
-  assert.match(filled, /tel:\+254700000111/);
+  const filled = renderToStaticMarkup(createElement(EntityContact));
+  assert.equal(filled.includes("Owned by"), false);
+  assert.ok(filled.includes(BUSINESS_PHONE));
+  assert.ok(filled.includes(BUSINESS_ADDRESS));
+  assert.ok(filled.includes(`href="tel:${BUSINESS_PHONE_TEL}"`));
+  assert.equal(filled.includes("tel:+254 729"), false);
 
   const contact = renderToStaticMarkup(await ContactPage());
+  const terms = renderToStaticMarkup(await TermsPage());
+  const privacy = renderToStaticMarkup(await PrivacyPage());
   assert.equal(contactMeta.title, "Contact");
-  assert.equal(contact.includes("TODO"), false);
-  assert.equal(contact.includes("Owned by"), false);
-  assert.equal(contact.includes("tel:"), false);
-  assert.match(contact, new RegExp(`mailto:${CONTACT_EMAIL}`));
+  for (const html of [contact, terms, privacy]) {
+    assert.equal(html.includes("TODO"), false);
+    assert.equal(html.includes("Owned by"), false);
+    assert.ok(html.includes(BUSINESS_PHONE));
+    assert.ok(html.includes(BUSINESS_ADDRESS));
+    assert.ok(html.includes(`href="tel:${BUSINESS_PHONE_TEL}"`));
+    assert.match(html, new RegExp(`mailto:${CONTACT_EMAIL}`));
+  }
 });
 
 test("refund page is a draft and public policy pages do not name a processor or env vars", async () => {

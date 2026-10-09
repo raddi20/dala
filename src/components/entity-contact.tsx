@@ -5,12 +5,14 @@ import {
   legalEntityOwnerLine,
   publicBusinessAddress,
   publicBusinessPhone,
+  publicBusinessPhoneTel,
 } from "@/lib/public-info";
 
 type EntityContactProps = {
   owner?: string;
   address?: string;
   phone?: string;
+  phoneTel?: string;
 };
 
 /** Controller name, and phone, address, or owner only when those constants are filled in. */
@@ -18,7 +20,8 @@ export function EntityContact(props: EntityContactProps) {
   const owner = props.owner ?? legalEntityOwnerLine();
   const address = props.address ?? publicBusinessAddress();
   const phone = props.phone ?? publicBusinessPhone();
-  const call = phone ? telHref(phone) : "";
+  const rawTel = props.phoneTel ?? (props.phone === undefined ? publicBusinessPhoneTel() : "");
+  const call = phone ? (rawTel ? `tel:${rawTel.replace(/^tel:/, "")}` : telHref(phone)) : "";
 
   return (
     <p>

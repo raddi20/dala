@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { hiddenDemoUserFilter } from "@/lib/demo-visibility";
+import { hiddenDemoUserFilter, publicSellerContacts } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
@@ -11,6 +11,7 @@ const include = {
     select: {
       id: true,
       name: true,
+      email: true,
       verifiedPro: true,
       verifiedProUntil: true,
       storefront: {
@@ -110,11 +111,21 @@ export async function searchListings(filters: {
     take: filters.ids?.length ? filters.ids.length : 100,
   });
 
-  return rows.sort((a, b) => {
-    const featuredDelta = Number(isFeatured(b)) - Number(isFeatured(a));
-    if (featuredDelta !== 0) return featuredDelta;
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
+  return rows
+    .sort((a, b) => {
+      const featuredDelta = Number(isFeatured(b)) - Number(isFeatured(a));
+      if (featuredDelta !== 0) return featuredDelta;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    })
+    .map((row) => {
+      const contacts = publicSellerContacts({
+        email: row.owner.email,
+        phone: row.contactPhone,
+        whatsapp: row.contactWhatsapp,
+      });
+      if (!contacts.hidden) return row;
+      return { ...row, contactPhone: "", contactWhatsapp: "" };
+    });
 }
 
 export type ListingCardData = Awaited<ReturnType<typeof searchListings>>[number];

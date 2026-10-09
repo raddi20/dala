@@ -4,6 +4,7 @@ import { VideoMark } from "@/components/video-mark";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { publicSellerContacts } from "@/lib/demo-visibility";
 import type { ListingCardData } from "@/lib/search";
 import { isProActive } from "@/lib/pro";
 import { averageRating } from "@/lib/utils";
@@ -12,7 +13,10 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
   const rating = averageRating(listing.reviews);
   const initial = listing.title.trim().charAt(0).toUpperCase() || "D";
   const shopSlug = listing.owner.storefront?.published ? listing.owner.storefront.slug : "";
-  const whatsapp = listing.contactWhatsapp.trim();
+  const whatsapp = publicSellerContacts({
+    email: listing.owner.email,
+    whatsapp: listing.contactWhatsapp,
+  }).whatsapp;
   const servesDiaspora = Boolean(listing.owner.storefront?.servesDiaspora);
   const proActive = isProActive(listing.owner);
   const hasVideo = Boolean(

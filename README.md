@@ -30,7 +30,7 @@ The initial migration is already in `prisma/migrations`, so `migrate dev` should
 
 ## Demo accounts
 
-Every seeded account uses the password `demo1234` on your laptop (`npm run dev`). A production deploy disables password login for `@dala.local` and removes any admin role on those accounts. Those shops and listings stay in the database. Public pages hide them unless `SHOW_DEMO_SHOPS=1`. The sign-in page lists these addresses only in local development.
+Every seeded account uses the password `demo1234` on your laptop (`npm run dev`). A production deploy disables password login for `@dala.local` and removes any admin role on those accounts. Those shops and listings stay in the database and stay on public pages unless `HIDE_DEMO_SHOPS` is `1`, `true`, `yes`, or `on`. Placeholder phone and WhatsApp numbers are never shown. The sign-in page lists these addresses only in local development.
 
 | Email | Who |
 | --- | --- |
@@ -90,7 +90,7 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 | `NEXTAUTH_URL` | Omit. | Same value as `AUTH_URL`. |
 | `APP_NAME` | Omit. The site name is Rangach. | Optional. Set only if the visible name should change. Default `Rangach`. |
 | `APP_URL` | Omit. The dev server host is used for share links and the payment return URL. | `https://dala-sigma.vercel.app` (no path). Later, `https://rangach.co.ke`. If this is unset, `AUTH_URL` then `NEXTAUTH_URL` are used. |
-| `SHOW_DEMO_SHOPS` | Omit. Seeded `@dala.local` shops and listings stay in the database and are hidden. Set to `1` to show them on your laptop. | Leave unset. Public pages hide those rows. Set to `1` only if you want the sample shops public again. |
+| `HIDE_DEMO_SHOPS` | Leave unset. Seeded `@dala.local` shops and listings stay visible. Set to `1` to hide them. Their placeholder phone and WhatsApp numbers are never shown. | Leave unset so the sample shops stay visible until there are enough real shops. Set to `1` to hide them. |
 | `FLW_SECRET_KEY` | Flutterwave test secret (`FLWSECK_TEST-…`). Omit to keep checkout disabled. | Test key until you are ready, then the live key (`FLWSECK-…`). |
 | `FLW_PUBLIC_KEY` | Optional. Stored next to the secret. The hosted checkout does not send it to the browser. | Same. |
 | `FLW_WEBHOOK_HASH` | Any long random string. The same value goes in the Flutterwave webhook settings. | Same value as the dashboard secret hash. |
@@ -108,7 +108,7 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later. Sign-up does not prove you own the mailbox, so `ADMIN_EMAIL` is not granted admin from the register form. See **Production admin**.
 
-The public controller name, registration number, proprietor line, phone, and postal address live in `src/lib/public-info.ts` (`LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_REG_NO`, `LEGAL_ENTITY_OWNER`, `BUSINESS_PHONE`, `BUSINESS_ADDRESS`). Phone, address, proprietor, and registration number render nothing while they are empty. Change the controller name in that one constant.
+The public controller name, registration number, proprietor line, phone, and postal address live in `src/lib/public-info.ts` (`LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_REG_NO`, `LEGAL_ENTITY_OWNER`, `BUSINESS_PHONE`, `BUSINESS_PHONE_TEL`, `BUSINESS_ADDRESS`). `BUSINESS_PHONE` is the spaced display number. `BUSINESS_PHONE_TEL` is the raw number used on tel: links. Proprietor and registration number render nothing while they are empty. Change the controller name in that one constant.
 
 ## Photos
 
@@ -207,7 +207,7 @@ From the local clone, after the variables are saved:
 cd ~/dala && git pull && npx vercel --prod
 ```
 
-Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` returns 404 unless `SHOW_DEMO_SHOPS=1`.
+Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` stays public unless `HIDE_DEMO_SHOPS=1`. That page does not show the sample phone or WhatsApp number.
 
 If `ADMIN_EMAIL` is unset, the build still succeeds and nobody is promoted. A bad secret fails the build and does not change accounts.
 
@@ -229,7 +229,7 @@ About ten minutes, after this deploy config is on `main`:
 
 4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi, Kenya and the Diaspora demo shops.
 5. The live site is `https://dala-sigma.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL`, each set to that exact origin (no trailing path). `APP_NAME` can stay unset. Redeploy once so sign-in cookies, share links, and payment return URLs use that host.
-6. `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co` are the seeded sample shops. They stay in the database. Public pages hide them unless `SHOW_DEMO_SHOPS=1`. `demo1234` works on your laptop only. On the live site, demo password login is disabled.
+6. `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co` are the seeded sample shops. They stay in the database and on the public site unless `HIDE_DEMO_SHOPS=1`. Their placeholder phone and WhatsApp numbers are not shown. `demo1234` works on your laptop only. On the live site, demo password login is disabled.
 7. To take test payments, add the Flutterwave variables in **Payments** and redeploy from the local clone with `git pull && npx vercel --prod`.
 8. To let sellers upload photos from a phone, connect a Blob store. See **Photos**. Pasted image URLs keep working without it.
 

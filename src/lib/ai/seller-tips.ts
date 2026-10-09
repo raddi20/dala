@@ -6,7 +6,7 @@ import { statRetentionCutoff } from "@/lib/stats/retention";
 import { canSendTips, sendTipEmail, type TipEmail } from "@/lib/email/zeptomail";
 import { defaultSiteUrl } from "@/lib/brand";
 import type { AiActor, RunResult } from "@/lib/ai/types";
-import { showDemoShops } from "@/lib/demo-visibility";
+import { hideDemoShops } from "@/lib/demo-visibility";
 import { DEMO_EMAIL_DOMAIN } from "@/lib/admin-access";
 import { prisma } from "@/lib/prisma";
 
@@ -139,7 +139,7 @@ export async function loadTipSellers(now: Date): Promise<TipSeller[]> {
     prisma.user.findMany({
       where: {
         storefront: { is: { published: true } },
-        ...(showDemoShops() ? {} : { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } }),
+        ...(hideDemoShops() ? { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } : {}),
       },
       select: {
         id: true,
