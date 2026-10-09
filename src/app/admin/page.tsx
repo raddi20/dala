@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AgentCountTable } from "@/components/admin-agent-counts";
 import { AdminOccasions } from "@/components/admin-occasions";
 import { AdminVideoQueue } from "@/components/admin-video-queue";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
@@ -11,6 +12,7 @@ import {
   setShopBadge,
   setVerifiedPro,
 } from "@/lib/actions/admin";
+import { countAgentSignups } from "@/lib/agent-code";
 import { PRO_DAYS } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { formatPlanDate, isProActive } from "@/lib/pro";
@@ -35,7 +37,7 @@ export default async function AdminPage({
   await requireAdmin();
   const notice = (await searchParams).videoNotice;
   const videoNotice = typeof notice === "string" ? notice : "";
-  const [listings, reports, users, shops] = await Promise.all([
+  const [listings, reports, users, shops, agentUsers] = await Promise.all([
     prisma.listing.findMany({
       include: { owner: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
@@ -68,7 +70,21 @@ export default async function AdminPage({
       },
       orderBy: { user: { name: "asc" } },
     }),
+    prisma.user.findMany({
+      select: {
+        referralAgentCode: true,
+        storefront: { select: { id: true } },
+        _count: { select: { listings: true } },
+      },
+    }),
   ]);
+  const agentCounts = countAgentSignups(
+    agentUsers.map((person) => ({
+      code: person.referralAgentCode,
+      hasShop: person.storefront !== null,
+      hasListing: person._count.listings > 0,
+    })),
+  );
 
   const rank: Record<string, number> = { high: 0, medium: 1, low: 2 };
   const ordered = [...listings].sort((a, b) => (rank[a.scamRisk] ?? 3) - (rank[b.scamRisk] ?? 3));
@@ -94,6 +110,8 @@ export default async function AdminPage({
       </div>
 
       <AdminVideoQueue notice={videoNotice} />
+
+      <AgentCountTable rows={agentCounts} />
 
       <section id="shop-badges" className="grid gap-3">
         <h2 className="font-serif text-2xl">Shop checks</h2>

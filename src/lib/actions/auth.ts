@@ -1,10 +1,13 @@
 "use server";
 
 import bcrypt from "bcryptjs";
+import { cookies } from "next/headers";
 import { AuthError } from "next-auth";
 import { normalizeEmail, registrationBlockReason } from "@/lib/admin-access";
+import { AGENT_COOKIE } from "@/lib/agent-code";
 import { signIn, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { createRegisteredUser } from "@/lib/register-user";
 import { safePath } from "@/lib/utils";
 import { field, registerSchema, type ActionState } from "@/lib/validators";
 
@@ -40,19 +43,23 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
   const reserved = registrationBlockReason(email, process.env);
   if (reserved) return { error: reserved };
 
-  const existing = await prisma.user.findUnique({ where: { email } });
-  if (existing) return { error: "That email is already registered." };
-
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
-  await prisma.user.create({
-    data: {
+  const jar = await cookies();
+  const created = await createRegisteredUser(
+    {
+      findByEmail: (address) => prisma.user.findUnique({ where: { email: address }, select: { referralAgentCode: true } }),
+      create: (data) => prisma.user.create({ data, select: { id: true, referralAgentCode: true } }),
+    },
+    {
       name: parsed.data.name,
       email,
       passwordHash,
       kind: parsed.data.kind,
       city: parsed.data.city,
+      agentCookie: jar.get(AGENT_COOKIE)?.value,
     },
-  });
+  );
+  if (!created.ok) return { error: created.error };
 
   const next = safePath(field(formData, "next"), "/");
   try {

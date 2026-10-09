@@ -27,6 +27,10 @@ model User {
   // paid before expiry existed. The deploy backfill writes a 30-day grace date.
   // Until that runs, isProActive treats the row as still on so nobody loses Pro.
   verifiedProUntil DateTime?
+  // Brochure code from the rangach_agent cookie, copied once at sign-up.
+  // Null when the new account had no code. Existing rows stay null. Never rewritten.
+  referralAgentCode String?
+  referralAgentAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
