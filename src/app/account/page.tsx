@@ -7,6 +7,7 @@ import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
 import { appName, defaultSiteUrl } from "@/lib/brand";
+import { LICENSED_PAYMENT_PROVIDER } from "@/lib/public-info";
 import { cityChipLabel, productLabel } from "@/lib/constants";
 import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
@@ -59,7 +60,7 @@ export default async function AccountPage({
       : paid === "1"
         ? "Payment received. Featured listing or Verified Pro is active."
         : paid === "pending"
-          ? "Payment is still pending. If you approved the M-Pesa prompt, it updates when Flutterwave confirms it."
+          ? `Payment is still pending. If you approved the M-Pesa prompt, it updates when ${LICENSED_PAYMENT_PROVIDER} confirms it.`
           : paid === "cancelled"
             ? "Checkout cancelled. Nothing was charged."
             : paid === "failed"

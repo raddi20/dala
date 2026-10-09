@@ -3,7 +3,8 @@ import Link from "next/link";
 import { EntityContact } from "@/components/entity-contact";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
-import { FEATURED_DAYS, PRO_DAYS, productLabel } from "@/lib/constants";
+import { CHARGE, FEATURED_DAYS, PRO_DAYS, productLabel } from "@/lib/constants";
+import { kesPerUsd } from "@/lib/pricing-display";
 import {
   CONTACT_EMAIL,
   LEGAL_DRAFT_NOTE,
@@ -13,6 +14,8 @@ import {
   publicInfoPage,
   verifiedProDurationCopy,
 } from "@/lib/public-info";
+import { readVisitorCountry } from "@/lib/visitor-country";
+import { cachedUsdRates, needsLiveRates, visitorPrice, type VisitorPrice } from "@/lib/visitor-currency";
 
 const page = publicInfoPage("/refund");
 
@@ -21,8 +24,29 @@ export const metadata: Metadata = {
   description: page.description,
 };
 
-export default function RefundPage() {
+function refundCurrencyNote(price: VisitorPrice) {
+  if (price.kind === "approx") {
+    return `The pricing page shows an approximate local figure (${price.label}) for shops in Kenya and East Africa. Payment is charged in Kenyan shillings for those shops, or in pounds for Diaspora shops. A refund returns the Kenyan shillings or pounds that were charged, not that approximate figure.`;
+  }
+  if (price.kind === "exact") {
+    return price.caption.includes("pounds")
+      ? "The pricing page shows the pound charge for Diaspora shops. A refund returns that charge in pounds, not a converted amount."
+      : "The pricing page shows the Kenyan shilling charge for shops in Kenya and East Africa. A refund returns that charge in Kenyan shillings, not a converted amount.";
+  }
+  return `The pricing page shows the charges: ${price.kesLabel} for shops in Kenya and East Africa and ${price.gbpLabel} for Diaspora shops. A refund returns the currency that was charged, Kenyan shillings or pounds. An approximate local figure is not the amount charged and it is not a separate refund.`;
+}
+
+export default async function RefundPage() {
   const name = appName();
+  const country = await readVisitorCountry();
+  const rates = needsLiveRates(country) ? await cachedUsdRates() : null;
+  const shown = visitorPrice({
+    country,
+    kes: CHARGE.featured.Nairobi,
+    gbp: CHARGE.featured.London,
+    rates,
+    kesPerUsd: kesPerUsd(),
+  });
 
   return (
     <InfoPage
@@ -39,9 +63,7 @@ export default function RefundPage() {
           <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
             pricing page
           </Link>{" "}
-          shows the prices. Kenyan shilling prices are the Nairobi charge. Pound prices are the Diaspora charge.
-          Approximate US dollar figures on that page are for comparison. They are not the amount charged and they are
-          not a separate refund.
+          shows the prices. {refundCurrencyNote(shown)}
         </p>
         <p>
           A deal between a buyer and a seller is not covered here. {name} does not hold that money, so it cannot refund

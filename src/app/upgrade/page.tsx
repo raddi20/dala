@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PayForm } from "@/components/pay-form";
 import { appName, defaultSiteUrl } from "@/lib/brand";
+import { LICENSED_PAYMENT_PROVIDER } from "@/lib/public-info";
 import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
 import { kesPerGbp, kesPerUsd } from "@/lib/pricing-display";
 import { readVisitorCountry } from "@/lib/visitor-country";
@@ -54,7 +55,7 @@ export default async function UpgradePage({
       <div>
         <h1 className="font-serif text-3xl">Promote</h1>
         <p className="mt-2 text-sm text-ink/70">
-          Featured listings stay raised for {FEATURED_DAYS} days ({featuredLabel}). That is a directory boost, separate from a shop. Verified Pro is {proLabel} per {PRO_DAYS} days: a shop banner, a shop video, and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date. It is shown as Pro plan and does not grant Phone, Location, or Business verified. An admin grants those shop checks. The green listing Verified badge stays an admin action too. Card numbers stay on Flutterwave.{" "}
+          Featured listings stay raised for {FEATURED_DAYS} days ({featuredLabel}). That is a directory boost, separate from a shop. Verified Pro is {proLabel} per {PRO_DAYS} days: a shop banner, a shop video, and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date. It is shown as Pro plan and does not grant Phone, Location, or Business verified. An admin grants those shop checks. The green listing Verified badge stays an admin action too. Card numbers stay with {LICENSED_PAYMENT_PROVIDER}.{" "}
           {featuredPrice.kind === "approx" ? "Figures marked ≈ are approximate and are not the amount checkout charges. " : ""}
           <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
             Public prices
