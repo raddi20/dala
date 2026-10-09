@@ -5,10 +5,11 @@ const prisma = new PrismaClient();
 
 ensureOccasionDefinitions(prisma)
   .then((result) => {
-    if (result.created.length === 0) {
+    if (result.created.length === 0 && result.updated.length === 0) {
       console.log("Occasion pages already exist. Left titles and intros as they are.");
     } else {
-      console.log(`Added occasion pages: ${result.created.join(", ")}`);
+      if (result.created.length > 0) console.log(`Added occasion pages: ${result.created.join(", ")}`);
+      if (result.updated.length > 0) console.log(`Updated occasion intros: ${result.updated.join(", ")}`);
     }
   })
   .then(() => prisma.$disconnect())

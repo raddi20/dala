@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { InfoPage, InfoSection } from "@/components/info-page";
-import { APP_TAGLINE, appName } from "@/lib/brand";
-import { CITIES, FREE_OFFERING_CAP, regionLabel } from "@/lib/constants";
+import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
+import { FREE_OFFERING_CAP } from "@/lib/constants";
 import { CONTACT_EMAIL, publicInfoPage } from "@/lib/public-info";
 
 const page = publicInfoPage("/about");
@@ -13,8 +13,6 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   const name = appName();
-  const places = CITIES.map((city) => `${city.name} (${regionLabel(city.region)}, ${city.country})`);
-  const placeList = places.length === 1 ? places[0] : `${places.slice(0, -1).join(", ")} and ${places[places.length - 1]}`;
 
   return (
     <InfoPage
@@ -25,7 +23,7 @@ export default function AboutPage() {
     >
       <InfoSection title="What Rangach is">
         <p>
-          {name} is a directory of Luo-owned businesses, housing, and classifieds for {placeList}. You can browse a
+          {name} is a directory of Luo-owned businesses, housing, and classifieds in {AUDIENCE_LINE}. You can browse a
           shop, a room, something for sale, or a service, then talk to the person who posted it.
         </p>
         <p>

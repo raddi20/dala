@@ -7,8 +7,8 @@ import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/cons
 
 /** Visible on each page. Change this when the copy changes. */
 export const PUBLIC_PAGES_UPDATED = {
-  label: "6 October 2026",
-  iso: "2026-10-06",
+  label: "9 October 2026",
+  iso: "2026-10-09",
 } as const;
 
 /**
@@ -45,7 +45,7 @@ export const PUBLIC_INFO_PAGES = [
     label: "About",
     title: "About",
     description:
-      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Nairobi and London.",
+      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Nairobi, Kenya and the Diaspora.",
   },
   {
     path: "/faq",
@@ -113,9 +113,9 @@ export function featuredDurationCopy() {
   return `Featured lasts ${FEATURED_DAYS} days from the payment. A new payment starts another ${FEATURED_DAYS} days from that payment.`;
 }
 
-/** Nairobi and London labels from the same CHARGE table checkout uses. */
+/** Nairobi and Diaspora labels from the same CHARGE table checkout uses. */
 export function paidPriceLine(product: PaidProduct) {
   const nairobi = chargeFor(product, "Nairobi");
   const london = chargeFor(product, "London");
-  return `${nairobi.label} in Nairobi and ${london.label} in London`;
+  return `${nairobi.label} in Nairobi and ${london.label} for Diaspora shops`;
 }

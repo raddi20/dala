@@ -7,7 +7,7 @@ import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { regionForCity, regionLabel } from "@/lib/constants";
+import { cityChoiceLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -65,7 +65,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     hasPublicVideo,
   });
   if (!preview) return privateMetadata("Shop");
-  const description = clipText(shop.user.bio) || `${shop.user.name} in ${shop.user.city}. A shop on ${appName()}. Chat stays on WhatsApp.`;
+  const description = clipText(shop.user.bio) || `${shop.user.name} ${cityInPhrase(shop.user.city)}. A shop on ${appName()}. Chat stays on WhatsApp.`;
   return buildShareMetadata({
     origin,
     path: `/b/${slug}`,
@@ -184,7 +184,7 @@ export default async function StorefrontPage({ params }: Props) {
             {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
             {proActive ? <ProPlanChip /> : null}
             <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
-              {shop.user.city}
+              {cityChoiceLabel(shop.user.city)}
             </span>
           </div>
           <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />

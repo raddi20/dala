@@ -9,6 +9,7 @@ import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/compo
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { appName } from "@/lib/brand";
+import { cityInPhrase } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { isProActive } from "@/lib/pro";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const preview = listingPreviewImage({ origin, id, hidden: false, photoUrl: listing.photoUrl });
   if (!preview) return privateMetadata("Listing");
   const description =
-    clipText(listing.description) || `${listing.title} in ${listing.city}. ${listing.category} on ${appName()}.`;
+    clipText(listing.description) || `${listing.title} ${cityInPhrase(listing.city)}. ${listing.category} on ${appName()}.`;
   return buildShareMetadata({
     origin,
     path: `/listings/${id}`,
@@ -125,7 +126,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         />
         <h1 className="font-serif text-3xl leading-tight text-navy sm:text-4xl">{listing.title}</h1>
         <p className="text-ink/65">
-          {listing.city} · {listing.region === "diaspora" ? "Diaspora" : "Homeland"} · {listing.category}
+          {listing.region === "diaspora" ? "Diaspora" : `${listing.city} · Homeland`} · {listing.category}
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
         {listing.priceLabel ? <p className="text-lg font-semibold text-ink">{listing.priceLabel}</p> : null}

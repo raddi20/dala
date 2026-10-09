@@ -6,7 +6,7 @@ export const OCCASION_TITLE_MAX = 80;
 /**
  * Definitions inserted only when the slug is missing.
  * Homecomings, ayie, funerals, and Christmas are the diaspora-funded moments in the market report.
- * A house back home is the other clear one: money from London often goes into a build in Nairobi or Piny Luo.
+ * A house back home is the other clear one: money from the Diaspora often goes into a build in Nairobi or Piny Luo.
  */
 export const OCCASION_DEFINITIONS = [
   {
@@ -14,7 +14,7 @@ export const OCCASION_DEFINITIONS = [
     title: "Homecomings",
     sortOrder: 10,
     intro:
-      "Someone is flying in from London, or travelling from Nairobi down to the village. The household needs food, a vehicle, and a bed for that week. These shops and listings are the ones sellers have marked for the visit. You arrange it on WhatsApp.",
+      "Someone is flying in from the Diaspora, or travelling from Nairobi down to the village. The household needs food, a vehicle, and a bed for that week. These shops and listings are the ones sellers have marked for the visit. You arrange it on WhatsApp.",
   },
   {
     slug: "weddings-dowry",
@@ -35,7 +35,7 @@ export const OCCASION_DEFINITIONS = [
     title: "Christmas at home",
     sortOrder: 40,
     intro:
-      "December is when many people in London and Nairobi send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
+      "December is when many people in Nairobi, Kenya and the Diaspora send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
   },
   {
     slug: "house-back-home",
@@ -62,8 +62,20 @@ export function occasionDefinition(slug: string) {
 type OccasionWriter = Pick<PrismaClient, "occasion">;
 
 /**
+ * Previous default intros. An occasion row that still has one of these is
+ * updated to the current definition. Any other saved intro is left alone.
+ */
+const PREVIOUS_OCCASION_INTROS: Record<string, string> = {
+  homecomings:
+    "Someone is flying in from London, or travelling from Nairobi down to the village. The household needs food, a vehicle, and a bed for that week. These shops and listings are the ones sellers have marked for the visit. You arrange it on WhatsApp.",
+  "christmas-at-home":
+    "December is when many people in London and Nairobi send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
+};
+
+/**
  * Create occasion rows that are not in the database yet.
- * Existing title, intro, and sort order are left as the admin saved them.
+ * Existing title, intro, and sort order are left as the admin saved them,
+ * except an intro that is still the previous default sentence.
  */
 export async function ensureOccasionDefinitions(
   db: OccasionWriter,
@@ -72,11 +84,12 @@ export async function ensureOccasionDefinitions(
   const slugs = definitions.map((item) => item.slug);
   const existing = await db.occasion.findMany({
     where: { slug: { in: [...slugs] } },
-    select: { slug: true },
+    select: { slug: true, intro: true },
   });
   const have = new Set(existing.map((row) => row.slug));
   const missing = definitions.filter((item) => !have.has(item.slug));
   const created: string[] = [];
+  const updated: string[] = [];
   for (const item of missing) {
     try {
       await db.occasion.create({
@@ -93,7 +106,14 @@ export async function ensureOccasionDefinitions(
       throw error;
     }
   }
-  return { created };
+  for (const row of existing) {
+    const previous = PREVIOUS_OCCASION_INTROS[row.slug];
+    const next = definitions.find((item) => item.slug === row.slug);
+    if (!previous || !next || row.intro !== previous || next.intro === previous) continue;
+    await db.occasion.update({ where: { slug: row.slug }, data: { intro: next.intro } });
+    updated.push(row.slug);
+  }
+  return { created, updated };
 }
 
 const tagSelect = { id: true, slug: true } satisfies Prisma.OccasionSelect;

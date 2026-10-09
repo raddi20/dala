@@ -60,7 +60,8 @@ export default async function PersonPage({ params }: Props) {
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-8">
       <div className="rounded-2xl border border-sand bg-card p-5">
         <p className="text-sm font-semibold uppercase tracking-wide text-lake">
-          {person.kind === "business" ? "Business" : "Person"} · {person.city} · {regionLabel(region)}
+          {person.kind === "business" ? "Business" : "Person"} ·{" "}
+          {person.city === "London" ? "Diaspora" : `${person.city} · ${regionLabel(region)}`}
         </p>
         <h1 className="mt-1 font-serif text-4xl">{person.name}</h1>
         {shop?.phoneVerified || shop?.locationVerified || shop?.businessVerified || isProActive(person) ? (

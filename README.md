@@ -36,14 +36,14 @@ Every seeded account uses the password `demo1234` on your laptop (`npm run dev`)
 | --- | --- |
 | `akinyi@dala.local` | Admin on your laptop. In production this account is a normal user and `demo1234` does not work. The live admin is `ADMIN_EMAIL`. |
 | `atieno@dala.local` | Nairobi restaurant and events. |
-| `okello@dala.local` | London solicitor. Already on Verified Pro. |
+| `okello@dala.local` | Diaspora solicitor. Already on Verified Pro. |
 | `grace@dala.local` | Nairobi beauty, clinic, and fellowship. |
 | `mary@dala.local` | Nairobi trades, garage, and shop. |
-| `peter@dala.local` | London grocer, kitchen, and cabs. |
+| `peter@dala.local` | Diaspora grocer, kitchen, and cabs. |
 | `achieng@dala.local` | Nairobi resident. Tutoring and classifieds. |
-| `james@dala.local` | London resident. Rooms and a flagged plot advert. |
+| `james@dala.local` | Diaspora resident. Rooms and a flagged plot advert. |
 
-Try the sentence search with `verified restaurants in Nairobi` or `housing in London`. The high-risk plot advert and the "limited offer" sofa are there so the scam check is visible. One phone advert is already hidden for the admin queue.
+Try the sentence search with `verified restaurants in Nairobi` or `housing in the diaspora`. The high-risk plot advert and the "limited offer" sofa are there so the scam check is visible. One phone advert is already hidden for the admin queue.
 
 ## Shops
 
@@ -123,16 +123,16 @@ Locally, leave the variable unset, or copy the token into `.env` and restart `np
 
 ## Payments
 
-Featured listing and Verified Pro use [Flutterwave](https://flutterwave.com) hosted checkout. One integration covers Kenya M-Pesa and cards. Paystack was the other candidate, but its charge currencies do not include GBP, and London prices are already in pounds. The app was not on Daraja: the old checkout only stored a simulated receipt.
+Featured listing and Verified Pro use [Flutterwave](https://flutterwave.com) hosted checkout. One integration covers Kenya M-Pesa and cards. Paystack was the other candidate, but its charge currencies do not include GBP, and Diaspora prices are already in pounds. The app was not on Daraja: the old checkout only stored a simulated receipt.
 
 There is no cart. Shop goods are still arranged on WhatsApp.
 
 | Product | Price | What it unlocks |
 | --- | --- | --- |
-| Featured listing | KES 1,500 in Nairobi, £12 in London | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
-| Verified Pro | KES 2,500 in Nairobi, £20 in London, per 30 days | `user.verifiedPro` and `user.verifiedProUntil`. The paid plan (shown as Pro plan), the shop cover banner, the shop video, and 20 offerings instead of 5, while that date is in the future. Paying again before it ends adds 30 days to the current end date. A webhook retry for the same payment does not. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
+| Featured listing | KES 1,500 in Nairobi, £12 for Diaspora shops | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
+| Verified Pro | KES 2,500 in Nairobi, £20 for Diaspora shops, per 30 days | `user.verifiedPro` and `user.verifiedProUntil`. The paid plan (shown as Pro plan), the shop cover banner, the shop video, and 20 offerings instead of 5, while that date is in the future. Paying again before it ends adds 30 days to the current end date. A webhook retry for the same payment does not. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
 
-M-Pesa is only offered when the price is in Kenyan shillings. London prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro for 30 days`).
+M-Pesa is only offered when the price is in Kenyan shillings. Diaspora prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro for 30 days`).
 
 ### How a payment completes
 
@@ -224,7 +224,7 @@ About ten minutes, after this deploy config is on `main`:
    | `AUTH_SECRET` | Output of `openssl rand -base64 32` |
    | `AUTH_TRUST_HOST` | `true` |
 
-4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi and London demo shops.
+4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi, Kenya and the Diaspora demo shops.
 5. The live site is `https://dala-sigma.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL`, each set to that exact origin (no trailing path). `APP_NAME` can stay unset. Redeploy once so sign-in cookies, share links, and payment return URLs use that host.
 6. Open `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co`. Those pages are public. `demo1234` works on your laptop only. On the live site, demo password login is disabled.
 7. To take test payments, add the Flutterwave variables in **Payments** and redeploy from the local clone with `git pull && npx vercel --prod`.

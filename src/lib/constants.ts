@@ -90,6 +90,21 @@ export function regionLabel(region: string) {
   return region;
 }
 
+/**
+ * Visible name for a catalogue city on forms, filters, and cards.
+ * The stored value stays Nairobi or London.
+ */
+export function cityChoiceLabel(city: string) {
+  if (city === "London") return "Diaspora";
+  return city;
+}
+
+/** Sentence fragment: "in Nairobi" or "in the Diaspora". */
+export function cityInPhrase(city: string) {
+  if (city === "London") return "in the Diaspora";
+  return `in ${city}`;
+}
+
 export function chargeFor(product: PaidProduct, city: string) {
   const prices = CHARGE[product];
   return city === "London" ? prices.London : prices.Nairobi;

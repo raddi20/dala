@@ -40,8 +40,8 @@ export default async function LoginPage({
             <ul className="mt-2 grid gap-1 text-ink/70">
               <li>akinyi@dala.local — admin</li>
               <li>atieno@dala.local — Nairobi restaurant</li>
-              <li>okello@dala.local — London solicitor</li>
-              <li>james@dala.local — London resident</li>
+              <li>okello@dala.local — Diaspora solicitor</li>
+              <li>james@dala.local — Diaspora resident</li>
             </ul>
           </div>
         ) : null}

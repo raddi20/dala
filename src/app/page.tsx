@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ListingCard } from "@/components/listing-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
 import { GateMark } from "@/components/wordmark";
-import { APP_TAGLINE, appName } from "@/lib/brand";
+import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
 import { HOME_CATEGORIES, categoryHref } from "@/lib/categories";
 import { CITIES } from "@/lib/constants";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
@@ -120,23 +120,26 @@ export default async function HomePage() {
         </section>
 
         <section>
-          <h2 className={sectionTitleClass}>Cities</h2>
-          <p className="mt-2 text-ink/65">Homeland and diaspora — same community directory.</p>
+          <h2 className={sectionTitleClass}>Homeland or Diaspora</h2>
+          <p className="mt-2 text-ink/65">Same community directory, in {AUDIENCE_LINE}.</p>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {CITIES.map((city) => (
-              <Link
-                key={city.name}
-                href={`/listings?city=${city.name}&region=${city.region}`}
-                className={`card-lift group relative overflow-hidden ${cardClass} p-6`}
-              >
-                <p className="text-xs font-semibold uppercase tracking-wider text-lake">
-                  {city.region === "homeland" ? "Homeland" : "Diaspora"} · {city.country}
-                </p>
-                <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
-                  {city.name}
-                </h3>
-              </Link>
-            ))}
+            {CITIES.map((city) => {
+              const diaspora = city.region === "diaspora";
+              return (
+                <Link
+                  key={city.name}
+                  href={`/listings?city=${city.name}&region=${city.region}`}
+                  className={`card-lift group relative overflow-hidden ${cardClass} p-6`}
+                >
+                  <p className="text-xs font-semibold uppercase tracking-wider text-lake">
+                    {diaspora ? "Diaspora" : "Homeland · Kenya"}
+                  </p>
+                  <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
+                    {diaspora ? "The Diaspora" : city.name}
+                  </h3>
+                </Link>
+              );
+            })}
           </div>
         </section>
 
