@@ -43,7 +43,7 @@ Every seeded account uses the password `demo1234` on your laptop (`npm run dev`)
 | `achieng@dala.local` | Nairobi resident. Tutoring and classifieds. |
 | `james@dala.local` | Diaspora resident. Rooms and a flagged plot advert. |
 
-Try the sentence search with `verified restaurants in Nairobi` or `housing in the diaspora`. The high-risk plot advert and the "limited offer" sofa are there so the scam check is visible. One phone advert is already hidden for the admin queue.
+Try the sentence search with `verified restaurants in Kenya` or `housing in the diaspora`. The high-risk plot advert and the "limited offer" sofa are there so the scam check is visible. One phone advert is already hidden for the admin queue.
 
 ## Shops
 
@@ -132,8 +132,8 @@ There is no cart. Shop goods are still arranged on WhatsApp.
 
 | Product | Price | What it unlocks |
 | --- | --- | --- |
-| Featured listing | KES 1,500 in Nairobi, £12 for Diaspora shops | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
-| Verified Pro | KES 2,500 in Nairobi, £20 for Diaspora shops, per 30 days | `user.verifiedPro` and `user.verifiedProUntil`. The paid plan (shown as Pro plan), the shop cover banner, the shop video, and 20 offerings instead of 5, while that date is in the future. Paying again before it ends adds 30 days to the current end date. A webhook retry for the same payment does not. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
+| Featured listing | KES 1,500 for shops in Kenya and East Africa, £12 for Diaspora shops | `listing.featured` and `featuredUntil` for 30 days. Browse keeps the listing raised while that date is in the future. A directory boost, separate from the shop. Paying again starts a new 30 days from that payment. A webhook retry does not. |
+| Verified Pro | KES 2,500 for shops in Kenya and East Africa, £20 for Diaspora shops, per 30 days | `user.verifiedPro` and `user.verifiedProUntil`. The paid plan (shown as Pro plan), the shop cover banner, the shop video, and 20 offerings instead of 5, while that date is in the future. Paying again before it ends adds 30 days to the current end date. A webhook retry for the same payment does not. It does not grant Phone, Location, or Business verified, and it does not grant the green listing Verified badge. Those stay admin actions. |
 
 M-Pesa is only offered when the price is in Kenyan shillings. Diaspora prices use card. The card number is entered on Flutterwave, not on Rangach. The Flutterwave checkout title and description use the site name (`Rangach — Featured listing for 30 days`, or `Rangach — Verified Pro for 30 days`).
 
@@ -227,7 +227,7 @@ About ten minutes, after this deploy config is on `main`:
    | `AUTH_SECRET` | Output of `openssl rand -base64 32` |
    | `AUTH_TRUST_HOST` | `true` |
 
-4. Deploy. The build creates the tables and, because the database is empty, loads the Nairobi, Kenya and the Diaspora demo shops.
+4. Deploy. The build creates the tables and, because the database is empty, loads the Kenya, East Africa and the Diaspora demo shops.
 5. The live site is `https://dala-sigma.vercel.app`. In the Vercel project, **Settings → Environment Variables**, add `AUTH_URL`, `NEXTAUTH_URL`, and `APP_URL`, each set to that exact origin (no trailing path). `APP_NAME` can stay unset. Redeploy once so sign-in cookies, share links, and payment return URLs use that host.
 6. `/b/mama-atieno`, `/b/peckham-grocer`, and `/b/okello-and-co` are the seeded sample shops. They stay in the database and on the public site unless `HIDE_DEMO_SHOPS=1`. Their placeholder phone and WhatsApp numbers are not shown. `demo1234` works on your laptop only. On the live site, demo password login is disabled.
 7. To take test payments, add the Flutterwave variables in **Payments** and redeploy from the local clone with `git pull && npx vercel --prod`.

@@ -77,7 +77,7 @@ export default async function HomePage() {
             <input
               id="home-nl"
               name="nl"
-              placeholder="Try: verified electricians in Nairobi"
+              placeholder="Try: verified electricians in Kenya"
               className={`${fieldClass} mt-0 border-0 bg-white/95 shadow-lg`}
             />
             <button className={`${btnPrimary} shrink-0 shadow-lg sm:px-6`}>Search</button>
@@ -136,7 +136,7 @@ export default async function HomePage() {
                     {diaspora ? "Diaspora" : "Homeland · Kenya"}
                   </p>
                   <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
-                    {diaspora ? "The Diaspora" : city.name}
+                    {diaspora ? "The Diaspora" : "Kenya / East Africa"}
                   </h3>
                 </Link>
               );

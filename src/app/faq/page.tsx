@@ -62,7 +62,7 @@ export default function FaqPage() {
             <h3 className="font-serif text-lg text-navy">{plan.name}</h3>
             <p>{plan.summary}</p>
             <p>
-              <span className="font-semibold text-navy">{plan.prices.kes.label}</span> in Nairobi.{" "}
+              <span className="font-semibold text-navy">{plan.prices.kes.label}</span> for shops in Kenya and East Africa.{" "}
               <span className="font-semibold text-navy">{plan.prices.gbp.label}</span> for Diaspora shops.
               {plan.product === "featured"
                 ? " Featured is priced for the listing’s city."
@@ -82,7 +82,7 @@ export default function FaqPage() {
           or off. Paying, or an admin switch, does not grant Phone verified, Location verified, or Business verified.
         </p>
         <p>
-          You pay on the Promote page after you sign in. Nairobi prices are Kenyan shillings and can be M-Pesa or a
+          You pay on the Promote page after you sign in. Prices for shops in Kenya and East Africa are Kenyan shillings and can be M-Pesa or a
           card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Payment
           is taken by {LICENSED_PAYMENT_PROVIDER}. The plan does not renew unless you pay again. {name} does not see
           your card number.

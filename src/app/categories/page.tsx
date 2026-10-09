@@ -32,7 +32,7 @@ export default async function CategoriesPage() {
   return (
     <div className="mx-auto grid max-w-5xl gap-10 px-4 py-10">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-lake">Nairobi, Kenya and the Diaspora</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-lake">Kenya, East Africa and the Diaspora</p>
         <h1 className={`${sectionTitleClass} mt-2`}>Categories</h1>
         <p className="mt-3 max-w-2xl text-ink/70">
           {CATEGORIES.length} ways to browse Luo shops and classifieds. The names that were already on the home page are unchanged, and each one still opens the same browse link.
