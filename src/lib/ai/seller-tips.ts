@@ -6,6 +6,8 @@ import { statRetentionCutoff } from "@/lib/stats/retention";
 import { canSendTips, sendTipEmail, type TipEmail } from "@/lib/email/zeptomail";
 import { defaultSiteUrl } from "@/lib/brand";
 import type { AiActor, RunResult } from "@/lib/ai/types";
+import { hideDemoShops } from "@/lib/demo-visibility";
+import { DEMO_EMAIL_DOMAIN } from "@/lib/admin-access";
 import { prisma } from "@/lib/prisma";
 
 export type WeekCounts = {
@@ -135,7 +137,10 @@ export async function loadTipSellers(now: Date): Promise<TipSeller[]> {
   const previousSince = new Date(now.getTime() - 2 * WEEK_MS);
   const [users, sent, events] = await Promise.all([
     prisma.user.findMany({
-      where: { storefront: { is: { published: true } } },
+      where: {
+        storefront: { is: { published: true } },
+        ...(hideDemoShops() ? { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } : {}),
+      },
       select: {
         id: true,
         email: true,

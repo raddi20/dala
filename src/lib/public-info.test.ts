@@ -1,24 +1,40 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { createElement } from "react";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import AboutPage, { metadata as aboutMeta } from "@/app/about/page";
+import ContactPage, { metadata as contactMeta } from "@/app/contact/page";
 import FaqPage, { metadata as faqMeta } from "@/app/faq/page";
 import PrivacyPage, { metadata as privacyMeta } from "@/app/privacy/page";
+import RefundPage, { metadata as refundMeta } from "@/app/refund/page";
 import TermsPage, { metadata as termsMeta } from "@/app/terms/page";
+import { EntityContact } from "@/components/entity-contact";
 import { Footer } from "@/components/footer";
 import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS } from "@/lib/constants";
+import { pricingRateNote } from "@/lib/pricing-display";
 import {
+  BUSINESS_ADDRESS,
+  BUSINESS_PHONE,
+  BUSINESS_PHONE_TEL,
   CONTACT_EMAIL,
+  LEGAL_DRAFT_NOTE,
   LEGAL_ENTITY_NAME,
+  LEGAL_ENTITY_OWNER,
   LEGAL_ENTITY_REG_NO,
+  LICENSED_PAYMENT_PROVIDER,
   PUBLIC_INFO_PAGES,
   PUBLIC_PAGES_UPDATED,
   VERIFIED_PRO_DAYS,
   featuredDurationCopy,
   legalEntityLabel,
+  legalEntityOwnerLine,
   paidPriceLine,
+  publicBusinessAddress,
+  publicBusinessPhone,
+  publicBusinessPhoneTel,
   verifiedProDayCount,
   verifiedProDurationCopy,
 } from "@/lib/public-info";
@@ -43,6 +59,9 @@ test("about, faq, terms, and privacy are in the sitemap and the footer", () => {
   for (const page of PUBLIC_INFO_PAGES) {
     assert.ok(footer.includes(`href="${page.path}"`), page.path);
     assert.ok(footer.includes(page.label), page.label);
+  }
+  for (const path of ["/contact", "/refund", "/terms", "/privacy"]) {
+    assert.ok(footer.includes(`href="${path}"`), path);
   }
 });
 
@@ -83,6 +102,15 @@ test("terms and privacy name Rangach Ltd and hide the company number until it is
   assert.equal(privacy.includes("company no."), false);
   assert.equal(terms.includes("[Rangach legal entity, TBC]"), false);
   assert.equal(privacy.includes("[Rangach legal entity, TBC]"), false);
+  assert.equal(LEGAL_ENTITY_OWNER, "");
+  assert.equal(legalEntityOwnerLine(), "");
+  assert.equal(legalEntityOwnerLine("  "), "");
+  assert.equal(legalEntityOwnerLine("Kevin Okullo"), "Owned by Kevin Okullo.");
+  assert.equal(terms.includes("Owned by"), false);
+  assert.equal(privacy.includes("Owned by"), false);
+  assert.match(terms, /not legal advice/);
+  assert.match(privacy, /not legal advice/);
+  assert.equal(terms.includes(LEGAL_DRAFT_NOTE), true);
 });
 
 test("faq and terms use checkout prices and do not hardcode them", async () => {
@@ -149,6 +177,114 @@ test("pro duration is the renewable 30-day plan, and a lapse hides extras", asyn
   }
   assert.match(faq, /Renewing before the end date adds another 30 days to that date/);
 });
+
+test("phone and address render when set, and stay hidden when blank", async () => {
+  assert.equal(BUSINESS_PHONE, "+254 729 217 350");
+  assert.equal(BUSINESS_PHONE_TEL, "+254729217350");
+  assert.equal(BUSINESS_ADDRESS, "P.O. Box 46799 - 00100 Nairobi, Kenya");
+  assert.equal(LEGAL_ENTITY_OWNER, "");
+  assert.equal(publicBusinessPhone(), BUSINESS_PHONE);
+  assert.equal(publicBusinessPhone("   "), "");
+  assert.equal(publicBusinessPhoneTel(), BUSINESS_PHONE_TEL);
+  assert.equal(publicBusinessPhoneTel("  "), "");
+  assert.equal(publicBusinessAddress(), BUSINESS_ADDRESS);
+  assert.equal(publicBusinessAddress("   "), "");
+
+  const blank = renderToStaticMarkup(
+    createElement(EntityContact, { owner: "", address: "", phone: "", phoneTel: "" }),
+  );
+  assert.equal(blank.includes("TODO"), false);
+  assert.equal(blank.includes("Owned by"), false);
+  assert.equal(blank.includes("tel:"), false);
+  assert.equal(blank.includes("P.O. Box"), false);
+  assert.match(blank, new RegExp(`mailto:${CONTACT_EMAIL}`));
+  assert.ok(blank.includes(LEGAL_ENTITY_NAME));
+
+  const filled = renderToStaticMarkup(createElement(EntityContact));
+  assert.equal(filled.includes("Owned by"), false);
+  assert.ok(filled.includes(BUSINESS_PHONE));
+  assert.ok(filled.includes(BUSINESS_ADDRESS));
+  assert.ok(filled.includes(`href="tel:${BUSINESS_PHONE_TEL}"`));
+  assert.equal(filled.includes("tel:+254 729"), false);
+
+  const contact = renderToStaticMarkup(await ContactPage());
+  const terms = renderToStaticMarkup(await TermsPage());
+  const privacy = renderToStaticMarkup(await PrivacyPage());
+  assert.equal(contactMeta.title, "Contact");
+  for (const html of [contact, terms, privacy]) {
+    assert.equal(html.includes("TODO"), false);
+    assert.equal(html.includes("Owned by"), false);
+    assert.ok(html.includes(BUSINESS_PHONE));
+    assert.ok(html.includes(BUSINESS_ADDRESS));
+    assert.ok(html.includes(`href="tel:${BUSINESS_PHONE_TEL}"`));
+    assert.match(html, new RegExp(`mailto:${CONTACT_EMAIL}`));
+  }
+});
+
+test("refund page is a draft and public policy pages do not name a processor or env vars", async () => {
+  const refund = renderToStaticMarkup(await RefundPage());
+  assert.equal(refundMeta.title, "Refunds");
+  assert.match(refund, /not legal advice/);
+  assert.ok(refund.includes(LEGAL_DRAFT_NOTE));
+  assert.match(refund, /except where the law requires a refund|the law requires a refund/);
+  assert.match(refund, /Neither plan renews by itself/);
+  assert.match(refund, new RegExp(CONTACT_EMAIL));
+  assert.match(refund, /5 business days/);
+  assert.match(refund, /14 days/);
+  assert.equal(refund.includes("TODO"), false);
+  assert.equal(refund.includes("Flutterwave"), false);
+
+  const pages = [
+    "terms/page.tsx",
+    "privacy/page.tsx",
+    "faq/page.tsx",
+    "pricing/page.tsx",
+    "refund/page.tsx",
+    "contact/page.tsx",
+  ];
+  const rendered = [
+    renderToStaticMarkup(await TermsPage()),
+    renderToStaticMarkup(await PrivacyPage()),
+    renderToStaticMarkup(await FaqPage()),
+    refund,
+    renderToStaticMarkup(await ContactPage()),
+    pricingRateNote(),
+  ];
+  for (const file of pages) {
+    const source = readFileSync(new URL(`../app/${file}`, import.meta.url), "utf8");
+    assert.equal(/Flutterwave/i.test(source), false, file);
+    assert.equal(/FX_/.test(source), false, file);
+  }
+  for (const html of rendered) {
+    assert.equal(/Flutterwave/i.test(html), false);
+    assert.equal(/FX_/.test(html), false);
+  }
+  assert.ok(rendered[2].includes(LICENSED_PAYMENT_PROVIDER));
+});
+
+test("Rangach Ltd is only hardcoded as LEGAL_ENTITY_NAME", () => {
+  const root = fileURLToPath(new URL("../../", import.meta.url));
+  const paths = [join(root, "README.md"), ...walk(join(root, "src"))];
+  const hits: string[] = [];
+  for (const path of paths) {
+    if (path.endsWith(".test.ts") || path.endsWith(".test.tsx")) continue;
+    if (path.endsWith(`${join("src", "lib", "public-info.ts")}`)) continue;
+    const source = readFileSync(path, "utf8");
+    if (source.includes("Rangach Ltd")) hits.push(path.slice(root.length));
+  }
+  assert.deepEqual(hits, []);
+  assert.equal(LEGAL_ENTITY_NAME, "Rangach Ltd");
+});
+
+function walk(dir: string): string[] {
+  const out: string[] = [];
+  for (const name of readdirSync(dir)) {
+    const path = join(dir, name);
+    if (statSync(path).isDirectory()) out.push(...walk(path));
+    else if (/\.(ts|tsx|md)$/.test(name)) out.push(path);
+  }
+  return out;
+}
 
 test("the info pages stay network-only so the offline fallback is unchanged", () => {
   for (const page of PUBLIC_INFO_PAGES) {

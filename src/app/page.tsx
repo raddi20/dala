@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HomeRail } from "@/components/home-rail";
 import { ListingCard } from "@/components/listing-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
 import { GateMark } from "@/components/wordmark";
@@ -188,42 +189,43 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section>
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <h2 className={sectionTitleClass}>Featured</h2>
-              <p className="mt-1 text-sm text-ink/60">Raised shops and listings worth a look first.</p>
-            </div>
-            <Link href="/listings" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
-              Browse all
+        <HomeRail
+          title="Featured"
+          hint="Raised shops and listings worth a look first."
+          browseHref="/listings"
+          browseLabel="Browse all"
+          empty={featured.length === 0}
+          emptyTitle="No featured listings yet"
+          emptyBody="Featured listings show here after a seller pays for a place at the top of the directory. Listing a business is free."
+          action={
+            <Link href={listHref} className={btnSecondary}>
+              List your business
             </Link>
-          </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {featured.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
-          </div>
-        </section>
+          }
+        >
+          {featured.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} />
+          ))}
+        </HomeRail>
 
-        <section>
-          <div className="flex items-baseline justify-between gap-3">
-            <div>
-              <h2 className={sectionTitleClass}>Recent classifieds</h2>
-              <p className="mt-1 text-sm text-ink/60">Housing, goods, and services from the community.</p>
-            </div>
-            <Link
-              href="/listings?type=classifieds"
-              className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake"
-            >
-              All classifieds
+        <HomeRail
+          title="Recent classifieds"
+          hint="Housing, goods, and services from the community."
+          browseHref="/listings?type=classifieds"
+          browseLabel="All classifieds"
+          empty={classifieds.length === 0}
+          emptyTitle="No classifieds yet"
+          emptyBody="Housing, goods, and services will show here as people publish them. You can list something yourself."
+          action={
+            <Link href={listHref} className={btnSecondary}>
+              List your business
             </Link>
-          </div>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {classifieds.map((listing) => (
-              <ListingCard key={listing.id} listing={listing} />
-            ))}
-          </div>
-        </section>
+          }
+        >
+          {classifieds.map((listing) => (
+            <ListingCard key={listing.id} listing={listing} />
+          ))}
+        </HomeRail>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden sticky-cta-bar">

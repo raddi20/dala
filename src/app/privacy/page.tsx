@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { EntityContact } from "@/components/entity-contact";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
 import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
-import { CONTACT_EMAIL, legalEntityLabel, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
+import { CONTACT_EMAIL, LEGAL_DRAFT_NOTE, LICENSED_PAYMENT_PROVIDER, legalEntityLabel, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
 import { STAT_RETENTION_DAYS } from "@/lib/stats/retention";
 import { VIEW_DEDUPE_MS } from "@/lib/stats/track";
 import { REJECT_PURGE_DAYS } from "@/lib/video/constants";
@@ -24,8 +25,8 @@ const PROCESSORS = [
     role: "Provides AI search and the other AI features when those features are switched on. If a different model provider is configured, the same kinds of text and photos may go there instead.",
   },
   {
-    name: "Flutterwave",
-    role: "Takes payment for Featured and Verified Pro. Card numbers and the M-Pesa prompt stay with Flutterwave.",
+    name: "Licensed payment provider",
+    role: `Takes payment for Featured and Verified Pro. Card numbers and the M-Pesa prompt stay with ${LICENSED_PAYMENT_PROVIDER}.`,
   },
   {
     name: "ZeptoMail",
@@ -43,6 +44,7 @@ export default function PrivacyPage() {
       path="/privacy"
       kicker="Privacy"
       title="Privacy"
+      notice={LEGAL_DRAFT_NOTE}
       lede={`${legalEntityLabel()} is the controller for personal data on ${name}. This note is written for the Kenya Data Protection Act 2019, and for the UK GDPR where you use ${name} from the United Kingdom.`}
     >
       <InfoSection title="Who we are">
@@ -79,9 +81,10 @@ export default function PrivacyPage() {
         </p>
         <p>
           Payment references. For Featured and Verified Pro we store the product, the amount, the currency, the method
-          (M-Pesa or card), our payment reference, Flutterwave’s transaction id, and whether the payment is pending,
-          paid, failed, or cancelled. We do not store card numbers. Flutterwave handles the card and the M-Pesa prompt.
-          An M-Pesa phone number is sent to Flutterwave for that prompt. It is not written on our payment record.
+          (M-Pesa or card), our payment reference, the provider’s transaction id, and whether the payment is pending,
+          paid, failed, or cancelled. We do not store card numbers. The card and the M-Pesa prompt stay with{" "}
+          {LICENSED_PAYMENT_PROVIDER}. An M-Pesa phone number is sent to that provider for the prompt. It is not written
+          on our payment record.
         </p>
         <p>
           The “Buying for family back home” note is written in your browser and opens in WhatsApp. We do not save it.
@@ -176,7 +179,7 @@ export default function PrivacyPage() {
 
       <InfoSection title="Transfers out of Kenya and the UK">
         <p>
-          Vercel, Neon, Vercel Blob, Mux, Google Gemini, Flutterwave, and ZeptoMail may store or process personal data
+          Vercel, Neon, Vercel Blob, Mux, Google Gemini, {LICENSED_PAYMENT_PROVIDER}, and ZeptoMail may store or process personal data
           outside Kenya and the United Kingdom. If you use {name} from London, the UK GDPR rules on international
           transfers apply to your personal data as well as the Kenya Data Protection Act. If you use it from Kenya, the
           Act’s rules on cross-border transfers apply.
@@ -211,13 +214,7 @@ export default function PrivacyPage() {
       </InfoSection>
 
       <InfoSection title="Contact">
-        <p>
-          {legalEntityLabel()}
-          <br />
-          <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
-            {CONTACT_EMAIL}
-          </a>
-        </p>
+        <EntityContact />
       </InfoSection>
     </InfoPage>
   );

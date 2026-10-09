@@ -10,7 +10,7 @@ import {
 } from "@/lib/constants";
 import { DIASPORA_ORDERS_EXPLANATION, DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
 import { pricingPlans } from "@/lib/pricing-display";
-import { CONTACT_EMAIL, featuredDurationCopy, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
+import { CONTACT_EMAIL, LICENSED_PAYMENT_PROVIDER, featuredDurationCopy, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
 import {
   DOCUMENTS_SEEN_NOTE,
   PRO_PLAN_LABEL,
@@ -83,8 +83,9 @@ export default function FaqPage() {
         </p>
         <p>
           You pay on the Promote page after you sign in. Nairobi prices are Kenyan shillings and can be M-Pesa or a
-          card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Flutterwave
-          takes the payment. {name} does not see your card number.
+          card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Payment
+          is taken by {LICENSED_PAYMENT_PROVIDER}. The plan does not renew unless you pay again. {name} does not see
+          your card number.
         </p>
       </InfoSection>
 

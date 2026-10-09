@@ -80,6 +80,8 @@ test("plan copy uses the real offering caps and says Pro is not verified", () =>
   assert.match(pricingRateNote({}), /the Diaspora charge/);
   assert.equal(pricingRateNote({}).includes("London charge"), false);
   assert.match(pricingRateNote({ FX_KES_PER_USD: "140" }), /140 shillings/);
+  assert.equal(/FX_|process\.env|default \d+/.test(pricingRateNote({})), false);
+  assert.equal(/FX_|process\.env/.test(pricingRateNote({ FX_KES_PER_USD: "140" })), false);
 });
 
 test("the pricing page and promote form name the pound price for Diaspora shops", () => {

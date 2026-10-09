@@ -148,6 +148,5 @@ export function pricingPlans(env?: RateEnv): PricingPlan[] {
 
 export function pricingRateNote(env?: RateEnv) {
   const usd = kesPerUsd(env);
-  const gbp = kesPerGbp(env);
-  return `Kenyan shilling prices are the Nairobi charge. Pound prices are the Diaspora charge from the same table checkout uses. US dollar amounts are approximate, at ${usd} shillings per dollar, so someone abroad can compare. That figure is FX_KES_PER_USD (default ${DEFAULT_KES_PER_USD}) and it is not a live rate or the amount you pay. If a pound price were ever missing, the page would show an approximate pound amount at ${gbp} shillings per pound (FX_KES_PER_GBP, default ${DEFAULT_KES_PER_GBP}).`;
+  return `Kenyan shilling prices are what checkout charges in Nairobi. Pound prices are the Diaspora charge. US dollar amounts are approximate, at ${usd} shillings per dollar, so someone abroad can compare. That is not a live rate and it is not the amount you pay.`;
 }

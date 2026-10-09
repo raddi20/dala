@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { hiddenDemoUserFilter, publicSellerContacts } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
@@ -10,6 +11,7 @@ const include = {
     select: {
       id: true,
       name: true,
+      email: true,
       verifiedPro: true,
       verifiedProUntil: true,
       storefront: {
@@ -95,6 +97,12 @@ export async function searchListings(filters: {
   } else if (blockedIds.length > 0) {
     where.ownerId = { notIn: blockedIds };
   }
+  const demoOwner = hiddenDemoUserFilter();
+  if (demoOwner) {
+    const current = where.AND;
+    const list = Array.isArray(current) ? current : current ? [current] : [];
+    where.AND = [...list, { owner: demoOwner }];
+  }
 
   const rows = await prisma.listing.findMany({
     where,
@@ -103,11 +111,21 @@ export async function searchListings(filters: {
     take: filters.ids?.length ? filters.ids.length : 100,
   });
 
-  return rows.sort((a, b) => {
-    const featuredDelta = Number(isFeatured(b)) - Number(isFeatured(a));
-    if (featuredDelta !== 0) return featuredDelta;
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
+  return rows
+    .sort((a, b) => {
+      const featuredDelta = Number(isFeatured(b)) - Number(isFeatured(a));
+      if (featuredDelta !== 0) return featuredDelta;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    })
+    .map((row) => {
+      const contacts = publicSellerContacts({
+        email: row.owner.email,
+        phone: row.contactPhone,
+        whatsapp: row.contactWhatsapp,
+      });
+      if (!contacts.hidden) return row;
+      return { ...row, contactPhone: "", contactWhatsapp: "" };
+    });
 }
 
 export type ListingCardData = Awaited<ReturnType<typeof searchListings>>[number];

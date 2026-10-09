@@ -1,5 +1,6 @@
 import { appName } from "@/lib/brand";
 import { isCategory } from "@/lib/categories";
+import { isPublicDemoHidden } from "@/lib/demo-visibility";
 import { brandOgModel, categoryOgModel, listingOgModel, occasionOgModel, shopOgModel } from "@/lib/og-model";
 import { prisma } from "@/lib/prisma";
 import { shopSignals } from "@/lib/storefront";
@@ -14,7 +15,7 @@ export async function loadShopOg(slug: string) {
       published: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
+      user: { select: { name: true, email: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -23,7 +24,7 @@ export async function loadShopOg(slug: string) {
       },
     },
   });
-  if (!shop?.published) return brandOgModel(brand);
+  if (!shop?.published || isPublicDemoHidden(shop.user.email)) return brandOgModel(brand);
   const signals = await shopSignals(shop.userId);
   const proActive = isProActive(shop.user);
   const video = shop.videos[0];
@@ -52,9 +53,16 @@ export async function loadListingOg(id: string) {
   const brand = appName();
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { title: true, city: true, category: true, hidden: true, photoUrl: true },
+    select: {
+      title: true,
+      city: true,
+      category: true,
+      hidden: true,
+      photoUrl: true,
+      owner: { select: { email: true } },
+    },
   });
-  if (!listing || listing.hidden) return brandOgModel(brand);
+  if (!listing || listing.hidden || isPublicDemoHidden(listing.owner.email)) return brandOgModel(brand);
   return listingOgModel({
     brand,
     hidden: false,

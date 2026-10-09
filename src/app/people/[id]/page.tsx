@@ -6,6 +6,13 @@ import { ListingCard } from "@/components/listing-card";
 import { ReportForm } from "@/components/report-form";
 import { blockUser } from "@/lib/actions/social";
 import { regionLabel } from "@/lib/constants";
+import {
+  DEMO_PROFILE_CONTACT_NOTE,
+  isPublicDemoHidden,
+  publicSellerContacts,
+  publicTextWithoutDemoNumbers,
+} from "@/lib/demo-visibility";
+import { DemoContactNote } from "@/components/seller-contact";
 import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
@@ -15,9 +22,13 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const person = await prisma.user.findUnique({ where: { id }, select: { name: true, bio: true } });
+  const person = await prisma.user.findUnique({
+    where: { id },
+    select: { name: true, bio: true, email: true, phone: true, whatsapp: true },
+  });
+  if (!person || isPublicDemoHidden(person.email)) return { title: "Profile", robots: { index: false, follow: false } };
   const title = person?.name ?? "Profile";
-  const description = person?.bio.slice(0, 160);
+  const description = publicTextWithoutDemoNumbers(person.email, person.bio.slice(0, 160), [person.phone, person.whatsapp]);
   const path = `/people/${id}`;
   return {
     title,
@@ -30,7 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PersonPage({ params }: Props) {
   const { id } = await params;
   const person = await prisma.user.findUnique({ where: { id } });
-  if (!person) notFound();
+  if (!person || isPublicDemoHidden(person.email)) notFound();
 
   const viewer = await getSessionUser();
   const blocked = viewer
@@ -79,10 +90,14 @@ export default async function PersonPage({ params }: Props) {
           </div>
         ) : null}
         {person.bio ? <p className="mt-3 whitespace-pre-wrap">{person.bio}</p> : null}
-        <div className="mt-3 text-sm text-ink/70">
-          {person.phone ? <p>Phone {person.phone}</p> : null}
-          {person.whatsapp ? <p>WhatsApp {person.whatsapp}</p> : null}
-        </div>
+        {publicSellerContacts(person).hidden ? (
+          <DemoContactNote note={DEMO_PROFILE_CONTACT_NOTE} />
+        ) : (
+          <div className="mt-3 text-sm text-ink/70">
+            {person.phone ? <p>Phone {person.phone}</p> : null}
+            {person.whatsapp ? <p>WhatsApp {person.whatsapp}</p> : null}
+          </div>
+        )}
         {showShop && shop ? (
           <Link href={`/b/${shop.slug}`} className="mt-3 inline-block text-sm font-semibold text-lake-dark">
             Visit storefront

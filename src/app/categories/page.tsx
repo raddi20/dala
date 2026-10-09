@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cardClass, sectionTitleClass } from "@/components/ui";
 import { APP_DESCRIPTION, appName } from "@/lib/brand";
 import { CATEGORIES, CATEGORY_GROUPS, categoryHref } from "@/lib/categories";
+import { publicListingWhere } from "@/lib/demo-visibility";
 import { prisma } from "@/lib/prisma";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
@@ -23,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CategoriesPage() {
   const counts = await prisma.listing.groupBy({
     by: ["category"],
-    where: { hidden: false },
+    where: publicListingWhere({ hidden: false }),
     _count: { _all: true },
   });
   const countFor = new Map(counts.map((row) => [row.category, row._count._all]));
