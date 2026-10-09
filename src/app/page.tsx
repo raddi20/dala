@@ -128,7 +128,7 @@ export default async function HomePage() {
               return (
                 <Link
                   key={city.name}
-                  href={`/listings?city=${city.name}&region=${city.region}`}
+                  href={`/listings?region=${city.region}`}
                   className={`card-lift group relative overflow-hidden ${cardClass} p-6`}
                 >
                   <p className="text-xs font-semibold uppercase tracking-wider text-lake">

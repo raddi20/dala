@@ -1,6 +1,5 @@
 import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
-import { CITIES } from "@/lib/constants";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
 import { absoluteUrl } from "@/lib/share-metadata";
 
@@ -35,10 +34,9 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/listings" },
     { path: "/listings?type=business" },
     { path: "/listings?type=classifieds" },
+    { path: "/listings?region=homeland" },
+    { path: "/listings?region=diaspora" },
   ];
-  for (const city of CITIES) {
-    paths.push({ path: `/listings?city=${encodeURIComponent(city.name)}&region=${encodeURIComponent(city.region)}` });
-  }
   for (const category of CATEGORIES) {
     paths.push({ path: categoryHref(category) });
   }

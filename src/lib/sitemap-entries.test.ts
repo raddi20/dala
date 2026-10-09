@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
-import { CITIES } from "@/lib/constants";
 import { OG_IMAGE, absoluteUrl, buildShareMetadata, clipText, listingPreviewImage, privateMetadata, publicImageUrl, shopPreviewImage } from "@/lib/share-metadata";
 import { listingOgModel, shopOgModel } from "@/lib/og-model";
 import { PRIVATE_PREFIXES, buildRobots, buildSitemap, isPrivatePath, staticPublicPaths } from "@/lib/sitemap-entries";
@@ -36,9 +35,9 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
   for (const category of CATEGORIES) {
     assert.ok(urls.includes(absoluteUrl(origin, categoryHref(category))), category);
   }
-  for (const city of CITIES) {
-    assert.ok(urls.some((url) => url.includes(`city=${encodeURIComponent(city.name)}`)));
-  }
+  assert.ok(urls.includes(`${origin}/listings?region=homeland`));
+  assert.ok(urls.includes(`${origin}/listings?region=diaspora`));
+  assert.equal(urls.some((url) => url.includes("city=")), false);
   for (const url of urls) {
     const path = new URL(url).pathname;
     assert.equal(isPrivatePath(path), false, url);
