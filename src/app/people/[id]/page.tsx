@@ -6,6 +6,7 @@ import { ListingCard } from "@/components/listing-card";
 import { ReportForm } from "@/components/report-form";
 import { blockUser } from "@/lib/actions/social";
 import { regionLabel } from "@/lib/constants";
+import { isPublicDemoHidden } from "@/lib/demo-visibility";
 import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
@@ -15,7 +16,8 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const person = await prisma.user.findUnique({ where: { id }, select: { name: true, bio: true } });
+  const person = await prisma.user.findUnique({ where: { id }, select: { name: true, bio: true, email: true } });
+  if (!person || isPublicDemoHidden(person.email)) return { title: "Profile", robots: { index: false, follow: false } };
   const title = person?.name ?? "Profile";
   const description = person?.bio.slice(0, 160);
   const path = `/people/${id}`;
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function PersonPage({ params }: Props) {
   const { id } = await params;
   const person = await prisma.user.findUnique({ where: { id } });
-  if (!person) notFound();
+  if (!person || isPublicDemoHidden(person.email)) notFound();
 
   const viewer = await getSessionUser();
   const blocked = viewer

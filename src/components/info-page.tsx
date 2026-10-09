@@ -8,12 +8,14 @@ export function InfoPage({
   kicker,
   title,
   lede,
+  notice,
   children,
 }: {
   path: PublicInfoPath;
   kicker: string;
   title: string;
   lede: string;
+  notice?: string;
   children: ReactNode;
 }) {
   return (
@@ -23,6 +25,7 @@ export function InfoPage({
         <h1 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">{title}</h1>
         <p className="mt-3 text-sm font-medium text-ink/70">Last updated {PUBLIC_PAGES_UPDATED.label}</p>
         <p className="mt-3 text-sm leading-relaxed text-ink/75">{lede}</p>
+        {notice ? <p className="mt-3 text-sm leading-relaxed text-ink/70">{notice}</p> : null}
       </header>
       {children}
       <InfoFooterNav current={path} />

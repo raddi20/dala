@@ -2,7 +2,7 @@ import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/cons
 
 /**
  * Public info pages. Edit the date and the legal name here.
- * The four routes, the footer, and the sitemap all read this list.
+ * The routes, the footer, and the sitemap all read this list.
  */
 
 /** Visible on each page. Change this when the copy changes. */
@@ -12,16 +12,24 @@ export const PUBLIC_PAGES_UPDATED = {
 } as const;
 
 /**
- * Controller name. Shown on the Terms and Privacy pages.
- * Keep the name in this one constant.
+ * Controller name. Terms, Privacy, Contact, Refund, and the other public legal lines
+ * read this constant. It is the only copy of the name.
+ * Change it to the registered BRS name (for example "Rangach" while that business
+ * name is owned by the proprietor, or a limited-company name after incorporation).
  */
 export const LEGAL_ENTITY_NAME = "Rangach Ltd";
 
 /**
- * Company registration number. Leave this empty until incorporation.
- * Terms and Privacy show "Rangach Ltd (company no. X)" only once it is set.
+ * Company or business-name registration number. Leave this empty until it exists.
+ * Pages show "(company no. X)" only once LEGAL_ENTITY_REG_NO is filled in.
  */
 export const LEGAL_ENTITY_REG_NO = "";
+
+/**
+ * TODO(Kevin): proprietor name, for example Kevin Okullo.
+ * Leave this empty until it should be public. An empty value is not shown.
+ */
+export const LEGAL_ENTITY_OWNER = "";
 
 /** Name, plus the registration number only when LEGAL_ENTITY_REG_NO is filled in. */
 export function legalEntityLabel(name = LEGAL_ENTITY_NAME, regNo = LEGAL_ENTITY_REG_NO) {
@@ -30,7 +38,43 @@ export function legalEntityLabel(name = LEGAL_ENTITY_NAME, regNo = LEGAL_ENTITY_
   return `${name} (company no. ${number})`;
 }
 
+/** "Owned by …" only when LEGAL_ENTITY_OWNER is filled in. */
+export function legalEntityOwnerLine(owner = LEGAL_ENTITY_OWNER) {
+  const name = owner.trim();
+  if (!name) return "";
+  return `Owned by ${name}.`;
+}
+
 export const CONTACT_EMAIL = "info@rangach.co.ke";
+
+/**
+ * TODO(Kevin): Kenyan business phone. Leave this empty until it is a real number.
+ * An empty value is not shown on the site.
+ */
+export const BUSINESS_PHONE = "";
+
+/**
+ * TODO(Kevin): Kenyan postal or physical address. Leave this empty until it is real.
+ * An empty value is not shown on the site.
+ */
+export const BUSINESS_ADDRESS = "";
+
+/** Phone text for public pages. Empty when BUSINESS_PHONE is blank. */
+export function publicBusinessPhone(value = BUSINESS_PHONE) {
+  return value.trim();
+}
+
+/** Address text for public pages. Empty when BUSINESS_ADDRESS is blank. */
+export function publicBusinessAddress(value = BUSINESS_ADDRESS) {
+  return value.trim();
+}
+
+/** Phrase used on public pages instead of a payment-company name. */
+export const LICENSED_PAYMENT_PROVIDER = "our licensed payment provider";
+
+/** Shown on Terms, Privacy, and Refunds. Not legal advice. */
+export const LEGAL_DRAFT_NOTE =
+  "This page is a draft for review. It is not legal advice, and it is not a substitute for a lawyer.";
 
 /**
  * How many days a Verified Pro payment lasts.
@@ -67,6 +111,20 @@ export const PUBLIC_INFO_PAGES = [
     title: "Privacy",
     description:
       "How Rangach handles personal data under the Kenya Data Protection Act 2019 and the UK GDPR, including what we collect and who processes it.",
+  },
+  {
+    path: "/contact",
+    label: "Contact",
+    title: "Contact",
+    description:
+      "How to reach Rangach about a listing, a shop, or a Featured or Verified Pro payment. Email info@rangach.co.ke.",
+  },
+  {
+    path: "/refund",
+    label: "Refunds",
+    title: "Refunds",
+    description:
+      "Refund and cancellation terms for Featured and Verified Pro on Rangach, including how to request a refund and how long a reply takes.",
   },
 ] as const;
 

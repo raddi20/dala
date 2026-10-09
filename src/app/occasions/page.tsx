@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { publicListingWhere, publicShopWhere } from "@/lib/demo-visibility";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
@@ -27,8 +28,8 @@ export default async function OccasionsPage() {
     include: {
       _count: {
         select: {
-          shops: { where: { storefront: { published: true } } },
-          listings: { where: { listing: { hidden: false } } },
+          shops: { where: { storefront: publicShopWhere({ published: true }) } },
+          listings: { where: { listing: publicListingWhere({ hidden: false }) } },
         },
       },
     },

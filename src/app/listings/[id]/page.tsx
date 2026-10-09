@@ -9,6 +9,7 @@ import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/compo
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { appName } from "@/lib/brand";
+import { isPublicDemoHidden } from "@/lib/demo-visibility";
 import { cityInPhrase } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -24,9 +25,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const listing = await prisma.listing.findUnique({
     where: { id },
-    select: { title: true, description: true, hidden: true, photoUrl: true, city: true, category: true, ownerId: true },
+    select: {
+      title: true,
+      description: true,
+      hidden: true,
+      photoUrl: true,
+      city: true,
+      category: true,
+      ownerId: true,
+      owner: { select: { email: true } },
+    },
   });
-  if (!listing) return privateMetadata("Listing");
+  if (!listing || isPublicDemoHidden(listing.owner.email)) return privateMetadata("Listing");
   const viewer = await getSessionUser();
   const allowed = viewer?.id === listing.ownerId || viewer?.role === "admin";
   if (listing.hidden && !allowed) return privateMetadata("Listing");
@@ -74,7 +84,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       },
     },
   });
-  if (!listing) notFound();
+  if (!listing || isPublicDemoHidden(listing.owner.email)) notFound();
 
   const user = await getSessionUser();
   const isOwner = user?.id === listing.ownerId;

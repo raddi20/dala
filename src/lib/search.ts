@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { hiddenDemoUserFilter } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
@@ -94,6 +95,12 @@ export async function searchListings(filters: {
     where.ownerId = filters.ownerId;
   } else if (blockedIds.length > 0) {
     where.ownerId = { notIn: blockedIds };
+  }
+  const demoOwner = hiddenDemoUserFilter();
+  if (demoOwner) {
+    const current = where.AND;
+    const list = Array.isArray(current) ? current : current ? [current] : [];
+    where.AND = [...list, { owner: demoOwner }];
   }
 
   const rows = await prisma.listing.findMany({

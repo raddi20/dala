@@ -6,6 +6,7 @@ import { VideoMark } from "@/components/video-mark";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState, btnSecondary, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { publicListingWhere, publicShopWhere } from "@/lib/demo-visibility";
 import { isProActive } from "@/lib/pro";
 import { continueHref } from "@/lib/utils";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
@@ -23,7 +24,7 @@ async function loadOccasion(slug: string) {
     where: { slug },
     include: {
       shops: {
-        where: { storefront: { published: true } },
+        where: { storefront: publicShopWhere({ published: true }) },
         orderBy: [{ pinned: "desc" }, { pinOrder: "asc" }, { createdAt: "asc" }],
         include: {
           storefront: {
@@ -41,7 +42,7 @@ async function loadOccasion(slug: string) {
         },
       },
       listings: {
-        where: { listing: { hidden: false } },
+        where: { listing: publicListingWhere({ hidden: false }) },
         orderBy: [{ pinned: "desc" }, { pinOrder: "asc" }, { createdAt: "asc" }],
         select: { listingId: true, pinned: true },
       },

@@ -7,6 +7,7 @@ import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnSecondary, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { isPublicDemoHidden } from "@/lib/demo-visibility";
 import { cityChoiceLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
@@ -30,7 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       published: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, bio: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
+      user: { select: { name: true, email: true, bio: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
     },
   });
-  if (!shop) return privateMetadata("Shop");
+  if (!shop || isPublicDemoHidden(shop.user.email)) return privateMetadata("Shop");
   const viewer = await getSessionUser();
   const isOwner = viewer?.id === shop.userId;
   if (!shop.published && !isOwner) return privateMetadata("Shop");
@@ -91,7 +92,7 @@ export default async function StorefrontPage({ params }: Props) {
       videos: { orderBy: { createdAt: "desc" } },
     },
   });
-  if (!shop) notFound();
+  if (!shop || isPublicDemoHidden(shop.user.email)) notFound();
 
   const viewer = await getSessionUser();
   const isOwner = viewer?.id === shop.userId;

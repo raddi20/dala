@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EntityContact } from "@/components/entity-contact";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
 import { FEATURED_DAYS, productLabel } from "@/lib/constants";
 import {
-  CONTACT_EMAIL,
+  LEGAL_DRAFT_NOTE,
+  LICENSED_PAYMENT_PROVIDER,
   featuredDurationCopy,
   legalEntityLabel,
   paidPriceLine,
@@ -28,6 +30,7 @@ export default function TermsPage() {
       path="/terms"
       kicker="Seller and user terms"
       title="Terms"
+      notice={LEGAL_DRAFT_NOTE}
       lede={`These terms cover how people use ${name}. ${legalEntityLabel()} operates the site.`}
     >
       <InfoSection title="What this site is">
@@ -92,11 +95,11 @@ export default function TermsPage() {
           terms, if someone reports it, or if we need to protect other people.
         </p>
         <p>
-          Hiding a listing removes it from public browse. It does not by itself delete your account. Write to{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
-            {CONTACT_EMAIL}
-          </a>{" "}
-          if you think we made a mistake.
+          Hiding a listing removes it from public browse. It does not by itself delete your account. The{" "}
+          <Link href="/contact" className="font-semibold text-lake-dark hover:text-lake">
+            contact page
+          </Link>{" "}
+          has the address to write to if you think we made a mistake.
         </p>
       </InfoSection>
 
@@ -110,12 +113,16 @@ export default function TermsPage() {
         </p>
         <p>
           You pay the price shown at checkout for the city that applies: the listing’s city for Featured, and the city
-          on your account for Verified Pro. Flutterwave collects it, by M-Pesa where the price is in shillings, or by
-          card. We do not store your card number.
+          on your account for Verified Pro. Payment is collected by {LICENSED_PAYMENT_PROVIDER}, by M-Pesa where the
+          price is in shillings, or by card. We do not store your card number. The plan does not renew by itself.
         </p>
         <p>
           We do not refund a Featured or Verified Pro payment, except where the law requires a refund. Paying does not
-          buy a verification badge.
+          buy a verification badge. The{" "}
+          <Link href="/refund" className="font-semibold text-lake-dark hover:text-lake">
+            refund and cancellation page
+          </Link>{" "}
+          says how to ask, and what happens if you do not renew.
         </p>
       </InfoSection>
 
@@ -157,13 +164,7 @@ export default function TermsPage() {
       </InfoSection>
 
       <InfoSection title="Contact">
-        <p>
-          {legalEntityLabel()}
-          <br />
-          <a href={`mailto:${CONTACT_EMAIL}`} className="break-all font-semibold text-lake-dark hover:text-lake">
-            {CONTACT_EMAIL}
-          </a>
-        </p>
+        <EntityContact />
       </InfoSection>
     </InfoPage>
   );
