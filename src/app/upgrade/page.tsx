@@ -9,6 +9,7 @@ import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, localFx, needsLiveRates, visitorPrice, type LocalFx } from "@/lib/visitor-currency";
 import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { one } from "@/lib/utils";
@@ -20,6 +21,23 @@ export default async function UpgradePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  if (!paymentsLive()) {
+    return (
+      <div className="mx-auto grid max-w-2xl gap-6 px-4 py-8">
+        <div>
+          <h1 className="font-serif text-3xl">Promote</h1>
+          <p className="mt-2 text-sm text-ink/70">
+            Featured and Verified Pro are the paid plans. {PAID_UPGRADES_COMING_SOON}. The prices stay on the pricing
+            page, labelled coming soon. Nothing is charged yet.
+          </p>
+        </div>
+        <Link href="/pricing" className="text-sm font-semibold text-lake-dark">
+          Public prices
+        </Link>
+      </div>
+    );
+  }
+
   const user = await requireUser("/upgrade");
   const sp = await searchParams;
   const payments = paymentConfig();

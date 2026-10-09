@@ -14,6 +14,7 @@ import {
   publicInfoPage,
   verifiedProDurationCopy,
 } from "@/lib/public-info";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, needsLiveRates, visitorPrice, type VisitorPrice } from "@/lib/visitor-currency";
 
@@ -38,6 +39,7 @@ function refundCurrencyNote(price: VisitorPrice) {
 
 export default async function RefundPage() {
   const name = appName();
+  const live = paymentsLive();
   const country = await readVisitorCountry();
   const rates = needsLiveRates(country) ? await cachedUsdRates() : null;
   const shown = visitorPrice({
@@ -79,10 +81,17 @@ export default async function RefundPage() {
           <li>we cannot provide the upgrade at all</li>
           <li>the law requires a refund</li>
         </ul>
-        <p>
-          Payment is collected by {LICENSED_PAYMENT_PROVIDER}, by M-Pesa where the price is in shillings, or by card. We
-          do not store the card number.
-        </p>
+        {live ? (
+          <p>
+            Payment is collected by {LICENSED_PAYMENT_PROVIDER}, by M-Pesa where the price is in shillings, or by card. We
+            do not store the card number.
+          </p>
+        ) : (
+          <p>
+            {PAID_UPGRADES_COMING_SOON}. A charge that was already taken was collected by {LICENSED_PAYMENT_PROVIDER}. We
+            do not store the card number.
+          </p>
+        )}
       </InfoSection>
 
       <InfoSection title="What is not refunded">
@@ -101,7 +110,10 @@ export default async function RefundPage() {
         <p>
           Neither plan renews by itself. Featured lasts {FEATURED_DAYS} days. Verified Pro lasts {PRO_DAYS} days.
           When that time ends, the extra features stop unless you pay again. Renewing before the end date adds another
-          period of the same length. Nothing charges a card or M-Pesa again unless you start a new payment.
+          period of the same length.{" "}
+          {live
+            ? "Nothing charges a card or M-Pesa again unless you start a new payment."
+            : `Nothing charges a card or M-Pesa again. ${PAID_UPGRADES_COMING_SOON}.`}
         </p>
         <p>
           You cancel by not paying again. You can also email {CONTACT_EMAIL} and ask us to stop an upgrade early. We

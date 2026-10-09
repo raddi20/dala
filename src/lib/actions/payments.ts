@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { appName } from "@/lib/brand";
 import { chargeFor, isPaidProduct, PRO_DAYS } from "@/lib/constants";
 import { paymentConfig } from "@/lib/payments/config";
+import { checkoutRefusal } from "@/lib/payments/live";
 import { createFlutterwaveCheckout } from "@/lib/payments/flutterwave";
 import { publicOrigin } from "@/lib/payments/origin";
 import { normalizeMpesaPhone } from "@/lib/payments/rules";
@@ -13,6 +14,9 @@ import { getSessionUser } from "@/lib/session";
 import { field, type ActionState } from "@/lib/validators";
 
 export async function startPayment(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const refused = checkoutRefusal();
+  if (refused) return { error: refused };
+
   const user = await getSessionUser();
   if (!user) return { error: "Sign in to continue." };
 

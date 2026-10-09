@@ -12,6 +12,7 @@ import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatOfferingPrice, one } from "@/lib/utils";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { whatsappOfferingLink, whatsappOfferingText } from "@/lib/whatsapp";
 import { ShopVideoUpload } from "@/components/shop-video-upload";
@@ -26,6 +27,7 @@ export default async function ManageStorefrontPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser("/account/storefront");
+  const live = paymentsLive();
   const sp = await searchParams;
   await ensureOccasionDefinitions(prisma);
   const [shop, occasionChoices] = await Promise.all([
@@ -175,9 +177,13 @@ export default async function ManageStorefrontPage({
             {PRICES.verified_pro.London} per {PRO_DAYS} days, with a cover, a shop video, and {PRO_OFFERING_CAP} offerings.
           </p>
         )}
-        <Link href="/upgrade?product=verified_pro" className={btnPrimary}>
-          {proActive || lapsed ? "Renew" : "Get Verified Pro"}
-        </Link>
+        {live ? (
+          <Link href="/upgrade?product=verified_pro" className={btnPrimary}>
+            {proActive || lapsed ? "Renew" : "Get Verified Pro"}
+          </Link>
+        ) : (
+          <p className="text-sm font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</p>
+        )}
       </section>
       <section className={`${cardClass} p-5`}>
         <ShopBadgeStatus
@@ -191,7 +197,7 @@ export default async function ManageStorefrontPage({
       </section>
       <section id="shop-video" className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-xl text-navy">Shop video</h2>
-        <ShopVideoPanel verifiedPro={proActive} lapsed={lapsed} videos={shop.videos} />
+        <ShopVideoPanel verifiedPro={proActive} lapsed={lapsed} videos={shop.videos} paymentsOpen={live} />
       </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {notice === "published" ? (
@@ -278,6 +284,7 @@ export default async function ManageStorefrontPage({
             occasions={occasionChoices}
             selectedOccasions={shop.occasions.map((row) => row.occasion.slug)}
             emphasizePublish={readyToPublish}
+            paymentsOpen={live}
           />
         </div>
       </section>
@@ -348,9 +355,13 @@ export default async function ManageStorefrontPage({
                     See prices
                   </Link>
                   {" · "}
-                  <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-                    {lapsed ? "Renew" : "See Promote"}
-                  </Link>
+                  {live ? (
+                    <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
+                      {lapsed ? "Renew" : "See Promote"}
+                    </Link>
+                  ) : (
+                    <span className="font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</span>
+                  )}
                 </>
               ) : null}
             </p>
@@ -390,10 +401,12 @@ function ShopVideoPanel({
   verifiedPro,
   lapsed,
   videos,
+  paymentsOpen,
 }: {
   verifiedPro: boolean;
   lapsed: boolean;
   videos: { status: string; caption: string; rejectReason: string; publicPlaybackId: string }[];
+  paymentsOpen: boolean;
 }) {
   const mode = videoMode();
   const live = videos.find((video) => video.status === "approved" && video.publicPlaybackId);
@@ -424,9 +437,13 @@ function ShopVideoPanel({
       ))}
       {mode === "off" ? null : !verifiedPro ? (
         <p className="text-sm">
-          <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-            {lapsed ? "Renew" : "See the Pro plan"}
-          </Link>
+          {paymentsOpen ? (
+            <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
+              {lapsed ? "Renew" : "See the Pro plan"}
+            </Link>
+          ) : (
+            <span className="font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</span>
+          )}
         </p>
       ) : (
         <ShopVideoUpload disabledReason={disabledReason} />

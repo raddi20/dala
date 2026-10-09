@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { UpgradeAction } from "@/components/upgrade-action";
 import { Wordmark } from "@/components/wordmark";
+import { paymentsLive } from "@/lib/payments/live";
 import { signOutAction } from "@/lib/actions/auth";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -42,9 +44,7 @@ export async function Header() {
             <span className="md:hidden">List</span>
             <span className="hidden md:inline">List your business</span>
           </Link>
-          <Link href="/upgrade" className={`hidden md:inline ${navLink}`}>
-            Promote
-          </Link>
+          <UpgradeAction live={paymentsLive()} href="/upgrade" label="Promote" className={`hidden md:inline ${navLink}`} />
           <Link
             href={shopHref}
             className="btn-press rounded-full bg-clay px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-clay-dark"

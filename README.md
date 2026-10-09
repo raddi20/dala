@@ -126,6 +126,10 @@ Locally, leave the variable unset, or copy the token into `.env` and restart `np
 
 ## Payments
 
+### Payments are off until PAYMENTS_LIVE is on
+
+`PAYMENTS_LIVE` is off unless it is `1`, `true`, `yes`, or `on`. While it is off, the pricing page, Promote, the account page, and the shop dashboard replace pay, promote, and upgrade buttons, and the “pay by M-Pesa or card” lines, with “Paid upgrades coming soon”. The pricing page still lists the plans and the prices, and labels each one Coming soon. `/upgrade` does not open the pay form. The server action that creates a checkout refuses with that same sentence, so a crafted request cannot start a payment. The Flutterwave webhook and `/upgrade/return` still reconcile a payment that is already in flight. Admin Grant, Add 30 days, and Remove for the Pro plan, shop checks, and listing verified stay available. Set `PAYMENTS_LIVE=1` and redeploy to restore checkout exactly as it works with the flag on.
+
 Featured listing and Verified Pro use [Flutterwave](https://flutterwave.com) hosted checkout. One integration covers Kenya M-Pesa and cards. Paystack was the other candidate, but its charge currencies do not include GBP, and Diaspora prices are already in pounds. The app was not on Daraja: the old checkout only stored a simulated receipt.
 
 There is no cart. Shop goods are still arranged on WhatsApp.
