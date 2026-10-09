@@ -14,21 +14,39 @@ export function parseEmailFrom(value: string): { address: string; name: string }
   return { address, name };
 }
 
-export function canSendTips(env: NodeJS.ProcessEnv = process.env): boolean {
+export function canSendMail(env: NodeJS.ProcessEnv = process.env): boolean {
   const from = parseEmailFrom(env.EMAIL_FROM ?? "");
-  return env.TIPS_EMAIL === "1" && Boolean(env.ZEPTOMAIL_TOKEN?.trim()) && Boolean(from);
+  return Boolean(env.ZEPTOMAIL_TOKEN?.trim()) && Boolean(from);
 }
 
-/** Sends one plain-text email. Returns skipped when the flag or ZeptoMail settings are missing. */
-export async function sendTipEmail(
-  message: TipEmail,
-  deps: { env?: NodeJS.ProcessEnv; fetchImpl?: typeof fetch } = {},
-): Promise<"sent" | "skipped" | "failed"> {
+export function canSendTips(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.TIPS_EMAIL === "1" && canSendMail(env);
+}
+
+type MailDeps = { env?: NodeJS.ProcessEnv; fetchImpl?: typeof fetch };
+
+/** Password reset and any other transactional note. Does not require TIPS_EMAIL. */
+export async function sendMail(message: TipEmail, deps: MailDeps = {}): Promise<"sent" | "skipped" | "failed"> {
   const env = deps.env ?? process.env;
+  if (!canSendMail(env)) return "skipped";
+  return postZepto(message, env, deps.fetchImpl ?? fetch);
+}
+
+/** Weekly seller tips. Returns skipped when the flag or ZeptoMail settings are missing. */
+export async function sendTipEmail(message: TipEmail, deps: MailDeps = {}): Promise<"sent" | "skipped" | "failed"> {
+  const env = deps.env ?? process.env;
+  if (!canSendTips(env)) return "skipped";
+  return postZepto(message, env, deps.fetchImpl ?? fetch);
+}
+
+async function postZepto(
+  message: TipEmail,
+  env: NodeJS.ProcessEnv,
+  fetchImpl: typeof fetch,
+): Promise<"sent" | "failed"> {
   const token = env.ZEPTOMAIL_TOKEN?.trim() ?? "";
   const from = parseEmailFrom(env.EMAIL_FROM ?? "");
-  if (!canSendTips(env) || !from) return "skipped";
-  const fetchImpl = deps.fetchImpl ?? fetch;
+  if (!from || !token) return "failed";
   try {
     const response = await fetchImpl("https://api.zeptomail.com/v1.1/email", {
       method: "POST",
