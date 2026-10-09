@@ -15,7 +15,8 @@ import {
 } from "@/components/ui";
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { categoryHref, isCategory } from "@/lib/categories";
-import { CITIES, LISTING_TYPES, cityChoiceLabel, cityInPhrase, isCityName } from "@/lib/constants";
+import { activeBrowseRegion, browseRegionChipHref } from "@/lib/browse-filters";
+import { LISTING_TYPES, cityChoiceLabel, cityInPhrase, isCityName } from "@/lib/constants";
 import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
@@ -178,21 +179,15 @@ export default async function ListingsPage({
       <div className="grid gap-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-ink/45">Quick filters</p>
         <div className="chip-scroll">
-          <Link href={chipHref(chipBase, "city", "Nairobi")} className={filters.city === "Nairobi" ? chipActiveClass : chipClass}>
-            {cityChoiceLabel("Nairobi")}
-          </Link>
-          <Link href={chipHref(chipBase, "city", "London")} className={filters.city === "London" ? chipActiveClass : chipClass}>
-            {cityChoiceLabel("London")}
-          </Link>
           <Link
-            href={chipHref(chipBase, "region", "homeland")}
-            className={filters.region === "homeland" ? chipActiveClass : chipClass}
+            href={browseRegionChipHref(chipBase, "homeland")}
+            className={activeBrowseRegion(filters.city, filters.region) === "homeland" ? chipActiveClass : chipClass}
           >
             Homeland
           </Link>
           <Link
-            href={chipHref(chipBase, "region", "diaspora")}
-            className={filters.region === "diaspora" ? chipActiveClass : chipClass}
+            href={browseRegionChipHref(chipBase, "diaspora")}
+            className={activeBrowseRegion(filters.city, filters.region) === "diaspora" ? chipActiveClass : chipClass}
           >
             Diaspora
           </Link>
@@ -251,19 +246,8 @@ export default async function ListingsPage({
             <input name="q" defaultValue={filters.q} className={fieldClass} />
           </label>
           <label className="block text-sm font-medium text-ink/80">
-            City
-            <select name="city" defaultValue={filters.city} className={fieldClass}>
-              <option value="">Any</option>
-              {CITIES.map((city) => (
-                <option key={city.name} value={city.name}>
-                  {cityChoiceLabel(city.name)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-medium text-ink/80">
             Homeland or Diaspora
-            <select name="region" defaultValue={filters.region} className={fieldClass}>
+            <select name="region" defaultValue={activeBrowseRegion(filters.city, filters.region)} className={fieldClass}>
               <option value="">Any</option>
               <option value="homeland">Homeland</option>
               <option value="diaspora">Diaspora</option>
