@@ -5,7 +5,9 @@ import { startPayment } from "@/lib/actions/payments";
 import { PaymentSetup } from "@/components/payment-setup";
 import { SubmitButton } from "@/components/submit-button";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
-import { chargeFor, cityChoiceLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { chargeFor, cityChipLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { LICENSED_PAYMENT_PROVIDER } from "@/lib/public-info";
+import { approxBesideCharge, type LocalFx } from "@/lib/visitor-currency";
 import type { PaymentMode } from "@/lib/payments/rules";
 import type { ActionState } from "@/lib/validators";
 
@@ -23,6 +25,7 @@ export function PayForm({
   webhookReady,
   brandName,
   siteUrl,
+  localFx,
 }: {
   listings: { id: string; title: string; city: string }[];
   defaultListingId: string;
@@ -35,6 +38,7 @@ export function PayForm({
   webhookReady: boolean;
   brandName: string;
   siteUrl: string;
+  localFx?: LocalFx | null;
 }) {
   const [state, action] = useActionState(startPayment, initial);
   const [product, setProduct] = useState<PaidProduct>(defaultProduct);
@@ -53,6 +57,7 @@ export function PayForm({
   const listingCity = listings.find((listing) => listing.id === listingId)?.city ?? userCity;
   const city = product === "featured" ? listingCity : userCity;
   const charge = chargeFor(product, city);
+  const localApprox = localFx ? approxBesideCharge(charge, localFx) : null;
   const mpesaOk = charge.currency === "KES";
   const method: "mpesa" | "card" = mpesaOk ? methodChoice : "card";
   const configured = mode === "test" || mode === "live";
@@ -71,7 +76,7 @@ export function PayForm({
           <span>
             <span className="font-semibold">Featured listing</span>
             <span className="mt-1 block text-ink/70">
-              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} in Nairobi, {chargeFor("featured", "London").label} for Diaspora shops.
+              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} for shops in Kenya and East Africa, {chargeFor("featured", "London").label} for Diaspora shops.
             </span>
           </span>
         </label>
@@ -115,7 +120,7 @@ export function PayForm({
             >
               {listings.map((listing) => (
                 <option key={listing.id} value={listing.id}>
-                  {listing.title} ({cityChoiceLabel(listing.city)})
+                  {listing.title} ({cityChipLabel(listing.city)})
                 </option>
               ))}
             </select>
@@ -151,18 +156,23 @@ export function PayForm({
         <label className="block text-sm">
           M-Pesa phone
           <input name="phone" inputMode="tel" placeholder="2547… or 07…" className={fieldClass} />
-          <span className="mt-1 block text-ink/60">Flutterwave sends the prompt. {brandName} does not talk to Safaricom directly.</span>
+          <span className="mt-1 block text-ink/60">The prompt comes from {LICENSED_PAYMENT_PROVIDER}. {brandName} does not talk to Safaricom directly.</span>
         </label>
       ) : (
-        <p className="text-sm text-ink/70">The card number is entered on Flutterwave, not on {brandName}.</p>
+        <p className="text-sm text-ink/70">The card number is entered with {LICENSED_PAYMENT_PROVIDER}, not on {brandName}.</p>
       )}
 
       <p className="text-sm font-semibold text-navy">
         {product === "featured" ? "Featured listing" : "Verified Pro"} · {charge.label}
+        {localApprox ? <span className="font-normal text-ink/70"> · {localApprox}</span> : null}
         {product === "verified_pro" ? ` per ${PRO_DAYS} days` : ""}
       </p>
+      <p className="text-sm text-ink/60">
+        Checkout charges {charge.label}.
+        {localApprox ? ` ${localApprox} is an approximate figure in your currency, not the amount the payment provider takes.` : ""}
+      </p>
       <SubmitButton className={btnPrimary} pendingLabel="Opening checkout…" disabled={blocked}>
-        {configured ? `Pay ${charge.label}` : "Checkout needs Flutterwave keys"}
+        {configured ? `Pay ${charge.label}` : "Checkout is not set up yet"}
       </SubmitButton>
     </form>
   );

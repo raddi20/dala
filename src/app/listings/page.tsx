@@ -16,7 +16,7 @@ import {
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { categoryHref, isCategory } from "@/lib/categories";
 import { activeBrowseRegion, browseRegionChipHref } from "@/lib/browse-filters";
-import { LISTING_TYPES, cityChoiceLabel, cityInPhrase, isCityName } from "@/lib/constants";
+import { LISTING_TYPES, cityChipLabel, cityInPhrase, isCityName } from "@/lib/constants";
 import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
@@ -48,7 +48,7 @@ export async function generateMetadata({
       imageAlt: `${category} on ${name}`,
     });
   }
-  const title = isCityName(city) ? cityChoiceLabel(city) : "Browse";
+  const title = isCityName(city) ? cityChipLabel(city) : "Browse";
   const description = isCityName(city)
     ? `Luo shops and classifieds ${cityInPhrase(city)} on ${name}.`
     : `Directory and classifieds in ${AUDIENCE_LINE} on ${name}.`;

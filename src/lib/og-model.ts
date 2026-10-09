@@ -1,5 +1,5 @@
 import { APP_TAGLINE, AUDIENCE_LINE } from "@/lib/brand";
-import { cityChoiceLabel } from "@/lib/constants";
+import { cityChipLabel } from "@/lib/constants";
 import { publicImageUrl } from "@/lib/share-metadata";
 
 export type OgCardModel = {
@@ -49,7 +49,7 @@ export function shopOgModel(input: {
   const poster = input.videoPosterUrl ? posterPhoto(input.videoPosterUrl) : "";
   const cover = input.verifiedPro ? publicImageUrl(input.coverUrl) : "";
   const logo = publicImageUrl(input.logoUrl);
-  const place = [cityChoiceLabel(input.city), input.category].filter(Boolean).join(" · ");
+  const place = [cityChipLabel(input.city), input.category].filter(Boolean).join(" · ");
   return {
     brand: input.brand,
     kicker: poster ? "Video" : place || "Shop",
@@ -69,7 +69,7 @@ export function listingOgModel(input: {
   photoUrl: string;
 }): OgCardModel {
   if (input.hidden) return brandOgModel(input.brand);
-  const place = [cityChoiceLabel(input.city), input.category].filter(Boolean).join(" · ");
+  const place = [cityChipLabel(input.city), input.category].filter(Boolean).join(" · ");
   return {
     brand: input.brand,
     kicker: place || "Listing",

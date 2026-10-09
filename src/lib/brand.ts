@@ -13,10 +13,10 @@ export const APP_MEANING = 'Dholuo for "gate, the entrance to a homestead"';
 export const APP_TAGLINE = "The gateway to the Luo home.";
 
 /** Where the directory says it reaches. Display copy only. */
-export const AUDIENCE_LINE = "Nairobi, Kenya and the Diaspora";
+export const AUDIENCE_LINE = "Kenya, East Africa and the Diaspora";
 
 export const APP_DESCRIPTION =
-  "Discover Luo-owned businesses, housing, and classifieds in Nairobi, Kenya and the Diaspora. Discovery here — chat stays on WhatsApp.";
+  "Discover Luo-owned businesses, housing, and classifieds in Kenya, East Africa and the Diaspora. Discovery here — chat stays on WhatsApp.";
 
 /** Optional override. Defaults to Rangach. Read on the server and passed into client UI. */
 export function appName() {

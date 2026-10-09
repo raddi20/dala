@@ -3,13 +3,16 @@ import Link from "next/link";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { appName } from "@/lib/brand";
 import {
+  CHARGE,
   FEATURED_DAYS,
   FREE_OFFERING_CAP,
   PRO_OFFERING_CAP,
   REPORT_REASONS,
 } from "@/lib/constants";
 import { DIASPORA_ORDERS_EXPLANATION, DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
-import { pricingPlans } from "@/lib/pricing-display";
+import { kesPerUsd, pricingPlans } from "@/lib/pricing-display";
+import { readVisitorCountry } from "@/lib/visitor-country";
+import { cachedUsdRates, needsLiveRates, visitorPrice } from "@/lib/visitor-currency";
 import { CONTACT_EMAIL, LICENSED_PAYMENT_PROVIDER, featuredDurationCopy, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
 import {
   DOCUMENTS_SEEN_NOTE,
@@ -26,9 +29,12 @@ export const metadata: Metadata = {
   description: page.description,
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
   const name = appName();
   const plans = pricingPlans();
+  const country = await readVisitorCountry();
+  const rates = needsLiveRates(country) ? await cachedUsdRates() : null;
+  const shillingsPerDollar = kesPerUsd();
   const methods = SHOP_BADGE_METHODS.map((method) => method.label).join(", ");
 
   return (
@@ -55,15 +61,38 @@ export default function FaqPage() {
           <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
             pricing page
           </Link>{" "}
-          also shows an approximate US dollar figure so someone abroad can compare. That figure is not what you pay.
+          shows one price in your currency. Outside Kenya and the United Kingdom that figure is approximate and is not what you pay.
         </p>
-        {plans.map((plan) => (
+        {plans.map((plan) => {
+          const price = visitorPrice({
+            country,
+            kes: CHARGE[plan.product].Nairobi,
+            gbp: CHARGE[plan.product].London,
+            rates,
+            kesPerUsd: shillingsPerDollar,
+          });
+          return (
           <div key={plan.product} className="grid gap-2 rounded-xl bg-paper px-3 py-3">
             <h3 className="font-serif text-lg text-navy">{plan.name}</h3>
-            <p>{plan.summary}</p>
             <p>
-              <span className="font-semibold text-navy">{plan.prices.kes.label}</span> in Nairobi.{" "}
-              <span className="font-semibold text-navy">{plan.prices.gbp.label}</span> for Diaspora shops.
+              {price.kind === "charges"
+                ? plan.summary
+                : plan.summary.replace(
+                    `${CHARGE.verified_pro.Nairobi.label} / ${CHARGE.verified_pro.London.label}`,
+                    price.label,
+                  )}
+            </p>
+            <p>
+              {price.kind === "charges" ? (
+                <>
+                  <span className="font-semibold text-navy">{price.kesLabel}</span> for shops in Kenya and East Africa.{" "}
+                  <span className="font-semibold text-navy">{price.gbpLabel}</span> for Diaspora shops.
+                </>
+              ) : (
+                <>
+                  <span className="font-semibold text-navy">{price.label}</span>. {price.caption}{" "}
+                </>
+              )}
               {plan.product === "featured"
                 ? " Featured is priced for the listing’s city."
                 : " Verified Pro is priced for the city on your account."}
@@ -74,7 +103,8 @@ export default function FaqPage() {
               ))}
             </ul>
           </div>
-        ))}
+          );
+        })}
         <p>{featuredDurationCopy()} It applies to the one listing you choose. It does not verify that listing, and it does not change the shop.</p>
         <p>{verifiedProDurationCopy()}</p>
         <p>
@@ -82,7 +112,7 @@ export default function FaqPage() {
           or off. Paying, or an admin switch, does not grant Phone verified, Location verified, or Business verified.
         </p>
         <p>
-          You pay on the Promote page after you sign in. Nairobi prices are Kenyan shillings and can be M-Pesa or a
+          You pay on the Promote page after you sign in. Prices for shops in Kenya and East Africa are Kenyan shillings and can be M-Pesa or a
           card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Payment
           is taken by {LICENSED_PAYMENT_PROVIDER}. The plan does not renew unless you pay again. {name} does not see
           your card number.

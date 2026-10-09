@@ -35,7 +35,7 @@ export const OCCASION_DEFINITIONS = [
     title: "Christmas at home",
     sortOrder: 40,
     intro:
-      "December is when many people in Nairobi, Kenya and the Diaspora send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
+      "December is when many people in Kenya, East Africa and the Diaspora send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
   },
   {
     slug: "house-back-home",
@@ -65,11 +65,14 @@ type OccasionWriter = Pick<PrismaClient, "occasion">;
  * Previous default intros. An occasion row that still has one of these is
  * updated to the current definition. Any other saved intro is left alone.
  */
-const PREVIOUS_OCCASION_INTROS: Record<string, string> = {
-  homecomings:
+const PREVIOUS_OCCASION_INTROS: Record<string, readonly string[]> = {
+  homecomings: [
     "Someone is flying in from London, or travelling from Nairobi down to the village. The household needs food, a vehicle, and a bed for that week. These shops and listings are the ones sellers have marked for the visit. You arrange it on WhatsApp.",
-  "christmas-at-home":
+  ],
+  "christmas-at-home": [
     "December is when many people in London and Nairobi send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
+    "December is when many people in Nairobi, Kenya and the Diaspora send food, gifts, and fare for the visit home. These sellers have said they can help with that week. Chat on WhatsApp to arrange it.",
+  ],
 };
 
 /**
@@ -107,9 +110,9 @@ export async function ensureOccasionDefinitions(
     }
   }
   for (const row of existing) {
-    const previous = PREVIOUS_OCCASION_INTROS[row.slug];
+    const previous = PREVIOUS_OCCASION_INTROS[row.slug] ?? [];
     const next = definitions.find((item) => item.slug === row.slug);
-    if (!previous || !next || row.intro !== previous || next.intro === previous) continue;
+    if (!next || !previous.includes(row.intro) || next.intro === row.intro) continue;
     await db.occasion.update({ where: { slug: row.slug }, data: { intro: next.intro } });
     updated.push(row.slug);
   }

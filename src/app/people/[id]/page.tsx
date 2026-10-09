@@ -5,7 +5,7 @@ import { ProPlanChip, ShopBadgeChips } from "@/components/badges";
 import { ListingCard } from "@/components/listing-card";
 import { ReportForm } from "@/components/report-form";
 import { blockUser } from "@/lib/actions/social";
-import { regionLabel } from "@/lib/constants";
+import { cityChipLabel, regionLabel } from "@/lib/constants";
 import {
   DEMO_PROFILE_CONTACT_NOTE,
   isPublicDemoHidden,
@@ -72,7 +72,7 @@ export default async function PersonPage({ params }: Props) {
       <div className="rounded-2xl border border-sand bg-card p-5">
         <p className="text-sm font-semibold uppercase tracking-wide text-lake">
           {person.kind === "business" ? "Business" : "Person"} ·{" "}
-          {person.city === "London" ? "Diaspora" : `${person.city} · ${regionLabel(region)}`}
+          {person.city === "London" ? "Diaspora" : `${cityChipLabel(person.city)} · ${regionLabel(region)}`}
         </p>
         <h1 className="mt-1 font-serif text-4xl">{person.name}</h1>
         {shop?.phoneVerified || shop?.locationVerified || shop?.businessVerified || isProActive(person) ? (

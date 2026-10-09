@@ -91,17 +91,26 @@ export function regionLabel(region: string) {
 }
 
 /**
- * Visible name for a catalogue city on forms, filters, and cards.
+ * City option on account, profile, and listing forms.
  * The stored value stays Nairobi or London.
  */
 export function cityChoiceLabel(city: string) {
   if (city === "London") return "Diaspora";
+  if (city === "Nairobi") return "Kenya / East Africa";
   return city;
 }
 
-/** Sentence fragment: "in Nairobi" or "in the Diaspora". */
+/** Short place on shop and listing chips. The stored value stays Nairobi or London. */
+export function cityChipLabel(city: string) {
+  if (city === "London") return "Diaspora";
+  if (city === "Nairobi") return "Kenya";
+  return city;
+}
+
+/** Sentence fragment: "in Kenya and East Africa" or "in the Diaspora". */
 export function cityInPhrase(city: string) {
   if (city === "London") return "in the Diaspora";
+  if (city === "Nairobi") return "in Kenya and East Africa";
   return `in ${city}`;
 }
 

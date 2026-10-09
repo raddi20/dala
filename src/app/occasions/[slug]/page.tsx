@@ -6,6 +6,7 @@ import { VideoMark } from "@/components/video-mark";
 import { ListingCard } from "@/components/listing-card";
 import { EmptyState, btnSecondary, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
+import { cityChipLabel } from "@/lib/constants";
 import { publicListingWhere, publicShopWhere } from "@/lib/demo-visibility";
 import { isProActive } from "@/lib/pro";
 import { continueHref } from "@/lib/utils";
@@ -127,7 +128,7 @@ export default async function OccasionPage({ params }: Props) {
                       {row.storefront.user.name}
                       {isProActive(row.storefront.user) && row.storefront.videos.length > 0 ? <VideoMark /> : null}
                     </h3>
-                    <p className="mt-1 text-sm text-ink/60">{row.storefront.user.city}</p>
+                    <p className="mt-1 text-sm text-ink/60">{cityChipLabel(row.storefront.user.city)}</p>
                   </Link>
                 ))}
               </div>

@@ -148,5 +148,5 @@ export function pricingPlans(env?: RateEnv): PricingPlan[] {
 
 export function pricingRateNote(env?: RateEnv) {
   const usd = kesPerUsd(env);
-  return `Kenyan shilling prices are what checkout charges in Nairobi. Pound prices are the Diaspora charge. US dollar amounts are approximate, at ${usd} shillings per dollar, so someone abroad can compare. That is not a live rate and it is not the amount you pay.`;
+  return `Kenyan shilling prices are the charge for shops in Kenya and East Africa. Pound prices are the Diaspora charge. US dollar amounts are approximate, at ${usd} shillings per dollar, so someone abroad can compare. That is not a live rate and it is not the amount you pay.`;
 }

@@ -40,7 +40,7 @@ export default async function OccasionsPage() {
       <div>
         <h1 className={sectionTitleClass}>Occasions</h1>
         <p className="mt-2 max-w-2xl text-ink/70">
-          The weeks when family in Nairobi, Kenya and the Diaspora is paying for something at home: a visit, ayie, a funeral, Christmas,
+          The weeks when family in Kenya, East Africa and the Diaspora is paying for something at home: a visit, ayie, a funeral, Christmas,
           or a house going up. Each page lists shops and listings tagged for that moment. You message the seller on
           WhatsApp. Nothing is booked or paid here.
         </p>

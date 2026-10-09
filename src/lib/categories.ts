@@ -59,7 +59,7 @@ export const CATEGORY_GROUPS = [
   {
     id: "transport",
     title: "Transport",
-    blurb: "Getting around Nairobi, Kenya and the Diaspora, and parcels between them.",
+    blurb: "Getting around Kenya, East Africa and the Diaspora, and parcels between them.",
     categories: [
       "Transport & logistics",
       "Auto & mechanics",
