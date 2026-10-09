@@ -91,6 +91,7 @@ test("the pricing page and promote form name the pound price for Diaspora shops"
   const promote = readFileSync(new URL("../components/pay-form.tsx", import.meta.url), "utf8");
   assert.match(pricing, /Diaspora price/);
   assert.equal(pricing.includes("London price"), false);
+  assert.equal(pricing.includes("FX_KES_PER_USD"), false);
   assert.match(promote, /for Diaspora shops/);
   assert.match(promote, /for shops in Kenya and East Africa/);
   assert.equal(promote.includes("in London"), false);

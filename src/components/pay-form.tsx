@@ -6,6 +6,7 @@ import { PaymentSetup } from "@/components/payment-setup";
 import { SubmitButton } from "@/components/submit-button";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { chargeFor, cityChipLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { approxBesideCharge, type LocalFx } from "@/lib/visitor-currency";
 import type { PaymentMode } from "@/lib/payments/rules";
 import type { ActionState } from "@/lib/validators";
 
@@ -23,6 +24,7 @@ export function PayForm({
   webhookReady,
   brandName,
   siteUrl,
+  localFx,
 }: {
   listings: { id: string; title: string; city: string }[];
   defaultListingId: string;
@@ -35,6 +37,7 @@ export function PayForm({
   webhookReady: boolean;
   brandName: string;
   siteUrl: string;
+  localFx?: LocalFx | null;
 }) {
   const [state, action] = useActionState(startPayment, initial);
   const [product, setProduct] = useState<PaidProduct>(defaultProduct);
@@ -53,6 +56,7 @@ export function PayForm({
   const listingCity = listings.find((listing) => listing.id === listingId)?.city ?? userCity;
   const city = product === "featured" ? listingCity : userCity;
   const charge = chargeFor(product, city);
+  const localApprox = localFx ? approxBesideCharge(charge, localFx) : null;
   const mpesaOk = charge.currency === "KES";
   const method: "mpesa" | "card" = mpesaOk ? methodChoice : "card";
   const configured = mode === "test" || mode === "live";
@@ -159,7 +163,12 @@ export function PayForm({
 
       <p className="text-sm font-semibold text-navy">
         {product === "featured" ? "Featured listing" : "Verified Pro"} · {charge.label}
+        {localApprox ? <span className="font-normal text-ink/70"> · {localApprox}</span> : null}
         {product === "verified_pro" ? ` per ${PRO_DAYS} days` : ""}
+      </p>
+      <p className="text-sm text-ink/60">
+        Checkout charges {charge.label}.
+        {localApprox ? ` ${localApprox} is an approximate figure in your currency, not the amount the payment provider takes.` : ""}
       </p>
       <SubmitButton className={btnPrimary} pendingLabel="Opening checkout…" disabled={blocked}>
         {configured ? `Pay ${charge.label}` : "Checkout needs Flutterwave keys"}
