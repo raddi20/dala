@@ -93,6 +93,19 @@ test("faq and terms use checkout prices and do not hardcode them", async () => {
   assert.ok(faq.includes(CHARGE.featured.London.label));
   assert.ok(faq.includes(CHARGE.verified_pro.Nairobi.label));
   assert.ok(faq.includes(CHARGE.verified_pro.London.label));
+  assert.equal(
+    paidPriceLine("featured"),
+    `${CHARGE.featured.Nairobi.label} in Nairobi and ${CHARGE.featured.London.label} for Diaspora shops`,
+  );
+  assert.equal(
+    paidPriceLine("verified_pro"),
+    `${CHARGE.verified_pro.Nairobi.label} in Nairobi and ${CHARGE.verified_pro.London.label} for Diaspora shops`,
+  );
+  assert.match(faq, /for Diaspora shops/);
+  assert.match(faq, /Diaspora prices are pounds/);
+  assert.match(faq, /a Diaspora price is paid by card/);
+  assert.equal(faq.includes("in London"), false);
+  assert.equal(terms.includes("in London"), false);
   assert.ok(terms.includes(paidPriceLine("featured")));
   assert.ok(terms.includes(paidPriceLine("verified_pro")));
   assert.match(faq, new RegExp(featuredDurationCopy()));

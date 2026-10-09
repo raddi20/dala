@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
 import {
@@ -76,5 +77,16 @@ test("plan copy uses the real offering caps and says Pro is not verified", () =>
   assert.match(pro.summary, /not a verification badge/i);
   assert.match(pro.notIncluded.join(" "), /does not mean the shop is verified/i);
   assert.match(pricingRateNote({}), new RegExp(String(DEFAULT_KES_PER_USD)));
+  assert.match(pricingRateNote({}), /the Diaspora charge/);
+  assert.equal(pricingRateNote({}).includes("London charge"), false);
   assert.match(pricingRateNote({ FX_KES_PER_USD: "140" }), /140 shillings/);
+});
+
+test("the pricing page and promote form name the pound price for Diaspora shops", () => {
+  const pricing = readFileSync(new URL("../app/pricing/page.tsx", import.meta.url), "utf8");
+  const promote = readFileSync(new URL("../components/pay-form.tsx", import.meta.url), "utf8");
+  assert.match(pricing, /Diaspora price/);
+  assert.equal(pricing.includes("London price"), false);
+  assert.match(promote, /for Diaspora shops/);
+  assert.equal(promote.includes("in London"), false);
 });

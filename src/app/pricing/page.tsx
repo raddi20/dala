@@ -50,7 +50,7 @@ export default async function PricingPage() {
               <ul className="mt-4 grid gap-2 text-sm">
                 <li className="flex items-baseline justify-between gap-3 rounded-xl bg-paper px-3 py-2">
                   <span className="font-semibold text-navy">{plan.prices.gbp.label}</span>
-                  <span className="text-ink/60">{plan.prices.gbp.approximate ? "Approximate pounds" : "London price"}</span>
+                  <span className="text-ink/60">{plan.prices.gbp.approximate ? "Approximate pounds" : "Diaspora price"}</span>
                 </li>
                 <li className="flex items-baseline justify-between gap-3 rounded-xl bg-paper px-3 py-2">
                   <span className="font-semibold text-navy">{plan.prices.usd.label}</span>

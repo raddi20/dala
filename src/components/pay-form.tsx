@@ -71,7 +71,7 @@ export function PayForm({
           <span>
             <span className="font-semibold">Featured listing</span>
             <span className="mt-1 block text-ink/70">
-              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} in Nairobi, {chargeFor("featured", "London").label} in London.
+              30 days at the top of browse. {chargeFor("featured", "Nairobi").label} in Nairobi, {chargeFor("featured", "London").label} for Diaspora shops.
             </span>
           </span>
         </label>

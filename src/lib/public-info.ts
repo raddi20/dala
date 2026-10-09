@@ -113,9 +113,9 @@ export function featuredDurationCopy() {
   return `Featured lasts ${FEATURED_DAYS} days from the payment. A new payment starts another ${FEATURED_DAYS} days from that payment.`;
 }
 
-/** Nairobi and London labels from the same CHARGE table checkout uses. */
+/** Nairobi and Diaspora labels from the same CHARGE table checkout uses. */
 export function paidPriceLine(product: PaidProduct) {
   const nairobi = chargeFor(product, "Nairobi");
   const london = chargeFor(product, "London");
-  return `${nairobi.label} in Nairobi and ${london.label} in London`;
+  return `${nairobi.label} in Nairobi and ${london.label} for Diaspora shops`;
 }

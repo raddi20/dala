@@ -63,7 +63,7 @@ export default function FaqPage() {
             <p>{plan.summary}</p>
             <p>
               <span className="font-semibold text-navy">{plan.prices.kes.label}</span> in Nairobi.{" "}
-              <span className="font-semibold text-navy">{plan.prices.gbp.label}</span> in London.
+              <span className="font-semibold text-navy">{plan.prices.gbp.label}</span> for Diaspora shops.
               {plan.product === "featured"
                 ? " Featured is priced for the listing’s city."
                 : " Verified Pro is priced for the city on your account."}
@@ -83,7 +83,7 @@ export default function FaqPage() {
         </p>
         <p>
           You pay on the Promote page after you sign in. Nairobi prices are Kenyan shillings and can be M-Pesa or a
-          card. London prices are pounds. M-Pesa only charges shillings, so a London price is paid by card. Flutterwave
+          card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Flutterwave
           takes the payment. {name} does not see your card number.
         </p>
       </InfoSection>
