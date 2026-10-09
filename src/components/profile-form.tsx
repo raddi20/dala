@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { updateProfile } from "@/lib/actions/profile";
-import { CITIES } from "@/lib/constants";
+import { CITIES, cityChoiceLabel } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
@@ -46,7 +46,7 @@ export function ProfileForm({
           <select name="city" defaultValue={user.city} className={fieldClass}>
             {CITIES.map((city) => (
               <option key={city.name} value={city.name}>
-                {city.name}
+                {cityChoiceLabel(city.name)}
               </option>
             ))}
           </select>

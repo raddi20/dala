@@ -1,4 +1,5 @@
-import { APP_TAGLINE } from "@/lib/brand";
+import { APP_TAGLINE, AUDIENCE_LINE } from "@/lib/brand";
+import { cityChoiceLabel } from "@/lib/constants";
 import { publicImageUrl } from "@/lib/share-metadata";
 
 export type OgCardModel = {
@@ -14,7 +15,7 @@ export type OgCardModel = {
 export function brandOgModel(brand: string): OgCardModel {
   return {
     brand,
-    kicker: "Nairobi and London",
+    kicker: AUDIENCE_LINE,
     title: brand,
     subtitle: APP_TAGLINE,
     photoUrl: "",
@@ -48,7 +49,7 @@ export function shopOgModel(input: {
   const poster = input.videoPosterUrl ? posterPhoto(input.videoPosterUrl) : "";
   const cover = input.verifiedPro ? publicImageUrl(input.coverUrl) : "";
   const logo = publicImageUrl(input.logoUrl);
-  const place = [input.city, input.category].filter(Boolean).join(" · ");
+  const place = [cityChoiceLabel(input.city), input.category].filter(Boolean).join(" · ");
   return {
     brand: input.brand,
     kicker: poster ? "Video" : place || "Shop",
@@ -68,7 +69,7 @@ export function listingOgModel(input: {
   photoUrl: string;
 }): OgCardModel {
   if (input.hidden) return brandOgModel(input.brand);
-  const place = [input.city, input.category].filter(Boolean).join(" · ");
+  const place = [cityChoiceLabel(input.city), input.category].filter(Boolean).join(" · ");
   return {
     brand: input.brand,
     kicker: place || "Listing",
@@ -83,7 +84,7 @@ export function categoryOgModel(brand: string, category: string): OgCardModel {
     brand,
     kicker: "Category",
     title: category,
-    subtitle: "Shops and classifieds in Nairobi and London",
+    subtitle: `Shops and classifieds in ${AUDIENCE_LINE}`,
     photoUrl: "",
   };
 }
@@ -102,7 +103,7 @@ export function occasionOgModel(brand: string, title: string, intro: string): Og
 export function pageOgModel(brand: string, title: string, subtitle: string): OgCardModel {
   return {
     brand,
-    kicker: "Nairobi and London",
+    kicker: AUDIENCE_LINE,
     title,
     subtitle,
     photoUrl: "",

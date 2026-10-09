@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { APP_TAGLINE, appName } from "@/lib/brand";
+import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
 
 export const alt = "Rangach, the gateway to the Luo home";
 export const size = { width: 1200, height: 630 };
@@ -43,7 +43,7 @@ export default function OpenGraphImage() {
         </div>
         <div style={{ display: "flex", marginTop: 36, fontSize: 36, color: "#c8881a" }}>{APP_TAGLINE}</div>
         <div style={{ display: "flex", marginTop: 16, fontSize: 28, color: "#f7f3ec" }}>
-          Luo shops and classifieds in Nairobi and London. Chat stays on WhatsApp.
+          Luo shops and classifieds in {AUDIENCE_LINE}. Chat stays on WhatsApp.
         </div>
       </div>
     ),

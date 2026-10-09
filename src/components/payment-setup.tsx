@@ -1,4 +1,5 @@
 import { cardClass } from "@/components/ui";
+import { AUDIENCE_LINE } from "@/lib/brand";
 import type { PaymentMode } from "@/lib/payments/rules";
 
 export function PaymentSetup({
@@ -16,7 +17,7 @@ export function PaymentSetup({
   if (mode === "live") {
     return (
       <div className={`${cardClass} p-4 text-sm text-ink/80`}>
-        <p>Checkout opens on Flutterwave. M-Pesa is offered on Kenyan shilling prices. Card covers Nairobi and London. {brandName} does not see the card number.</p>
+        <p>Checkout opens on Flutterwave. M-Pesa is offered on Kenyan shilling prices. Card covers {AUDIENCE_LINE}. {brandName} does not see the card number.</p>
         {webhookReady ? null : (
           <p className="mt-2">
             <span className="font-semibold">FLW_WEBHOOK_HASH</span> is not set. The upgrade still applies when the buyer returns here. Set the hash so a closed tab still completes.

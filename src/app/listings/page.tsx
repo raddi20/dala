@@ -13,9 +13,9 @@ import {
   fieldClass,
   sectionTitleClass,
 } from "@/components/ui";
-import { appName } from "@/lib/brand";
+import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { categoryHref, isCategory } from "@/lib/categories";
-import { CITIES, LISTING_TYPES, isCityName } from "@/lib/constants";
+import { CITIES, LISTING_TYPES, cityChoiceLabel, cityInPhrase, isCityName } from "@/lib/constants";
 import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
@@ -42,15 +42,15 @@ export async function generateMetadata({
       origin,
       path: categoryHref(category),
       title: category,
-      description: `${category} from Luo shops and classifieds in Nairobi and London on ${name}.`,
+      description: `${category} from Luo shops and classifieds in ${AUDIENCE_LINE} on ${name}.`,
       image: `/og/category/${encodeURIComponent(category)}`,
       imageAlt: `${category} on ${name}`,
     });
   }
-  const title = isCityName(city) ? city : "Browse";
+  const title = isCityName(city) ? cityChoiceLabel(city) : "Browse";
   const description = isCityName(city)
-    ? `Luo shops and classifieds in ${city} on ${name}.`
-    : `Directory and classifieds in Nairobi and London on ${name}.`;
+    ? `Luo shops and classifieds ${cityInPhrase(city)} on ${name}.`
+    : `Directory and classifieds in ${AUDIENCE_LINE} on ${name}.`;
   const region = one(sp.region);
   const path = isCityName(city)
     ? `/listings?city=${encodeURIComponent(city)}${region === "homeland" || region === "diaspora" ? `&region=${region}` : ""}`
@@ -150,7 +150,7 @@ export default async function ListingsPage({
           id="nl"
           name="nl"
           defaultValue={nlRaw}
-          placeholder="housing in London"
+          placeholder="housing in the Diaspora"
           className={`${fieldClass} mt-0`}
         />
         <button className={`${btnPrimary} shrink-0`}>Search</button>
@@ -179,10 +179,10 @@ export default async function ListingsPage({
         <p className="text-xs font-semibold uppercase tracking-wider text-ink/45">Quick filters</p>
         <div className="chip-scroll">
           <Link href={chipHref(chipBase, "city", "Nairobi")} className={filters.city === "Nairobi" ? chipActiveClass : chipClass}>
-            Nairobi
+            {cityChoiceLabel("Nairobi")}
           </Link>
           <Link href={chipHref(chipBase, "city", "London")} className={filters.city === "London" ? chipActiveClass : chipClass}>
-            London
+            {cityChoiceLabel("London")}
           </Link>
           <Link
             href={chipHref(chipBase, "region", "homeland")}
@@ -256,13 +256,13 @@ export default async function ListingsPage({
               <option value="">Any</option>
               {CITIES.map((city) => (
                 <option key={city.name} value={city.name}>
-                  {city.name}
+                  {cityChoiceLabel(city.name)}
                 </option>
               ))}
             </select>
           </label>
           <label className="block text-sm font-medium text-ink/80">
-            Homeland or diaspora
+            Homeland or Diaspora
             <select name="region" defaultValue={filters.region} className={fieldClass}>
               <option value="">Any</option>
               <option value="homeland">Homeland</option>

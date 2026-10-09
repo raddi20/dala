@@ -7,7 +7,7 @@ import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { unblockUser } from "@/lib/actions/social";
 import { appName, defaultSiteUrl } from "@/lib/brand";
-import { productLabel } from "@/lib/constants";
+import { cityChoiceLabel, productLabel } from "@/lib/constants";
 import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
 import { prisma } from "@/lib/prisma";
@@ -194,7 +194,7 @@ export default async function AccountPage({
                 {listing.title}
               </Link>
               <p className="text-ink/70">
-                {listing.city} · {listing.hidden ? "Hidden" : "Visible"}
+                {cityChoiceLabel(listing.city)} · {listing.hidden ? "Hidden" : "Visible"}
                 {listing.scamRisk !== "low" ? ` · ${listing.scamRisk} scam risk` : ""}
               </p>
               <Link href={`/listings/${listing.id}/edit`} className="text-lake-dark">

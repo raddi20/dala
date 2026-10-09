@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { createListing, updateListing } from "@/lib/actions/listings";
-import { CITIES, LISTING_TYPES } from "@/lib/constants";
+import { CITIES, LISTING_TYPES, cityChoiceLabel } from "@/lib/constants";
 import { draftListing } from "@/lib/draft";
 import { btnPrimary, btnSecondary, ErrorNote, fieldClass } from "@/components/ui";
 import { CategoryOptions } from "@/components/category-options";
@@ -173,7 +173,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
             >
               {CITIES.map((item) => (
                 <option key={item.name} value={item.name}>
-                  {item.name} ({item.region})
+                  {cityChoiceLabel(item.name)}
                 </option>
               ))}
             </select>

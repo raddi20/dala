@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { login, register } from "@/lib/actions/auth";
-import { CITIES } from "@/lib/constants";
+import { CITIES, cityChoiceLabel } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
@@ -67,7 +67,7 @@ export function RegisterForm({ nextPath }: { nextPath: string }) {
         <select name="city" className={fieldClass} defaultValue="Nairobi">
           {CITIES.map((city) => (
             <option key={city.name} value={city.name}>
-              {city.name}
+              {cityChoiceLabel(city.name)}
             </option>
           ))}
         </select>

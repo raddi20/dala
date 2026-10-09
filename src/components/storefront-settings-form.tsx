@@ -78,7 +78,7 @@ export function StorefrontSettingsForm({
         <span>
           <span className="font-semibold">Serves diaspora orders</span>
           <span className="mt-1 block text-ink/70">
-            People in London, or elsewhere abroad, can see that you will take a WhatsApp order for family at home. You
+            People in the Diaspora can see that you will take a WhatsApp order for family at home. You
             still arrange it in the chat. Rangach does not take payment.
           </span>
         </span>

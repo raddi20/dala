@@ -5,7 +5,7 @@ import { startPayment } from "@/lib/actions/payments";
 import { PaymentSetup } from "@/components/payment-setup";
 import { SubmitButton } from "@/components/submit-button";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
-import { chargeFor, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
+import { chargeFor, cityChoiceLabel, FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, type PaidProduct } from "@/lib/constants";
 import type { PaymentMode } from "@/lib/payments/rules";
 import type { ActionState } from "@/lib/validators";
 
@@ -115,7 +115,7 @@ export function PayForm({
             >
               {listings.map((listing) => (
                 <option key={listing.id} value={listing.id}>
-                  {listing.title} ({listing.city})
+                  {listing.title} ({cityChoiceLabel(listing.city)})
                 </option>
               ))}
             </select>

@@ -7,8 +7,8 @@ import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/cons
 
 /** Visible on each page. Change this when the copy changes. */
 export const PUBLIC_PAGES_UPDATED = {
-  label: "6 October 2026",
-  iso: "2026-10-06",
+  label: "9 October 2026",
+  iso: "2026-10-09",
 } as const;
 
 /**
@@ -45,7 +45,7 @@ export const PUBLIC_INFO_PAGES = [
     label: "About",
     title: "About",
     description:
-      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Nairobi and London.",
+      "Rangach means the gate to a homestead in Dholuo. A directory of Luo-owned businesses, housing, and classifieds in Nairobi, Kenya and the Diaspora.",
   },
   {
     path: "/faq",
