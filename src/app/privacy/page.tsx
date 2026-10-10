@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { EntityContact } from "@/components/entity-contact";
 import { InfoPage, InfoSection } from "@/components/info-page";
+import { AGENT_COOKIE, AGENT_COOKIE_DAYS } from "@/lib/agent-code";
 import { appName } from "@/lib/brand";
 import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
 import { CONTACT_EMAIL, LEGAL_DRAFT_NOTE, LICENSED_PAYMENT_PROVIDER, legalEntityLabel, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
@@ -59,7 +60,7 @@ export default function PrivacyPage() {
       </InfoSection>
 
       <InfoSection title="What we collect">
-        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Kenya / East Africa or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo.</p>
+        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Kenya / East Africa or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo. If you arrived from a brochure link with an agent code, we store that short code and the time you registered. We do not change it later.</p>
         <p>
           Shop and listing content. That includes titles, descriptions, categories, cities, addresses you choose to
           publish, prices, contact names, and the offerings on a shop. Reviews you write are stored with your name.
@@ -197,6 +198,14 @@ export default function PrivacyPage() {
           It is there so view and tap counts, and the optional AI limits, can tell one browser from another without
           storing the raw id. You can clear it in your browser. Clearing it starts a new random id. The site still
           works.
+        </p>
+        <p>
+          If you open a link with an agent code, for example from a printed brochure, we store that short code in a
+          first-party cookie named {AGENT_COOKIE}. It lasts about {AGENT_COOKIE_DAYS} days, on this site only, with
+          SameSite=Lax. The first valid code is kept. A later visit with a different valid code replaces it. A junk
+          value is ignored. When you create an account, we copy the code onto that new account. We do not overwrite a
+          code already saved on an account. We do not store your IP address or a device id for this. You can clear the
+          cookie in your browser. The site still works.
         </p>
         <p>
           The install hint remembers, on your device, if you have dismissed it. That uses local storage, not a cookie,

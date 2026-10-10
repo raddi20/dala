@@ -26,6 +26,8 @@ function entry(origin: string, path: string, updatedAt?: Date, changeFrequency?:
 export function staticPublicPaths(): DatedPath[] {
   const paths: DatedPath[] = [
     { path: "/" },
+    { path: "/welcome" },
+    { path: "/list" },
     { path: "/categories" },
     { path: "/occasions" },
     { path: "/pricing" },
@@ -60,7 +62,11 @@ export function buildSitemap(input: {
     const priority =
       path.path === "/"
         ? 1
-        : path.path === "/categories" || path.path === "/occasions" || path.path === "/pricing"
+        : path.path === "/categories" ||
+            path.path === "/occasions" ||
+            path.path === "/pricing" ||
+            path.path === "/welcome" ||
+            path.path === "/list"
           ? 0.8
           : info
             ? 0.5

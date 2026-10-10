@@ -14,6 +14,12 @@ export function Footer() {
           </p>
         </div>
         <div className="flex flex-wrap gap-x-5 gap-y-2 font-medium text-ink/80">
+          <Link href="/welcome" className="hover:text-navy">
+            Learn about Rangach
+          </Link>
+          <Link href="/list" className="hover:text-navy">
+            List your business
+          </Link>
           <Link href="/occasions" className="hover:text-navy">
             Occasions
           </Link>
