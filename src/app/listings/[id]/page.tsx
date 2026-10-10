@@ -5,6 +5,7 @@ import { Badges } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
 import { ReviewForm } from "@/components/review-form";
+import { UpgradeAction } from "@/components/upgrade-action";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
 import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
@@ -21,6 +22,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { isProActive } from "@/lib/pro";
 import { averageRating, formatWhen, one, telHref } from "@/lib/utils";
+import { paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
@@ -99,6 +101,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
 
   const user = await getSessionUser();
   const isOwner = user?.id === listing.ownerId;
+  const upgradesOpen = paymentsLive();
   const isAdmin = user?.role === "admin";
   if (listing.hidden && !isOwner && !isAdmin) notFound();
 
@@ -208,9 +211,12 @@ export default async function ListingPage({ params, searchParams }: Props) {
             <Link href="/account/storefront" className={btnSecondary}>
               Manage storefront
             </Link>
-            <Link href={`/upgrade?listing=${listing.id}`} className={btnSecondary}>
-              Feature this listing
-            </Link>
+            <UpgradeAction
+              live={upgradesOpen}
+              href={`/upgrade?listing=${listing.id}`}
+              label="Feature this listing"
+              className={btnSecondary}
+            />
           </>
         ) : null}
       </div>
@@ -316,9 +322,12 @@ export default async function ListingPage({ params, searchParams }: Props) {
             <Link href="/account/storefront" className={btnSecondary}>
               Manage storefront
             </Link>
-            <Link href={`/upgrade?listing=${listing.id}`} className={btnSecondary}>
-              Feature this listing
-            </Link>
+            <UpgradeAction
+              live={upgradesOpen}
+              href={`/upgrade?listing=${listing.id}`}
+              label="Feature this listing"
+              className={btnSecondary}
+            />
           </>
         ) : null}
       </div>

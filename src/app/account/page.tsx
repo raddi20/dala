@@ -11,6 +11,7 @@ import { LICENSED_PAYMENT_PROVIDER } from "@/lib/public-info";
 import { cityChipLabel, productLabel } from "@/lib/constants";
 import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatWhen, one } from "@/lib/utils";
@@ -69,6 +70,7 @@ export default async function AccountPage({
                 ? "Listing deleted."
                 : "";
   const paymentsConfig = paymentConfig();
+  const live = paymentsLive();
 
   return (
     <div className="mx-auto grid max-w-2xl gap-8 px-4 py-8">
@@ -92,9 +94,13 @@ export default async function AccountPage({
           Your week
         </Link>
         {isProActive(user) || proLapsed(user) ? (
-          <Link href="/upgrade?product=verified_pro" className="mt-1 block text-sm font-semibold text-lake-dark underline">
-            Renew Pro
-          </Link>
+          live ? (
+            <Link href="/upgrade?product=verified_pro" className="mt-1 block text-sm font-semibold text-lake-dark underline">
+              Renew Pro
+            </Link>
+          ) : (
+            <p className="mt-1 text-sm font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</p>
+          )
         ) : null}
       </div>
       {flash ? <Flash>{flash}</Flash> : null}
@@ -208,20 +214,28 @@ export default async function AccountPage({
           <Link href="/pricing" className="text-sm font-semibold text-lake-dark">
             Prices
           </Link>
-          <Link href="/upgrade" className="text-sm font-semibold text-lake-dark">
-            Feature a listing or get Verified Pro
-          </Link>
+          {live ? (
+            <Link href="/upgrade" className="text-sm font-semibold text-lake-dark">
+              Feature a listing or get Verified Pro
+            </Link>
+          ) : (
+            <span className="text-sm font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</span>
+          )}
         </div>
       </section>
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Payment settings</h2>
-        <PaymentSetup
-          mode={paymentsConfig.mode}
-          webhookReady={paymentsConfig.webhookReady}
-          brandName={appName()}
-          siteUrl={defaultSiteUrl()}
-        />
+        {live ? (
+          <PaymentSetup
+            mode={paymentsConfig.mode}
+            webhookReady={paymentsConfig.webhookReady}
+            brandName={appName()}
+            siteUrl={defaultSiteUrl()}
+          />
+        ) : (
+          <p className="text-sm font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</p>
+        )}
       </section>
 
       <section className="grid gap-2">

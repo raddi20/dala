@@ -13,6 +13,7 @@ import {
   publicInfoPage,
   verifiedProDurationCopy,
 } from "@/lib/public-info";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { MAX_DURATION_SECONDS } from "@/lib/video/constants";
 
 const page = publicInfoPage("/terms");
@@ -24,6 +25,7 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   const name = appName();
+  const live = paymentsLive();
 
   return (
     <InfoPage
@@ -111,11 +113,20 @@ export default function TermsPage() {
         <p>
           {productLabel("verified_pro")} is {paidPriceLine("verified_pro")}. {verifiedProDurationCopy()}
         </p>
-        <p>
-          You pay the price shown at checkout for the city that applies: the listing’s city for Featured, and the city
-          on your account for Verified Pro. Payment is collected by {LICENSED_PAYMENT_PROVIDER}, by M-Pesa where the
-          price is in shillings, or by card. We do not store your card number. The plan does not renew by itself.
-        </p>
+        {live ? (
+          <p>
+            You pay the price shown at checkout for the city that applies: the listing’s city for Featured, and the city
+            on your account for Verified Pro. Payment is collected by {LICENSED_PAYMENT_PROVIDER}, by M-Pesa where the
+            price is in shillings, or by card. We do not store your card number. The plan does not renew by itself.
+          </p>
+        ) : (
+          <p>
+            {PAID_UPGRADES_COMING_SOON}. The price, once payments are open, is the one shown for the city that applies:
+            the listing’s city for Featured, and the city on your account for Verified Pro. A charge that was already
+            taken was collected by {LICENSED_PAYMENT_PROVIDER}. We do not store your card number. The plan does not renew
+            by itself.
+          </p>
+        )}
         <p>
           We do not refund a Featured or Verified Pro payment, except where the law requires a refund. Paying does not
           buy a verification badge. The{" "}

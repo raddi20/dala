@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
 import { FREE_OFFERING_CAP } from "@/lib/constants";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { CONTACT_EMAIL, publicInfoPage } from "@/lib/public-info";
 
 const page = publicInfoPage("/about");
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   const name = appName();
+  const live = paymentsLive();
 
   return (
     <InfoPage
@@ -34,10 +36,20 @@ export default function AboutPage() {
       </InfoSection>
       <InfoSection title="Listing is free">
         <p>
-          Putting a business or a classified on {name} is free. A free shop can list {FREE_OFFERING_CAP} offerings.
-          Sellers who want a louder place in the directory can pay for Featured, or for the Pro shop plan. Those
-          payments are for a place on {name}. They are not a payment for the thing being sold, and the Pro plan is not
-          a verification badge.
+          Putting a business or a classified on {name} is free. A free shop can list {FREE_OFFERING_CAP} offerings.{" "}
+          {live ? (
+            <>
+              Sellers who want a louder place in the directory can pay for Featured, or for the Pro shop plan. Those
+              payments are for a place on {name}. They are not a payment for the thing being sold, and the Pro plan is not
+              a verification badge.
+            </>
+          ) : (
+            <>
+              {PAID_UPGRADES_COMING_SOON}. Sellers who want a louder place in the directory will be able to pay for
+              Featured, or for the Pro shop plan. Those payments are for a place on {name}. They are not a payment for
+              the thing being sold, and the Pro plan is not a verification badge.
+            </>
+          )}
         </p>
         <p>
           The FAQ explains the shop, the badges, shop videos, and buying for family back home. Write to us at{" "}

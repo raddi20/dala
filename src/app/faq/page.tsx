@@ -13,6 +13,7 @@ import { DIASPORA_ORDERS_EXPLANATION, DIASPORA_ORDERS_LABEL } from "@/lib/diaspo
 import { kesPerUsd, pricingPlans } from "@/lib/pricing-display";
 import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, needsLiveRates, visitorPrice } from "@/lib/visitor-currency";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { CONTACT_EMAIL, LICENSED_PAYMENT_PROVIDER, featuredDurationCopy, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
 import {
   DOCUMENTS_SEEN_NOTE,
@@ -36,6 +37,7 @@ export default async function FaqPage() {
   const rates = needsLiveRates(country) ? await cachedUsdRates() : null;
   const shillingsPerDollar = kesPerUsd();
   const methods = SHOP_BADGE_METHODS.map((method) => method.label).join(", ");
+  const live = paymentsLive();
 
   return (
     <InfoPage
@@ -111,12 +113,18 @@ export default async function FaqPage() {
           On the shop and on listings, the paid plan is labelled {PRO_PLAN_LABEL}. An admin can also turn that plan on
           or off. Paying, or an admin switch, does not grant Phone verified, Location verified, or Business verified.
         </p>
-        <p>
-          You pay on the Promote page after you sign in. Prices for shops in Kenya and East Africa are Kenyan shillings and can be M-Pesa or a
-          card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Payment
-          is taken by {LICENSED_PAYMENT_PROVIDER}. The plan does not renew unless you pay again. {name} does not see
-          your card number.
-        </p>
+        {live ? (
+          <p>
+            You pay on the Promote page after you sign in. Prices for shops in Kenya and East Africa are Kenyan shillings and can be M-Pesa or a
+            card. Diaspora prices are pounds. M-Pesa only charges shillings, so a Diaspora price is paid by card. Payment
+            is taken by {LICENSED_PAYMENT_PROVIDER}. The plan does not renew unless you pay again. {name} does not see
+            your card number.
+          </p>
+        ) : (
+          <p>
+            {PAID_UPGRADES_COMING_SOON}. The prices above are what the plans will cost. Nothing is charged yet.
+          </p>
+        )}
       </InfoSection>
 
       <InfoSection title="Verified Pro is not a verification badge">

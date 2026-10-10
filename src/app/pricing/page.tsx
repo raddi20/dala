@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { UpgradeAction } from "@/components/upgrade-action";
 import { btnPrimary, btnSecondary, cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS } from "@/lib/constants";
 import { kesPerUsd, pricingPlans } from "@/lib/pricing-display";
 import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, needsLiveRates, visitorPrice } from "@/lib/visitor-currency";
+import { paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { getSessionUser } from "@/lib/session";
 import { buildShareMetadata } from "@/lib/share-metadata";
@@ -26,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function PricingPage() {
   const user = await getSessionUser();
+  const live = paymentsLive();
   const plans = pricingPlans();
   const country = await readVisitorCountry();
   const rates = needsLiveRates(country) ? await cachedUsdRates() : null;
@@ -69,6 +71,7 @@ export default async function PricingPage() {
                     )}
               </p>
               <p className="mt-5 font-serif text-4xl text-navy">{price.kind === "charges" ? price.kesLabel : price.label}</p>
+              {live ? null : <p className="text-sm font-semibold text-clay-dark">Coming soon</p>}
               {plan.period ? <p className="text-sm font-semibold text-navy">{plan.period}</p> : null}
               {price.kind === "charges" ? (
                 <>
@@ -95,9 +98,12 @@ export default async function PricingPage() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
-              <Link href={href} className={`${btnPrimary} mt-6`}>
-                {user ? "Continue on Promote" : "Sign in to promote"}
-              </Link>
+              <UpgradeAction
+                live={live}
+                href={href}
+                label={user ? "Continue on Promote" : "Sign in to promote"}
+                className={`${btnPrimary} mt-6`}
+              />
             </section>
           );
         })}
@@ -113,9 +119,7 @@ export default async function PricingPage() {
       <p className="max-w-3xl text-sm leading-relaxed text-ink/60">{shownPlans[0]?.price.caption}</p>
       <p className="text-sm text-ink/60">
         Already signed in?{" "}
-        <Link href="/upgrade" className={`${btnSecondary} ml-1`}>
-          Open Promote
-        </Link>
+        <UpgradeAction live={live} href="/upgrade" label="Open Promote" className={`${btnSecondary} ml-1`} />
       </p>
     </div>
   );
