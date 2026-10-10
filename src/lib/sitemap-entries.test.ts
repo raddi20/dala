@@ -55,7 +55,15 @@ test("static paths include pricing and every category, and private prefixes stay
   assert.ok(paths.includes("/pricing"));
   assert.ok(paths.includes("/occasions"));
   assert.equal(paths.filter((path) => isPrivatePath(path)).length, 0);
-  assert.deepEqual(PRIVATE_PREFIXES, ["/admin", "/account", "/api", "/login", "/register"]);
+  assert.deepEqual(PRIVATE_PREFIXES, [
+    "/admin",
+    "/account",
+    "/api",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ]);
 });
 
 test("robots allows the public site, blocks private prefixes, and points at the sitemap", () => {
@@ -65,7 +73,15 @@ test("robots allows the public site, blocks private prefixes, and points at the 
   assert.ok(rules);
   assert.equal(rules.userAgent, "*");
   assert.deepEqual(rules.allow, "/");
-  assert.deepEqual(rules.disallow, ["/admin", "/account", "/api", "/login", "/register"]);
+  assert.deepEqual(rules.disallow, [
+    "/admin",
+    "/account",
+    "/api",
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/reset-password",
+  ]);
 });
 
 test("share metadata uses an absolute URL, card size, and twitter large image", () => {

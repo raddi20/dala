@@ -108,6 +108,10 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later. Sign-up does not prove you own the mailbox, so `ADMIN_EMAIL` is not granted admin from the register form. See **Production admin**.
 
+Forgot password is `/forgot-password`, linked from the sign-in form. It emails a one-time link to `/reset-password`. The link lasts 45 minutes. The token is stored as a SHA-256 hash, works once, and a new request invalidates the previous unused link. The page says the same thing whether or not that email is registered. After a successful reset, older signed-in sessions for that account stop working, and the person is signed in.
+
+The reset email goes through ZeptoMail. Set `ZEPTOMAIL_TOKEN` and `EMAIL_FROM` (a sender on a domain verified in ZeptoMail). Weekly seller tips still also need `TIPS_EMAIL=1` and an opt-in. Password reset does not use `TIPS_EMAIL`. The link is built from `APP_URL`, then `AUTH_URL`, then `NEXTAUTH_URL`. If the token or from-address is missing, the form does not send mail and tells the person to write to info@rangach.co.ke.
+
 The public controller name, registration number, proprietor line, phone, and postal address live in `src/lib/public-info.ts` (`LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_REG_NO`, `LEGAL_ENTITY_OWNER`, `BUSINESS_PHONE`, `BUSINESS_PHONE_TEL`, `BUSINESS_ADDRESS`). `BUSINESS_PHONE` is the spaced display number. `BUSINESS_PHONE_TEL` is the raw number used on tel: links. Proprietor and registration number render nothing while they are empty. Change the controller name in that one constant.
 
 ## Photos

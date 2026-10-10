@@ -31,7 +31,7 @@ const PROCESSORS = [
   },
   {
     name: "ZeptoMail",
-    role: "Sends optional weekly seller-tip emails, and only when that feature is switched on and the seller has asked for them.",
+    role: "Sends password-reset emails when someone asks, and optional weekly seller-tip emails when that feature is switched on and the seller has asked for them.",
   },
 ] as const;
 

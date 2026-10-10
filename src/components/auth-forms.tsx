@@ -24,6 +24,11 @@ export function LoginForm({ nextPath, queryError }: { nextPath: string; queryErr
         Password
         <input name="password" type="password" autoComplete="current-password" required className={fieldClass} />
       </label>
+      <p className="text-right text-sm">
+        <Link href="/forgot-password" className="font-semibold text-lake-dark">
+          Forgot password?
+        </Link>
+      </p>
       <SubmitButton className={btnPrimary} pendingLabel="Signing in…">
         Sign in
       </SubmitButton>
