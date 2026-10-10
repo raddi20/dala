@@ -10,6 +10,7 @@ import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { continueHref, isFeatured } from "@/lib/utils";
 
 /** Local SVG: warm geometric shops + connection nodes (navy/amber/cream). Replaces Unsplash food plate. */
@@ -196,7 +197,11 @@ export default async function HomePage() {
           browseLabel="Browse all"
           empty={featured.length === 0}
           emptyTitle="No featured listings yet"
-          emptyBody="Featured listings show here after a seller pays for a place at the top of the directory. Listing a business is free."
+          emptyBody={
+            paymentsLive()
+              ? "Featured listings show here after a seller pays for a place at the top of the directory. Listing a business is free."
+              : `${PAID_UPGRADES_COMING_SOON}. Listing a business is free.`
+          }
           action={
             <Link href={listHref} className={btnSecondary}>
               List your business

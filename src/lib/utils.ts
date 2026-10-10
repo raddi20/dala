@@ -10,6 +10,14 @@ export function safePath(input: string, fallback = "/") {
   return input;
 }
 
+/** Keep a same-site return path on a link. "/" stays as the bare path. */
+export function withNext(path: string, next: string) {
+  const dest = safePath(next, "/");
+  if (dest === "/") return path;
+  const join = path.includes("?") ? "&" : "?";
+  return `${path}${join}next=${encodeURIComponent(dest)}`;
+}
+
 /** Signed-out seller links go through sign-in and return to the same page. */
 export function continueHref(signedIn: boolean, path: string) {
   if (signedIn) return path;

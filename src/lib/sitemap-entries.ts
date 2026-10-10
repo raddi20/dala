@@ -4,7 +4,15 @@ import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
-export const PRIVATE_PREFIXES = ["/admin", "/account", "/api", "/login", "/register"] as const;
+export const PRIVATE_PREFIXES = [
+  "/admin",
+  "/account",
+  "/api",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+] as const;
 
 export function isPrivatePath(path: string) {
   const pathname = path.split("?")[0] ?? path;

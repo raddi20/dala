@@ -14,6 +14,7 @@ import {
 } from "@/lib/actions/admin";
 import { countAgentSignups } from "@/lib/agent-code";
 import { PRO_DAYS } from "@/lib/constants";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";
 import { formatPlanDate, isProActive } from "@/lib/pro";
 import {
@@ -104,6 +105,11 @@ export default async function AdminPage({
           kept in the audit trail. Pro plan is paid on Promote for {PRO_DAYS} days and does not verify a shop. Granting
           it here adds {PRO_DAYS} days. The listing verified flag is separate from those checks.
         </p>
+        {paymentsLive() ? null : (
+          <p className="mt-2 text-sm font-semibold text-navy">
+            {PAID_UPGRADES_COMING_SOON}. Grant, Add {PRO_DAYS} days, and Remove on this page still work.
+          </p>
+        )}
         <p className="mt-3 text-sm">
           <Link href="/admin/ai" className="font-semibold text-lake-dark underline">
             AI usage

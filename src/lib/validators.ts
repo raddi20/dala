@@ -8,7 +8,7 @@ import {
   REPORT_REASONS,
 } from "@/lib/constants";
 
-export type ActionState = { error: string; ok?: boolean };
+export type ActionState = { error: string; ok?: boolean; message?: string };
 
 export function field(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -80,6 +80,15 @@ export const profileSchema = z.object({
       (value) => value === "" || /^https?:\/\//i.test(value),
       "Photo URL must start with http:// or https://.",
     ),
+});
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email("Enter a valid email.").max(120),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().trim().min(20, "This link is not valid. Ask for a new one.").max(200),
+  password: z.string().min(8, "Password must be at least 8 characters.").max(72),
 });
 
 export const registerSchema = z.object({

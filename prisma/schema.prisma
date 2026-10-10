@@ -27,6 +27,8 @@ model User {
   // paid before expiry existed. The deploy backfill writes a 30-day grace date.
   // Until that runs, isProActive treats the row as still on so nobody loses Pro.
   verifiedProUntil DateTime?
+  // Set when a password reset succeeds. Older signed-in sessions stop there.
+  passwordChangedAt DateTime?
   // Brochure code from the rangach_agent cookie, copied once at sign-up.
   // Null when the new account had no code. Existing rows stay null. Never rewritten.
   referralAgentCode String?
@@ -43,6 +45,7 @@ model User {
   payments         Payment[]
   storefront       Storefront?
   shopBadgeEvents  ShopBadgeEvent[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model Listing {
@@ -461,3 +464,17 @@ model SellerTip {
 }
 
 // ===== end AI block =====
+
+// One-time password reset. The email contains the raw token. Only the SHA-256 hash is stored.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}

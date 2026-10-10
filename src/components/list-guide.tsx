@@ -11,6 +11,7 @@ import {
 } from "@/lib/launch-pages";
 import { FREE_OFFERING_CAP } from "@/lib/constants";
 import { appName } from "@/lib/brand";
+import { PAID_UPGRADES_COMING_SOON } from "@/lib/payments/live";
 import { CONTACT_EMAIL, publicBusinessPhone, publicBusinessPhoneTel } from "@/lib/public-info";
 import { SHOP_BADGES } from "@/lib/shop-badges";
 import { MAX_DURATION_SECONDS } from "@/lib/video/constants";
@@ -22,9 +23,11 @@ const doneClass = `${btnSecondary} min-h-12 w-full px-5 text-base`;
 export function ListGuide({
   progress,
   listingWriter,
+  paymentsOpen = false,
 }: {
   progress: GuideProgress;
   listingWriter: boolean;
+  paymentsOpen?: boolean;
 }) {
   const name = appName();
   const current = guideCurrentStep(progress);
@@ -129,9 +132,10 @@ export function ListGuide({
 
         <Step n={5} id="video" title="Shop video, if you want one" state="optional" href={LAUNCH_ROUTES.video} label="Shop video">
           <p>
-            Optional. A clip can be up to {MAX_DURATION_SECONDS} seconds, and only on Verified Pro. Paid upgrades
-            coming soon. A free shop cannot upload a video. A video stays private until an admin has watched it and
-            approved it. You confirm you have the rights, and the consent of anyone who is shown.
+            Optional. A clip can be up to {MAX_DURATION_SECONDS} seconds, and only on Verified Pro.
+            {paymentsOpen ? "" : `${PAID_UPGRADES_COMING_SOON}. `}A free shop cannot upload a video. A video stays
+            private until an admin has watched it and approved it. You confirm you have the rights, and the consent of
+            anyone who is shown.
           </p>
         </Step>
 

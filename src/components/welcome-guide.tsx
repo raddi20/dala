@@ -2,6 +2,7 @@ import Link from "next/link";
 import { APP_MEANING, APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
 import { FREE_OFFERING_CAP } from "@/lib/constants";
 import { LAUNCH_ROUTES, LIST_PATH } from "@/lib/launch-pages";
+import { PAID_UPGRADES_COMING_SOON } from "@/lib/payments/live";
 import { CONTACT_EMAIL, publicBusinessPhone, publicBusinessPhoneTel } from "@/lib/public-info";
 import { SHOP_BADGES } from "@/lib/shop-badges";
 import { MAX_DURATION_SECONDS } from "@/lib/video/constants";
@@ -9,7 +10,7 @@ import { btnNavy, cardClass } from "@/components/ui";
 
 const ctaClass = `${btnNavy} min-h-12 w-full px-5 text-base`;
 
-export function WelcomeGuide() {
+export function WelcomeGuide({ paymentsOpen = false }: { paymentsOpen?: boolean }) {
   const name = appName();
   const phone = publicBusinessPhone();
   const tel = publicBusinessPhoneTel();
@@ -56,8 +57,9 @@ export function WelcomeGuide() {
             are not added on their own.
           </li>
           <li>
-            A shop video, up to {MAX_DURATION_SECONDS} seconds, needs Verified Pro. Paid upgrades coming soon. A free
-            shop does not show a video. An admin watches a video before anyone else can.
+            A shop video, up to {MAX_DURATION_SECONDS} seconds, needs Verified Pro.
+            {paymentsOpen ? "" : `${PAID_UPGRADES_COMING_SOON}. `}A free shop does not show a video. An admin watches a
+            video before anyone else can.
           </li>
         </ul>
       </section>

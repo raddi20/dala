@@ -132,6 +132,20 @@ test("welcome and list render, link from the footer, and sit in the sitemap", ()
   assert.equal(twitter?.card, "summary_large_image");
 });
 
+test("welcome and list stay free of pay buttons when upgrades are live", () => {
+  const welcome = renderToStaticMarkup(createElement(WelcomeGuide, { paymentsOpen: true }));
+  const list = renderToStaticMarkup(
+    createElement(ListGuide, { progress: SIGNED_OUT_PROGRESS, listingWriter: false, paymentsOpen: true }),
+  );
+  for (const html of [welcome, list]) {
+    assert.equal(html.includes("Paid upgrades coming soon"), false);
+    assert.equal(html.includes("/upgrade"), false);
+    assert.equal(html.toLowerCase().includes("buy now"), false);
+    assert.equal(html.toLowerCase().includes("m-pesa"), false);
+    assert.ok(html.includes("Verified Pro"));
+  }
+});
+
 test("the listing writer is mentioned only when it is enabled", () => {
   const on = renderToStaticMarkup(createElement(ListGuide, { progress: SIGNED_OUT_PROGRESS, listingWriter: true }));
   assert.ok(on.includes("Write it for me"));

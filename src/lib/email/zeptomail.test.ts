@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { cronAuthorized } from "@/lib/ai/cron-auth";
-import { canSendTips, parseEmailFrom, sendTipEmail } from "@/lib/email/zeptomail";
+import { canSendMail, canSendTips, parseEmailFrom, sendMail, sendTipEmail } from "@/lib/email/zeptomail";
 
 function env(values: Record<string, string>): NodeJS.ProcessEnv {
   return { NODE_ENV: "test", ...values } as unknown as NodeJS.ProcessEnv;
@@ -31,6 +31,25 @@ test("the cron accepts only the bearer secret", () => {
   });
   assert.equal(cronAuthorized(right, env({ CRON_SECRET: "long-secret" })), true);
   assert.equal(cronAuthorized(right, env({ CRON_SECRET: "other" })), false);
+});
+
+test("password reset mail uses the ZeptoMail token and from address, and does not need TIPS_EMAIL", async () => {
+  assert.equal(canSendMail(env({})), false);
+  assert.equal(canSendTips(env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" })), false);
+  assert.equal(canSendMail(env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" })), true);
+  let calls = 0;
+  const sent = await sendMail(
+    { to: "a@example.com", name: "Amina", subject: "Reset your Rangach password", text: "Hello" },
+    {
+      env: env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+      fetchImpl: async () => {
+        calls += 1;
+        return new Response("{}", { status: 201 });
+      },
+    },
+  );
+  assert.equal(sent, "sent");
+  assert.equal(calls, 1);
 });
 
 test("send is skipped when ZeptoMail is not configured", async () => {

@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { updateStorefront } from "@/lib/actions/storefront";
 import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
+import { PAID_UPGRADES_COMING_SOON } from "@/lib/payments/live";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
@@ -21,6 +22,7 @@ export function StorefrontSettingsForm({
   occasions,
   selectedOccasions,
   emphasizePublish = false,
+  paymentsOpen,
 }: {
   slug: string;
   bannerUrl: string;
@@ -31,6 +33,7 @@ export function StorefrontSettingsForm({
   occasions: { slug: string; title: string }[];
   selectedOccasions: string[];
   emphasizePublish?: boolean;
+  paymentsOpen: boolean;
 }) {
   const [state, action] = useActionState(updateStorefront, initial);
 
@@ -67,9 +70,13 @@ export function StorefrontSettingsForm({
             See prices
           </Link>
           {" · "}
-          <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-            See Promote
-          </Link>
+          {paymentsOpen ? (
+            <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
+              See Promote
+            </Link>
+          ) : (
+            <span className="font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</span>
+          )}
         </p>
       )}
       <label className="flex items-start gap-2 text-sm">

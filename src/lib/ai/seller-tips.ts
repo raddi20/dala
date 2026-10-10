@@ -4,6 +4,7 @@ import { sellerTipsPrompt, type SellerTipsResult } from "@/lib/ai/prompts/seller
 import { runAi } from "@/lib/ai/run";
 import { statRetentionCutoff } from "@/lib/stats/retention";
 import { canSendTips, sendTipEmail, type TipEmail } from "@/lib/email/zeptomail";
+import { paymentsLive } from "@/lib/payments/live";
 import { defaultSiteUrl } from "@/lib/brand";
 import type { AiActor, RunResult } from "@/lib/ai/types";
 import { hideDemoShops } from "@/lib/demo-visibility";
@@ -120,6 +121,23 @@ export function unsubscribeToken(userId: string, secret: string): string {
 export function unsubscribeUrl(origin: string, userId: string, secret: string): string {
   const token = unsubscribeToken(userId, secret);
   return `${origin.replace(/\/$/, "")}/api/ai/tips-unsubscribe?user=${encodeURIComponent(userId)}&token=${token}`;
+}
+
+/** Drop upgrade suggestions while checkout is off. Flag on returns the list unchanged. */
+export function presentSellerTips(result: SellerTipsResult, env: NodeJS.ProcessEnv = process.env): SellerTipsResult {
+  if (paymentsLive(env)) return result;
+  return { ...result, tips: result.tips.filter((tip) => tip.action !== "upgrade_featured") };
+}
+
+function tipsPromptFor(env: NodeJS.ProcessEnv) {
+  if (paymentsLive(env)) return sellerTipsPrompt;
+  return {
+    ...sellerTipsPrompt,
+    system: sellerTipsPrompt.system.replace(
+      "Mention Featured or Pro at most once and only if stats show high views but low taps.",
+      "Do not mention Featured, Verified Pro, paying, upgrades, M-Pesa, or card.",
+    ),
+  };
 }
 
 export function tipEmailText(name: string, result: SellerTipsResult, unsubscribe: string): string {
@@ -270,8 +288,10 @@ export async function runWeeklySellerTips(
   let emailed = 0;
   let drafted = 0;
   for (const seller of sellers) {
-    const result = await run(sellerTipsPrompt, { statsJson: seller.statsJson }, { userId: seller.userId }, { env });
-    if (!result.ok || result.data.tips.length === 0) continue;
+    const result = await run(tipsPromptFor(env), { statsJson: seller.statsJson }, { userId: seller.userId }, { env });
+    if (!result.ok) continue;
+    const data = presentSellerTips(result.data, env);
+    if (data.tips.length === 0) continue;
     const weekStart = weekStartUtc(now);
     try {
       await save({
@@ -279,7 +299,7 @@ export async function runWeeklySellerTips(
         storefrontId: seller.storefrontId,
         weekStart,
         statsJson: seller.statsJson,
-        tipsJson: JSON.stringify(result.data),
+        tipsJson: JSON.stringify(data),
         source: "ai",
         emailedAt: null,
         createdAt: now,
@@ -293,7 +313,7 @@ export async function runWeeklySellerTips(
       to: seller.email,
       name: seller.name,
       subject: "Your week on Rangach",
-      text: tipEmailText(seller.name, result.data, unsubscribeUrl(origin, seller.userId, secret)),
+      text: tipEmailText(seller.name, data, unsubscribeUrl(origin, seller.userId, secret)),
     });
     if (delivery !== "sent") continue;
     try {

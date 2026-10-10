@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+// These pages describe today's pay copy. PAYMENTS_LIVE=1 is that copy. The off state is tested beside the flag.
+process.env.PAYMENTS_LIVE = "1";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
