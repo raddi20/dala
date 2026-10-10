@@ -2,13 +2,19 @@ import type { Metadata } from "next";
 import { ForgotPasswordForm } from "@/components/password-reset-forms";
 import { Wordmark } from "@/components/wordmark";
 import { cardClass } from "@/components/ui";
+import { one, safePath } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Forgot password",
   robots: { index: false, follow: false },
 };
 
-export default function ForgotPasswordPage() {
+export default async function ForgotPasswordPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const next = safePath(one((await searchParams).next), "/");
   return (
     <div className="mx-auto flex max-w-md flex-col justify-center gap-6 px-4 py-12 sm:py-16">
       <div className="text-center">
@@ -21,7 +27,7 @@ export default function ForgotPasswordPage() {
         </p>
       </div>
       <div className={`${cardClass} p-6`}>
-        <ForgotPasswordForm />
+        <ForgotPasswordForm nextPath={next} />
       </div>
     </div>
   );

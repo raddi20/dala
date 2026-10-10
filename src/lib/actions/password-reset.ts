@@ -10,9 +10,11 @@ import {
   issueResetToken,
   planPasswordReset,
   resetEmailText,
+  resetPasswordLink,
   takeResetSlot,
 } from "@/lib/password-reset";
 import { prisma } from "@/lib/prisma";
+import { safePath } from "@/lib/utils";
 import { field, forgotPasswordSchema, resetPasswordSchema, type ActionState } from "@/lib/validators";
 
 async function requestIp(): Promise<string> {
@@ -48,7 +50,7 @@ export async function requestPasswordReset(_prev: ActionState, formData: FormDat
   if (plan.send && account) {
     const token = await issueResetToken(account.id, new Date());
     if (token) {
-      const link = `${defaultSiteUrl()}/reset-password?token=${encodeURIComponent(token)}`;
+      const link = resetPasswordLink(defaultSiteUrl(), token, field(formData, "next"));
       const product = appName();
       const sent = await sendMail({
         to: account.email,
@@ -76,7 +78,7 @@ export async function resetPassword(_prev: ActionState, formData: FormData): Pro
     await signIn("credentials", {
       email: result.email,
       password: parsed.data.password,
-      redirectTo: "/",
+      redirectTo: safePath(field(formData, "next"), "/"),
     });
   } catch (error) {
     if (error instanceof AuthError) {

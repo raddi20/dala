@@ -4,9 +4,10 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { login, register } from "@/lib/actions/auth";
 import { CITIES, cityChoiceLabel } from "@/lib/constants";
+import { withNext } from "@/lib/utils";
+import type { ActionState } from "@/lib/validators";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
-import type { ActionState } from "@/lib/validators";
 
 const initial: ActionState = { error: "" };
 
@@ -25,7 +26,7 @@ export function LoginForm({ nextPath, queryError }: { nextPath: string; queryErr
         <input name="password" type="password" autoComplete="current-password" required className={fieldClass} />
       </label>
       <p className="text-right text-sm">
-        <Link href="/forgot-password" className="font-semibold text-lake-dark">
+        <Link href={withNext("/forgot-password", nextPath)} className="font-semibold text-lake-dark">
           Forgot password?
         </Link>
       </p>

@@ -3,6 +3,7 @@ import { ListGuide } from "@/components/list-guide";
 import { isAiFeatureOn } from "@/lib/ai/flags";
 import { appName } from "@/lib/brand";
 import { LIST_DESCRIPTION, LIST_PATH, LIST_TITLE, SIGNED_OUT_PROGRESS, type GuideProgress } from "@/lib/launch-pages";
+import { paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -24,7 +25,8 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ListPage() {
   const user = await getSessionUser();
   const listingWriter = await isAiFeatureOn("listing_writer");
-  if (!user) return <ListGuide progress={SIGNED_OUT_PROGRESS} listingWriter={listingWriter} />;
+  const paymentsOpen = paymentsLive();
+  if (!user) return <ListGuide progress={SIGNED_OUT_PROGRESS} listingWriter={listingWriter} paymentsOpen={paymentsOpen} />;
 
   const shop = await prisma.storefront.findUnique({
     where: { userId: user.id },
@@ -42,5 +44,5 @@ export default async function ListPage() {
     hasWhatsapp: Boolean(user.whatsapp.trim() || user.phone.trim()),
   };
 
-  return <ListGuide progress={progress} listingWriter={listingWriter} />;
+  return <ListGuide progress={progress} listingWriter={listingWriter} paymentsOpen={paymentsOpen} />;
 }

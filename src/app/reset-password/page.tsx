@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ResetPasswordForm } from "@/components/password-reset-forms";
 import { Wordmark } from "@/components/wordmark";
 import { cardClass } from "@/components/ui";
-import { one } from "@/lib/utils";
+import { one, safePath, withNext } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Choose a new password",
@@ -15,7 +15,9 @@ export default async function ResetPasswordPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const token = one((await searchParams).token).trim();
+  const sp = await searchParams;
+  const token = one(sp.token).trim();
+  const next = safePath(one(sp.next), "/");
 
   return (
     <div className="mx-auto flex max-w-md flex-col justify-center gap-6 px-4 py-12 sm:py-16">
@@ -28,11 +30,11 @@ export default async function ResetPasswordPage({
       </div>
       <div className={`${cardClass} grid gap-4 p-6`}>
         {token.length >= 20 ? (
-          <ResetPasswordForm token={token} />
+          <ResetPasswordForm token={token} nextPath={next} />
         ) : (
           <>
             <p className="text-sm text-ink/70">This link is missing or too short. Ask for a new one.</p>
-            <Link href="/forgot-password" className="text-sm font-semibold text-lake-dark">
+            <Link href={withNext("/forgot-password", next)} className="text-sm font-semibold text-lake-dark">
               Forgot password
             </Link>
           </>

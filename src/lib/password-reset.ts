@@ -4,6 +4,7 @@ import { passwordLoginAllowed } from "@/lib/admin-access";
 import { APP_TAGLINE } from "@/lib/brand";
 import { CONTACT_EMAIL } from "@/lib/public-info";
 import { prisma } from "@/lib/prisma";
+import { safePath } from "@/lib/utils";
 
 /** High-entropy reset links last 45 minutes, inside the 30–60 minute window. */
 export const RESET_TTL_MS = 45 * 60 * 1000;
@@ -44,6 +45,14 @@ export function sessionStale(tokenPwdAt: number, passwordChangedAt: Date | null)
   if (!Number.isFinite(changed) || changed <= 0) return false;
   if (!Number.isFinite(tokenPwdAt)) return true;
   return changed > tokenPwdAt;
+}
+
+/** Reset URL. A safe return path other than "/" is kept as next. Unsafe values are dropped. */
+export function resetPasswordLink(origin: string, token: string, next: string): string {
+  const base = `${origin.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+  const dest = safePath(next, "/");
+  if (dest === "/") return base;
+  return `${base}&next=${encodeURIComponent(dest)}`;
 }
 
 export function resetEmailText(name: string, link: string, product = "Rangach"): string {

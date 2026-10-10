@@ -18,6 +18,7 @@ import {
   newResetToken,
   planPasswordReset,
   resetEmailText,
+  resetPasswordLink,
   sessionStale,
   takeResetSlot,
   tokenUsable,
@@ -122,10 +123,22 @@ test("the reset email is short and carries the site link", () => {
   assert.equal(text.includes("passwordHash"), false);
 });
 
-test("the sign-in form links to forgot password", () => {
+test("the sign-in form links to forgot password and keeps the return path", () => {
   const html = renderToStaticMarkup(createElement(LoginForm, { nextPath: "/account", queryError: "" }));
-  assert.match(html, /href="\/forgot-password"/);
+  assert.match(html, /href="\/forgot-password\?next=%2Faccount"/);
   assert.match(html, /Forgot password\?/);
+  const home = renderToStaticMarkup(createElement(LoginForm, { nextPath: "/", queryError: "" }));
+  assert.match(home, /href="\/forgot-password"/);
+  assert.equal(home.includes("forgot-password?next"), false);
+});
+
+test("a reset link keeps a safe return path and drops an open redirect", () => {
+  const kept = resetPasswordLink("https://www.rangach.co.ke", "tok", "/list");
+  assert.equal(kept, "https://www.rangach.co.ke/reset-password?token=tok&next=%2Flist");
+  const home = resetPasswordLink("https://www.rangach.co.ke/", "tok", "/");
+  assert.equal(home, "https://www.rangach.co.ke/reset-password?token=tok");
+  const dropped = resetPasswordLink("https://www.rangach.co.ke", "tok", "https://evil.example");
+  assert.equal(dropped, "https://www.rangach.co.ke/reset-password?token=tok");
 });
 
 async function userWithPassword(password: string) {
