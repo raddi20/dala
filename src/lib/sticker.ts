@@ -23,17 +23,19 @@ export function stickerFilename(slug: string, size: StickerSize, extension: "svg
 }
 
 /**
- * Published shops are public. A draft, or a shop hidden from the public (demo hide),
- * is visible to the owner and to admins only.
+ * A published shop is public. A draft, a demo hide, an admin takedown (hidden),
+ * or a shop whose owner is suspended is visible to the owner and to admins only.
  */
 export function canViewSticker(input: {
   published: boolean;
   publiclyHidden: boolean;
+  shopHidden: boolean;
+  ownerSuspended: boolean;
   isOwner: boolean;
   isAdmin: boolean;
 }) {
   if (input.isOwner || input.isAdmin) return true;
-  if (input.publiclyHidden) return false;
+  if (input.publiclyHidden || input.shopHidden || input.ownerSuspended) return false;
   return input.published;
 }
 
@@ -43,13 +45,15 @@ export type StickerScanInput = {
   userAgent: string;
   published: boolean;
   publiclyHidden: boolean;
+  shopHidden: boolean;
+  ownerSuspended: boolean;
   prefetch?: boolean;
 };
 
 /** True when this request should add one to the shop's sticker count. No personal data. */
 export function shouldRecordStickerScan(input: StickerScanInput) {
   if (input.ref !== STICKER_REF) return false;
-  if (!input.published || input.publiclyHidden) return false;
+  if (!input.published || input.publiclyHidden || input.shopHidden || input.ownerSuspended) return false;
   if (input.prefetch) return false;
   if (isAutomatedAgent(input.userAgent)) return false;
   return true;

@@ -10,9 +10,10 @@ export async function loadStickerShop(slug: string) {
       id: true,
       slug: true,
       published: true,
+      hidden: true,
       userId: true,
       stickerScans: true,
-      user: { select: { name: true, email: true } },
+      user: { select: { name: true, email: true, suspended: true } },
     },
   });
   if (!shop) return null;
@@ -20,6 +21,8 @@ export async function loadStickerShop(slug: string) {
   const allowed = canViewSticker({
     published: shop.published,
     publiclyHidden: isPublicDemoHidden(shop.user.email),
+    shopHidden: shop.hidden,
+    ownerSuspended: shop.user.suspended,
     isOwner: viewer?.id === shop.userId,
     isAdmin: viewer?.role === "admin",
   });

@@ -166,17 +166,17 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     if (blocked) notFound();
   }
 
-  if (shop.published) {
-    const headerList = await headers();
-    await countStickerScan({
-      storefrontId: shop.id,
-      ref: one(query.ref),
-      userAgent: headerList.get("user-agent") ?? "",
-      published: true,
-      publiclyHidden: false,
-      prefetch: isPrefetchRequest((name) => headerList.get(name)),
-    });
-  }
+  const headerList = await headers();
+  await countStickerScan({
+    storefrontId: shop.id,
+    ref: one(query.ref),
+    userAgent: headerList.get("user-agent") ?? "",
+    published: shop.published,
+    publiclyHidden: false,
+    shopHidden: shop.hidden,
+    ownerSuspended: shop.user.suspended,
+    prefetch: isPrefetchRequest((name) => headerList.get(name)),
+  });
 
   const [signals, reviews] = await Promise.all([shopSignals(shop.userId), shopReviews(shop.userId)]);
   const region = regionForCity(shop.user.city);

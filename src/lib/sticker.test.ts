@@ -87,7 +87,14 @@ test("a decoder reads the sticker QR, including the downloaded PNG", async () =>
 });
 
 test("sticker access is public only for a published shop", () => {
-  const open = { published: true, publiclyHidden: false, isOwner: false, isAdmin: false };
+  const open = {
+    published: true,
+    publiclyHidden: false,
+    shopHidden: false,
+    ownerSuspended: false,
+    isOwner: false,
+    isAdmin: false,
+  };
   assert.equal(canViewSticker(open), true);
   assert.equal(canViewSticker({ ...open, published: false }), false);
   assert.equal(canViewSticker({ ...open, published: false, isOwner: true }), true);
@@ -95,6 +102,21 @@ test("sticker access is public only for a published shop", () => {
   assert.equal(canViewSticker({ ...open, publiclyHidden: true }), false);
   assert.equal(canViewSticker({ ...open, publiclyHidden: true, isOwner: true }), true);
   assert.equal(canViewSticker({ ...open, publiclyHidden: true, isAdmin: true }), true);
+  assert.equal(canViewSticker({ ...open, shopHidden: true }), false);
+  assert.equal(canViewSticker({ ...open, shopHidden: true, isOwner: true }), true);
+  assert.equal(canViewSticker({ ...open, shopHidden: true, isAdmin: true }), true);
+  assert.equal(canViewSticker({ ...open, ownerSuspended: true }), false);
+  assert.equal(canViewSticker({ ...open, ownerSuspended: true, isOwner: true }), true);
+  assert.equal(canViewSticker({ ...open, ownerSuspended: true, isAdmin: true }), true);
+
+  const loader = read("src/lib/sticker-shop.ts");
+  assert.match(loader, /shopHidden: shop\.hidden/);
+  assert.match(loader, /ownerSuspended: shop\.user\.suspended/);
+  assert.match(read("src/app/b/[slug]/sticker/page.tsx"), /loadStickerShop/);
+  assert.match(read("src/app/b/[slug]/sticker/file/route.ts"), /loadStickerShop/);
+  const shopPage = read("src/app/b/[slug]/page.tsx");
+  assert.match(shopPage, /shopHidden: shop\.hidden/);
+  assert.match(shopPage, /ownerSuspended: shop\.user\.suspended/);
 });
 
 test("ref=sticker counts one visit and stores no personal data", async () => {
@@ -110,12 +132,16 @@ test("ref=sticker counts one visit and stores no personal data", async () => {
     userAgent: browser,
     published: true,
     publiclyHidden: false,
+    shopHidden: false,
+    ownerSuspended: false,
   };
   assert.equal(await recordStickerVisit(counter, base), true);
   assert.equal(await recordStickerVisit(counter, { ...base, ref: "" }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, ref: "email" }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, published: false }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, publiclyHidden: true }), false);
+  assert.equal(await recordStickerVisit(counter, { ...base, shopHidden: true }), false);
+  assert.equal(await recordStickerVisit(counter, { ...base, ownerSuspended: true }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, userAgent: "Googlebot" }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, userAgent: "" }), false);
   assert.equal(await recordStickerVisit(counter, { ...base, prefetch: true }), false);
