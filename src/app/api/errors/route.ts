@@ -17,13 +17,7 @@ export async function POST(request: Request) {
   const parsed = parseClientErrorReport(raw);
   if (!parsed.ok) return new NextResponse(null, { status: parsed.status });
 
-  const { initServerSentry } = await import("@/sentry.server.config");
-  initServerSentry();
-  const Sentry = await import("@sentry/nextjs");
-  const error = new Error(parsed.report.message);
-  if (parsed.report.stack) error.stack = parsed.report.stack;
-  Sentry.captureException(error, {
-    extra: { digest: parsed.report.digest, href: parsed.report.href },
-  });
+  const { captureClientReport } = await import("@/sentry.server.config");
+  captureClientReport(parsed.report);
   return new NextResponse(null, { status: 204 });
 }
