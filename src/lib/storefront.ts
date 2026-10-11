@@ -23,6 +23,26 @@ export async function uniqueSlug(name: string, exceptId?: string) {
   throw new Error("Could not choose a shop address.");
 }
 
+export type ShopListingSignal = {
+  type: string;
+  verified: boolean;
+  featured: boolean;
+  featuredUntil: Date | null;
+};
+
+/** Same primary listing the shop page shows: verified and featured, then verified, then featured, then the oldest. */
+export function pickPrimaryShopListing<T extends ShopListingSignal>(listings: readonly T[]): T | null {
+  const business = listings.filter((listing) => listing.type === "business");
+  const pool = business.length > 0 ? business : [...listings];
+  return (
+    pool.find((listing) => listing.verified && isFeatured(listing)) ??
+    pool.find((listing) => listing.verified) ??
+    pool.find((listing) => isFeatured(listing)) ??
+    pool[0] ??
+    null
+  );
+}
+
 export async function shopSignals(ownerId: string) {
   const listings = await prisma.listing.findMany({
     where: { ownerId, hidden: false, owner: { suspended: false } },
@@ -38,14 +58,7 @@ export async function shopSignals(ownerId: string) {
     },
     orderBy: { createdAt: "asc" },
   });
-  const business = listings.filter((listing) => listing.type === "business");
-  const pool = business.length > 0 ? business : listings;
-  const primary =
-    pool.find((listing) => listing.verified && isFeatured(listing)) ??
-    pool.find((listing) => listing.verified) ??
-    pool.find((listing) => isFeatured(listing)) ??
-    pool[0] ??
-    null;
+  const primary = pickPrimaryShopListing(listings);
 
   return {
     verified: listings.some((listing) => listing.verified),

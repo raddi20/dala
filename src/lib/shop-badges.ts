@@ -175,6 +175,19 @@ export function parseShopBadgeFilter(value: string | null | undefined): ShopBadg
   return null;
 }
 
+/** Shop-table form of the listing badge filter. Same phone, location, business, and any values. */
+export function storefrontBadgeWhere(value: string | null | undefined): Prisma.StorefrontWhereInput | null {
+  const filter = parseShopBadgeFilter(value);
+  if (!filter) return null;
+  if (filter === "any") {
+    return { OR: [{ phoneVerified: true }, { locationVerified: true }, { businessVerified: true }] };
+  }
+  if (filter === "phone") return { phoneVerified: true };
+  if (filter === "location") return { locationVerified: true };
+  if (filter === "business") return { businessVerified: true };
+  return null;
+}
+
 export function shopBadgeWhere(value: string | null | undefined): Prisma.ListingWhereInput | null {
   const filter = parseShopBadgeFilter(value);
   if (!filter) return null;

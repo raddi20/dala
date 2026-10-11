@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { HomeRail } from "@/components/home-rail";
 import { ListingCard } from "@/components/listing-card";
+import { OfferingCard } from "@/components/offering-card";
+import { ShopCard } from "@/components/shop-card";
 import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
 import { GateMark } from "@/components/wordmark";
 import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
@@ -8,10 +10,10 @@ import { HOME_CATEGORIES, categoryHref } from "@/lib/categories";
 import { CITIES } from "@/lib/constants";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
-import { searchListings } from "@/lib/search";
+import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
-import { continueHref, isFeatured } from "@/lib/utils";
+import { continueHref } from "@/lib/utils";
 
 /** Local SVG: warm geometric shops + connection nodes (navy/amber/cream). Replaces Unsplash food plate. */
 const HERO_IMAGE = "/hero-community.svg";
@@ -29,15 +31,15 @@ export default async function HomePage() {
       ? "Your shop is in the header. List another business in the directory any time."
       : "Open a shop, add one offering, then publish. Buyers message you on WhatsApp.";
   await ensureOccasionDefinitions(prisma);
-  const [listings, occasions] = await Promise.all([
-    searchListings({ viewerId: user?.id }),
+  const [rails, occasions] = await Promise.all([
+    homeRails(user?.id),
     prisma.occasion.findMany({
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
       select: { slug: true, title: true },
     }),
   ]);
-  const featured = listings.filter((listing) => isFeatured(listing)).slice(0, 4);
-  const classifieds = listings.filter((listing) => listing.type !== "business").slice(0, 4);
+  const featured = rails.featured;
+  const classifieds = rails.classifieds;
 
   return (
     <div>
@@ -189,6 +191,44 @@ export default async function HomePage() {
             ))}
           </div>
         </section>
+
+        <HomeRail
+          title="New shops"
+          hint="Published shops buyers can open and message."
+          browseHref="/shops"
+          browseLabel="All shops"
+          empty={rails.shops.length === 0}
+          emptyTitle="No shops yet"
+          emptyBody="Shops show here after a seller adds an offering and publishes."
+          action={
+            <Link href={shopHref} className={btnSecondary}>
+              Open a shop
+            </Link>
+          }
+        >
+          {rails.shops.map((shop) => (
+            <ShopCard key={shop.id} shop={shop} />
+          ))}
+        </HomeRail>
+
+        <HomeRail
+          title="Offerings"
+          hint="What published shops are selling right now."
+          browseHref="/listings?type=business"
+          browseLabel="Browse businesses"
+          empty={rails.offerings.length === 0}
+          emptyTitle="No offerings yet"
+          emptyBody="Offerings show here once a published shop adds one."
+          action={
+            <Link href={shopHref} className={btnSecondary}>
+              Open a shop
+            </Link>
+          }
+        >
+          {rails.offerings.map((offering) => (
+            <OfferingCard key={offering.id} offering={offering} />
+          ))}
+        </HomeRail>
 
         <HomeRail
           title="Featured"

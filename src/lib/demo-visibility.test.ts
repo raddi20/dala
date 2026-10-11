@@ -203,5 +203,9 @@ test("public surfaces that can leak demo rows apply the visibility filter", () =
     assert.match(source, /demo-visibility/, file);
   }
   const listings = readFileSync(new URL("../app/listings/page.tsx", import.meta.url), "utf8");
-  assert.match(listings, /searchListings/);
+  assert.match(listings, /searchCatalogue/);
+  const shops = readFileSync(new URL("../app/shops/page.tsx", import.meta.url), "utf8");
+  assert.match(shops, /searchShops/);
+  const home = readFileSync(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(home, /homeRails/);
 });

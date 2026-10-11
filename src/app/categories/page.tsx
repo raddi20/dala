@@ -5,6 +5,8 @@ import { APP_DESCRIPTION, appName } from "@/lib/brand";
 import { CATEGORIES, CATEGORY_GROUPS, categoryHref } from "@/lib/categories";
 import { publicListingWhere } from "@/lib/demo-visibility";
 import { prisma } from "@/lib/prisma";
+import { shopCategoryCounts } from "@/lib/search";
+import { categoryCountLabel } from "@/lib/shop-category";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
 
@@ -22,11 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CategoriesPage() {
-  const counts = await prisma.listing.groupBy({
-    by: ["category"],
-    where: publicListingWhere({ hidden: false }),
-    _count: { _all: true },
-  });
+  const [counts, shopCounts] = await Promise.all([
+    prisma.listing.groupBy({
+      by: ["category"],
+      where: publicListingWhere({ hidden: false }),
+      _count: { _all: true },
+    }),
+    shopCategoryCounts(),
+  ]);
   const countFor = new Map(counts.map((row) => [row.category, row._count._all]));
 
   return (
@@ -46,7 +51,8 @@ export default async function CategoriesPage() {
           </div>
           <ul className="grid gap-2 sm:grid-cols-2">
             {group.categories.map((category) => {
-              const count = countFor.get(category) ?? 0;
+              const listings = countFor.get(category) ?? 0;
+              const shops = shopCounts.get(category) ?? 0;
               return (
                 <li key={category}>
                   <Link
@@ -54,9 +60,7 @@ export default async function CategoriesPage() {
                     className={`${cardClass} flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:border-navy/20`}
                   >
                     <span className="font-medium text-navy">{category}</span>
-                    <span className="shrink-0 text-sm text-ink/50">
-                      {count === 1 ? "1 listing" : `${count} listings`}
-                    </span>
+                    <span className="shrink-0 text-sm text-ink/50">{categoryCountLabel(listings, shops)}</span>
                   </Link>
                 </li>
               );

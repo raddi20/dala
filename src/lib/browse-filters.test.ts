@@ -35,4 +35,6 @@ test("region chips drop the city param and toggle the active region", () => {
   );
   assert.equal(browseRegionChipHref({ region: "diaspora" }, "diaspora"), "/listings");
   assert.equal(browseRegionChipHref({}, "homeland"), "/listings?region=homeland");
+  assert.equal(browseRegionChipHref({ q: "catering" }, "homeland", "/shops"), "/shops?q=catering&region=homeland");
+  assert.equal(browseRegionChipHref({ region: "homeland", q: "catering" }, "homeland", "/shops"), "/shops?q=catering");
 });

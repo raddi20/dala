@@ -1,3 +1,4 @@
+import { CATEGORIES } from "@/lib/categories";
 import { typeLabel, regionLabel } from "@/lib/constants";
 
 export type NlParse = {
@@ -89,6 +90,42 @@ function longestKey(text: string, keys: string[]) {
   return best;
 }
 
+/** Same keyword map the sentence parser uses for a listing category. Longest key wins. */
+export function categoryFromKeys(input: string): string {
+  return bestCategoryKey(input.toLowerCase()).category;
+}
+
+/**
+ * Categories a shop or offering belongs to.
+ * The keyword map is the same one listings use. A catalogue name also matches
+ * when that name appears as a word, so "catering" is Food & restaurants and Catering.
+ */
+export function categoriesInText(input: string): string[] {
+  const text = input.toLowerCase();
+  const found: string[] = [];
+  const fromKeys = categoryFromKeys(text);
+  if (fromKeys) found.push(fromKeys);
+  const names = [...CATEGORIES].sort((left, right) => right.length - left.length);
+  for (const name of names) {
+    if (found.includes(name)) continue;
+    if (hasTerm(text, name.toLowerCase())) found.push(name);
+  }
+  return found;
+}
+
+function bestCategoryKey(text: string): { category: string; key: string } {
+  let category = "";
+  let categoryKey = "";
+  for (const item of CATEGORY_KEYS) {
+    const key = longestKey(text, item.keys);
+    if (key.length > categoryKey.length) {
+      category = item.category;
+      categoryKey = key;
+    }
+  }
+  return { category, key: categoryKey };
+}
+
 function earliestPlace(text: string) {
   let best: { index: number; term: string; city: string; region: string } | null = null;
   for (const place of PLACES) {
@@ -161,16 +198,9 @@ export function parseNlQuery(input: string): NlParse {
     }
   }
 
-  let category = "";
-  let categoryKey = "";
-  for (const item of CATEGORY_KEYS) {
-    const key = longestKey(text, item.keys);
-    if (key.length > categoryKey.length) {
-      category = item.category;
-      categoryKey = key;
-    }
-  }
-  if (categoryKey) matched.push(categoryKey);
+  const categoryHit = bestCategoryKey(text);
+  const category = categoryHit.category;
+  if (categoryHit.key) matched.push(categoryHit.key);
 
   const typeHit = detectType(text);
   if (typeHit.term) matched.push(typeHit.term);

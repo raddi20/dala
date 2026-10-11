@@ -31,6 +31,9 @@ export async function Header() {
           <Link href="/listings" className={navLink}>
             Browse
           </Link>
+          <Link href="/shops" className={navLink}>
+            Shops
+          </Link>
           <Link href="/occasions" className={navLink}>
             Occasions
           </Link>

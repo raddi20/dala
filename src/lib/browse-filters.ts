@@ -23,7 +23,7 @@ export function activeBrowseRegion(city: string, region: string): BrowseRegion |
  * Toggle a Homeland or Diaspora chip. Always drops ?city= so the next URL
  * uses the region filter, and clicking the already-active chip clears it.
  */
-export function browseRegionChipHref(base: Record<string, string>, region: BrowseRegion): string {
+export function browseRegionChipHref(base: Record<string, string>, region: BrowseRegion, path = "/listings"): string {
   const next = { ...base };
   const active = activeBrowseRegion(next.city ?? "", next.region ?? "");
   delete next.city;
@@ -34,5 +34,5 @@ export function browseRegionChipHref(base: Record<string, string>, region: Brows
     if (value) params.set(key, value);
   }
   const qs = params.toString();
-  return qs ? `/listings?${qs}` : "/listings";
+  return qs ? `${path}?${qs}` : path;
 }
