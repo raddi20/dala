@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
-  SENTRY_TRACE_SAMPLE_RATE,
   scrubSentryEvent,
   scrubText,
   sentryDsn,
@@ -24,8 +23,7 @@ test("sentry is a no-op unless a DSN is set, and source maps need an auth token"
   delete process.env.SENTRY_PROJECT;
   assert.equal(sentryDsn(), "");
   assert.equal(sentrySourceMapsEnabled(), false);
-  assert.equal(sentryInitOptions().tracesSampleRate, SENTRY_TRACE_SAMPLE_RATE);
-  assert.equal(SENTRY_TRACE_SAMPLE_RATE, 0.05);
+  assert.equal("tracesSampleRate" in sentryInitOptions(), false);
   assert.equal(sentryInitOptions().dataCollection.userInfo, false);
 
   process.env.SENTRY_AUTH_TOKEN = "sntrys_test";

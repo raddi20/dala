@@ -105,21 +105,21 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 | `ADMIN_EMAIL` | Omit. | `admin@rangach.co.ke`. Production, and Preview if preview deploys use the same database. Comma-separated if you ever need more than one. |
 | `ADMIN_CLAIM_SECRET` | Omit. | 16 to 72 characters. The first login password for `ADMIN_EMAIL`. `openssl rand -base64 24` |
 | `ADMIN_CLAIM_RESET` | Omit. | Leave unset. Set to `1` for one production deploy only when you need to replace the admin password, then delete it. |
-| `NEXT_PUBLIC_SENTRY_DSN` | Omit. Errors stay on the branded page and nothing is sent. | Sentry DSN. Public. The browser and the server both read it. Redeploy after setting it. |
-| `SENTRY_DSN` | Omit. | Same DSN, server only. Used when `NEXT_PUBLIC_SENTRY_DSN` is unset. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Omit. | Optional. The server also accepts this DSN. The browser does not read it and does not load the SDK. |
+| `SENTRY_DSN` | Omit. Nothing is sent. | Server DSN. Enough on its own. The browser posts to `/api/errors` and the server forwards the report. |
 | `SENTRY_ORG` | Omit. | Sentry organization slug. Needed only to upload source maps. |
 | `SENTRY_PROJECT` | Omit. | Sentry project slug. Needed only to upload source maps. |
 | `SENTRY_AUTH_TOKEN` | Omit. | Organization auth token (`project:releases` and `org:read`). Source maps upload only when this, `SENTRY_ORG`, and `SENTRY_PROJECT` are all set at build time. Do not commit it. |
 
 ### Error monitoring
 
-Missing pages and crashes show a Rangach page with links home, to listings, to contact, and to WhatsApp. Sentry is installed and does nothing until a DSN is set. Trace sampling is 5%. Emails and phone numbers are stripped before an event is sent. Session Replay is off.
+Missing pages and crashes show a Rangach page with links home, to listings, to contact, and to WhatsApp. The browser does not load the Sentry SDK. It posts the crash to `/api/errors`. The server forwards that only when `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set, and strips emails and phone numbers first. Tracing, Session Replay, and the OpenTelemetry provider are off, so the SDK is not on the first-load JavaScript.
 
 1. Sign up at [sentry.io/signup](https://sentry.io/signup/) (free Developer plan).
 2. Create a project and choose Next.js. Copy the DSN.
-3. In Vercel → Settings → Environment Variables, for Production, set `NEXT_PUBLIC_SENTRY_DSN` to that DSN. Set `SENTRY_DSN` to the same value if you want the server to keep working when the public variable is absent.
-4. For readable stack traces, create an organization auth token (Settings → Auth Tokens, scopes `project:releases` and `org:read`) and set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT`. The org and project are the slugs in the Sentry URL.
-5. Redeploy. Until step 3, the SDK does not start and no events leave the server.
+3. In Vercel → Settings → Environment Variables, for Production, set `SENTRY_DSN` to that DSN. `NEXT_PUBLIC_SENTRY_DSN` is optional; the server reads it too, and the browser does not.
+4. For readable stack traces, create an organization auth token (Settings → Auth Tokens, scopes `project:releases` and `org:read`) and set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT`. The org and project are the slugs in the Sentry URL. Those three have to be present at build time or source maps are skipped.
+5. Redeploy. Until step 3, `/api/errors` returns without sending anything.
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later. Sign-up does not prove you own the mailbox, so `ADMIN_EMAIL` is not granted admin from the register form. See **Production admin**.
 

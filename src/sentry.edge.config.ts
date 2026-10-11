@@ -1,7 +1,8 @@
 import * as Sentry from "@sentry/nextjs";
 import { scrubSentryEvent, sentryDsn, sentryInitOptions } from "@/lib/sentry";
 
-if (sentryDsn()) {
+export function initEdgeSentry() {
+  if (!sentryDsn() || Sentry.isInitialized()) return;
   Sentry.init({
     ...sentryInitOptions(),
     beforeSend(event) {
@@ -9,3 +10,5 @@ if (sentryDsn()) {
     },
   });
 }
+
+initEdgeSentry();

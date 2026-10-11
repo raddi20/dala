@@ -2,16 +2,16 @@
  * Sentry stays idle unless a DSN is set. Nothing is sent during local dev or
  * on Vercel until Kevin adds the variables below.
  *
- *   NEXT_PUBLIC_SENTRY_DSN  browser and server (public, baked in at build)
- *   SENTRY_DSN              server only; used when the public DSN is unset
+ *   SENTRY_DSN              server DSN. This is enough to capture errors.
+ *   NEXT_PUBLIC_SENTRY_DSN  optional public DSN, also read on the server.
+ *                           The browser does not load the SDK or this value.
  *   SENTRY_ORG              org slug, only for source map upload
  *   SENTRY_PROJECT          project slug, only for source map upload
  *   SENTRY_AUTH_TOKEN       upload token. Source maps are skipped without it.
  *
- * tracesSampleRate is 5%. Session Replay is not enabled.
+ * The browser posts to /api/errors. The server forwards that with the SDK.
+ * Tracing is left unset so the SDK does not start OpenTelemetry. Replay is off.
  */
-
-export const SENTRY_TRACE_SAMPLE_RATE = 0.05;
 
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 const PHONE = /(?:\+\d(?:[\s().-]?\d){7,14}|\b254\d{8,12}\b|\b0[17]\d(?:[\s-]?\d){7}\b)/gi;
@@ -72,7 +72,6 @@ export function scrubSentryEvent<T>(event: T): T {
 export function sentryInitOptions() {
   return {
     dsn: sentryDsn(),
-    tracesSampleRate: SENTRY_TRACE_SAMPLE_RATE,
     dataCollection: {
       userInfo: false,
       cookies: false,

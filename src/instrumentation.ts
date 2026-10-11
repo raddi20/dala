@@ -1,17 +1,32 @@
-import * as Sentry from "@sentry/nextjs";
+import type { InstrumentationOnRequestError } from "next/dist/server/instrumentation/types";
 import { sentryDsn } from "@/lib/sentry";
 
-export async function register() {
+async function initSentryForThisRuntime() {
   if (!sentryDsn()) return;
-  if (process.env.NEXT_RUNTIME === "nodejs") {
-    await import("./sentry.server.config");
-  }
   if (process.env.NEXT_RUNTIME === "edge") {
-    await import("./sentry.edge.config");
+    const { initEdgeSentry } = await import("./sentry.edge.config");
+    initEdgeSentry();
+    return;
   }
+  const { initServerSentry } = await import("./sentry.server.config");
+  initServerSentry();
 }
 
-export const onRequestError = ((...args: Parameters<typeof Sentry.captureRequestError>) => {
+export async function register() {
+  await initSentryForThisRuntime();
+}
+
+export const onRequestError: InstrumentationOnRequestError = async (error, request, context) => {
   if (!sentryDsn()) return;
-  return Sentry.captureRequestError(...args);
-}) satisfies typeof Sentry.captureRequestError;
+  await initSentryForThisRuntime();
+  const Sentry = await import("@sentry/nextjs");
+  Sentry.captureRequestError(
+    error,
+    { path: request.path, method: request.method, headers: request.headers },
+    {
+      routerKind: context.routerKind,
+      routePath: context.routePath,
+      routeType: context.routeType,
+    },
+  );
+};
