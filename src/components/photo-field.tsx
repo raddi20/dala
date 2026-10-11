@@ -1,10 +1,44 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { IMAGE_ACCEPT } from "@/lib/image-file";
+import dynamic from "next/dynamic";
+import { Component, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { IMAGE_ACCEPT, clientImageChoiceError } from "@/lib/image-file";
 import { uploadPhoto } from "@/lib/prepare-photo";
 import type { UploadPurpose } from "@/lib/image-upload";
 import { fieldClass } from "@/components/ui";
+
+const PhotoEditor = dynamic(() => import("@/components/photo-editor").then((mod) => mod.PhotoEditor), {
+  ssr: false,
+  loading: () => (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-navy px-6 text-center text-white" role="status">
+      Opening the editor…
+    </div>
+  ),
+});
+
+class EditorBoundary extends Component<{ children: ReactNode; onClose: () => void }, { failed: boolean }> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  render() {
+    if (this.state.failed) {
+      return (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-navy px-6 text-center text-white" role="alert">
+          <div className="max-w-xs">
+            <p>The editor did not open. Connect once so it can be saved on this phone, then try again.</p>
+            <button type="button" className="mt-4 min-h-11 rounded-full bg-white px-4 text-sm font-semibold text-navy" onClick={this.props.onClose}>
+              Close
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export function PhotoField({
   name,
@@ -12,7 +46,7 @@ export function PhotoField({
   purpose,
   resourceId,
   defaultUrl = "",
-  hint = "JPEG, PNG, or WebP. Drop a photo here, or tap to choose from this device. Large phone photos are resized first.",
+  hint = "JPEG, PNG, or WebP. You can crop and brighten it before it uploads.",
 }: {
   name: string;
   label: string;
@@ -31,6 +65,23 @@ export function PhotoField({
   const [chosen, setChosen] = useState(false);
   const [error, setError] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    const win = window as Window & {
+      requestIdleCallback?: (cb: () => void) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const load = () => {
+      void import("@/components/photo-editor");
+    };
+    if (win.requestIdleCallback) {
+      const id = win.requestIdleCallback(load);
+      return () => win.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(load, 500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   useEffect(() => {
     const form = rootRef.current?.closest("form");
@@ -44,8 +95,19 @@ export function PhotoField({
     return () => form.removeEventListener("submit", onSubmit);
   }, []);
 
-  async function acceptFile(file: File | undefined) {
-    if (!file || uploadingRef.current) return;
+  function stageFile(file: File | undefined) {
+    if (!file || uploadingRef.current || pendingFile) return;
+    const choice = clientImageChoiceError(file);
+    if (choice) {
+      setError(choice);
+      return;
+    }
+    setError("");
+    setPendingFile(file);
+  }
+
+  async function uploadPrepared(file: File) {
+    setPendingFile(null);
     setError("");
     setUploading(true);
     uploadingRef.current = true;
@@ -88,7 +150,7 @@ export function PhotoField({
           onDrop={(event) => {
             event.preventDefault();
             setDragging(false);
-            void acceptFile(event.dataTransfer.files?.[0]);
+            stageFile(event.dataTransfer.files?.[0]);
           }}
           className={
             dragging
@@ -120,13 +182,13 @@ export function PhotoField({
             id={inputId}
             type="file"
             accept={IMAGE_ACCEPT}
-            disabled={uploading}
+            disabled={uploading || Boolean(pendingFile)}
             aria-describedby={hintId}
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
               event.target.value = "";
-              void acceptFile(file);
+              stageFile(file);
             }}
           />
         </label>
@@ -182,6 +244,17 @@ export function PhotoField({
         <p className="text-xs text-danger">Photo URL must start with http:// or https://.</p>
       ) : null}
       <input type="hidden" name={name} value={url} />
+      {pendingFile ? (
+        <EditorBoundary onClose={() => setPendingFile(null)}>
+          <PhotoEditor
+            key={`${pendingFile.name}-${pendingFile.size}-${pendingFile.lastModified}`}
+            file={pendingFile}
+            purpose={purpose}
+            onUse={(prepared) => void uploadPrepared(prepared)}
+            onCancel={() => setPendingFile(null)}
+          />
+        </EditorBoundary>
+      ) : null}
     </div>
   );
 }

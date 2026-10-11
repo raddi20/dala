@@ -217,7 +217,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           purpose="listing"
           resourceId={initial.id}
           defaultUrl={initial.photoUrl}
-          hint="Optional. Shows on the listing. Drop a photo, or choose one from this phone or computer. Large photos are resized first."
+          hint="Optional. Shows on the listing. You can crop and brighten it before it uploads."
         />
         <SubmitButton className={btnPrimary} pendingLabel="Saving…">
           {mode === "create" ? "Publish listing" : "Save changes"}

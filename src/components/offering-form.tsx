@@ -75,7 +75,7 @@ export function OfferingForm({
         purpose="offering"
         resourceId={offering?.id}
         defaultUrl={offering?.imageUrl ?? ""}
-        hint="Optional. Shows on your shop. Drop a photo, or choose one from this phone or computer. Large photos are resized first."
+        hint="Optional. Shows on your shop. You can crop and brighten it before it uploads."
       />
       <SubmitButton className={btnPrimary} pendingLabel="Saving…">
         {mode === "create" ? "Add offering" : "Save offering"}

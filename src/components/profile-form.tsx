@@ -71,7 +71,7 @@ export function ProfileForm({
         label="Profile photo"
         purpose="avatar"
         defaultUrl={user.avatarUrl}
-        hint="Shows on your shop page. Drop a photo, or choose one from this phone or computer."
+        hint="Shows on your shop as the round logo. You can crop and brighten it before it uploads."
       />
       <SubmitButton className={btnPrimary} pendingLabel="Saving…">
         Save profile
