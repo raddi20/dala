@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
+import { remoteImagePatterns } from "./src/lib/image-hosts";
 
 const nextConfig: NextConfig = {
   agentRules: false,
   serverExternalPackages: ["@prisma/client", "prisma", "@mux/mux-node", "sharp"],
+  images: {
+    remotePatterns: remoteImagePatterns(),
+  },
   async headers() {
     return [
       {
