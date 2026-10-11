@@ -370,7 +370,11 @@ export function PhotoEditor({
             </button>
             <button
               type="button"
-              className="min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              className={
+                edit.enhance
+                  ? "min-h-11 rounded-xl bg-navy px-4 text-sm font-semibold text-white disabled:opacity-50"
+                  : "min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              }
               aria-pressed={edit.enhance}
               disabled={busy}
               onClick={() => setEdit((prev) => ({ ...prev, enhance: !prev.enhance }))}
