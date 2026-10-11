@@ -1,7 +1,7 @@
 import { scrubText } from "@/lib/sentry";
 
-/** Keep the JSON body small enough for fetch keepalive and cheap phones. */
-export const CLIENT_ERROR_BODY_LIMIT = 8_000;
+/** Reject anything larger than 16 KB before it is parsed or forwarded. */
+export const CLIENT_ERROR_BODY_LIMIT = 16 * 1024;
 
 const LIMITS = {
   message: 2_000,

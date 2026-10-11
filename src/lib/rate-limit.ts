@@ -19,6 +19,10 @@ export const REPORT_WINDOW_MS = 24 * 60 * 60 * 1000;
 export const REVIEW_LIMIT = 5;
 export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/** Browser crash reports per hashed IP. */
+export const CLIENT_ERROR_LIMIT = 30;
+export const CLIENT_ERROR_WINDOW_MS = 60 * 1000;
+
 export const LOGIN_LIMIT_MESSAGE = "Too many sign-in attempts. Wait 15 minutes and try again.";
 export const REGISTER_LIMIT_MESSAGE = "Too many new accounts from this connection. Wait an hour and try again.";
 export const REPORT_LIMIT_MESSAGE = "You've sent enough reports for today. Try again tomorrow.";
@@ -178,6 +182,26 @@ export async function consumeFixedWindow(input: {
 
 export function loginSubject(ip: string, email: string): string {
   return `${ip || "unknown"}\n${email}`;
+}
+
+/** 30 reports per minute. The stored key hashes the IP. */
+export async function takeClientErrorSlot(
+  ip: string,
+  deps?: {
+    now?: number;
+    memory?: Map<string, MemoryBucket> | null;
+    durable?: FixedWindowStore | null;
+  },
+) {
+  return consumeFixedWindow({
+    action: "client_error",
+    subject: ip || "unknown",
+    limit: CLIENT_ERROR_LIMIT,
+    windowMs: CLIENT_ERROR_WINDOW_MS,
+    now: deps?.now,
+    memory: deps && "memory" in deps ? deps.memory : undefined,
+    durable: deps && "durable" in deps ? deps.durable : undefined,
+  });
 }
 
 /** Password reset keeps its 5/hour email and 20/hour IP limits, and now also writes the shared store. */

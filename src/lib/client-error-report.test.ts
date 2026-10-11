@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { POST } from "@/app/api/errors/route";
 import nextConfig from "../../next.config";
-import { parseClientErrorReport } from "./client-error-report";
+import { CLIENT_ERROR_LIMIT, takeClientErrorSlot, type MemoryBucket } from "./rate-limit";
+import { CLIENT_ERROR_BODY_LIMIT, parseClientErrorReport } from "./client-error-report";
 
 test("client error reports drop emails and phones and reject junk", () => {
   const parsed = parseClientErrorReport(
@@ -29,7 +30,7 @@ test("client error reports drop emails and phones and reject junk", () => {
   assert.equal(parseClientErrorReport("not-json").ok, false);
   assert.equal(parseClientErrorReport("[]").ok, false);
   assert.equal(parseClientErrorReport(JSON.stringify({ message: "" })).ok, false);
-  const oversized = parseClientErrorReport("x".repeat(8_001));
+  const oversized = parseClientErrorReport("x".repeat(CLIENT_ERROR_BODY_LIMIT + 1));
   assert.equal(oversized.ok, false);
   if (!oversized.ok) assert.equal(oversized.status, 413);
 });
@@ -51,7 +52,40 @@ test("browser bundles alias @sentry/nextjs to the stub", () => {
   assert.equal(typeof nextConfig.webpack, "function");
 });
 
-test("the error route drops reports when no DSN is set", async () => {
+test("client error reports allow 30 per minute and hash the IP", async () => {
+  const memory = new Map<string, MemoryBucket>();
+  const ip = "203.0.113.50";
+  const now = 1_700_000_000_000;
+  for (let i = 0; i < CLIENT_ERROR_LIMIT; i += 1) {
+    const hit = await takeClientErrorSlot(ip, { now, memory, durable: null });
+    assert.equal(hit.limited, false);
+    assert.equal(hit.key.includes(ip), false);
+    assert.match(hit.key, /^client_error:[a-f0-9]{64}:/);
+  }
+  const blocked = await takeClientErrorSlot(ip, { now, memory, durable: null });
+  assert.equal(blocked.limited, true);
+  const later = await takeClientErrorSlot(ip, { now: now + 60_000, memory, durable: null });
+  assert.equal(later.limited, false);
+});
+
+test("the error route rejects bodies over 16 KB and drops reports when no DSN is set", async () => {
+  const tooBig = await POST(
+    new Request("http://localhost/api/errors", {
+      method: "POST",
+      headers: { "content-length": String(CLIENT_ERROR_BODY_LIMIT + 1) },
+      body: "x",
+    }),
+  );
+  assert.equal(tooBig.status, 413);
+
+  const fat = await POST(
+    new Request("http://localhost/api/errors", {
+      method: "POST",
+      body: "y".repeat(CLIENT_ERROR_BODY_LIMIT + 1),
+    }),
+  );
+  assert.equal(fat.status, 413);
+
   const previous = {
     dsn: process.env.SENTRY_DSN,
     pub: process.env.NEXT_PUBLIC_SENTRY_DSN,

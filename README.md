@@ -113,7 +113,7 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 
 ### Error monitoring
 
-Missing pages and crashes show a Rangach page with links home, to listings, to contact, and to WhatsApp. The browser does not load the Sentry SDK. It posts the crash to `/api/errors`. The server forwards that only when `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set, and strips emails and phone numbers first. Tracing, Session Replay, and the OpenTelemetry provider are off, so the SDK is not on the first-load JavaScript.
+Missing pages and crashes show a Rangach page with links home, to listings, to contact, and to WhatsApp. The browser does not load the Sentry SDK. It posts the crash to `/api/errors`. That route allows 30 reports per minute per hashed IP and rejects a body over 16 KB. The server forwards a report only when `SENTRY_DSN` or `NEXT_PUBLIC_SENTRY_DSN` is set, and strips emails and phone numbers first. Tracing, Session Replay, and the OpenTelemetry provider are off, so the SDK is not on the first-load JavaScript.
 
 1. Sign up at [sentry.io/signup](https://sentry.io/signup/) (free Developer plan).
 2. Create a project and choose Next.js. Copy the DSN.
