@@ -13,7 +13,7 @@
  * Vercel already sends Strict-Transport-Security: max-age=63072000 on
  * www.rangach.co.ke, so this list does not add a second HSTS header.
  *
- * Fonts: next/font self-hosts Fraunces and Figtree. font-src is 'self' only.
+ * Fonts: Georgia and the system sans. Nothing is downloaded. font-src stays 'self'.
  * Camera and microphone are unused (uploads are file pickers; shop video is playback).
  */
 

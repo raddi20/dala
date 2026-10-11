@@ -138,7 +138,7 @@
 <meta name="theme-color" content="#1a2436">
 <title>Offline \xB7 Rangach</title>
 <style>
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f3ec;color:#141a24;font-family:Georgia,"Iowan Old Style",serif;padding:24px}
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fffcf6;color:#141a24;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px}
   main{max-width:28rem;text-align:center}
   h1{font-size:1.8rem;font-weight:600;color:#1a2436;margin:16px 0 8px}
   p{font-family:"Segoe UI",sans-serif;font-size:.95rem;line-height:1.5;color:#5c6573;margin:0}

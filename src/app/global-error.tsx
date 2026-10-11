@@ -19,8 +19,8 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body
-        className="min-h-full bg-[#f7f3ec] text-[#141a24] antialiased"
-        style={{ fontFamily: 'Figtree, "Segoe UI", ui-sans-serif, system-ui, sans-serif' }}
+        className="min-h-full bg-[#fffcf6] text-[#141a24] antialiased"
+        style={{ fontFamily: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }}
       >
         <main id="main" className="flex min-h-full flex-col">
           <StatusPage

@@ -8,7 +8,7 @@ import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
 
 const navLink =
-  "rounded-lg px-2.5 py-1.5 text-ink/80 transition-colors hover:bg-paper hover:text-navy";
+  "inline-flex min-h-11 items-center rounded-lg px-2.5 text-ink/80 hover:bg-paper hover:text-navy";
 
 export async function Header() {
   const user = await getSessionUser();
@@ -50,7 +50,7 @@ export async function Header() {
           <UpgradeAction live={paymentsLive()} href="/upgrade" label="Promote" className={`hidden md:inline ${navLink}`} />
           <Link
             href={shopHref}
-            className="btn-press rounded-full bg-clay px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-clay-dark"
+            className="btn-press inline-flex min-h-11 items-center rounded-full bg-gold px-3 py-1.5 text-sm font-semibold text-navy shadow-sm hover:bg-gold-d"
           >
             {shopLabel}
           </Link>
@@ -65,7 +65,7 @@ export async function Header() {
                 Account
               </Link>
               <form action={signOutAction}>
-                <button className="rounded-lg px-2.5 py-1.5 text-ink/55 transition-colors hover:bg-paper hover:text-navy">
+                <button className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-ink/55 hover:bg-paper hover:text-navy">
                   Sign out
                 </button>
               </form>
@@ -73,7 +73,7 @@ export async function Header() {
           ) : (
             <Link
               href="/login"
-              className="btn-press ml-1 rounded-full bg-navy px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-soft"
+              className="btn-press ml-1 inline-flex min-h-11 items-center rounded-full bg-navy px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-soft"
             >
               Sign in
             </Link>
