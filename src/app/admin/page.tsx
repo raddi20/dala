@@ -26,6 +26,7 @@ import {
   shopBadgeMethodLabel,
 } from "@/lib/shop-badges";
 import { requireAdmin } from "@/lib/session";
+import { stickerScanLabel } from "@/lib/sticker";
 import { formatWhen } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin" };
@@ -141,6 +142,12 @@ export default async function AdminPage({
                 </Link>
                 <span className="text-ink/60">{shop.published ? "Published" : "Draft"}</span>
               </div>
+              <p className="mt-1 text-sm">
+                <Link href={`/b/${shop.slug}/sticker`} className="font-semibold text-lake-dark">
+                  Print sticker
+                </Link>
+                <span className="text-ink/60"> · {stickerScanLabel(shop.stickerScans)}</span>
+              </p>
               <p className="text-ink/70">
                 /b/{shop.slug} · {shop.user.city} · {shop.user.email}
                 {isProActive(shop.user)

@@ -12,6 +12,7 @@ import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { publishShopButtonVisible } from "@/lib/shop-publish";
+import { stickerScanLabel } from "@/lib/sticker";
 import { formatOfferingPrice, one } from "@/lib/utils";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
@@ -141,9 +142,15 @@ export default async function ManageStorefrontPage({
           {active.length > cap ? ` · ${active.length} saved` : ""}
           {proActive && proUntilLabel ? ` · Pro plan until ${proUntilLabel}` : proActive ? " · Pro plan" : lapsed ? " · Pro plan ended" : ""}
         </p>
-        <Link href={`/b/${shop.slug}`} className="mt-2 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
-          {shop.published ? "View shop" : "Preview shop"}
-        </Link>
+        <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
+          <Link href={`/b/${shop.slug}`} className="text-lake-dark hover:text-lake">
+            {shop.published ? "View shop" : "Preview shop"}
+          </Link>
+          <Link href={`/b/${shop.slug}/sticker`} className="text-lake-dark hover:text-lake">
+            Print sticker
+          </Link>
+        </p>
+        <p className="mt-1 text-sm text-ink/65">{stickerScanLabel(shop.stickerScans)}</p>
       </div>
       <section className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-xl text-navy">Verified Pro</h2>

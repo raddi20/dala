@@ -140,6 +140,8 @@ model Storefront {
   businessVerified Boolean  @default(false)
   // Seller opt-in: this shop will take a WhatsApp order from abroad for family at home.
   servesDiaspora   Boolean  @default(false)
+  // Visits that opened the shop from a printed sticker (?ref=sticker). A count only.
+  stickerScans     Int      @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   offerings        Offering[]
