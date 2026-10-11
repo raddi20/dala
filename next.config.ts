@@ -1,10 +1,14 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
+import { remoteImagePatterns } from "./src/lib/image-hosts";
 import { sentrySourceMapsEnabled } from "./src/lib/sentry";
 
 const nextConfig: NextConfig = {
   agentRules: false,
   serverExternalPackages: ["@prisma/client", "prisma", "@mux/mux-node", "sharp"],
+  images: {
+    remotePatterns: remoteImagePatterns(),
+  },
   async headers() {
     return [
       {

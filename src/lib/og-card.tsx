@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ImageResponse } from "next/og";
+import { ogPhotoSource } from "@/lib/image-hosts";
 import type { OgCardModel } from "@/lib/og-model";
 import { OG_IMAGE } from "@/lib/share-metadata";
 
@@ -123,13 +124,16 @@ function inlinePublicFile(urlPath: string) {
 }
 
 async function inlineImage(url: string) {
-  if (url.startsWith("/")) return inlinePublicFile(url);
+  const source = ogPhotoSource(url);
+  if (!source) return "";
+  if (source.startsWith("/")) return inlinePublicFile(source);
   try {
-    const response = await fetch(url, {
+    const response = await fetch(source, {
       headers: { Accept: "image/*", "User-Agent": "RangachLinkPreview/1.0" },
       signal: AbortSignal.timeout(5000),
-      redirect: "follow",
+      redirect: "manual",
     });
+    if (response.status >= 300 && response.status < 400) return "";
     if (!response.ok) return "";
     const type = (response.headers.get("content-type") ?? "").split(";")[0]?.trim() ?? "";
     if (!type.startsWith("image/")) return "";
