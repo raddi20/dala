@@ -200,15 +200,18 @@ test("privacy names the agent cookie", () => {
 test("the admin table shows agent counts including none", () => {
   const html = renderToStaticMarkup(
     createElement(AgentCountTable, {
+      range: { preset: "all", from: null, to: null, label: "All dates", fromInput: "", toInput: "" },
       rows: [
-        { code: "A1", signups: 4, shops: 3, firstOfferings: 2, directoryListings: 1 },
-        { code: "none", signups: 1, shops: 0, firstOfferings: 0, directoryListings: 0 },
+        { code: "A1", signups: 4, shops: 3, publishedShops: 2, firstOfferings: 2, directoryListings: 1 },
+        { code: "none", signups: 1, shops: 0, publishedShops: 0, firstOfferings: 0, directoryListings: 0 },
       ],
     }),
   );
   assert.match(html, /Field agents/);
+  assert.ok(html.includes("Published shops"));
   assert.ok(html.includes("First offerings"));
   assert.ok(html.includes("Directory listings"));
+  assert.ok(html.includes("Launch weekend"));
   assert.ok(html.includes("A1"));
   assert.ok(html.includes("none"));
   assert.ok(html.includes(">4<"));
