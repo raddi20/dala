@@ -18,7 +18,7 @@ import {
   publicSellerContacts,
   publicTextWithoutDemoNumbers,
 } from "@/lib/demo-visibility";
-import { DemoContactNote } from "@/components/seller-contact";
+import { DemoContactNote, PaymentSafetyNote } from "@/components/seller-contact";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { isProActive } from "@/lib/pro";
@@ -82,7 +82,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
     where: { id },
     include: {
       owner: {
-        include: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          kind: true,
+          verifiedPro: true,
+          verifiedProUntil: true,
           storefront: {
             select: {
               slug: true,
@@ -242,6 +248,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
             />
           </>
         ) : null}
+        {chatUrl || callUrl ? <PaymentSafetyNote className="basis-full" /> : null}
       </div>
 
       <div className="whitespace-pre-wrap text-base leading-relaxed text-ink/90">{listing.description}</div>
@@ -341,6 +348,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
             Call
           </a>
         ) : null}
+        {callUrl ? <PaymentSafetyNote /> : null}
         {shop ? (
           <Link href={`/b/${shop.slug}`} className={btnSecondary}>
             Visit storefront
@@ -377,6 +385,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
             <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
               WhatsApp the seller
             </a>
+            <PaymentSafetyNote />
           </div>
         </div>
       ) : (

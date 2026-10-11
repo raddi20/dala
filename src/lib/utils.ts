@@ -55,10 +55,7 @@ export function formatWhen(date: Date) {
   return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function telHref(phone: string) {
-  const cleaned = phone.replace(/[^\d+]/g, "");
-  return cleaned ? `tel:${cleaned}` : "";
-}
+export { telHref } from "@/lib/phone";
 
 export function centsToInput(cents: number | null | undefined) {
   if (cents == null) return "";

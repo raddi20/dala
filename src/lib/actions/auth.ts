@@ -46,6 +46,7 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
     password: field(formData, "password"),
     kind: field(formData, "kind"),
     city: field(formData, "city"),
+    terms: field(formData, "terms"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Check the form." };

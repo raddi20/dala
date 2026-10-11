@@ -49,6 +49,15 @@ export function ErrorNote({ children }: { children: string }) {
   );
 }
 
+export function FieldError({ children }: { children?: string }) {
+  if (!children) return null;
+  return (
+    <span className="mt-1 block text-sm text-danger" role="alert">
+      {children}
+    </span>
+  );
+}
+
 export function EmptyState({
   title,
   body,
