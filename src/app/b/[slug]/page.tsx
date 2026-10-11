@@ -27,6 +27,8 @@ import { countStickerScan } from "@/lib/sticker-shop";
 import { isPrefetchRequest } from "@/lib/sticker";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
+import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
+import { variantMap } from "@/lib/image-variant-store";
 import { ShopVideoPoster } from "@/components/shop-video-poster";
 import { videoMode } from "@/lib/video/config";
 import { shopVideoIsPublic } from "@/lib/video/machine";
@@ -191,6 +193,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   const isAdmin = viewer?.role === "admin";
   const liveOfferings = shop.offerings.filter((offering) => !offering.hidden);
   const publicOfferings = visibleOfferings(liveOfferings, proActive);
+  const photoVariants = await variantMap(publicOfferings.map((offering) => offering.imageUrl));
   const moderatorHidden = isOwner || isAdmin ? shop.offerings.filter((offering) => offering.hidden) : [];
   const bannerSrc = proActive ? shop.bannerUrl : "";
   const publicVideo = shop.videos.find((video) =>
@@ -351,13 +354,33 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
               const price = formatOfferingPrice(offering.priceCents, offering.currency);
               const offeringChat = phone ? whatsappOfferingLink(phone, offering.title, url) : "";
               const letter = offering.title.trim().charAt(0).toUpperCase() || "D";
+              const stored = photoVariants.get(offering.imageUrl);
+              const photo = cardPhoto({
+                src: offering.imageUrl,
+                thumb480: stored?.thumb480,
+                thumb960: stored?.thumb960,
+                width: 480,
+                height: 360,
+                sizes: CARD_SIZES,
+              });
               return (
                 <article
                   key={offering.id}
                   id={`offering-${offering.id}`}
                   className={`card-lift scroll-mt-24 flex flex-col overflow-hidden ${cardClass}`}
                 >
-                  <RemoteImage src={offering.imageUrl} alt={offering.title} className="aspect-[4/3] w-full object-cover">
+                  <RemoteImage
+                    src={photo?.src ?? ""}
+                    srcSet={photo?.srcSet}
+                    sizes={photo?.sizes}
+                    width={photo?.width}
+                    height={photo?.height}
+                    loading={photo?.loading}
+                    decoding={photo?.decoding}
+                    fetchPriority={photo?.fetchPriority}
+                    alt={offering.title}
+                    className="aspect-[4/3] h-auto w-full object-cover"
+                  >
                     <div className="flex aspect-[4/3] items-end bg-gradient-to-br from-navy to-lake-dark p-3 text-white">
                       <span className="font-serif text-3xl">{letter}</span>
                     </div>

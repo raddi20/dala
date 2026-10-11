@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
+import { variantMap } from "@/lib/image-variant-store";
 import { mergeFreshItems } from "@/lib/home-fresh";
 import { firstPhoto } from "@/lib/item-card";
 import { paymentsLive } from "@/lib/payments/live";
@@ -321,6 +322,14 @@ function toShopCard(row: ShopRow): ShopCardData {
   };
 }
 
+async function attachCoverThumbs(shops: ShopCardData[]): Promise<ShopCardData[]> {
+  const stored = await variantMap(shops.map((shop) => shop.coverUrl));
+  return shops.map((shop) => {
+    const thumbs = shop.coverUrl ? stored.get(shop.coverUrl) : undefined;
+    return { ...shop, coverThumb480: thumbs?.thumb480 ?? null, coverThumb960: thumbs?.thumb960 ?? null };
+  });
+}
+
 function toOfferingCard(row: OfferingRow): OfferingCardData {
   return {
     id: row.id,
@@ -424,6 +433,8 @@ export type ShopCardData = {
   servesDiaspora: boolean;
   coverUrl: string;
   avatarUrl: string;
+  coverThumb480?: string | null;
+  coverThumb960?: string | null;
 };
 
 export type OfferingCardData = {
@@ -534,6 +545,14 @@ export async function searchCatalogue(filters: SearchFilters, env: Env = process
   const total = ordered.length;
   const window = pageWindow(total, filters.page ?? 1, pageSize);
   const slice = ordered.slice(window.start, window.start + pageSize);
+  const pageShops = slice.flatMap((hit) => {
+    if (hit.kind !== "shop") return [];
+    const shop = shopCards.get(hit.id);
+    return shop ? [shop] : [];
+  });
+  if (pageShops.length > 0) {
+    for (const shop of await attachCoverThumbs(pageShops)) shopCards.set(shop.id, shop);
+  }
   const hits = await hydrateHits(slice, shopCards, offeringCards);
   return { hits, total, page: window.page, pageSize, pageCount: window.pageCount };
 }
@@ -580,7 +599,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
     const matched = rows.filter((row) => shopMatches(row, category));
     const window = pageWindow(matched.length, filters.page ?? 1, pageSize);
     return {
-      shops: matched.slice(window.start, window.start + pageSize).map(toShopCard),
+      shops: await attachCoverThumbs(matched.slice(window.start, window.start + pageSize).map(toShopCard)),
       total: matched.length,
       page: window.page,
       pageSize,
@@ -597,7 +616,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
     take: pageSize,
   });
   return {
-    shops: rows.map(toShopCard),
+    shops: await attachCoverThumbs(rows.map(toShopCard)),
     total,
     page: window.page,
     pageSize,

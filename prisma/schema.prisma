@@ -526,6 +526,19 @@ model AdminAuditLog {
   @@index([targetType, targetId])
 }
 
+// Derived WebP sizes for a photo already stored in Blob. Existing photos stay
+// without a row until the backfill runs. Null thumbs mean that size was not
+// written (the original is already smaller, or it has not been made yet).
+model ImageVariant {
+  sourceUrl String   @id
+  thumb480  String?
+  thumb960  String?
+  // Longest side of the original. Set once the photo has been measured.
+  longest   Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 // Fixed-window counters for login, sign-up, reports, reviews, and password reset.
 // The key is the action, a hash of the subject, and the window start. No raw IP is stored.
 model RateLimitBucket {

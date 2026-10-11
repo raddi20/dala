@@ -27,6 +27,8 @@ import { paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
+import { cardPhoto } from "@/lib/image-variants";
+import { variantMap } from "@/lib/image-variant-store";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -142,6 +144,16 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const shopRecord = listing.owner.storefront;
   const shop = shopRecord?.published && !shopRecord.hidden && !listing.owner.suspended ? shopRecord : null;
   const callUrl = telHref(contacts.phone);
+  const storedPhoto = listing.photoUrl ? (await variantMap([listing.photoUrl])).get(listing.photoUrl) : undefined;
+  const photo = cardPhoto({
+    src: listing.photoUrl,
+    thumb480: storedPhoto?.thumb480,
+    thumb960: storedPhoto?.thumb960,
+    width: 960,
+    height: 600,
+    sizes: "(min-width: 768px) 720px, 100vw",
+    priority: true,
+  });
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
 
@@ -158,12 +170,19 @@ export default async function ListingPage({ params, searchParams }: Props) {
         </Flash>
       ) : null}
 
-      {listing.photoUrl ? (
+      {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={listing.photoUrl}
+          src={photo.src}
+          srcSet={photo.srcSet}
+          sizes={photo.sizes}
+          width={photo.width}
+          height={photo.height}
           alt={listing.title}
-          className="aspect-[16/10] w-full rounded-[1.25rem] border border-sand/80 bg-sand object-cover shadow-[var(--shadow-card)]"
+          loading={photo.loading}
+          decoding={photo.decoding}
+          fetchPriority={photo.fetchPriority}
+          className="aspect-[16/10] h-auto w-full rounded-[14px] border border-line/80 bg-sand object-cover shadow-[var(--shadow-card)]"
         />
       ) : (
         <div className="flex aspect-[16/10] items-end rounded-[1.25rem] bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white shadow-[var(--shadow-card)]">

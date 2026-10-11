@@ -1,10 +1,13 @@
 import Link from "next/link";
+import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { itemPriceText, showScamChip } from "@/lib/item-card";
 
 export function ItemCard({
   href,
   title,
   imageUrl,
+  thumb480,
+  thumb960,
   tag,
   price,
   seller,
@@ -16,6 +19,8 @@ export function ItemCard({
   href: string;
   title: string;
   imageUrl: string;
+  thumb480?: string | null;
+  thumb960?: string | null;
   tag: string;
   price?: string | null;
   seller: string;
@@ -24,7 +29,15 @@ export function ItemCard({
   scamRisk?: string | null;
   priority?: boolean;
 }) {
-  const src = imageUrl.trim();
+  const photo = cardPhoto({
+    src: imageUrl,
+    thumb480,
+    thumb960,
+    width: 480,
+    height: 360,
+    sizes: CARD_SIZES,
+    priority,
+  });
   const amount = itemPriceText(price);
   const meta = [seller, place].filter(Boolean).join(" · ");
   const warn = showScamChip(scamRisk);
@@ -33,16 +46,18 @@ export function ItemCard({
     <article className="card-lift h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
       <Link href={href} className="flex h-full flex-col">
         <div className="relative aspect-[4/3] bg-line">
-          {src ? (
+          {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={src}
-              width={480}
-              height={360}
+              src={photo.src}
+              srcSet={photo.srcSet}
+              sizes={photo.sizes}
+              width={photo.width}
+              height={photo.height}
               alt=""
-              loading={priority ? "eager" : "lazy"}
-              decoding="async"
-              fetchPriority={priority ? "high" : "auto"}
+              loading={photo.loading}
+              decoding={photo.decoding}
+              fetchPriority={photo.fetchPriority}
               className="h-full w-full object-cover"
             />
           ) : (
