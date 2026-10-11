@@ -6,7 +6,16 @@ import { AuthError } from "next-auth";
 import { normalizeEmail, registrationBlockReason } from "@/lib/admin-access";
 import { AGENT_COOKIE } from "@/lib/agent-code";
 import { signIn, signOut } from "@/auth";
+import { clientAddress } from "@/lib/client-address";
 import { prisma } from "@/lib/prisma";
+import {
+  consumeFixedWindow,
+  LOGIN_LIMIT_MESSAGE,
+  REGISTER_LIMIT,
+  REGISTER_LIMIT_MESSAGE,
+  REGISTER_WINDOW_MS,
+  SUSPENDED_MESSAGE,
+} from "@/lib/rate-limit";
 import { createRegisteredUser } from "@/lib/register-user";
 import { safePath } from "@/lib/utils";
 import { field, registerSchema, type ActionState } from "@/lib/validators";
@@ -20,6 +29,9 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
     await signIn("credentials", { email, password, redirectTo: next });
   } catch (error) {
     if (error instanceof AuthError) {
+      const code = "code" in error ? String(error.code) : "";
+      if (code === "rate_limited") return { error: LOGIN_LIMIT_MESSAGE };
+      if (code === "suspended") return { error: SUSPENDED_MESSAGE };
       return { error: "Email or password is wrong." };
     }
     throw error;
@@ -43,6 +55,14 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
   const email = normalizeEmail(parsed.data.email);
   const reserved = registrationBlockReason(email, process.env);
   if (reserved) return { error: reserved };
+
+  const gate = await consumeFixedWindow({
+    action: "register",
+    subject: await clientAddress(),
+    limit: REGISTER_LIMIT,
+    windowMs: REGISTER_WINDOW_MS,
+  });
+  if (gate.limited) return { error: REGISTER_LIMIT_MESSAGE };
 
   const passwordHash = await bcrypt.hash(parsed.data.password, 10);
   const jar = await cookies();

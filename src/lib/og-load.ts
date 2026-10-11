@@ -13,9 +13,10 @@ export async function loadShopOg(slug: string) {
     where: { slug },
     select: {
       published: true,
+      hidden: true,
       bannerUrl: true,
       userId: true,
-      user: { select: { name: true, email: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true } },
+      user: { select: { name: true, email: true, city: true, avatarUrl: true, verifiedPro: true, verifiedProUntil: true, suspended: true } },
       videos: {
         where: { status: "approved", NOT: { publicPlaybackId: "" } },
         orderBy: { createdAt: "desc" },
@@ -24,7 +25,7 @@ export async function loadShopOg(slug: string) {
       },
     },
   });
-  if (!shop?.published || isPublicDemoHidden(shop.user.email)) return brandOgModel(brand);
+  if (!shop?.published || shop.hidden || shop.user.suspended || isPublicDemoHidden(shop.user.email)) return brandOgModel(brand);
   const signals = await shopSignals(shop.userId);
   const proActive = isProActive(shop.user);
   const video = shop.videos[0];
@@ -59,10 +60,10 @@ export async function loadListingOg(id: string) {
       category: true,
       hidden: true,
       photoUrl: true,
-      owner: { select: { email: true } },
+      owner: { select: { email: true, suspended: true } },
     },
   });
-  if (!listing || listing.hidden || isPublicDemoHidden(listing.owner.email)) return brandOgModel(brand);
+  if (!listing || listing.hidden || listing.owner.suspended || isPublicDemoHidden(listing.owner.email)) return brandOgModel(brand);
   return listingOgModel({
     brand,
     hidden: false,

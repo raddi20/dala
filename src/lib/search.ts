@@ -4,9 +4,10 @@ import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
 import { isFeatured } from "@/lib/utils";
+import { liveOwner, publicReviewWhere } from "@/lib/visibility";
 
 const include = {
-  reviews: { where: { hidden: false }, select: { rating: true } },
+  reviews: { where: publicReviewWhere, select: { rating: true } },
   owner: {
     select: {
       id: true,
@@ -51,7 +52,12 @@ export async function searchListings(filters: {
   includeHidden?: boolean;
 }) {
   const where: Prisma.ListingWhereInput = {};
-  if (!filters.includeHidden) where.hidden = false;
+  if (!filters.includeHidden) {
+    where.hidden = false;
+    const current = where.AND;
+    const list = Array.isArray(current) ? current : current ? [current] : [];
+    where.AND = [...list, { owner: liveOwner }];
+  }
   if (filters.ids) where.id = { in: filters.ids };
   if (filters.city) where.city = filters.city;
   if (filters.region) where.region = filters.region;

@@ -6,9 +6,10 @@ import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
 import { ReviewForm } from "@/components/review-form";
 import { UpgradeAction } from "@/components/upgrade-action";
-import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp } from "@/components/ui";
+import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
-import { setListingHidden, setListingVerified } from "@/lib/actions/admin";
+import { setListingFeatured, setListingHidden, setListingVerified } from "@/lib/actions/admin";
+import { listingOpenTo, publicReviewWhere } from "@/lib/visibility";
 import { appName } from "@/lib/brand";
 import { cityChipLabel, cityInPhrase } from "@/lib/constants";
 import {
@@ -43,14 +44,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       contactPhone: true,
       contactWhatsapp: true,
       ownerId: true,
-      owner: { select: { email: true } },
+      owner: { select: { email: true, suspended: true } },
     },
   });
   if (!listing || isPublicDemoHidden(listing.owner.email)) return privateMetadata("Listing");
   const viewer = await getSessionUser();
-  const allowed = viewer?.id === listing.ownerId || viewer?.role === "admin";
-  if (listing.hidden && !allowed) return privateMetadata("Listing");
-  if (listing.hidden) return { title: listing.title, robots: { index: false, follow: false } };
+  const open = listingOpenTo(viewer, {
+    hidden: listing.hidden,
+    ownerId: listing.ownerId,
+    ownerSuspended: listing.owner.suspended,
+  });
+  if (!open) return privateMetadata("Listing");
+  if (listing.hidden || listing.owner.suspended) return { title: listing.title, robots: { index: false, follow: false } };
   const origin = await publicOrigin();
   const preview = listingPreviewImage({ origin, id, hidden: false, photoUrl: listing.photoUrl });
   if (!preview) return privateMetadata("Listing");
@@ -84,10 +89,12 @@ export default async function ListingPage({ params, searchParams }: Props) {
           kind: true,
           verifiedPro: true,
           verifiedProUntil: true,
+          suspended: true,
           storefront: {
             select: {
               slug: true,
               published: true,
+              hidden: true,
               phoneVerified: true,
               locationVerified: true,
               businessVerified: true,
@@ -97,7 +104,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         },
       },
       reviews: {
-        where: { hidden: false },
+        where: publicReviewWhere,
         include: { author: { select: { id: true, name: true } } },
         orderBy: { createdAt: "desc" },
       },
@@ -109,7 +116,15 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const isOwner = user?.id === listing.ownerId;
   const upgradesOpen = paymentsLive();
   const isAdmin = user?.role === "admin";
-  if (listing.hidden && !isOwner && !isAdmin) notFound();
+  if (
+    !listingOpenTo(user, {
+      hidden: listing.hidden,
+      ownerId: listing.ownerId,
+      ownerSuspended: listing.owner.suspended,
+    })
+  ) {
+    notFound();
+  }
 
   const blocked = user
     ? await prisma.block.findUnique({
@@ -124,7 +139,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
     whatsapp: listing.contactWhatsapp,
   });
   const chatUrl = contacts.whatsapp ? whatsappChatLink(contacts.whatsapp, listing.title) : "";
-  const shop = listing.owner.storefront?.published ? listing.owner.storefront : null;
+  const shopRecord = listing.owner.storefront;
+  const shop = shopRecord?.published && !shopRecord.hidden && !listing.owner.suspended ? shopRecord : null;
   const callUrl = telHref(contacts.phone);
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
@@ -132,7 +148,15 @@ export default async function ListingPage({ params, searchParams }: Props) {
   return (
     <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {notice ? <Flash>{notice}</Flash> : null}
-      {listing.hidden ? <Flash>This listing is hidden from browse. Only you and moderators can open it.</Flash> : null}
+      {listing.hidden || listing.owner.suspended ? (
+        <Flash>
+          {`${
+            listing.owner.suspended
+              ? "This account is suspended, so the listing is hidden from buyers."
+              : "This listing is hidden from browse. Only you and moderators can open it."
+          }${listing.hiddenReason ? ` ${listing.hiddenReason}` : ""}`}
+        </Flash>
+      ) : null}
 
       {listing.photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -292,15 +316,24 @@ export default async function ListingPage({ params, searchParams }: Props) {
         <section className={`grid gap-2 ${cardClass} p-4`}>
           <h2 className="font-serif text-xl text-navy">Moderation</h2>
           <div className="flex flex-wrap gap-2">
-            <form action={setListingHidden}>
+            <form action={setListingHidden} className="flex flex-wrap items-end gap-2">
               <input type="hidden" name="id" value={listing.id} />
               <input type="hidden" name="hidden" value={listing.hidden ? "0" : "1"} />
+              <label className="grid gap-1 text-sm">
+                Reason
+                <input name="reason" required minLength={3} maxLength={500} className={fieldClass} placeholder="Why" />
+              </label>
               <button className={btnSecondary}>{listing.hidden ? "Unhide" : "Hide"}</button>
             </form>
             <form action={setListingVerified}>
               <input type="hidden" name="id" value={listing.id} />
               <input type="hidden" name="verified" value={listing.verified ? "0" : "1"} />
               <button className={btnSecondary}>{listing.verified ? "Remove verified" : "Grant verified"}</button>
+            </form>
+            <form action={setListingFeatured}>
+              <input type="hidden" name="id" value={listing.id} />
+              <input type="hidden" name="featured" value={listing.featured ? "0" : "1"} />
+              <button className={btnSecondary}>{listing.featured ? "Remove featured" : "Feature for 30 days"}</button>
             </form>
           </div>
         </section>

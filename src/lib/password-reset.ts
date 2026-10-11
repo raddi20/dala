@@ -87,6 +87,11 @@ export function planPasswordReset(input: {
   return { error: "", message: RESET_NEUTRAL, send };
 }
 
+/** SHA-256 so the in-memory map does not keep a raw IP or email. */
+export function resetSlotKey(kind: "email" | "ip", value: string): string {
+  return `${kind}:${createHash("sha256").update(value).digest("hex")}`;
+}
+
 /** True when this email or IP is over the hour window. Records the attempt either way. */
 export function takeResetSlot(
   email: string,
@@ -94,8 +99,8 @@ export function takeResetSlot(
   now: number,
   store: Map<string, number[]> = hits,
 ): boolean {
-  const emailBlocked = note(store, `email:${email}`, now, RESET_EMAIL_LIMIT);
-  const ipBlocked = note(store, `ip:${ip || "unknown"}`, now, RESET_IP_LIMIT);
+  const emailBlocked = note(store, resetSlotKey("email", email), now, RESET_EMAIL_LIMIT);
+  const ipBlocked = note(store, resetSlotKey("ip", ip || "unknown"), now, RESET_IP_LIMIT);
   return emailBlocked || ipBlocked;
 }
 

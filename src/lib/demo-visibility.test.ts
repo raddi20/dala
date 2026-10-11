@@ -35,16 +35,28 @@ test("demo shops stay visible unless HIDE_DEMO_SHOPS is on", () => {
   assert.equal(isPublicDemoHidden("Atieno@Dala.Local", { HIDE_DEMO_SHOPS: "on" }), true);
   assert.equal(isPublicDemoHidden("seller@rangach.co.ke", { HIDE_DEMO_SHOPS: "1" }), false);
 
-  assert.deepEqual(publicListingWhere({ hidden: false }, {}), { hidden: false });
+  assert.deepEqual(publicListingWhere({ hidden: false }, {}), {
+    AND: [{ hidden: false }, { hidden: false, owner: { suspended: false } }],
+  });
   assert.equal(hiddenDemoUserFilter({}), null);
-  assert.deepEqual(publicShopWhere({ published: true }, {}), { published: true });
+  assert.deepEqual(publicShopWhere({ published: true }, {}), {
+    AND: [{ published: true }, { hidden: false, user: { suspended: false } }],
+  });
 
   const hiddenListings = publicListingWhere({ hidden: false }, { HIDE_DEMO_SHOPS: "1" });
   assert.deepEqual(hiddenListings, {
-    AND: [{ hidden: false }, { owner: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } }],
+    AND: [
+      { hidden: false },
+      { hidden: false, owner: { suspended: false } },
+      { owner: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } },
+    ],
   });
   assert.deepEqual(publicShopWhere({ published: true }, { HIDE_DEMO_SHOPS: "yes" }), {
-    AND: [{ published: true }, { user: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } }],
+    AND: [
+      { published: true },
+      { hidden: false, user: { suspended: false } },
+      { user: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } },
+    ],
   });
 });
 
