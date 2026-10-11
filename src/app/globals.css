@@ -210,6 +210,12 @@ h3,
   }
 }
 
+@media print {
+  .back-bar {
+    display: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --page-fade: 0ms;

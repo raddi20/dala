@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Fraunces, Figtree } from "next/font/google";
+import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
 import { Header } from "@/components/header";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -78,6 +79,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <PwaRegister />
         <StatBeacon />
         <main id="main" className="page-enter flex-1">
+          <Suspense fallback={null}>
+            <BackBar brand={appName()} />
+          </Suspense>
           <InstallPrompt appName={installName} />
           {children}
         </main>
