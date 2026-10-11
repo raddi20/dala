@@ -1,9 +1,13 @@
 import { appName } from "@/lib/brand";
+import { waMeDigits } from "@/lib/phone";
 
 function waMe(phone: string, text: string) {
-  const digits = phone.replace(/\D/g, "");
-  const base = digits ? `https://wa.me/${digits}` : "https://wa.me/";
-  return `${base}?text=${encodeURIComponent(text)}`;
+  const digits = waMeDigits(phone);
+  const query = `?text=${encodeURIComponent(text)}`;
+  if (digits) return `https://wa.me/${digits}${query}`;
+  // A share link has no seller number. A typed number that is not E.164 must not become wa.me/07…
+  if (phone.trim()) return "";
+  return `https://wa.me/${query}`;
 }
 
 /** Opens WhatsApp with an exact message. Nothing is stored. */
