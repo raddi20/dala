@@ -100,7 +100,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 pb-28 sm:gap-14 sm:py-16 md:pb-16">
+      <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 sm:gap-14 sm:py-16">
         <section>
           <h2 className={sectionTitleClass}>Where to start</h2>
           <p className="mt-2 max-w-xl text-ink/65">
@@ -273,16 +273,6 @@ export default async function HomePage() {
         </HomeRail>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden sticky-cta-bar">
-        <div className="mx-auto flex max-w-5xl gap-2">
-          <Link href={shopHref} className={`${btnPrimary} flex-1`}>
-            Open a shop
-          </Link>
-          <Link href={listHref} className={`${btnSecondary} flex-1`}>
-            List your business
-          </Link>
-        </div>
-      </div>
     </div>
   );
 }

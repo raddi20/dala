@@ -5,6 +5,7 @@ import { PaymentSetup } from "@/components/payment-setup";
 import { ProfileForm } from "@/components/profile-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
+import { signOutAction } from "@/lib/actions/auth";
 import { unblockUser } from "@/lib/actions/social";
 import { appName, defaultSiteUrl } from "@/lib/brand";
 import { LICENSED_PAYMENT_PROVIDER } from "@/lib/public-info";
@@ -76,7 +77,12 @@ export default async function AccountPage({
   return (
     <div className="mx-auto grid max-w-2xl gap-8 px-4 py-8">
       <div>
-        <h1 className="font-serif text-3xl">Account</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="font-serif text-3xl">Account</h1>
+          <form action={signOutAction}>
+            <button className="inline-flex min-h-11 items-center text-sm font-semibold text-gold-d">Sign out</button>
+          </form>
+        </div>
         <p className="mt-1 text-sm text-ink/70">
           {user.kind === "business" ? "Business" : "Person"} profile
           {isProActive(user) && user.verifiedProUntil

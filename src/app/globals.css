@@ -97,7 +97,14 @@ h3,
 }
 
 .sticky-cta-bar {
+  bottom: calc(4rem + env(safe-area-inset-bottom));
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 768px) {
+  .sticky-cta-bar {
+    bottom: 0;
+  }
 }
 
 .skeleton {
@@ -257,7 +264,12 @@ h3,
 }
 
 @media print {
-  .back-bar {
+  .back-bar,
+  .bottom-nav {
     display: none !important;
+  }
+
+  .sticky-cta-bar {
+    position: static !important;
   }
 }
