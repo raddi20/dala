@@ -21,7 +21,7 @@ export async function Header() {
   const shopLabel = shop ? "Your shop" : "Open a shop";
 
   return (
-    <header className="sticky top-0 z-30 border-b border-sand/80 bg-card/90 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-sand/80 bg-card/90 backdrop-blur-md print:hidden">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
         <Link href="/" className="group flex min-w-0 items-center">
           <Wordmark />

@@ -5,7 +5,7 @@ import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
 
 export function Footer() {
   return (
-    <footer className="mt-auto border-t border-sand/80 bg-card/60">
+    <footer className="mt-auto border-t border-sand/80 bg-card/60 print:hidden">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-ink/65 sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-sm">
           <Wordmark />

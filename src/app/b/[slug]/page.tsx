@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { DiasporaOrdersTag, ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
@@ -20,15 +21,20 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
 import { shopOpenTo } from "@/lib/visibility";
-import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
+import { averageRating, formatOfferingPrice, formatWhen, one, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
+import { countStickerScan } from "@/lib/sticker-shop";
+import { isPrefetchRequest } from "@/lib/sticker";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
 import { ShopVideoPoster } from "@/components/shop-video-poster";
 import { videoMode } from "@/lib/video/config";
 import { shopVideoIsPublic } from "@/lib/video/machine";
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -99,6 +105,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   );
   return buildShareMetadata({
     origin,
+    // Shop path only. Share metadata drops ?ref so a sticker visit is not canonical.
     path: `/b/${slug}`,
     title: shop.user.name,
     description,
@@ -108,8 +115,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function StorefrontPage({ params }: Props) {
+export default async function StorefrontPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  const query = await searchParams;
   const shop = await prisma.storefront.findUnique({
     where: { slug },
     include: {
@@ -157,6 +165,18 @@ export default async function StorefrontPage({ params }: Props) {
     });
     if (blocked) notFound();
   }
+
+  const headerList = await headers();
+  await countStickerScan({
+    storefrontId: shop.id,
+    ref: one(query.ref),
+    userAgent: headerList.get("user-agent") ?? "",
+    published: shop.published,
+    publiclyHidden: false,
+    shopHidden: shop.hidden,
+    ownerSuspended: shop.user.suspended,
+    prefetch: isPrefetchRequest((name) => headerList.get(name)),
+  });
 
   const [signals, reviews] = await Promise.all([shopSignals(shop.userId), shopReviews(shop.userId)]);
   const region = regionForCity(shop.user.city);

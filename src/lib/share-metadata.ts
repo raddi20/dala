@@ -15,6 +15,20 @@ export function absoluteUrl(origin: string, path: string) {
   return `${base}${suffix}`;
 }
 
+/** Drop a tracking ?ref so a sticker visit is not the canonical or share URL. */
+export function withoutRefQuery(path: string) {
+  const hashAt = path.indexOf("#");
+  const hash = hashAt >= 0 ? path.slice(hashAt) : "";
+  const beforeHash = hashAt >= 0 ? path.slice(0, hashAt) : path;
+  const queryAt = beforeHash.indexOf("?");
+  if (queryAt < 0) return path;
+  const pathname = beforeHash.slice(0, queryAt);
+  const params = new URLSearchParams(beforeHash.slice(queryAt + 1));
+  params.delete("ref");
+  const query = params.toString();
+  return `${pathname}${query ? `?${query}` : ""}${hash}`;
+}
+
 export function clipText(value: string, max = 180) {
   const clean = value.replace(/\s+/g, " ").trim();
   if (clean.length <= max) return clean;
@@ -85,7 +99,7 @@ export type ShareImageInput = {
 };
 
 export function buildShareMetadata(input: ShareImageInput): Metadata {
-  const canonical = absoluteUrl(input.origin, input.path);
+  const canonical = absoluteUrl(input.origin, withoutRefQuery(input.path));
   const imageUrl = absoluteUrl(input.origin, input.image);
   const image = {
     url: imageUrl,
