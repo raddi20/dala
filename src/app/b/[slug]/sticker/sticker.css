@@ -169,6 +169,7 @@
 @media print {
   header,
   footer,
+  .back-bar,
   .sticker-toolbar,
   .sticker-note,
   a[href="#main"],
