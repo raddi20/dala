@@ -4,7 +4,8 @@ import { useActionState, useState } from "react";
 import { createListing, updateListing } from "@/lib/actions/listings";
 import { CITIES, LISTING_TYPES, cityChoiceLabel } from "@/lib/constants";
 import { draftListing } from "@/lib/draft";
-import { btnPrimary, btnSecondary, ErrorNote, fieldClass } from "@/components/ui";
+import { btnPrimary, btnSecondary, ErrorNote, FieldError, fieldClass } from "@/components/ui";
+import { PHONE_HINT } from "@/lib/phone";
 import { CategoryOptions } from "@/components/category-options";
 import { ListingAssist, type ListingAssistDraft } from "@/components/ai/listing-assist";
 import { PhotoField } from "@/components/photo-field";
@@ -95,7 +96,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
       <ListingAssist onApply={applyAiDraft} />
 
       <form action={formAction} className="grid gap-4">
-        <ErrorNote>{state.error}</ErrorNote>
+        <ErrorNote>{state.field ? "" : state.error}</ErrorNote>
         {aiReview ? <p className="rounded-xl bg-teal-soft px-3.5 py-2.5 text-sm text-lake-dark">{aiReview}</p> : null}
         {initial.id ? <input type="hidden" name="id" value={initial.id} /> : null}
         <label className="block text-sm">
@@ -204,12 +205,31 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           </label>
           <label className="block text-sm">
             Phone
-            <input name="contactPhone" defaultValue={initial.contactPhone} maxLength={32} className={fieldClass} />
+            <input
+              name="contactPhone"
+              defaultValue={initial.contactPhone}
+              maxLength={48}
+              inputMode="tel"
+              placeholder="0712 345 678"
+              aria-invalid={state.field === "contactPhone" || undefined}
+              className={fieldClass}
+            />
+            <span className="mt-1 block text-xs text-ink/55">{PHONE_HINT}</span>
+            <FieldError>{state.field === "contactPhone" ? state.error : ""}</FieldError>
           </label>
         </div>
         <label className="block text-sm">
           WhatsApp number
-          <input name="contactWhatsapp" defaultValue={initial.contactWhatsapp} maxLength={32} placeholder="+2547…" className={fieldClass} />
+          <input
+            name="contactWhatsapp"
+            defaultValue={initial.contactWhatsapp}
+            maxLength={48}
+            inputMode="tel"
+            placeholder="0712 345 678"
+            aria-invalid={state.field === "contactWhatsapp" || undefined}
+            className={fieldClass}
+          />
+          <FieldError>{state.field === "contactWhatsapp" ? state.error : ""}</FieldError>
         </label>
         <PhotoField
           name="photoUrl"

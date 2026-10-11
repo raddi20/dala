@@ -117,15 +117,23 @@ export async function searchListings(filters: {
       if (featuredDelta !== 0) return featuredDelta;
       return b.createdAt.getTime() - a.createdAt.getTime();
     })
-    .map((row) => {
-      const contacts = publicSellerContacts({
-        email: row.owner.email,
-        phone: row.contactPhone,
-        whatsapp: row.contactWhatsapp,
-      });
-      if (!contacts.hidden) return row;
-      return { ...row, contactPhone: "", contactWhatsapp: "" };
-    });
+    .map((row) => toPublicListing(row));
+}
+
+/** Public card data. The owner's login email is dropped so it cannot ride along in a payload. */
+export function toPublicListing<T extends { owner: { email: string }; contactPhone: string; contactWhatsapp: string }>(row: T) {
+  const contacts = publicSellerContacts({
+    email: row.owner.email,
+    phone: row.contactPhone,
+    whatsapp: row.contactWhatsapp,
+  });
+  const owner = Object.fromEntries(Object.entries(row.owner).filter(([key]) => key !== "email")) as Omit<T["owner"], "email">;
+  return {
+    ...row,
+    contactPhone: contacts.phone,
+    contactWhatsapp: contacts.whatsapp,
+    owner,
+  };
 }
 
 export type ListingCardData = Awaited<ReturnType<typeof searchListings>>[number];

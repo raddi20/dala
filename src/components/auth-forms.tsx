@@ -78,6 +78,19 @@ export function RegisterForm({ nextPath }: { nextPath: string }) {
           ))}
         </select>
       </label>
+      <label className="flex items-start gap-3 text-sm leading-snug">
+        <input name="terms" type="checkbox" value="1" required className="mt-1 h-4 w-4 shrink-0 accent-navy" />
+        <span>
+          I agree to the{" "}
+          <Link href="/terms" className="font-semibold text-lake-dark hover:text-lake">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="font-semibold text-lake-dark hover:text-lake">
+            Privacy Policy
+          </Link>
+        </span>
+      </label>
       <SubmitButton className={btnPrimary} pendingLabel="Creating account…">
         Create account
       </SubmitButton>

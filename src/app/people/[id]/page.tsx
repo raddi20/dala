@@ -40,7 +40,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PersonPage({ params }: Props) {
   const { id } = await params;
-  const person = await prisma.user.findUnique({ where: { id } });
+  const person = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      bio: true,
+      phone: true,
+      whatsapp: true,
+      kind: true,
+      city: true,
+      verifiedPro: true,
+      verifiedProUntil: true,
+    },
+  });
   if (!person || isPublicDemoHidden(person.email)) notFound();
 
   const viewer = await getSessionUser();

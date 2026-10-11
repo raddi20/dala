@@ -7,8 +7,8 @@ import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/cons
 
 /** Visible on each page. Change this when the copy changes. */
 export const PUBLIC_PAGES_UPDATED = {
-  label: "9 October 2026",
-  iso: "2026-10-09",
+  label: "11 October 2026",
+  iso: "2026-10-11",
 } as const;
 
 /**
@@ -99,6 +99,13 @@ export const PUBLIC_INFO_PAGES = [
     title: "FAQ",
     description:
       "How the free shop, Featured, and Verified Pro work, plus verification badges, shop videos, buying for family back home, and reporting a listing.",
+  },
+  {
+    path: "/safety",
+    label: "Safety",
+    title: "Safety",
+    description:
+      "Never send an M-Pesa deposit before you've confirmed the seller. How to check a Rangach shop before you pay.",
   },
   {
     path: "/terms",

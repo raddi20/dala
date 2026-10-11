@@ -33,6 +33,9 @@ model User {
   // Null when the new account had no code. Existing rows stay null. Never rewritten.
   referralAgentCode String?
   referralAgentAt   DateTime?
+  // Set when the person ticks agreement at sign-up. Null on accounts created
+  // before that tick-box. Existing rows are not backfilled.
+  termsAcceptedAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

@@ -14,7 +14,7 @@ import {
   publicSellerContacts,
   publicTextWithoutDemoNumbers,
 } from "@/lib/demo-visibility";
-import { SellerContactChannels } from "@/components/seller-contact";
+import { PaymentSafetyNote, SellerContactChannels } from "@/components/seller-contact";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -105,7 +105,20 @@ export default async function StorefrontPage({ params }: Props) {
   const shop = await prisma.storefront.findUnique({
     where: { slug },
     include: {
-      user: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          bio: true,
+          city: true,
+          avatarUrl: true,
+          phone: true,
+          whatsapp: true,
+          verifiedPro: true,
+          verifiedProUntil: true,
+        },
+      },
       offerings: {
         where: { archived: false },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -268,7 +281,6 @@ export default async function StorefrontPage({ params }: Props) {
           intro="Ask on WhatsApp. Payment for goods stays between you and the seller."
           phone={contacts.phone}
           whatsapp={contacts.whatsapp}
-          email={contacts.hidden ? "" : shop.user.email}
           chatUrl={chatUrl}
           callUrl={callUrl}
           family={
@@ -303,9 +315,12 @@ export default async function StorefrontPage({ params }: Props) {
                       <p className="text-sm leading-relaxed text-ink/70">{offering.description}</p>
                     ) : null}
                     {offeringChat ? (
-                      <a href={offeringChat} className={`${btnWhatsApp} mt-auto`} target="_blank" rel="noreferrer">
-                        Chat on WhatsApp
-                      </a>
+                      <div className="mt-auto grid gap-2">
+                        <a href={offeringChat} className={btnWhatsApp} target="_blank" rel="noreferrer">
+                          Chat on WhatsApp
+                        </a>
+                        <PaymentSafetyNote />
+                      </div>
                     ) : null}
                   </div>
                 </article>
@@ -376,6 +391,7 @@ export default async function StorefrontPage({ params }: Props) {
             <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
               WhatsApp this shop
             </a>
+            <PaymentSafetyNote />
           </div>
         </div>
       ) : null}

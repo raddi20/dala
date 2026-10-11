@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
+import { normalizeContactPair } from "@/lib/phone";
 import { field, profileSchema, type ActionState } from "@/lib/validators";
 
 export async function updateProfile(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -23,7 +24,17 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
     return { error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
 
-  await prisma.user.update({ where: { id: user.id }, data: parsed.data });
+  const phones = normalizeContactPair({
+    phone: parsed.data.phone,
+    whatsapp: parsed.data.whatsapp,
+    city: parsed.data.city,
+  });
+  if (!phones.ok) return { error: phones.error, field: phones.field };
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { ...parsed.data, phone: phones.phone, whatsapp: phones.whatsapp },
+  });
   const shop = await prisma.storefront.findUnique({ where: { userId: user.id }, select: { slug: true } });
   revalidatePath("/account");
   revalidatePath(`/people/${user.id}`);
