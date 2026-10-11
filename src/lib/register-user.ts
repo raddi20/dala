@@ -22,6 +22,7 @@ export type RegisterUserDb = {
     city: string;
     referralAgentCode: string | null;
     referralAgentAt: Date | null;
+    termsAcceptedAt: Date;
   }) => Promise<CreatedUser>;
 };
 
@@ -36,7 +37,8 @@ export async function createRegisteredUser(
   const existing = await db.findByEmail(input.email);
   if (existing) return { ok: false, error: "That email is already registered." };
 
-  const referral = referralForNewAccount(input.agentCookie, input.now);
+  const now = input.now ?? new Date();
+  const referral = referralForNewAccount(input.agentCookie, now);
   const user = await db.create({
     name: input.name,
     email: input.email,
@@ -45,6 +47,7 @@ export async function createRegisteredUser(
     city: input.city,
     referralAgentCode: referral.referralAgentCode,
     referralAgentAt: referral.referralAgentAt,
+    termsAcceptedAt: now,
   });
   return { ok: true, id: user.id, referralAgentCode: user.referralAgentCode };
 }

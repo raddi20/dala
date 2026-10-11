@@ -33,6 +33,14 @@ model User {
   // Null when the new account had no code. Existing rows stay null. Never rewritten.
   referralAgentCode String?
   referralAgentAt   DateTime?
+  // Soft suspension. The row stays. A suspended account cannot sign in, and
+  // their shops and listings drop off public pages until an admin unsuspends them.
+  suspended       Boolean   @default(false)
+  suspendedReason String    @default("")
+  suspendedAt     DateTime?
+  // Set when the person ticks agreement at sign-up. Null on accounts created
+  // before that tick-box. Existing rows are not backfilled.
+  termsAcceptedAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -66,6 +74,8 @@ model Listing {
   featured        Boolean   @default(false)
   featuredUntil   DateTime?
   hidden          Boolean   @default(false)
+  hiddenReason    String    @default("")
+  hiddenAt        DateTime?
   scamRisk        String    @default("low")
   scamNotes       String    @default("")
   ownerId         String
@@ -89,10 +99,12 @@ model Review {
   id        String   @id @default(cuid())
   listingId String
   authorId  String
-  rating    Int
-  body      String
-  hidden    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  rating       Int
+  body         String
+  hidden       Boolean   @default(false)
+  hiddenReason String    @default("")
+  hiddenAt     DateTime?
+  createdAt    DateTime  @default(now())
   listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
@@ -134,6 +146,11 @@ model Storefront {
   slug             String   @unique
   bannerUrl        String   @default("")
   published        Boolean  @default(false)
+  // Admin takedown. Separate from the seller's draft (published = false).
+  // Restore clears this and leaves the seller's published flag as it was.
+  hidden           Boolean  @default(false)
+  hiddenReason     String   @default("")
+  hiddenAt         DateTime?
   // Admin-granted shop checks. Independent of the paid Pro plan (User.verifiedPro).
   phoneVerified    Boolean  @default(false)
   locationVerified Boolean  @default(false)
@@ -292,6 +309,10 @@ model Offering {
   imageUrl     String     @default("")
   sortOrder    Int        @default(0)
   archived     Boolean    @default(false)
+  // Admin takedown. Separate from the seller's archive flag.
+  hidden       Boolean    @default(false)
+  hiddenReason String     @default("")
+  hiddenAt     DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -479,4 +500,32 @@ model PasswordResetToken {
 
   @@index([userId, createdAt])
   @@index([expiresAt])
+}
+
+// Append-only. One row for each admin action. The app only inserts.
+model AdminAuditLog {
+  id         String   @id @default(cuid())
+  actorId    String
+  actorEmail String   @default("")
+  actorName  String   @default("")
+  action     String
+  targetType String
+  targetId   String
+  reason     String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId])
+  @@index([targetType, targetId])
+}
+
+// Fixed-window counters for login, sign-up, reports, reviews, and password reset.
+// The key is the action, a hash of the subject, and the window start. No raw IP is stored.
+model RateLimitBucket {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime
+  updatedAt   DateTime @updatedAt
+
+  @@index([windowStart])
 }

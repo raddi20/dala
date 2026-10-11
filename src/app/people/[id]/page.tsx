@@ -17,6 +17,7 @@ import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
+import { profileOpenTo } from "@/lib/visibility";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -24,9 +25,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const person = await prisma.user.findUnique({
     where: { id },
-    select: { name: true, bio: true, email: true, phone: true, whatsapp: true },
+    select: { name: true, bio: true, email: true, phone: true, whatsapp: true, suspended: true },
   });
   if (!person || isPublicDemoHidden(person.email)) return { title: "Profile", robots: { index: false, follow: false } };
+  const viewer = await getSessionUser();
+  if (!profileOpenTo(viewer, person)) return { title: "Profile", robots: { index: false, follow: false } };
   const title = person?.name ?? "Profile";
   const description = publicTextWithoutDemoNumbers(person.email, person.bio.slice(0, 160), [person.phone, person.whatsapp]);
   const path = `/people/${id}`;
@@ -40,10 +43,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PersonPage({ params }: Props) {
   const { id } = await params;
-  const person = await prisma.user.findUnique({ where: { id } });
+  const person = await prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      bio: true,
+      phone: true,
+      whatsapp: true,
+      kind: true,
+      city: true,
+      verifiedPro: true,
+      verifiedProUntil: true,
+      suspended: true,
+    },
+  });
   if (!person || isPublicDemoHidden(person.email)) notFound();
 
   const viewer = await getSessionUser();
+  if (!profileOpenTo(viewer, person)) notFound();
   const blocked = viewer
     ? await prisma.block.findUnique({
         where: { blockerId_blockedId: { blockerId: viewer.id, blockedId: person.id } },
@@ -60,12 +79,13 @@ export default async function PersonPage({ params }: Props) {
     select: {
       slug: true,
       published: true,
+      hidden: true,
       phoneVerified: true,
       locationVerified: true,
       businessVerified: true,
     },
   });
-  const showShop = Boolean(shop?.published) && !blocked;
+  const showShop = Boolean(shop?.published && !shop.hidden && !person.suspended) && !blocked;
 
   return (
     <div className="mx-auto grid max-w-3xl gap-6 px-4 py-8">

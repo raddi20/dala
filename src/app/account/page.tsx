@@ -30,6 +30,7 @@ export default async function AccountPage({
     select: {
       slug: true,
       published: true,
+      hidden: true,
       phoneVerified: true,
       locationVerified: true,
       businessVerified: true,
@@ -119,6 +120,11 @@ export default async function AccountPage({
 
       <section className={`${cardClass} grid gap-4 p-5`}>
         <h2 className="font-serif text-2xl text-navy">Your shop</h2>
+        {storefront?.hidden ? (
+          <p className="text-sm text-ink/80">
+            A moderator hid this shop from buyers. It stays in your account. Publishing again does not put it back.
+          </p>
+        ) : null}
         {!storefront ? (
           <>
             <p className="text-sm text-ink/70">

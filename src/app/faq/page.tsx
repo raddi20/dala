@@ -15,6 +15,7 @@ import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, needsLiveRates, visitorPrice } from "@/lib/visitor-currency";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { CONTACT_EMAIL, LICENSED_PAYMENT_PROVIDER, featuredDurationCopy, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
+import { MPESA_SAFETY_NOTE, SAFETY_TIPS, safetyTipText } from "@/lib/safety";
 import {
   DOCUMENTS_SEEN_NOTE,
   PRO_PLAN_LABEL,
@@ -203,6 +204,21 @@ export default async function FaqPage() {
         <p>
           You can also block a person. Their other listings are then hidden from your own browse. Blocking does not
           delete their account.
+        </p>
+      </InfoSection>
+
+      <InfoSection title="Paying a seller">
+        <p>{MPESA_SAFETY_NOTE}</p>
+        <ul className="grid list-disc gap-2 pl-5">
+          {SAFETY_TIPS.map((tip) => (
+            <li key={tip.title}>{safetyTipText(tip.body, name)}</li>
+          ))}
+        </ul>
+        <p>
+          <Link href="/safety" className="font-semibold text-lake-dark hover:text-lake">
+            Safety tips
+          </Link>{" "}
+          has the same list.
         </p>
       </InfoSection>
 
