@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { ListingCard } from "@/components/listing-card";
+import { BrowseHits } from "@/components/browse-hits";
 import { CategoryOptions } from "@/components/category-options";
+import { Pager } from "@/components/pager";
 import {
   EmptyState,
   btnPrimary,
@@ -23,8 +24,7 @@ import { buildShareMetadata } from "@/lib/share-metadata";
 import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
 import { visitorActorHash } from "@/lib/ai/actor";
 import { interpretSearch } from "@/lib/ai/search-parse";
-import { rankByHints } from "@/lib/nl-query";
-import { searchListings } from "@/lib/search";
+import { browsePage, searchCatalogue } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { one } from "@/lib/utils";
 
@@ -64,6 +64,24 @@ export async function generateMetadata({
     image: "/listings/opengraph-image",
     imageAlt: `${title} on ${name}`,
   });
+}
+
+function listingsPageHref(base: Record<string, string>, page: number) {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(base)) {
+    if (value) params.set(key, value);
+  }
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return qs ? `/listings?${qs}` : "/listings";
+}
+
+function resultLine(total: number, page: number, pageSize: number) {
+  if (total === 0) return "0 results";
+  if (total <= pageSize) return `${total} result${total === 1 ? "" : "s"}`;
+  const start = (page - 1) * pageSize + 1;
+  const end = Math.min(page * pageSize, total);
+  return `${start}–${end} of ${total} results`;
 }
 
 function chipHref(base: Record<string, string>, key: string, value: string) {
@@ -117,13 +135,19 @@ export default async function ListingsPage({
     occasion: filters.occasion,
   };
   const user = await getSessionUser();
-  let listings = await searchListings({ ...filters, words: optionalWords, viewerId: user?.id });
+  const page = browsePage(one(sp.page));
+  let result = await searchCatalogue({
+    ...filters,
+    words: optionalWords,
+    hints: structured ? hints : [],
+    viewerId: user?.id,
+    page,
+  });
   let droppedWords = false;
-  if (listings.length === 0 && optionalWords.length > 0) {
-    listings = await searchListings({ ...filters, viewerId: user?.id });
+  if (result.total === 0 && optionalWords.length > 0) {
+    result = await searchCatalogue({ ...filters, viewerId: user?.id, page });
     droppedWords = true;
   }
-  if (structured && hints.length > 0) listings = rankByHints(listings, hints);
   const hasFilters = Boolean(
     filters.q ||
       filters.city ||
@@ -140,7 +164,7 @@ export default async function ListingsPage({
     <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 pb-24 sm:pb-10">
       <div>
         <h1 className={sectionTitleClass}>Browse</h1>
-        <p className="mt-1 text-sm text-ink/65">Directory and classifieds. Filters combine.</p>
+        <p className="mt-1 text-sm text-ink/65">Shops, offerings, and classifieds. Filters combine.</p>
       </div>
 
       <form id="search" action="/listings" method="get" className="flex flex-col gap-2 sm:flex-row">
@@ -300,9 +324,10 @@ export default async function ListingsPage({
       </details>
 
       <p className="text-sm text-ink/60">
-        {listings.length} listing{listings.length === 1 ? "" : "s"}
+        {filters.q ? <>Matches for “{filters.q}”. </> : null}
+        {resultLine(result.total, result.page, result.pageSize)}
       </p>
-      {listings.length === 0 ? (
+      {result.hits.length === 0 ? (
         <EmptyState
           title="Nothing matches"
           body="Try clearing a filter or searching with different words."
@@ -313,12 +338,13 @@ export default async function ListingsPage({
           }
         />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2">
-          {listings.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </div>
+        <BrowseHits hits={result.hits} />
       )}
+      <Pager
+        page={result.page}
+        pageCount={result.pageCount}
+        hrefFor={(next) => listingsPageHref({ ...chipBase, nl: nlRaw }, next)}
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden sticky-cta-bar">
         <a href="#search" className={`${btnPrimary} w-full`}>

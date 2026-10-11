@@ -29,6 +29,7 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
   assert.ok(urls.includes(`${origin}/occasions/weddings-dowry`));
   assert.ok(urls.includes(`${origin}/pricing`));
   assert.ok(urls.includes(`${origin}/listings`));
+  assert.ok(urls.includes(`${origin}/shops`));
   assert.ok(urls.includes(`${origin}/b/mama-atieno`));
   assert.ok(urls.includes(`${origin}/listings/list_1`));
   assert.ok(urls.includes(`${origin}/people/user_1`));
@@ -53,6 +54,7 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
 test("static paths include pricing and every category, and private prefixes stay out", () => {
   const paths = staticPublicPaths().map((item) => item.path);
   assert.ok(paths.includes("/pricing"));
+  assert.ok(paths.includes("/shops"));
   assert.ok(paths.includes("/occasions"));
   assert.equal(paths.filter((path) => isPrivatePath(path)).length, 0);
   assert.deepEqual(PRIVATE_PREFIXES, [

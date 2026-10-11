@@ -46,6 +46,8 @@ model User {
   storefront       Storefront?
   shopBadgeEvents  ShopBadgeEvent[]
   passwordResetTokens PasswordResetToken[]
+
+  @@index([city])
 }
 
 model Listing {
@@ -83,6 +85,9 @@ model Listing {
   @@index([type])
   @@index([hidden])
   @@index([ownerId])
+  @@index([createdAt])
+  @@index([verified])
+  @@index([hidden, category])
 }
 
 model Review {
@@ -150,6 +155,7 @@ model Storefront {
 
   @@index([published])
   @@index([servesDiaspora])
+  @@index([published, createdAt])
 }
 
 // A public collection such as weddings or Christmas at home.
@@ -294,6 +300,7 @@ model Offering {
   updatedAt    DateTime   @updatedAt
 
   @@index([storefrontId, archived])
+  @@index([archived, createdAt])
 }
 
 model Payment {

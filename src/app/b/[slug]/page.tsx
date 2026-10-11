@@ -290,7 +290,11 @@ export default async function StorefrontPage({ params }: Props) {
               const offeringChat = phone ? whatsappOfferingLink(phone, offering.title, url) : "";
               const letter = offering.title.trim().charAt(0).toUpperCase() || "D";
               return (
-                <article key={offering.id} className={`card-lift flex flex-col overflow-hidden ${cardClass}`}>
+                <article
+                  key={offering.id}
+                  id={`offering-${offering.id}`}
+                  className={`card-lift scroll-mt-24 flex flex-col overflow-hidden ${cardClass}`}
+                >
                   <RemoteImage src={offering.imageUrl} alt={offering.title} className="aspect-[4/3] w-full object-cover">
                     <div className="flex aspect-[4/3] items-end bg-gradient-to-br from-navy to-lake-dark p-3 text-white">
                       <span className="font-serif text-3xl">{letter}</span>

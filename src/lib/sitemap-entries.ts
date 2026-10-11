@@ -42,6 +42,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/video-policy" },
     ...PUBLIC_INFO_PAGES.map((page) => ({ path: page.path, updatedAt: publicPagesUpdatedAt() })),
     { path: "/listings" },
+    { path: "/shops" },
     { path: "/listings?type=business" },
     { path: "/listings?type=classifieds" },
     { path: "/listings?region=homeland" },
@@ -71,6 +72,7 @@ export function buildSitemap(input: {
       path.path === "/"
         ? 1
         : path.path === "/categories" ||
+            path.path === "/shops" ||
             path.path === "/occasions" ||
             path.path === "/pricing" ||
             path.path === "/welcome" ||
