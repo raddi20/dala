@@ -61,7 +61,7 @@ export function StorefrontSettingsForm({
           label="Cover photo"
           purpose="banner"
           defaultUrl={bannerUrl}
-          hint="One wide photo at the top of your shop. Drop it here, or choose it from this phone or computer. Verified Pro includes this."
+          hint="One wide photo at the top of your shop. You can crop and brighten it before it uploads. Verified Pro includes this."
         />
       ) : (
         <p className="rounded-xl bg-amber-soft/80 px-3.5 py-2.5 text-sm text-ink/80">
