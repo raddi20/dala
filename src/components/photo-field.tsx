@@ -1,20 +1,29 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Component, useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Component, useEffect, useId, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { IMAGE_ACCEPT, clientImageChoiceError } from "@/lib/image-file";
 import { uploadPhoto } from "@/lib/prepare-photo";
 import type { UploadPurpose } from "@/lib/image-upload";
 import { fieldClass } from "@/components/ui";
 
-const PhotoEditor = dynamic(() => import("@/components/photo-editor").then((mod) => mod.PhotoEditor), {
-  ssr: false,
-  loading: () => (
+type EditorComponent = ComponentType<{
+  file: File;
+  purpose: UploadPurpose;
+  onUse: (file: File) => void;
+  onCancel: () => void;
+}>;
+
+function loadEditor() {
+  return import("@/components/photo-editor").then((mod) => mod.PhotoEditor);
+}
+
+function EditorOpening() {
+  return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-navy px-6 text-center text-white" role="status">
       Opening the editor…
     </div>
-  ),
-});
+  );
+}
 
 class EditorBoundary extends Component<{ children: ReactNode; onClose: () => void }, { failed: boolean }> {
   state = { failed: false };
@@ -66,21 +75,31 @@ export function PhotoField({
   const [error, setError] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [Editor, setEditor] = useState<EditorComponent | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     const win = window as Window & {
       requestIdleCallback?: (cb: () => void) => number;
       cancelIdleCallback?: (id: number) => void;
     };
     const load = () => {
-      void import("@/components/photo-editor");
+      void loadEditor().then((component) => {
+        if (!cancelled) setEditor(() => component);
+      });
     };
     if (win.requestIdleCallback) {
       const id = win.requestIdleCallback(load);
-      return () => win.cancelIdleCallback?.(id);
+      return () => {
+        cancelled = true;
+        win.cancelIdleCallback?.(id);
+      };
     }
     const id = window.setTimeout(load, 500);
-    return () => window.clearTimeout(id);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
   }, []);
 
   useEffect(() => {
@@ -104,6 +123,9 @@ export function PhotoField({
     }
     setError("");
     setPendingFile(file);
+    if (!Editor) {
+      void loadEditor().then((component) => setEditor(() => component));
+    }
   }
 
   async function uploadPrepared(file: File) {
@@ -246,13 +268,17 @@ export function PhotoField({
       <input type="hidden" name={name} value={url} />
       {pendingFile ? (
         <EditorBoundary onClose={() => setPendingFile(null)}>
-          <PhotoEditor
-            key={`${pendingFile.name}-${pendingFile.size}-${pendingFile.lastModified}`}
-            file={pendingFile}
-            purpose={purpose}
-            onUse={(prepared) => void uploadPrepared(prepared)}
-            onCancel={() => setPendingFile(null)}
-          />
+          {Editor ? (
+            <Editor
+              key={`${pendingFile.name}-${pendingFile.size}-${pendingFile.lastModified}`}
+              file={pendingFile}
+              purpose={purpose}
+              onUse={(prepared) => void uploadPrepared(prepared)}
+              onCancel={() => setPendingFile(null)}
+            />
+          ) : (
+            <EditorOpening />
+          )}
         </EditorBoundary>
       ) : null}
     </div>

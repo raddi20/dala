@@ -31,9 +31,8 @@ test("every photo upload point uses the shared editor", () => {
     assert.doesNotMatch(source, /type="file"/);
   }
   const field = readFileSync(path.join(root, "src/components/photo-field.tsx"), "utf8");
-  assert.match(field, /next\/dynamic/);
-  assert.match(field, /@\/components\/photo-editor/);
-  assert.match(field, /ssr:\s*false/);
+  assert.match(field, /import\("@\/components\/photo-editor"\)/);
+  assert.doesNotMatch(field, /from "@\/components\/photo-editor"/);
   assert.match(field, /requestIdleCallback|setTimeout/);
 
   const editor = readFileSync(path.join(root, "src/components/photo-editor.tsx"), "utf8");
