@@ -1,10 +1,12 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
 import { remoteImagePatterns } from "./src/lib/image-hosts";
+import { securityHeaders } from "./src/lib/security-headers";
 import { sentrySourceMapsEnabled } from "./src/lib/sentry";
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  poweredByHeader: false,
   serverExternalPackages: ["@prisma/client", "prisma", "@mux/mux-node", "sharp"],
   images: {
     remotePatterns: remoteImagePatterns(),
@@ -21,6 +23,10 @@ const nextConfig: NextConfig = {
       {
         source: "/manifest.webmanifest",
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/:path*",
+        headers: securityHeaders(),
       },
     ];
   },
