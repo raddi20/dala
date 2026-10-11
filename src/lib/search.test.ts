@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 import { ShopsDirectory } from "@/components/shops-directory";
 import { parseNlQuery, categoryFromKeys } from "@/lib/nl-query";
 import { prisma } from "@/lib/prisma";
-import { searchCatalogue, searchShops, shopCategoryCounts } from "@/lib/search";
+import { homeRails, searchCatalogue, searchShops, shopCategoryCounts } from "@/lib/search";
 import { containsFilter, searchTerms } from "@/lib/search-text";
 import { categoryCountLabel } from "@/lib/shop-category";
 import { staticPublicPaths } from "@/lib/sitemap-entries";
@@ -234,6 +234,122 @@ test("category counts include a published shop and skip a draft", async () => {
     assert.equal((after.get("Pharmacies") ?? 0), (before.get("Pharmacies") ?? 0) + 1);
   } finally {
     await prisma.user.deleteMany({ where: { id: { in: [owner.id, draftOwner.id] } } });
+  }
+});
+
+test("a taken-down shop, a hidden offering, and a suspended owner stay out until they are restored", async () => {
+  const stamp = Date.now().toString(36);
+  const email = `takedown-${stamp}@example.com`;
+  const token = `takedown${stamp}`;
+  const secret = `braidingsecret${stamp}`;
+  const owner = await prisma.user.create({
+    data: {
+      email,
+      name: `Takedown Stall ${stamp}`,
+      passwordHash: "x",
+      city: "Nairobi",
+      bio: token,
+    },
+  });
+  const before = await shopCategoryCounts();
+  try {
+    const shop = await prisma.storefront.create({
+      data: {
+        userId: owner.id,
+        slug: `takedown-${stamp}`,
+        published: true,
+        offerings: {
+          create: [
+            { title: `Open plate ${stamp}`, description: token, sortOrder: 0 },
+            { title: `Braiding ${secret}`, description: secret, hidden: true, sortOrder: 1 },
+          ],
+        },
+      },
+      include: { offerings: true },
+    });
+    const visible = shop.offerings.find((offering) => !offering.hidden);
+    const hiddenOffering = shop.offerings.find((offering) => offering.hidden);
+    assert.ok(visible);
+    assert.ok(hiddenOffering);
+    const listing = await prisma.listing.create({
+      data: {
+        type: "business",
+        title: `Counsel ${stamp}`,
+        description: token,
+        category: "Legal & immigration",
+        city: "Nairobi",
+        region: "homeland",
+        featured: true,
+        ownerId: owner.id,
+      },
+    });
+
+    const idsOf = (hits: Awaited<ReturnType<typeof searchCatalogue>>["hits"]) =>
+      hits.map((hit) => (hit.kind === "listing" ? hit.listing.id : hit.kind === "shop" ? hit.shop.id : hit.offering.id));
+
+    const live = await searchCatalogue({ q: token, pageSize: 50 });
+    const liveIds = idsOf(live.hits);
+    assert.ok(liveIds.includes(shop.id));
+    assert.ok(liveIds.includes(visible.id));
+    assert.ok(liveIds.includes(listing.id));
+    assert.equal(JSON.stringify(live).includes(email), false);
+    const liveShops = await searchShops({ q: token, pageSize: 20 });
+    assert.ok(liveShops.shops.some((item) => item.id === shop.id));
+    assert.equal(JSON.stringify(liveShops).includes(email), false);
+    const secretHits = await searchCatalogue({ q: secret, pageSize: 20 });
+    assert.equal(idsOf(secretHits.hits).includes(hiddenOffering.id), false);
+    assert.equal(idsOf(secretHits.hits).includes(shop.id), false);
+    const counted = await shopCategoryCounts();
+    assert.equal((counted.get("Legal & immigration") ?? 0), (before.get("Legal & immigration") ?? 0) + 1);
+    assert.equal(counted.get("Beauty & personal care") ?? 0, before.get("Beauty & personal care") ?? 0);
+
+    await prisma.storefront.update({ where: { id: shop.id }, data: { hidden: true } });
+    const takenDown = await searchCatalogue({ q: token, pageSize: 50 });
+    const takenIds = idsOf(takenDown.hits);
+    assert.equal(takenIds.includes(shop.id), false);
+    assert.equal(takenIds.includes(visible.id), false);
+    assert.ok(takenIds.includes(listing.id));
+    assert.equal((await searchShops({ q: token, pageSize: 20 })).shops.some((item) => item.id === shop.id), false);
+    assert.equal((await shopCategoryCounts()).get("Legal & immigration") ?? 0, before.get("Legal & immigration") ?? 0);
+    assert.equal((await homeRails()).shops.some((item) => item.id === shop.id), false);
+
+    await prisma.storefront.update({ where: { id: shop.id }, data: { hidden: false } });
+    const restoredShop = idsOf((await searchCatalogue({ q: token, pageSize: 50 })).hits);
+    assert.ok(restoredShop.includes(shop.id));
+    assert.ok(restoredShop.includes(visible.id));
+    assert.ok((await searchShops({ q: token, pageSize: 20 })).shops.some((item) => item.id === shop.id));
+    assert.equal((await shopCategoryCounts()).get("Legal & immigration") ?? 0, (before.get("Legal & immigration") ?? 0) + 1);
+
+    await prisma.offering.update({ where: { id: visible.id }, data: { hidden: true } });
+    const offeringHidden = idsOf((await searchCatalogue({ q: token, pageSize: 50 })).hits);
+    assert.equal(offeringHidden.includes(visible.id), false);
+    assert.ok(offeringHidden.includes(shop.id));
+    assert.equal((await homeRails()).offerings.some((item) => item.id === visible.id), false);
+
+    await prisma.offering.update({ where: { id: visible.id }, data: { hidden: false } });
+    assert.ok(idsOf((await searchCatalogue({ q: token, pageSize: 50 })).hits).includes(visible.id));
+
+    await prisma.user.update({ where: { id: owner.id }, data: { suspended: true } });
+    const suspended = idsOf((await searchCatalogue({ q: token, pageSize: 50 })).hits);
+    assert.equal(suspended.includes(shop.id), false);
+    assert.equal(suspended.includes(visible.id), false);
+    assert.equal(suspended.includes(listing.id), false);
+    assert.equal((await searchShops({ q: token, pageSize: 20 })).shops.some((item) => item.id === shop.id), false);
+    assert.equal((await shopCategoryCounts()).get("Legal & immigration") ?? 0, before.get("Legal & immigration") ?? 0);
+    const hiddenRails = await homeRails();
+    assert.equal(hiddenRails.shops.some((item) => item.id === shop.id), false);
+    assert.equal(hiddenRails.offerings.some((item) => item.id === visible.id), false);
+    assert.equal(hiddenRails.featured.some((item) => item.id === listing.id), false);
+
+    await prisma.user.update({ where: { id: owner.id }, data: { suspended: false } });
+    const back = idsOf((await searchCatalogue({ q: token, pageSize: 50 })).hits);
+    assert.ok(back.includes(shop.id));
+    assert.ok(back.includes(visible.id));
+    assert.ok(back.includes(listing.id));
+    assert.ok((await searchShops({ q: token, pageSize: 20 })).shops.some((item) => item.id === shop.id));
+    assert.equal((await shopCategoryCounts()).get("Legal & immigration") ?? 0, (before.get("Legal & immigration") ?? 0) + 1);
+  } finally {
+    await prisma.user.deleteMany({ where: { id: owner.id } });
   }
 });
 

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { hiddenDemoUserFilter, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
+import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { regionForCity } from "@/lib/constants";
 import { rankByHints } from "@/lib/nl-query";
@@ -15,11 +15,12 @@ import {
 } from "@/lib/shop-category";
 import { containsFilter, matchTerms } from "@/lib/search-text";
 import { isFeatured } from "@/lib/utils";
+import { publicReviewWhere } from "@/lib/visibility";
 
 type Env = Record<string, string | undefined>;
 
 const include = {
-  reviews: { where: { hidden: false }, select: { rating: true } },
+  reviews: { where: publicReviewWhere, select: { rating: true } },
   owner: {
     select: {
       id: true,
@@ -31,6 +32,7 @@ const include = {
         select: {
           slug: true,
           published: true,
+          hidden: true,
           phoneVerified: true,
           locationVerified: true,
           businessVerified: true,
@@ -48,7 +50,8 @@ const include = {
 
 const offeringOrder = [{ sortOrder: "asc" as const }, { createdAt: "asc" as const }];
 
-const shopCardSelect = {
+function shopCardSelect(env: Env) {
+  return {
   id: true,
   slug: true,
   createdAt: true,
@@ -64,7 +67,7 @@ const shopCardSelect = {
       verifiedPro: true,
       verifiedProUntil: true,
       listings: {
-        where: { hidden: false },
+        where: publicListingWhere({}, env),
         orderBy: { createdAt: "asc" as const },
         select: {
           category: true,
@@ -77,11 +80,12 @@ const shopCardSelect = {
     },
   },
   offerings: {
-    where: { archived: false },
+    where: { archived: false, hidden: false },
     orderBy: offeringOrder,
     select: { id: true, title: true, description: true },
   },
 } satisfies Prisma.StorefrontSelect;
+}
 
 const offeringCardSelect = {
   id: true,
@@ -95,7 +99,7 @@ const offeringCardSelect = {
     select: {
       slug: true,
       offerings: {
-        where: { archived: false },
+        where: { archived: false, hidden: false },
         orderBy: offeringOrder,
         select: { id: true },
       },
@@ -111,7 +115,7 @@ const offeringCardSelect = {
   },
 } satisfies Prisma.OfferingSelect;
 
-type ShopRow = Prisma.StorefrontGetPayload<{ select: typeof shopCardSelect }>;
+type ShopRow = Prisma.StorefrontGetPayload<{ select: ReturnType<typeof shopCardSelect> }>;
 type OfferingRow = Prisma.OfferingGetPayload<{ select: typeof offeringCardSelect }>;
 
 export type SearchFilters = {
@@ -155,49 +159,49 @@ type Indexed = {
 };
 
 function listingWhere(filters: SearchFilters, blocked: string[], env: Env): Prisma.ListingWhereInput {
-  const where: Prisma.ListingWhereInput = {};
-  if (!filters.includeHidden) where.hidden = false;
-  if (filters.ids) where.id = { in: filters.ids };
-  if (filters.city) where.city = filters.city;
-  if (filters.region) where.region = filters.region;
-  if (filters.category) where.category = filters.category;
-  if (filters.type === "classifieds") where.type = { not: "business" };
-  else if (filters.type) where.type = filters.type;
-  if (filters.verified) where.verified = true;
-  if (filters.occasion) where.occasions = { some: { occasion: { slug: filters.occasion } } };
+  const extra: Prisma.ListingWhereInput = {};
+  if (filters.ids) extra.id = { in: filters.ids };
+  if (filters.city) extra.city = filters.city;
+  if (filters.region) extra.region = filters.region;
+  if (filters.category) extra.category = filters.category;
+  if (filters.type === "classifieds") extra.type = { not: "business" };
+  else if (filters.type) extra.type = filters.type;
+  if (filters.verified) extra.verified = true;
+  if (filters.occasion) extra.occasions = { some: { occasion: { slug: filters.occasion } } };
 
   const and: Prisma.ListingWhereInput[] = [];
   const badgeWhere = shopBadgeWhere(filters.badge);
   const diasporaWhere = diasporaOrdersWhere(filters.diaspora);
   if (badgeWhere) and.push(badgeWhere);
   if (diasporaWhere) and.push(diasporaWhere);
-  const demo = hiddenDemoUserFilter(env);
-  if (demo) and.push({ owner: demo });
-  if (and.length > 0) where.AND = and;
-
   const terms = matchTerms(filters);
   if (terms.length > 0) {
-    where.OR = terms.flatMap((term) => [
+    extra.OR = terms.flatMap((term) => [
       { title: containsFilter(term, env) },
       { description: containsFilter(term, env) },
       { address: containsFilter(term, env) },
     ]);
   }
+  if (filters.ownerId && blocked.length > 0) extra.ownerId = { equals: filters.ownerId, notIn: blocked };
+  else if (filters.ownerId) extra.ownerId = filters.ownerId;
+  else if (blocked.length > 0) extra.ownerId = { notIn: blocked };
 
-  if (filters.ownerId && blocked.length > 0) where.ownerId = { equals: filters.ownerId, notIn: blocked };
-  else if (filters.ownerId) where.ownerId = filters.ownerId;
-  else if (blocked.length > 0) where.ownerId = { notIn: blocked };
-  return where;
+  if (filters.includeHidden) {
+    const demo = hiddenDemoUserFilter(env);
+    if (demo) and.push({ owner: demo });
+    if (and.length > 0) extra.AND = and;
+    return extra;
+  }
+  if (and.length > 0) extra.AND = and;
+  return publicListingWhere(extra, env);
 }
 
-function userWhere(filters: SearchFilters, blocked: string[], env: Env): Prisma.UserWhereInput | undefined {
+function userWhere(filters: SearchFilters, blocked: string[]): Prisma.UserWhereInput | undefined {
   const and: Prisma.UserWhereInput[] = [];
   if (filters.city) and.push({ city: filters.city });
   if (filters.region === "diaspora") and.push({ city: "London" });
   if (filters.region === "homeland") and.push({ city: { not: "London" } });
   if (blocked.length > 0) and.push({ id: { notIn: blocked } });
-  const demo = hiddenDemoUserFilter(env);
-  if (demo) and.push(demo);
   if (and.length === 0) return undefined;
   if (and.length === 1) return and[0];
   return { AND: and };
@@ -210,13 +214,13 @@ function storefrontWhere(
   verified: "off" | "listing" | "shop",
   withText: boolean,
 ): Prisma.StorefrontWhereInput {
-  const and: Prisma.StorefrontWhereInput[] = [{ published: true }];
+  const and: Prisma.StorefrontWhereInput[] = [];
   const badge = storefrontBadgeWhere(filters.badge);
   if (badge) and.push(badge);
   if (filters.diaspora) and.push({ servesDiaspora: true });
   if (filters.occasion) and.push({ occasions: { some: { occasion: { slug: filters.occasion } } } });
   if (verified === "listing") {
-    and.push({ user: { listings: { some: { hidden: false, verified: true } } } });
+    and.push({ user: { listings: { some: publicListingWhere({ verified: true }, env) } } });
   }
   if (verified === "shop") {
     and.push({
@@ -224,11 +228,11 @@ function storefrontWhere(
         { phoneVerified: true },
         { locationVerified: true },
         { businessVerified: true },
-        { user: { listings: { some: { hidden: false, verified: true } } } },
+        { user: { listings: { some: publicListingWhere({ verified: true }, env) } } },
       ],
     });
   }
-  const user = userWhere(filters, blocked, env);
+  const user = userWhere(filters, blocked);
   if (user) and.push({ user });
   if (withText) {
     const terms = matchTerms(filters);
@@ -240,15 +244,15 @@ function storefrontWhere(
             { user: { name: contains } },
             { user: { bio: contains } },
             { user: { city: contains } },
-            { offerings: { some: { archived: false, title: contains } } },
-            { offerings: { some: { archived: false, description: contains } } },
+            { offerings: { some: { archived: false, hidden: false, title: contains } } },
+            { offerings: { some: { archived: false, hidden: false, description: contains } } },
             { occasions: { some: { occasion: { title: contains } } } },
           ];
         }),
       });
     }
   }
-  return { AND: and };
+  return publicShopWhere({ published: true, ...(and.length > 0 ? { AND: and } : {}) }, env);
 }
 
 function offeringWhere(
@@ -258,7 +262,7 @@ function offeringWhere(
   verified: "off" | "listing",
 ): Prisma.OfferingWhereInput {
   const and: Prisma.OfferingWhereInput[] = [
-    { archived: false },
+    { archived: false, hidden: false },
     { storefront: storefrontWhere(filters, blocked, env, verified, false) },
   ];
   const terms = matchTerms(filters);
@@ -337,18 +341,6 @@ async function blockedIds(viewerId?: string | null): Promise<string[]> {
   return rows.map((block) => block.blockedId);
 }
 
-function maskListings<T extends { contactPhone: string; contactWhatsapp: string; owner: { email: string } }>(rows: T[]): T[] {
-  return rows.map((row) => {
-    const contacts = publicSellerContacts({
-      email: row.owner.email,
-      phone: row.contactPhone,
-      whatsapp: row.contactWhatsapp,
-    });
-    if (!contacts.hidden) return row;
-    return { ...row, contactPhone: "", contactWhatsapp: "" };
-  });
-}
-
 function sortIndexed(rows: Indexed[], hints: string[]): Indexed[] {
   const ordered = [...rows].sort((left, right) => {
     const featuredDelta = Number(right.featured) - Number(left.featured);
@@ -377,11 +369,29 @@ export async function searchListings(filters: SearchFilters, env: Env = process.
     take: filters.ids?.length ? filters.ids.length : 100,
   });
 
-  return maskListings(rows).sort((left, right) => {
-    const featuredDelta = Number(isFeatured(right)) - Number(isFeatured(left));
-    if (featuredDelta !== 0) return featuredDelta;
-    return right.createdAt.getTime() - left.createdAt.getTime();
+  return rows
+    .sort((a, b) => {
+      const featuredDelta = Number(isFeatured(b)) - Number(isFeatured(a));
+      if (featuredDelta !== 0) return featuredDelta;
+      return b.createdAt.getTime() - a.createdAt.getTime();
+    })
+    .map((row) => toPublicListing(row));
+}
+
+/** Public card data. The owner's login email is dropped so it cannot ride along in a payload. */
+export function toPublicListing<T extends { owner: { email: string }; contactPhone: string; contactWhatsapp: string }>(row: T) {
+  const contacts = publicSellerContacts({
+    email: row.owner.email,
+    phone: row.contactPhone,
+    whatsapp: row.contactWhatsapp,
   });
+  const owner = Object.fromEntries(Object.entries(row.owner).filter(([key]) => key !== "email")) as Omit<T["owner"], "email">;
+  return {
+    ...row,
+    contactPhone: contacts.phone,
+    contactWhatsapp: contacts.whatsapp,
+    owner,
+  };
 }
 
 export type ListingCardData = Awaited<ReturnType<typeof searchListings>>[number];
@@ -463,7 +473,7 @@ export async function searchCatalogue(filters: SearchFilters, env: Env = process
   if (shopsOn) {
     const shopRows = await prisma.storefront.findMany({
       where: storefrontWhere(filters, blocked, env, filters.verified ? "listing" : "off", true),
-      select: shopCardSelect,
+      select: shopCardSelect(env),
     });
     for (const row of shopRows) {
       if (!shopMatches(row, category)) continue;
@@ -515,7 +525,7 @@ async function hydrateHits(
 ): Promise<CatalogueHit[]> {
   const listingIds = slice.filter((hit) => hit.kind === "listing").map((hit) => hit.id);
   const listings = listingIds.length
-    ? maskListings(await prisma.listing.findMany({ where: { id: { in: listingIds } }, include }))
+    ? (await prisma.listing.findMany({ where: { id: { in: listingIds } }, include })).map((row) => toPublicListing(row))
     : [];
   const listingById = new Map(listings.map((listing) => [listing.id, listing]));
   const hits: CatalogueHit[] = [];
@@ -544,7 +554,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
   if (category) {
     const rows = await prisma.storefront.findMany({
       where,
-      select: shopCardSelect,
+      select: shopCardSelect(env),
       orderBy: { createdAt: "desc" },
     });
     const matched = rows.filter((row) => shopMatches(row, category));
@@ -561,7 +571,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
   const window = pageWindow(total, filters.page ?? 1, pageSize);
   const rows = await prisma.storefront.findMany({
     where,
-    select: shopCardSelect,
+    select: shopCardSelect(env),
     orderBy: { createdAt: "desc" },
     skip: window.start,
     take: pageSize,
@@ -575,7 +585,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
   };
 }
 
-/** Published shops per category. Drafts, archived offerings, and hidden listings are left out. */
+/** Published shops per category. Taken-down shops, hidden offerings, hidden listings, and suspended owners are left out. */
 export async function shopCategoryCounts(env: Env = process.env): Promise<Map<string, number>> {
   const rows = await prisma.storefront.findMany({
     where: publicShopWhere({ published: true }, env),
@@ -587,7 +597,7 @@ export async function shopCategoryCounts(env: Env = process.env): Promise<Map<st
           verifiedPro: true,
           verifiedProUntil: true,
           listings: {
-            where: { hidden: false },
+            where: publicListingWhere({}, env),
             select: {
               category: true,
               type: true,
@@ -599,7 +609,7 @@ export async function shopCategoryCounts(env: Env = process.env): Promise<Map<st
         },
       },
       offerings: {
-        where: { archived: false },
+        where: { archived: false, hidden: false },
         orderBy: offeringOrder,
         select: { id: true, title: true, description: true },
       },
@@ -640,8 +650,8 @@ export async function homeRails(viewerId?: string | null, env: Env = process.env
     recentOfferings(4, viewerId, env),
   ]);
   return {
-    featured: maskListings(featuredRows).filter((listing) => isFeatured(listing)).slice(0, 4),
-    classifieds: maskListings(classifiedRows),
+    featured: featuredRows.map((row) => toPublicListing(row)).filter((listing) => isFeatured(listing)).slice(0, 4),
+    classifieds: classifiedRows.map((row) => toPublicListing(row)),
     shops: shops.shops,
     offerings,
   };

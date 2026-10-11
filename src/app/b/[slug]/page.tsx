@@ -14,11 +14,12 @@ import {
   publicSellerContacts,
   publicTextWithoutDemoNumbers,
 } from "@/lib/demo-visibility";
-import { SellerContactChannels } from "@/components/seller-contact";
+import { PaymentSafetyNote, SellerContactChannels } from "@/components/seller-contact";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { shopReviews, shopSignals } from "@/lib/storefront";
+import { shopOpenTo } from "@/lib/visibility";
 import { averageRating, formatOfferingPrice, formatWhen, telHref } from "@/lib/utils";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
@@ -35,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     where: { slug },
     select: {
       published: true,
+      hidden: true,
       bannerUrl: true,
       userId: true,
       user: {
@@ -48,6 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
           whatsapp: true,
           verifiedPro: true,
           verifiedProUntil: true,
+          suspended: true,
         },
       },
       videos: {
@@ -60,9 +63,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   if (!shop || isPublicDemoHidden(shop.user.email)) return privateMetadata("Shop");
   const viewer = await getSessionUser();
-  const isOwner = viewer?.id === shop.userId;
-  if (!shop.published && !isOwner) return privateMetadata("Shop");
-  if (!shop.published) return { title: shop.user.name, robots: { index: false, follow: false } };
+  const open = shopOpenTo(viewer, {
+    published: shop.published,
+    hidden: shop.hidden,
+    ownerId: shop.userId,
+    ownerSuspended: shop.user.suspended,
+  });
+  if (!open) return privateMetadata("Shop");
+  if (!shop.published || shop.hidden || shop.user.suspended) return { title: shop.user.name, robots: { index: false, follow: false } };
   const origin = await publicOrigin();
   const proActive = isProActive(shop.user);
   const clip = shop.videos[0];
@@ -105,7 +113,21 @@ export default async function StorefrontPage({ params }: Props) {
   const shop = await prisma.storefront.findUnique({
     where: { slug },
     include: {
-      user: true,
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          bio: true,
+          city: true,
+          avatarUrl: true,
+          phone: true,
+          whatsapp: true,
+          verifiedPro: true,
+          verifiedProUntil: true,
+          suspended: true,
+        },
+      },
       offerings: {
         where: { archived: false },
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -118,7 +140,16 @@ export default async function StorefrontPage({ params }: Props) {
 
   const viewer = await getSessionUser();
   const isOwner = viewer?.id === shop.userId;
-  if (!shop.published && !isOwner) notFound();
+  if (
+    !shopOpenTo(viewer, {
+      published: shop.published,
+      hidden: shop.hidden,
+      ownerId: shop.userId,
+      ownerSuspended: shop.user.suspended,
+    })
+  ) {
+    notFound();
+  }
 
   if (viewer && !isOwner) {
     const blocked = await prisma.block.findUnique({
@@ -137,7 +168,10 @@ export default async function StorefrontPage({ params }: Props) {
   const callUrl = telHref(contacts.phone);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const proActive = isProActive(shop.user);
-  const publicOfferings = visibleOfferings(shop.offerings, proActive);
+  const isAdmin = viewer?.role === "admin";
+  const liveOfferings = shop.offerings.filter((offering) => !offering.hidden);
+  const publicOfferings = visibleOfferings(liveOfferings, proActive);
+  const moderatorHidden = isOwner || isAdmin ? shop.offerings.filter((offering) => offering.hidden) : [];
   const bannerSrc = proActive ? shop.bannerUrl : "";
   const publicVideo = shop.videos.find((video) =>
     shopVideoIsPublic({
@@ -156,6 +190,15 @@ export default async function StorefrontPage({ params }: Props) {
 
   return (
     <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
+      {shop.hidden && (isOwner || viewer?.role === "admin") ? (
+        <Flash>
+          {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} Publishing again does not undo that.`}
+        </Flash>
+      ) : null}
+      {shop.user.suspended && viewer?.role === "admin" ? (
+        <Flash>This account is suspended, so the shop is hidden from buyers.</Flash>
+      ) : null}
+
       {!shop.published && isOwner ? (
         <div className="grid gap-2">
           <Flash>This shop is a draft. Only you can see this preview.</Flash>
@@ -268,7 +311,6 @@ export default async function StorefrontPage({ params }: Props) {
           intro="Ask on WhatsApp. Payment for goods stays between you and the seller."
           phone={contacts.phone}
           whatsapp={contacts.whatsapp}
-          email={contacts.hidden ? "" : shop.user.email}
           chatUrl={chatUrl}
           callUrl={callUrl}
           family={
@@ -307,9 +349,12 @@ export default async function StorefrontPage({ params }: Props) {
                       <p className="text-sm leading-relaxed text-ink/70">{offering.description}</p>
                     ) : null}
                     {offeringChat ? (
-                      <a href={offeringChat} className={`${btnWhatsApp} mt-auto`} target="_blank" rel="noreferrer">
-                        Chat on WhatsApp
-                      </a>
+                      <div className="mt-auto grid gap-2">
+                        <a href={offeringChat} className={btnWhatsApp} target="_blank" rel="noreferrer">
+                          Chat on WhatsApp
+                        </a>
+                        <PaymentSafetyNote />
+                      </div>
                     ) : null}
                   </div>
                 </article>
@@ -317,6 +362,12 @@ export default async function StorefrontPage({ params }: Props) {
             })}
           </div>
         )}
+        {moderatorHidden.length > 0 ? (
+          <p className="text-sm text-ink/70">
+            {moderatorHidden.length} offering{moderatorHidden.length === 1 ? " is" : "s are"} hidden by a moderator and{" "}
+            {moderatorHidden.length === 1 ? "is" : "are"} not shown to buyers: {moderatorHidden.map((offering) => offering.title).join(", ")}.
+          </p>
+        ) : null}
       </section>
 
       <section id="reviews" className="grid gap-3">
@@ -380,6 +431,7 @@ export default async function StorefrontPage({ params }: Props) {
             <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
               WhatsApp this shop
             </a>
+            <PaymentSafetyNote />
           </div>
         </div>
       ) : null}

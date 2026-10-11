@@ -45,7 +45,7 @@ export function pickPrimaryShopListing<T extends ShopListingSignal>(listings: re
 
 export async function shopSignals(ownerId: string) {
   const listings = await prisma.listing.findMany({
-    where: { ownerId, hidden: false },
+    where: { ownerId, hidden: false, owner: { suspended: false } },
     select: {
       id: true,
       title: true,
@@ -71,7 +71,11 @@ export async function shopSignals(ownerId: string) {
 
 export async function shopReviews(ownerId: string) {
   return prisma.review.findMany({
-    where: { hidden: false, listing: { ownerId, hidden: false } },
+    where: {
+      hidden: false,
+      author: { suspended: false },
+      listing: { ownerId, hidden: false, owner: { suspended: false } },
+    },
     include: {
       author: { select: { id: true, name: true } },
       listing: { select: { id: true, title: true } },

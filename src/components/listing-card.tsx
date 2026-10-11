@@ -4,7 +4,6 @@ import { VideoMark } from "@/components/video-mark";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { publicSellerContacts } from "@/lib/demo-visibility";
 import type { ListingCardData } from "@/lib/search";
 import { isProActive } from "@/lib/pro";
 import { averageRating } from "@/lib/utils";
@@ -12,16 +11,13 @@ import { averageRating } from "@/lib/utils";
 export function ListingCard({ listing }: { listing: ListingCardData }) {
   const rating = averageRating(listing.reviews);
   const initial = listing.title.trim().charAt(0).toUpperCase() || "D";
-  const shopSlug = listing.owner.storefront?.published ? listing.owner.storefront.slug : "";
-  const whatsapp = publicSellerContacts({
-    email: listing.owner.email,
-    whatsapp: listing.contactWhatsapp,
-  }).whatsapp;
-  const servesDiaspora = Boolean(listing.owner.storefront?.servesDiaspora);
+  const shop = listing.owner.storefront;
+  const shopPublic = shop != null && shop.published && !shop.hidden;
+  const shopSlug = shopPublic ? shop.slug : "";
+  const whatsapp = listing.contactWhatsapp.trim();
+  const servesDiaspora = Boolean(shopPublic && shop?.servesDiaspora);
   const proActive = isProActive(listing.owner);
-  const hasVideo = Boolean(
-    proActive && listing.owner.storefront?.published && (listing.owner.storefront.videos?.length ?? 0) > 0,
-  );
+  const hasVideo = Boolean(proActive && shopPublic && (shop?.videos?.length ?? 0) > 0);
 
   return (
     <article className={`card-lift flex h-full flex-col overflow-hidden ${cardClass}`}>
@@ -53,7 +49,7 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
             type={listing.type}
             verified={listing.verified}
             verifiedPro={proActive}
-            shopBadges={listing.owner.storefront}
+            shopBadges={shopPublic ? shop : null}
             servesDiaspora={servesDiaspora}
             featured={listing.featured}
             featuredUntil={listing.featuredUntil}

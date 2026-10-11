@@ -8,7 +8,7 @@ export async function getSessionUser() {
   const id = session?.user?.id;
   if (!id) return null;
   const user = await prisma.user.findUnique({ where: { id } });
-  if (!user) return null;
+  if (!user || user.suspended) return null;
   const role = effectiveRole(user, process.env);
   if (role === user.role) return user;
   return { ...user, role };

@@ -2,17 +2,24 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AgentCountTable } from "@/components/admin-agent-counts";
 import { AdminOccasions } from "@/components/admin-occasions";
+import { ReasonInput } from "@/components/admin-reason";
 import { AdminVideoQueue } from "@/components/admin-video-queue";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
 import {
   resolveReport,
+  setListingFeatured,
   setListingHidden,
   setListingVerified,
+  setOfferingHidden,
+  setReviewHidden,
   setServesDiaspora,
   setShopBadge,
+  setShopHidden,
+  setUserSuspended,
   setVerifiedPro,
 } from "@/lib/actions/admin";
-import { countAgentSignups } from "@/lib/agent-code";
+import { countAgentSignups, knownAgentCodes, resolveAgentRange } from "@/lib/agent-code";
+import { auditLabel, MODERATION_NOTICES } from "@/lib/moderation";
 import { PRO_DAYS } from "@/lib/constants";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";
@@ -26,7 +33,7 @@ import {
   shopBadgeMethodLabel,
 } from "@/lib/shop-badges";
 import { requireAdmin } from "@/lib/session";
-import { formatWhen } from "@/lib/utils";
+import { formatWhen, one } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Admin" };
 
@@ -35,10 +42,18 @@ export default async function AdminPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  await requireAdmin();
-  const notice = (await searchParams).videoNotice;
+  const admin = await requireAdmin();
+  const params = await searchParams;
+  const notice = params.videoNotice;
   const videoNotice = typeof notice === "string" ? notice : "";
-  const [listings, reports, users, shops, agentUsers] = await Promise.all([
+  const moderationCode = one(params.moderation);
+  const moderationNotice = MODERATION_NOTICES[moderationCode] ?? "";
+  const agentRange = resolveAgentRange({
+    agents: one(params.agents),
+    from: one(params.agentFrom),
+    to: one(params.agentTo),
+  });
+  const [listings, reports, users, shops, agentUsers, auditLogs, reviews] = await Promise.all([
     prisma.listing.findMany({
       include: { owner: { select: { name: true, email: true } } },
       orderBy: { createdAt: "desc" },
@@ -61,12 +76,29 @@ export default async function AdminPage({
         verifiedPro: true,
         verifiedProUntil: true,
         kind: true,
+        suspended: true,
+        suspendedReason: true,
       },
       orderBy: { name: "asc" },
     }),
     prisma.storefront.findMany({
       include: {
-        user: { select: { id: true, name: true, email: true, city: true, verifiedPro: true, verifiedProUntil: true } },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            city: true,
+            verifiedPro: true,
+            verifiedProUntil: true,
+            suspended: true,
+          },
+        },
+        offerings: {
+          where: { archived: false },
+          orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+          select: { id: true, title: true, hidden: true, hiddenReason: true },
+        },
         badgeEvents: { orderBy: { createdAt: "desc" } },
       },
       orderBy: { user: { name: "asc" } },
@@ -74,23 +106,43 @@ export default async function AdminPage({
     prisma.user.findMany({
       select: {
         referralAgentCode: true,
+        referralAgentAt: true,
+        createdAt: true,
+        suspended: true,
         storefront: {
           select: {
             id: true,
+            published: true,
+            hidden: true,
             _count: { select: { offerings: { where: { archived: false } } } },
           },
         },
         _count: { select: { listings: true } },
       },
     }),
+    prisma.adminAuditLog.findMany({ orderBy: { createdAt: "desc" }, take: 40 }),
+    prisma.review.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 80,
+      include: {
+        author: { select: { name: true, email: true } },
+        listing: { select: { id: true, title: true } },
+      },
+    }),
   ]);
+  const knownCodes = knownAgentCodes();
   const agentCounts = countAgentSignups(
     agentUsers.map((person) => ({
       code: person.referralAgentCode,
+      at: person.referralAgentAt ?? person.createdAt,
       hasShop: person.storefront !== null,
+      hasPublishedShop: Boolean(
+        person.storefront?.published && !person.storefront.hidden && !person.suspended,
+      ),
       hasOffering: (person.storefront?._count.offerings ?? 0) > 0,
       hasListing: person._count.listings > 0,
     })),
+    { knownCodes, from: agentRange.from, to: agentRange.to },
   );
 
   const rank: Record<string, number> = { high: 0, medium: 1, low: 2 };
@@ -101,10 +153,13 @@ export default async function AdminPage({
       <div>
         <h1 className="font-serif text-3xl">Moderation</h1>
         <p className="mt-1 text-sm text-ink/70">
-          Hide listings and close reports. Shop checks (phone, location, business) are granted here, and each change is
-          kept in the audit trail. Pro plan is paid on Promote for {PRO_DAYS} days and does not verify a shop. Granting
-          it here adds {PRO_DAYS} days. The listing verified flag is separate from those checks.
+          Hide listings, shops, offerings, and reviews, and suspend an account. Nothing here is deleted. A suspended
+          account cannot sign in, and their shops and listings stay off public pages until you unsuspend them. Shop
+          checks (phone, location, business) are granted here. Pro plan is paid on Promote for {PRO_DAYS} days and does
+          not verify a shop. Granting it here adds {PRO_DAYS} days. Featured is a directory boost. The listing verified
+          flag is separate from those checks. Each action is written to the audit log.
         </p>
+        {moderationNotice ? <p className="mt-3 text-sm font-semibold text-danger">{moderationNotice}</p> : null}
         {paymentsLive() ? null : (
           <p className="mt-2 text-sm font-semibold text-navy">
             {PAID_UPGRADES_COMING_SOON}. Grant, Add {PRO_DAYS} days, and Remove on this page still work.
@@ -121,9 +176,27 @@ export default async function AdminPage({
         </p>
       </div>
 
+      <section id="audit-log" className="grid gap-3">
+        <h2 className="font-serif text-2xl">Recent admin actions</h2>
+        {auditLogs.length === 0 ? <p className="text-sm text-ink/70">No admin actions yet.</p> : null}
+        <ol className="grid gap-2">
+          {auditLogs.map((event) => (
+            <li key={event.id} className="rounded-xl border border-sand bg-card px-3 py-2 text-sm">
+              <p>
+                <time dateTime={event.createdAt.toISOString()}>{formatWhen(event.createdAt)}</time>
+                {" · "}
+                {auditLabel(event.action)} · {event.targetType} {event.targetId} · {event.actorName || "Admin"}
+                {event.actorEmail ? ` (${event.actorEmail})` : ""}
+              </p>
+              {event.reason ? <p className="mt-1 text-ink/75">{event.reason}</p> : null}
+            </li>
+          ))}
+        </ol>
+      </section>
+
       <AdminVideoQueue notice={videoNotice} />
 
-      <AgentCountTable rows={agentCounts} />
+      <AgentCountTable rows={agentCounts} range={agentRange} />
 
       <section id="shop-badges" className="grid gap-3">
         <h2 className="font-serif text-2xl">Shop checks</h2>
@@ -139,7 +212,10 @@ export default async function AdminPage({
                 <Link href={`/b/${shop.slug}`} className="font-semibold">
                   {shop.user.name}
                 </Link>
-                <span className="text-ink/60">{shop.published ? "Published" : "Draft"}</span>
+                <span className="text-ink/60">
+                  {shop.hidden ? "Taken down" : shop.published ? "Published" : "Draft"}
+                  {shop.user.suspended ? " · owner suspended" : ""}
+                </span>
               </div>
               <p className="text-ink/70">
                 /b/{shop.slug} · {shop.user.city} · {shop.user.email}
@@ -149,6 +225,38 @@ export default async function AdminPage({
                     ? ` · Pro plan ended ${formatPlanDate(shop.user.verifiedProUntil)} (not a shop check)`
                     : ""}
               </p>
+              <form action={setShopHidden} className="mt-3 flex flex-wrap items-end gap-2">
+                <input type="hidden" name="storefrontId" value={shop.id} />
+                <input type="hidden" name="hidden" value={shop.hidden ? "0" : "1"} />
+                <ReasonInput id={`${shop.id}-shop-reason`} />
+                <button className={shop.hidden ? btnSecondary : btnDanger} type="submit">
+                  {shop.hidden ? "Restore shop" : "Take down shop"}
+                </button>
+              </form>
+              {shop.hiddenReason ? <p className="text-ink/70">Last takedown: {shop.hiddenReason}</p> : null}
+              {shop.offerings.length > 0 ? (
+                <ul className="mt-3 grid gap-2">
+                  {shop.offerings.map((offering) => (
+                    <li key={offering.id} className="rounded-xl border border-sand bg-white p-3">
+                      <p className="font-semibold">
+                        {offering.title}{" "}
+                        <span className="font-normal text-ink/60">{offering.hidden ? "Hidden" : "Visible"}</span>
+                      </p>
+                      {offering.hiddenReason ? <p className="text-ink/70">{offering.hiddenReason}</p> : null}
+                      <form action={setOfferingHidden} className="mt-2 flex flex-wrap items-end gap-2">
+                        <input type="hidden" name="offeringId" value={offering.id} />
+                        <input type="hidden" name="hidden" value={offering.hidden ? "0" : "1"} />
+                        <ReasonInput id={`${offering.id}-reason`} />
+                        <button className={offering.hidden ? btnSecondary : btnDanger} type="submit">
+                          {offering.hidden ? "Restore offering" : "Hide offering"}
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-ink/60">No offerings yet.</p>
+              )}
               <form action={setServesDiaspora} className="mt-2 flex flex-wrap items-center gap-2">
                 <input type="hidden" name="storefrontId" value={shop.id} />
                 <input type="hidden" name="value" value={shop.servesDiaspora ? "0" : "1"} />
@@ -298,6 +406,40 @@ export default async function AdminPage({
       </section>
 
       <section className="grid gap-3">
+        <h2 className="font-serif text-2xl">Reviews</h2>
+        <p className="text-sm text-ink/70">The latest reviews. Hiding one removes it from the listing, the shop, and the rating.</p>
+        {reviews.length === 0 ? <p className="text-sm text-ink/70">No reviews.</p> : null}
+        {reviews.map((review) => (
+          <article key={review.id} className="rounded-2xl border border-sand bg-card p-4 text-sm">
+            <p className="font-semibold">
+              {review.rating} / 5 · {review.author.name} · {review.hidden ? "Hidden" : "Visible"}
+            </p>
+            <p className="text-ink/70">
+              {review.author.email} · {formatWhen(review.createdAt)}
+              {review.listing ? (
+                <>
+                  {" · "}
+                  <Link href={`/listings/${review.listing.id}`} className="font-semibold text-lake-dark">
+                    {review.listing.title}
+                  </Link>
+                </>
+              ) : null}
+            </p>
+            <p className="mt-1 whitespace-pre-wrap">{review.body}</p>
+            {review.hiddenReason ? <p className="mt-1 text-ink/70">{review.hiddenReason}</p> : null}
+            <form action={setReviewHidden} className="mt-3 flex flex-wrap items-end gap-2">
+              <input type="hidden" name="reviewId" value={review.id} />
+              <input type="hidden" name="hidden" value={review.hidden ? "0" : "1"} />
+              <ReasonInput id={`${review.id}-reason`} />
+              <button className={review.hidden ? btnSecondary : btnDanger} type="submit">
+                {review.hidden ? "Restore review" : "Hide review"}
+              </button>
+            </form>
+          </article>
+        ))}
+      </section>
+
+      <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Listings</h2>
         <p className="text-sm text-ink/70">This verified flag marks the directory listing. It is separate from shop checks.</p>
         {ordered.map((listing) => (
@@ -313,16 +455,25 @@ export default async function AdminPage({
               {listing.verified ? " · verified" : ""}
             </p>
             {listing.scamNotes ? <p className="mt-1">{listing.scamNotes}</p> : null}
-            <div className="mt-3 flex flex-wrap gap-2">
-              <form action={setListingHidden}>
+            {listing.hiddenReason ? <p className="mt-1 text-ink/70">{listing.hiddenReason}</p> : null}
+            <div className="mt-3 flex flex-wrap items-end gap-2">
+              <form action={setListingHidden} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="id" value={listing.id} />
                 <input type="hidden" name="hidden" value={listing.hidden ? "0" : "1"} />
-                <button className={btnSecondary}>{listing.hidden ? "Unhide" : "Hide"}</button>
+                <ReasonInput id={`${listing.id}-hide-reason`} />
+                <button className={listing.hidden ? btnSecondary : btnDanger} type="submit">
+                  {listing.hidden ? "Unhide" : "Hide"}
+                </button>
               </form>
               <form action={setListingVerified}>
                 <input type="hidden" name="id" value={listing.id} />
                 <input type="hidden" name="verified" value={listing.verified ? "0" : "1"} />
                 <button className={btnSecondary}>{listing.verified ? "Remove verified" : "Grant verified"}</button>
+              </form>
+              <form action={setListingFeatured}>
+                <input type="hidden" name="id" value={listing.id} />
+                <input type="hidden" name="featured" value={listing.featured ? "0" : "1"} />
+                <button className={btnSecondary}>{listing.featured ? "Remove featured" : "Feature for 30 days"}</button>
               </form>
             </div>
           </article>
@@ -350,13 +501,25 @@ export default async function AdminPage({
                 <Link href={`/people/${person.id}`} className="font-semibold">
                   {person.name}
                 </Link>
+                {person.suspended ? <span className="ml-2 text-danger">Suspended</span> : null}
                 <p className="text-ink/70">
                   {person.email} · {person.kind} · {person.city}
                   {person.role === "admin" ? " · admin" : ""}
                   {proNote}
+                  {person.suspendedReason ? ` · ${person.suspendedReason}` : ""}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-end gap-2">
+                {person.id === admin.id ? null : (
+                  <form action={setUserSuspended} className="flex flex-wrap items-end gap-2">
+                    <input type="hidden" name="userId" value={person.id} />
+                    <input type="hidden" name="suspended" value={person.suspended ? "0" : "1"} />
+                    <ReasonInput id={`${person.id}-suspend-reason`} />
+                    <button className={person.suspended ? btnSecondary : btnDanger} type="submit">
+                      {person.suspended ? "Unsuspend" : "Suspend"}
+                    </button>
+                  </form>
+                )}
                 <form action={setVerifiedPro}>
                   <input type="hidden" name="userId" value={person.id} />
                   <input type="hidden" name="value" value="1" />
