@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { DEMO_EMAIL_DOMAIN, isDemoEmail } from "@/lib/admin-access";
+import { liveOwner } from "@/lib/visibility";
 
 /**
  * Seeded shops and listings belong to @dala.local accounts in prisma/seed.ts.
@@ -79,14 +80,16 @@ export function hiddenDemoUserFilter(env?: DemoEnv): Prisma.UserWhereInput | nul
 
 export function publicListingWhere(extra: Prisma.ListingWhereInput = {}, env?: DemoEnv): Prisma.ListingWhereInput {
   const demo = hiddenDemoUserFilter(env);
-  if (!demo) return extra;
-  return { AND: [extra, { owner: demo }] };
+  const live: Prisma.ListingWhereInput = { hidden: false, owner: liveOwner };
+  if (!demo) return { AND: [extra, live] };
+  return { AND: [extra, live, { owner: demo }] };
 }
 
 export function publicShopWhere(extra: Prisma.StorefrontWhereInput = {}, env?: DemoEnv): Prisma.StorefrontWhereInput {
   const demo = hiddenDemoUserFilter(env);
-  if (!demo) return extra;
-  return { AND: [extra, { user: demo }] };
+  const live: Prisma.StorefrontWhereInput = { hidden: false, user: liveOwner };
+  if (!demo) return { AND: [extra, live] };
+  return { AND: [extra, live, { user: demo }] };
 }
 
 /**

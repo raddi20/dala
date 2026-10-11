@@ -20,9 +20,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
     prisma.user.findMany({
       where: {
+        suspended: false,
         AND: [
           {
-            OR: [{ listings: { some: { hidden: false } } }, { storefront: { is: { published: true } } }],
+            OR: [
+              { listings: { some: { hidden: false } } },
+              { storefront: { is: { published: true, hidden: false } } },
+            ],
           },
           ...(demoUser ? [demoUser] : []),
         ],

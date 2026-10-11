@@ -19,6 +19,7 @@ import {
   planPasswordReset,
   resetEmailText,
   resetPasswordLink,
+  resetSlotKey,
   sessionStale,
   takeResetSlot,
   tokenUsable,
@@ -102,6 +103,11 @@ test("reset requests are limited by email and by IP", () => {
     assert.equal(takeResetSlot(`person-${i}@example.com`, "198.51.100.8", now + 20 + i, store), false);
   }
   assert.equal(takeResetSlot("fresh@example.com", "198.51.100.8", now + 50, store), true);
+  const keys = [...store.keys()];
+  assert.equal(keys.some((key) => key.includes("203.0.113")), false);
+  assert.equal(keys.some((key) => key.includes("198.51.100")), false);
+  assert.equal(keys.some((key) => key.includes("@")), false);
+  assert.equal(keys.includes(resetSlotKey("ip", "203.0.113.5")), true);
 });
 
 test("a password change makes older sessions stale and leaves a new sign-in", () => {

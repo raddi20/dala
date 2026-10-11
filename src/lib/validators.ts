@@ -7,15 +7,16 @@ import {
   isOfferingCurrency,
   REPORT_REASONS,
 } from "@/lib/constants";
+import { normalizeContactPair } from "@/lib/phone";
 
-export type ActionState = { error: string; ok?: boolean; message?: string };
+export type ActionState = { error: string; ok?: boolean; message?: string; field?: string };
 
 export function field(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value : "";
 }
 
-const phoneCheck = (value: string) => value === "" || value.replace(/\D/g, "").length >= 8;
+const phoneText = z.string().trim().max(48, "That number is too long.").default("");
 
 export const listingSchema = z.object({
   title: z.string().trim().min(3, "Title must be at least 3 characters.").max(80),
@@ -26,13 +27,8 @@ export const listingSchema = z.object({
   address: z.string().trim().max(160).default(""),
   priceLabel: z.string().trim().max(40).default(""),
   contactName: z.string().trim().max(80).default(""),
-  contactPhone: z.string().trim().max(32).default("").refine(phoneCheck, "Phone number looks too short."),
-  contactWhatsapp: z
-    .string()
-    .trim()
-    .max(32)
-    .default("")
-    .refine(phoneCheck, "WhatsApp number looks too short."),
+  contactPhone: phoneText,
+  contactWhatsapp: phoneText,
   photoUrl: z
     .string()
     .trim()
@@ -61,7 +57,22 @@ export function parseListingForm(formData: FormData) {
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Check the form." };
   }
-  return { ok: true as const, data: parsed.data };
+  const phones = normalizeContactPair({
+    phone: parsed.data.contactPhone,
+    whatsapp: parsed.data.contactWhatsapp,
+    city: parsed.data.city,
+  });
+  if (!phones.ok) {
+    return {
+      ok: false as const,
+      error: phones.error,
+      field: phones.field === "phone" ? "contactPhone" : "contactWhatsapp",
+    };
+  }
+  return {
+    ok: true as const,
+    data: { ...parsed.data, contactPhone: phones.phone, contactWhatsapp: phones.whatsapp },
+  };
 }
 
 export const profileSchema = z.object({
@@ -69,8 +80,8 @@ export const profileSchema = z.object({
   kind: z.enum(["person", "business"]),
   city: z.string().refine(isCityName, "Choose a city."),
   bio: z.string().trim().max(500).default(""),
-  phone: z.string().trim().max(32).default("").refine(phoneCheck, "Phone number looks too short."),
-  whatsapp: z.string().trim().max(32).default("").refine(phoneCheck, "WhatsApp number looks too short."),
+  phone: phoneText,
+  whatsapp: phoneText,
   avatarUrl: z
     .string()
     .trim()
@@ -97,6 +108,7 @@ export const registerSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters.").max(72),
   kind: z.enum(["person", "business"]),
   city: z.string().refine(isCityName, "Choose a city."),
+  terms: z.string().refine((value) => value === "1", "Agree to the Terms and Privacy Policy to create an account."),
 });
 
 export const reviewSchema = z.object({

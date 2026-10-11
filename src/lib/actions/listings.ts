@@ -22,7 +22,7 @@ export async function createListing(_prev: ActionState, formData: FormData): Pro
   if (!user) return { error: "Sign in to post a listing." };
 
   const parsed = parseListingForm(formData);
-  if (!parsed.ok) return { error: parsed.error };
+  if (!parsed.ok) return { error: parsed.error, field: parsed.field };
 
   const risk = assessScam(parsed.data);
   const listing = await prisma.listing.create({
@@ -52,7 +52,7 @@ export async function updateListing(_prev: ActionState, formData: FormData): Pro
   }
 
   const parsed = parseListingForm(formData);
-  if (!parsed.ok) return { error: parsed.error };
+  if (!parsed.ok) return { error: parsed.error, field: parsed.field };
 
   const risk = assessScam(parsed.data);
   await prisma.listing.update({

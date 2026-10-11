@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
+import { remoteImagePatterns } from "./src/lib/image-hosts";
+import { securityHeaders } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  poweredByHeader: false,
   serverExternalPackages: ["@prisma/client", "prisma", "@mux/mux-node", "sharp"],
+  images: {
+    remotePatterns: remoteImagePatterns(),
+  },
   async headers() {
     return [
       {
@@ -15,6 +21,10 @@ const nextConfig: NextConfig = {
       {
         source: "/manifest.webmanifest",
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
+      },
+      {
+        source: "/:path*",
+        headers: securityHeaders(),
       },
     ];
   },
