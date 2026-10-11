@@ -23,6 +23,7 @@
     "@mux/mux-player-react": "^3.13.4",
     "@mux/upchunk": "^3.5.0",
     "@prisma/client": "^6.19.3",
+    "@sentry/nextjs": "^11.6.0",
     "@vercel/blob": "^2.8.0",
     "bcryptjs": "^2.4.3",
     "next": "16.3.8",
