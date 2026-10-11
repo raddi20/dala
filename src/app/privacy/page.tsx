@@ -62,6 +62,11 @@ export default function PrivacyPage() {
       <InfoSection title="What we collect">
         <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Kenya / East Africa or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo. If you arrived from a brochure link with an agent code, we store that short code and the time you registered. We do not change it later.</p>
         <p>
+          Your sign-in email is not shown on your shop, your listings, or your public profile. Buyers see the phone and
+          WhatsApp number you choose to add. When you create an account you agree to the Terms and this privacy notice,
+          and we store the time you agreed. Accounts created before that tick-box have no time stored.
+        </p>
+        <p>
           Shop and listing content. That includes titles, descriptions, categories, cities, addresses you choose to
           publish, prices, contact names, and the offerings on a shop. Reviews you write are stored with your name.
           Reports you send, and the people you block, are stored too.

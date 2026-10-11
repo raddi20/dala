@@ -3,11 +3,21 @@ import type { StatStore } from "@/lib/stats/track";
 
 export function prismaStatStore(): StatStore {
   return {
-    findListing(id) {
-      return prisma.listing.findUnique({ where: { id }, select: { id: true, hidden: true } });
+    async findListing(id) {
+      const row = await prisma.listing.findUnique({
+        where: { id },
+        select: { id: true, hidden: true, owner: { select: { suspended: true } } },
+      });
+      if (!row) return null;
+      return { id: row.id, hidden: row.hidden || row.owner.suspended };
     },
-    findShop(slug) {
-      return prisma.storefront.findUnique({ where: { slug }, select: { id: true, published: true } });
+    async findShop(slug) {
+      const row = await prisma.storefront.findUnique({
+        where: { slug },
+        select: { id: true, published: true, hidden: true, user: { select: { suspended: true } } },
+      });
+      if (!row) return null;
+      return { id: row.id, published: row.published && !row.hidden && !row.user.suspended };
     },
     countRecent(sessionHash, since) {
       return prisma.statEvent.count({ where: { sessionHash, createdAt: { gte: since } } });

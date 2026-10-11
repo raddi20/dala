@@ -4,9 +4,10 @@ import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere } from "@/lib/shop-badges";
 import { isFeatured } from "@/lib/utils";
+import { liveOwner, publicReviewWhere } from "@/lib/visibility";
 
 const include = {
-  reviews: { where: { hidden: false }, select: { rating: true } },
+  reviews: { where: publicReviewWhere, select: { rating: true } },
   owner: {
     select: {
       id: true,
@@ -51,7 +52,12 @@ export async function searchListings(filters: {
   includeHidden?: boolean;
 }) {
   const where: Prisma.ListingWhereInput = {};
-  if (!filters.includeHidden) where.hidden = false;
+  if (!filters.includeHidden) {
+    where.hidden = false;
+    const current = where.AND;
+    const list = Array.isArray(current) ? current : current ? [current] : [];
+    where.AND = [...list, { owner: liveOwner }];
+  }
   if (filters.ids) where.id = { in: filters.ids };
   if (filters.city) where.city = filters.city;
   if (filters.region) where.region = filters.region;
@@ -117,15 +123,23 @@ export async function searchListings(filters: {
       if (featuredDelta !== 0) return featuredDelta;
       return b.createdAt.getTime() - a.createdAt.getTime();
     })
-    .map((row) => {
-      const contacts = publicSellerContacts({
-        email: row.owner.email,
-        phone: row.contactPhone,
-        whatsapp: row.contactWhatsapp,
-      });
-      if (!contacts.hidden) return row;
-      return { ...row, contactPhone: "", contactWhatsapp: "" };
-    });
+    .map((row) => toPublicListing(row));
+}
+
+/** Public card data. The owner's login email is dropped so it cannot ride along in a payload. */
+export function toPublicListing<T extends { owner: { email: string }; contactPhone: string; contactWhatsapp: string }>(row: T) {
+  const contacts = publicSellerContacts({
+    email: row.owner.email,
+    phone: row.contactPhone,
+    whatsapp: row.contactWhatsapp,
+  });
+  const owner = Object.fromEntries(Object.entries(row.owner).filter(([key]) => key !== "email")) as Omit<T["owner"], "email">;
+  return {
+    ...row,
+    contactPhone: contacts.phone,
+    contactWhatsapp: contacts.whatsapp,
+    owner,
+  };
 }
 
 export type ListingCardData = Awaited<ReturnType<typeof searchListings>>[number];

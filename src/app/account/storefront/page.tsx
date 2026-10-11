@@ -201,6 +201,11 @@ export default async function ManageStorefrontPage({
         <ShopVideoPanel verifiedPro={proActive} lapsed={lapsed} videos={shop.videos} paymentsOpen={live} />
       </section>
       {flash ? <Flash>{flash}</Flash> : null}
+      {shop.hidden ? (
+        <Flash>
+          {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} It stays in your account. Publishing again does not undo that.`}
+        </Flash>
+      ) : null}
       {notice === "published" ? (
         <div className="flex flex-wrap gap-2">
           <Link href={`/b/${shop.slug}`} className={btnSecondary}>
@@ -306,7 +311,10 @@ export default async function ManageStorefrontPage({
               <li key={offering.id} className={`${cardClass} p-4 text-sm`}>
                 <p className="font-semibold text-navy">
                   {offering.title}
-                  {index >= FREE_OFFERING_CAP && !proActive ? (
+                  {offering.hidden ? (
+                    <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-danger">Hidden by a moderator</span>
+                  ) : null}
+                  {index >= FREE_OFFERING_CAP && !proActive && !offering.hidden ? (
                     <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-clay">Hidden on the public shop</span>
                   ) : null}
                 </p>

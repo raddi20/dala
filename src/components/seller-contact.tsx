@@ -1,9 +1,23 @@
+import Link from "next/link";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { btnSecondary, btnWhatsApp } from "@/components/ui";
+import { MPESA_SAFETY_NOTE } from "@/lib/safety";
 
 /** Understated line in place of a demo shop's placeholder phone and WhatsApp. */
 export function DemoContactNote({ note }: { note: string }) {
   return <p className="mt-2 text-sm text-ink/55">{note}</p>;
+}
+
+/** One line beside a WhatsApp or call button. */
+export function PaymentSafetyNote({ className = "" }: { className?: string }) {
+  return (
+    <p className={`text-xs leading-relaxed text-ink/60 ${className}`}>
+      {MPESA_SAFETY_NOTE}{" "}
+      <Link href="/safety" className="font-semibold text-lake-dark hover:text-lake">
+        Safety tips
+      </Link>
+    </p>
+  );
 }
 
 /**
@@ -16,7 +30,6 @@ export function SellerContactChannels({
   intro,
   phone,
   whatsapp,
-  email,
   chatUrl,
   callUrl,
   family,
@@ -26,7 +39,6 @@ export function SellerContactChannels({
   intro?: string;
   phone?: string;
   whatsapp?: string;
-  email?: string;
   chatUrl?: string;
   callUrl?: string;
   family?: { phone: string; subjectName: string; path: string; siteName: string } | null;
@@ -54,16 +66,11 @@ export function SellerContactChannels({
             Call
           </a>
         ) : null}
-        {email ? (
-          <a href={`mailto:${email}`} className={btnSecondary}>
-            Email
-          </a>
-        ) : null}
       </div>
+      <PaymentSafetyNote className="mt-3" />
       <div className="mt-3 text-sm text-ink/65">
         {phone ? <p>Phone {phone}</p> : null}
         {whatsapp ? <p>WhatsApp {whatsapp}</p> : null}
-        {email ? <p>{email}</p> : null}
       </div>
     </>
   );

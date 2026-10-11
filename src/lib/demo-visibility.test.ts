@@ -35,16 +35,28 @@ test("demo shops stay visible unless HIDE_DEMO_SHOPS is on", () => {
   assert.equal(isPublicDemoHidden("Atieno@Dala.Local", { HIDE_DEMO_SHOPS: "on" }), true);
   assert.equal(isPublicDemoHidden("seller@rangach.co.ke", { HIDE_DEMO_SHOPS: "1" }), false);
 
-  assert.deepEqual(publicListingWhere({ hidden: false }, {}), { hidden: false });
+  assert.deepEqual(publicListingWhere({ hidden: false }, {}), {
+    AND: [{ hidden: false }, { hidden: false, owner: { suspended: false } }],
+  });
   assert.equal(hiddenDemoUserFilter({}), null);
-  assert.deepEqual(publicShopWhere({ published: true }, {}), { published: true });
+  assert.deepEqual(publicShopWhere({ published: true }, {}), {
+    AND: [{ published: true }, { hidden: false, user: { suspended: false } }],
+  });
 
   const hiddenListings = publicListingWhere({ hidden: false }, { HIDE_DEMO_SHOPS: "1" });
   assert.deepEqual(hiddenListings, {
-    AND: [{ hidden: false }, { owner: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } }],
+    AND: [
+      { hidden: false },
+      { hidden: false, owner: { suspended: false } },
+      { owner: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } },
+    ],
   });
   assert.deepEqual(publicShopWhere({ published: true }, { HIDE_DEMO_SHOPS: "yes" }), {
-    AND: [{ published: true }, { user: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } }],
+    AND: [
+      { published: true },
+      { hidden: false, user: { suspended: false } },
+      { user: { email: { not: { endsWith: DEMO_EMAIL_DOMAIN } } } },
+    ],
   });
 });
 
@@ -80,7 +92,6 @@ test("a demo shop never shows its placeholder phone or WhatsApp", () => {
       intro: "Ask on WhatsApp. Payment for goods stays between you and the seller.",
       phone: "+254711000101",
       whatsapp: "+254711000101",
-      email: "atieno@dala.local",
       chatUrl: "https://wa.me/254711000101",
       callUrl: "tel:+254711000101",
       family: {
@@ -113,10 +124,12 @@ test("a demo shop never shows its placeholder phone or WhatsApp", () => {
   assert.match(shown, /tel:\+254729217350/);
   assert.equal(shown.includes(DEMO_SHOP_CONTACT_NOTE), false);
 
-  for (const file of ["../app/b/[slug]/page.tsx", "../app/listings/[id]/page.tsx", "../app/people/[id]/page.tsx", "../lib/search.ts", "../components/listing-card.tsx"]) {
+  for (const file of ["../app/b/[slug]/page.tsx", "../app/listings/[id]/page.tsx", "../app/people/[id]/page.tsx", "../lib/search.ts"]) {
     const source = readFileSync(new URL(file, import.meta.url), "utf8");
     assert.match(source, /publicSellerContacts|SellerContactChannels|DemoContactNote/, file);
   }
+  const card = readFileSync(new URL("../components/listing-card.tsx", import.meta.url), "utf8");
+  assert.match(card, /contactWhatsapp/);
   const example = readFileSync(new URL("../../.env.example", import.meta.url), "utf8");
   const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
   assert.equal(example.includes("SHOW_DEMO_SHOPS"), false);
