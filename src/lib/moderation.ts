@@ -7,6 +7,13 @@ export type AdminActor = { id: string; email: string; name: string };
 export const REASON_TOO_SHORT = "Write a short reason (at least 3 characters).";
 export const CANNOT_SUSPEND_SELF = "You can't suspend your own account.";
 
+/** Query-code messages for /admin?moderation=. Kept out of the server-action module. */
+export const MODERATION_NOTICES: Record<string, string> = {
+  reason: REASON_TOO_SHORT,
+  self: CANNOT_SUSPEND_SELF,
+  missing: "That record is no longer there.",
+};
+
 const REASON_MAX = 500;
 
 export function requiredReason(raw: string): string | null {

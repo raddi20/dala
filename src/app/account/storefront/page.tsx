@@ -203,8 +203,7 @@ export default async function ManageStorefrontPage({
       {flash ? <Flash>{flash}</Flash> : null}
       {shop.hidden ? (
         <Flash>
-          A moderator hid this shop from buyers.{shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} It stays in your
-          account. Publishing again does not undo that.
+          {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} It stays in your account. Publishing again does not undo that.`}
         </Flash>
       ) : null}
       {notice === "published" ? (

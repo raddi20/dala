@@ -178,8 +178,7 @@ export default async function StorefrontPage({ params }: Props) {
     <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {shop.hidden && (isOwner || viewer?.role === "admin") ? (
         <Flash>
-          A moderator hid this shop from buyers.{shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} Publishing again does
-          not undo that.
+          {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} Publishing again does not undo that.`}
         </Flash>
       ) : null}
       {shop.user.suspended && viewer?.role === "admin" ? (

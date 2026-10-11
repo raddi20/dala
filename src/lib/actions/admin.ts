@@ -8,8 +8,6 @@ import { commitShopBadgeChange } from "@/lib/shop-badge-commit";
 import { shopBadgeDefinition, shopBadgeMethodLabel } from "@/lib/shop-badges";
 import { requireAdmin } from "@/lib/session";
 import {
-  CANNOT_SUSPEND_SELF,
-  REASON_TOO_SHORT,
   reasonOrDefault,
   requiredReason,
   setListingFeaturedState,
@@ -211,9 +209,3 @@ export async function resolveReport(formData: FormData) {
   }
   refresh(report.listingId ?? undefined);
 }
-
-export const MODERATION_NOTICES: Record<string, string> = {
-  reason: REASON_TOO_SHORT,
-  self: CANNOT_SUSPEND_SELF,
-  missing: "That record is no longer there.",
-};

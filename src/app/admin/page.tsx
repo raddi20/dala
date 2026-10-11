@@ -6,7 +6,6 @@ import { ReasonInput } from "@/components/admin-reason";
 import { AdminVideoQueue } from "@/components/admin-video-queue";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
 import {
-  MODERATION_NOTICES,
   resolveReport,
   setListingFeatured,
   setListingHidden,
@@ -20,7 +19,7 @@ import {
   setVerifiedPro,
 } from "@/lib/actions/admin";
 import { countAgentSignups, knownAgentCodes, resolveAgentRange } from "@/lib/agent-code";
-import { auditLabel } from "@/lib/moderation";
+import { auditLabel, MODERATION_NOTICES } from "@/lib/moderation";
 import { PRO_DAYS } from "@/lib/constants";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";

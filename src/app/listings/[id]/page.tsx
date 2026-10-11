@@ -143,10 +143,11 @@ export default async function ListingPage({ params, searchParams }: Props) {
       {notice ? <Flash>{notice}</Flash> : null}
       {listing.hidden || listing.owner.suspended ? (
         <Flash>
-          {listing.owner.suspended
-            ? "This account is suspended, so the listing is hidden from buyers."
-            : "This listing is hidden from browse. Only you and moderators can open it."}
-          {listing.hiddenReason ? ` ${listing.hiddenReason}` : ""}
+          {`${
+            listing.owner.suspended
+              ? "This account is suspended, so the listing is hidden from buyers."
+              : "This listing is hidden from browse. Only you and moderators can open it."
+          }${listing.hiddenReason ? ` ${listing.hiddenReason}` : ""}`}
         </Flash>
       ) : null}
 
