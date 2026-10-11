@@ -1,4 +1,6 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
+import { sentrySourceMapsEnabled } from "./src/lib/sentry";
 
 const nextConfig: NextConfig = {
   agentRules: false,
@@ -20,4 +22,21 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Source maps upload only when SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT
+// are all set. Replay code is left out of the client bundle.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: true,
+  telemetry: false,
+  sourcemaps: {
+    disable: !sentrySourceMapsEnabled(),
+  },
+  bundleSizeOptimizations: {
+    excludeDebugStatements: true,
+    excludeReplayShadowDom: true,
+    excludeReplayIframe: true,
+    excludeReplayWorker: true,
+  },
+});

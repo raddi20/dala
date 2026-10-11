@@ -105,6 +105,21 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 | `ADMIN_EMAIL` | Omit. | `admin@rangach.co.ke`. Production, and Preview if preview deploys use the same database. Comma-separated if you ever need more than one. |
 | `ADMIN_CLAIM_SECRET` | Omit. | 16 to 72 characters. The first login password for `ADMIN_EMAIL`. `openssl rand -base64 24` |
 | `ADMIN_CLAIM_RESET` | Omit. | Leave unset. Set to `1` for one production deploy only when you need to replace the admin password, then delete it. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Omit. Errors stay on the branded page and nothing is sent. | Sentry DSN. Public. The browser and the server both read it. Redeploy after setting it. |
+| `SENTRY_DSN` | Omit. | Same DSN, server only. Used when `NEXT_PUBLIC_SENTRY_DSN` is unset. |
+| `SENTRY_ORG` | Omit. | Sentry organization slug. Needed only to upload source maps. |
+| `SENTRY_PROJECT` | Omit. | Sentry project slug. Needed only to upload source maps. |
+| `SENTRY_AUTH_TOKEN` | Omit. | Organization auth token (`project:releases` and `org:read`). Source maps upload only when this, `SENTRY_ORG`, and `SENTRY_PROJECT` are all set at build time. Do not commit it. |
+
+### Error monitoring
+
+Missing pages and crashes show a Rangach page with links home, to listings, to contact, and to WhatsApp. Sentry is installed and does nothing until a DSN is set. Trace sampling is 5%. Emails and phone numbers are stripped before an event is sent. Session Replay is off.
+
+1. Sign up at [sentry.io/signup](https://sentry.io/signup/) (free Developer plan).
+2. Create a project and choose Next.js. Copy the DSN.
+3. In Vercel → Settings → Environment Variables, for Production, set `NEXT_PUBLIC_SENTRY_DSN` to that DSN. Set `SENTRY_DSN` to the same value if you want the server to keep working when the public variable is absent.
+4. For readable stack traces, create an organization auth token (Settings → Auth Tokens, scopes `project:releases` and `org:read`) and set `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, and `SENTRY_PROJECT`. The org and project are the slugs in the Sentry URL.
+5. Redeploy. Until step 3, the SDK does not start and no events leave the server.
 
 Auth is email and password so the demo runs without an email server. A magic-link provider can replace the Credentials provider in `src/auth.ts` later. Sign-up does not prove you own the mailbox, so `ADMIN_EMAIL` is not granted admin from the register form. See **Production admin**.
 
