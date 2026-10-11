@@ -56,6 +56,7 @@ export default async function PersonPage({ params }: Props) {
       city: true,
       verifiedPro: true,
       verifiedProUntil: true,
+      suspended: true,
     },
   });
   if (!person || isPublicDemoHidden(person.email)) notFound();

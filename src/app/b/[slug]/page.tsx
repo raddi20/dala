@@ -125,6 +125,7 @@ export default async function StorefrontPage({ params }: Props) {
           whatsapp: true,
           verifiedPro: true,
           verifiedProUntil: true,
+          suspended: true,
         },
       },
       offerings: {

@@ -89,6 +89,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           kind: true,
           verifiedPro: true,
           verifiedProUntil: true,
+          suspended: true,
           storefront: {
             select: {
               slug: true,
