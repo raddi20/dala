@@ -2,20 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { DiasporaOrdersTag, ProPlanChip, ShopBadgeChips, ShopBadgeNotes } from "@/components/badges";
+import { ShopBadgeNotes } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { cityChipLabel, cityInPhrase, regionForCity, regionLabel } from "@/lib/constants";
+import { cityInPhrase } from "@/lib/constants";
 import {
   DEMO_SHOP_CONTACT_NOTE,
   isPublicDemoHidden,
   publicSellerContacts,
   publicTextWithoutDemoNumbers,
 } from "@/lib/demo-visibility";
-import { PaymentSafetyNote, SellerContactChannels } from "@/components/seller-contact";
+import { DemoContactNote, PaymentSafetyNote } from "@/components/seller-contact";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -26,9 +26,10 @@ import { publicOrigin } from "@/lib/payments/origin";
 import { countStickerScan } from "@/lib/sticker-shop";
 import { isPrefetchRequest } from "@/lib/sticker";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
-import { whatsappOfferingLink, whatsappShopLink } from "@/lib/whatsapp";
+import { whatsappOfferingLink, whatsappShareLink, whatsappShopLink } from "@/lib/whatsapp";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { variantMap } from "@/lib/image-variant-store";
+import { shopPlaceLine, shopTrustLine } from "@/lib/shop-trust";
 import { ShopVideoPoster } from "@/components/shop-video-poster";
 import { videoMode } from "@/lib/video/config";
 import { shopVideoIsPublic } from "@/lib/video/machine";
@@ -181,21 +182,44 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   });
 
   const [signals, reviews] = await Promise.all([shopSignals(shop.userId), shopReviews(shop.userId)]);
-  const region = regionForCity(shop.user.city);
   const rating = averageRating(reviews);
   const url = `${await publicOrigin()}/b/${shop.slug}`;
   const contacts = publicSellerContacts(shop.user);
   const phone = contacts.whatsapp || contacts.phone;
   const chatUrl = phone ? whatsappShopLink(phone, url) : "";
   const callUrl = telHref(contacts.phone);
+  const shareUrl = whatsappShareLink(shop.user.name, url);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";
   const proActive = isProActive(shop.user);
   const isAdmin = viewer?.role === "admin";
   const liveOfferings = shop.offerings.filter((offering) => !offering.hidden);
   const publicOfferings = visibleOfferings(liveOfferings, proActive);
-  const photoVariants = await variantMap(publicOfferings.map((offering) => offering.imageUrl));
+  const bannerSrc = proActive ? shop.bannerUrl.trim() : "";
+  const photoVariants = await variantMap([
+    bannerSrc,
+    shop.user.avatarUrl,
+    ...publicOfferings.map((offering) => offering.imageUrl),
+  ]);
+  const coverUrl = bannerSrc || publicOfferings.find((offering) => offering.imageUrl.trim())?.imageUrl || "";
+  const coverStored = coverUrl ? photoVariants.get(coverUrl) : undefined;
+  const cover = cardPhoto({
+    src: coverUrl,
+    thumb480: coverStored?.thumb480,
+    thumb960: coverStored?.thumb960,
+    width: 960,
+    height: 420,
+    sizes: "(min-width: 768px) 768px, 100vw",
+  });
+  const avatarStored = shop.user.avatarUrl ? photoVariants.get(shop.user.avatarUrl) : undefined;
+  const avatar = cardPhoto({
+    src: shop.user.avatarUrl,
+    thumb480: avatarStored?.thumb480,
+    thumb960: avatarStored?.thumb960,
+    width: 80,
+    height: 80,
+    sizes: "64px",
+  });
   const moderatorHidden = isOwner || isAdmin ? shop.offerings.filter((offering) => offering.hidden) : [];
-  const bannerSrc = proActive ? shop.bannerUrl : "";
   const publicVideo = shop.videos.find((video) =>
     shopVideoIsPublic({
       verifiedPro: proActive,
@@ -210,9 +234,20 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     locationVerified: shop.locationVerified,
     businessVerified: shop.businessVerified,
   };
+  const trust = shopTrustLine({ ...shopBadges, verified: signals.verified });
+  const place = shopPlaceLine(signals.category, shop.user.city);
+  const bio = shop.user.bio
+    ? publicTextWithoutDemoNumbers(shop.user.email, shop.user.bio, [shop.user.phone, shop.user.whatsapp])
+    : "";
+  const shopParams = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    const item = Array.isArray(value) ? value[0] : value;
+    if (item) shopParams.set(key, item);
+  }
+  const shopHref = shopParams.size ? `/b/${shop.slug}?${shopParams}` : `/b/${shop.slug}`;
 
   return (
-    <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
+    <article className={`mx-auto grid max-w-3xl gap-5 px-4 py-4 ${chatUrl ? "pb-40" : "pb-8"}`}>
       {shop.hidden && (isOwner || viewer?.role === "admin") ? (
         <Flash>
           {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} Publishing again does not undo that.`}
@@ -236,76 +271,92 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </div>
       ) : null}
 
-      <header className={`overflow-hidden ${cardClass}`}>
-        <RemoteImage src={bannerSrc} alt="" className="aspect-[2/1] w-full object-cover sm:aspect-[5/2]">
-          <div className="flex aspect-[2/1] items-end bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white sm:aspect-[5/2]">
-            <span className="font-serif text-4xl">{initial}</span>
-            {signals.category ? (
-              <span className="ml-auto max-w-[60%] text-right text-xs font-medium uppercase tracking-wide text-white/80">
-                {signals.category}
-              </span>
-            ) : null}
-          </div>
-        </RemoteImage>
-        <div className="px-5 pb-6">
+      <header>
+        <div className="-mx-4 h-[210px] overflow-hidden bg-navy">
           <RemoteImage
-            src={shop.user.avatarUrl}
+            src={cover?.src ?? ""}
+            srcSet={cover?.srcSet}
+            sizes={cover?.sizes}
+            width={cover?.width ?? 960}
+            height={210}
             alt=""
-            className="-mt-10 h-20 w-20 rounded-full border-4 border-card object-cover shadow-md"
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            className="h-[210px] w-full object-cover"
           >
-            <div className="-mt-10 flex h-20 w-20 items-center justify-center rounded-full border-4 border-card bg-navy font-serif text-3xl text-white shadow-md">
+            <div className="h-[210px] bg-navy" />
+          </RemoteImage>
+        </div>
+        <div className="relative z-10 -mt-8">
+          <RemoteImage
+            src={avatar?.src ?? ""}
+            srcSet={avatar?.srcSet}
+            sizes={avatar?.sizes}
+            width={64}
+            height={64}
+            alt=""
+            className="h-16 w-16 rounded-2xl border-4 border-bg object-cover"
+          >
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border-4 border-bg bg-navy font-serif text-2xl text-white">
               {initial}
             </div>
           </RemoteImage>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            <span className="inline-flex items-center rounded-full bg-paper px-2.5 py-0.5 text-xs font-semibold text-ink/75 ring-1 ring-sand">
-              Shop
-            </span>
-            {signals.verified ? (
-              <span
-                title="An admin marked a directory listing for this shop as verified. Separate from the shop checks below."
-                aria-label="Verified. An admin marked a directory listing for this shop as verified. Separate from the shop checks."
-                className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20"
-              >
-                Verified
+        </div>
+        <h1 className="mt-3 font-serif text-[25px] leading-tight text-navy">{shop.user.name}</h1>
+        {place ? <p className="mt-1 text-sm text-muted">{place}</p> : null}
+        {trust ? (
+          shopBadges.phoneVerified || shopBadges.locationVerified || shopBadges.businessVerified ? (
+            <details className="filter-sheet mt-1">
+              <summary className="inline-flex min-h-11 cursor-pointer list-none items-center text-sm font-semibold text-navy marker:content-none [&::-webkit-details-marker]:hidden">
+                {trust}
+                <span aria-hidden="true"> ›</span>
+              </summary>
+              <div className="filter-sheet-layer">
+                <a className="filter-sheet-scrim" href={shopHref} aria-label="Close checks" />
+                <div className="filter-sheet-panel" role="dialog" aria-label="Checked by Rangach">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <h2 className="font-serif text-xl text-navy">Checked by Rangach</h2>
+                    <a href={shopHref} className="text-sm font-semibold text-gold-d">
+                      Close
+                    </a>
+                  </div>
+                  <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
+                </div>
+              </div>
+            </details>
+          ) : (
+            <p className="mt-1 text-sm font-semibold text-navy">{trust}</p>
+          )
+        ) : null}
+        <div className="mt-3 flex gap-6">
+          {callUrl ? (
+            <a href={callUrl} className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+                  <path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 6 6L17 13l4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 5a2 2 0 0 1 2-2z" />
+                </svg>
               </span>
-            ) : null}
-            <ShopBadgeChips flags={shopBadges} events={shop.badgeEvents} />
-            {shop.servesDiaspora ? <DiasporaOrdersTag /> : null}
-            {proActive ? <ProPlanChip /> : null}
-            <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
-              {cityChipLabel(shop.user.city)}
-            </span>
-          </div>
-          <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
-          <h1 className="mt-3 font-serif text-3xl leading-tight text-navy sm:text-4xl">{shop.user.name}</h1>
-          <p className="mt-1 text-ink/65">
-            {regionLabel(region)}
-            {signals.category ? ` · ${signals.category}` : ""}
-            {signals.address ? ` · ${signals.address}` : ""}
-          </p>
-
-          <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl bg-paper/80 p-3 text-center">
-            <div>
-              <p className="font-serif text-xl text-navy">{publicOfferings.length}</p>
-              <p className="text-xs text-ink/55">Offerings</p>
-            </div>
-            <div>
-              <p className="font-serif text-xl text-navy">{rating === null ? "—" : rating.toFixed(1)}</p>
-              <p className="text-xs text-ink/55">Rating</p>
-            </div>
-            <div>
-              <p className="font-serif text-xl text-navy">{reviews.length}</p>
-              <p className="text-xs text-ink/55">Reviews</p>
-            </div>
-          </div>
-
-          {signals.listingId ? (
-            <Link href={`/listings/${signals.listingId}`} className="mt-3 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
-              Directory listing{signals.listingTitle ? `: ${signals.listingTitle}` : ""}
-            </Link>
+              Call
+            </a>
+          ) : null}
+          {shareUrl ? (
+            <a
+              href={shareUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink"
+            >
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white">
+                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+                  <path d="M14 4l6 6-6 6v-4H9a6 6 0 0 0-6 6v1h2v-1a4 4 0 0 1 4-4h5v-4z" />
+                </svg>
+              </span>
+              Share
+            </a>
           ) : null}
         </div>
+        {contacts.hidden ? <DemoContactNote note={DEMO_SHOP_CONTACT_NOTE} /> : null}
       </header>
 
       {showVideo && publicVideo ? (
@@ -319,41 +370,27 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </section>
       ) : null}
 
-      {shop.user.bio ? (
-        <section className={`${cardClass} p-5`}>
-          <h2 className="font-serif text-xl text-navy">About</h2>
-          <p className="mt-2 whitespace-pre-wrap leading-relaxed text-ink/85">{shop.user.bio}</p>
-        </section>
-      ) : null}
+      <nav aria-label="Shop sections" className="flex gap-1 border-b border-line">
+        <a href="#offerings" className="inline-flex min-h-11 items-center border-b-2 border-navy px-2 text-sm font-semibold text-navy">
+          Offerings ({publicOfferings.length})
+        </a>
+        <a href="#about" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
+          About
+        </a>
+        <a href="#reviews" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
+          Reviews{reviews.length > 0 ? ` (${reviews.length})` : ""}
+        </a>
+      </nav>
 
-      <section className={`${cardClass} p-5`}>
-        <h2 className="font-serif text-xl text-navy">Contact</h2>
-        <SellerContactChannels
-          hidden={contacts.hidden}
-          note={DEMO_SHOP_CONTACT_NOTE}
-          intro="Ask on WhatsApp. Payment for goods stays between you and the seller."
-          phone={contacts.phone}
-          whatsapp={contacts.whatsapp}
-          chatUrl={chatUrl}
-          callUrl={callUrl}
-          family={
-            phone
-              ? { phone, subjectName: shop.user.name, path: `/b/${shop.slug}`, siteName: appName() }
-              : null
-          }
-        />
-      </section>
-
-      <section className="grid gap-4">
-        <h2 className="font-serif text-2xl text-navy">Offerings</h2>
+      <section id="offerings" className="grid scroll-mt-28 gap-3">
+        <h2 className="sr-only">Offerings</h2>
         {publicOfferings.length === 0 ? (
           <EmptyState title="No offerings yet" body="This shop has not listed products or services." />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3">
             {publicOfferings.map((offering) => {
               const price = formatOfferingPrice(offering.priceCents, offering.currency);
               const offeringChat = phone ? whatsappOfferingLink(phone, offering.title, url) : "";
-              const letter = offering.title.trim().charAt(0).toUpperCase() || "D";
               const stored = photoVariants.get(offering.imageUrl);
               const photo = cardPhoto({
                 src: offering.imageUrl,
@@ -367,7 +404,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                 <article
                   key={offering.id}
                   id={`offering-${offering.id}`}
-                  className={`card-lift scroll-mt-24 flex flex-col overflow-hidden ${cardClass}`}
+                  className={`card-lift scroll-mt-28 flex flex-col overflow-hidden ${cardClass}`}
                 >
                   <RemoteImage
                     src={photo?.src ?? ""}
@@ -378,26 +415,26 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                     loading={photo?.loading}
                     decoding={photo?.decoding}
                     fetchPriority={photo?.fetchPriority}
-                    alt={offering.title}
+                    alt=""
                     className="aspect-[4/3] h-auto w-full object-cover"
                   >
-                    <div className="flex aspect-[4/3] items-end bg-gradient-to-br from-navy to-lake-dark p-3 text-white">
-                      <span className="font-serif text-3xl">{letter}</span>
-                    </div>
+                    <div className="aspect-[4/3] bg-navy" />
                   </RemoteImage>
-                  <div className="flex flex-1 flex-col gap-2 p-4">
-                    <h3 className="font-serif text-xl leading-snug text-navy">{offering.title}</h3>
-                    {price ? <p className="font-semibold text-ink">{price}</p> : null}
-                    {offering.description ? (
-                      <p className="text-sm leading-relaxed text-ink/70">{offering.description}</p>
-                    ) : null}
+                  <div className="flex flex-1 flex-col gap-1 px-2.5 pb-3 pt-2">
+                    <h3 className="line-clamp-2 font-sans text-[14.5px] font-semibold leading-snug tracking-normal text-ink">
+                      {offering.title}
+                    </h3>
+                    {price ? <p className="text-sm font-semibold text-ink">{price}</p> : null}
+                    {offering.description ? <p className="line-clamp-2 text-xs leading-relaxed text-muted">{offering.description}</p> : null}
                     {offeringChat ? (
-                      <div className="mt-auto grid gap-2">
-                        <a href={offeringChat} className={btnWhatsApp} target="_blank" rel="noreferrer">
-                          Chat on WhatsApp
-                        </a>
-                        <PaymentSafetyNote />
-                      </div>
+                      <a
+                        href={offeringChat}
+                        className="mt-auto inline-flex min-h-11 items-center justify-center rounded-full bg-wa px-3 text-xs font-semibold text-white hover:bg-wa-d"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Ask on WhatsApp
+                      </a>
                     ) : null}
                   </div>
                 </article>
@@ -411,39 +448,61 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             {moderatorHidden.length === 1 ? "is" : "are"} not shown to buyers: {moderatorHidden.map((offering) => offering.title).join(", ")}.
           </p>
         ) : null}
+        <PaymentSafetyNote />
       </section>
 
-      <section id="reviews" className="grid gap-3">
-        <h2 className="font-serif text-2xl text-navy">Reviews</h2>
-        <p className="text-sm text-ink/60">
-          {rating === null
-            ? "No reviews yet."
-            : `${rating.toFixed(1)} out of 5 from ${reviews.length} review${reviews.length === 1 ? "" : "s"} on this seller's listings.`}
+      <section id="about" className="scroll-mt-28 grid gap-2">
+        <h2 className="font-serif text-xl text-navy">About</h2>
+        {bio ? (
+          <p className="whitespace-pre-wrap leading-relaxed text-ink/85">{bio}</p>
+        ) : (
+          <p className="text-sm text-muted">This shop has not added a description yet.</p>
+        )}
+        {signals.address ? <p className="text-sm text-muted">{signals.address}</p> : null}
+        {shop.servesDiaspora ? <p className="text-sm text-ink/80">Takes orders for family back home.</p> : null}
+        {signals.listingId ? (
+          <Link href={`/listings/${signals.listingId}`} className="text-sm font-semibold text-gold-d">
+            Directory listing{signals.listingTitle ? `: ${signals.listingTitle}` : ""}
+          </Link>
+        ) : null}
+        <p className="text-sm">
+          <Link href={`/people/${shop.user.id}`} className="font-semibold text-gold-d">
+            View profile
+          </Link>
         </p>
-        <ul className="grid gap-3">
-          {reviews.map((review) => (
-            <li key={review.id} className={`${cardClass} p-4`}>
-              <p className="text-sm font-semibold">
-                {review.rating} / 5 · {review.author.name}
-              </p>
-              <p className="mt-1 whitespace-pre-wrap text-sm text-ink/80">{review.body}</p>
-              <p className="mt-2 text-xs text-ink/45">
-                <Link href={`/listings/${review.listing.id}#reviews`} className="font-semibold text-lake-dark hover:text-lake">
-                  {review.listing.title}
-                </Link>
-                {" · "}
-                {formatWhen(review.createdAt)}
-              </p>
-            </li>
-          ))}
-        </ul>
       </section>
 
-      <p className="text-sm">
-        <Link href={`/people/${shop.user.id}`} className="font-semibold text-lake-dark hover:text-lake">
-          View profile
-        </Link>
-      </p>
+      <section id="reviews" className="grid scroll-mt-28 gap-3">
+        <h2 className="font-serif text-xl text-navy">Reviews</h2>
+        {reviews.length === 0 ? (
+          <EmptyState title="No reviews yet" body="When a buyer leaves a review on a listing, it shows up here." />
+        ) : (
+          <>
+            <p className="text-sm text-ink/60">
+              {rating === null
+                ? "No reviews yet."
+                : `${rating.toFixed(1)} out of 5 from ${reviews.length} review${reviews.length === 1 ? "" : "s"} on this seller's listings.`}
+            </p>
+            <ul className="grid gap-3">
+              {reviews.map((review) => (
+                <li key={review.id} className={`${cardClass} p-4`}>
+                  <p className="text-sm font-semibold">
+                    {review.rating} / 5 · {review.author.name}
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-ink/80">{review.body}</p>
+                  <p className="mt-2 text-xs text-ink/45">
+                    <Link href={`/listings/${review.listing.id}#reviews`} className="font-semibold text-gold-d">
+                      {review.listing.title}
+                    </Link>
+                    {" · "}
+                    {formatWhen(review.createdAt)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
 
       {viewer && !isOwner ? (
         <details className={`${cardClass} p-4`}>
@@ -460,22 +519,20 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       ) : null}
 
       {chatUrl ? (
-        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
-          <div className="grid gap-2">
-            {phone ? (
-              <FamilyOrderButton
-                variant="bar"
-                phone={phone}
-                subjectName={shop.user.name}
-                path={`/b/${shop.slug}`}
-                siteName={appName()}
-              />
-            ) : null}
-            <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-              WhatsApp this shop
-            </a>
-            <PaymentSafetyNote />
-          </div>
+        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-line/80 bg-card px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)]">
+          <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+            WhatsApp {shop.user.name}
+          </a>
+          <p className="mt-2 text-center text-sm text-muted">
+            Buying for family back home?{" "}
+            <FamilyOrderButton
+              variant="link"
+              phone={phone}
+              subjectName={shop.user.name}
+              path={`/b/${shop.slug}`}
+              siteName={appName()}
+            />
+          </p>
         </div>
       ) : null}
     </article>
