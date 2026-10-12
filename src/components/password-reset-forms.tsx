@@ -6,6 +6,7 @@ import { requestPasswordReset, resetPassword } from "@/lib/actions/password-rese
 import { SubmitButton } from "@/components/submit-button";
 import { withNext } from "@/lib/utils";
 import type { ActionState } from "@/lib/validators";
+import { PasswordInput } from "@/components/password-input";
 import { btnPrimary, ErrorNote, fieldClass, Flash } from "@/components/ui";
 
 const initial: ActionState = { error: "" };
@@ -42,14 +43,7 @@ export function ResetPasswordForm({ token, nextPath }: { token: string; nextPath
       <input type="hidden" name="next" value={nextPath} />
       <label className="block text-sm">
         New password
-        <input
-          name="password"
-          type="password"
-          autoComplete="new-password"
-          required
-          minLength={8}
-          className={fieldClass}
-        />
+        <PasswordInput name="password" autoComplete="new-password" required minLength={8} className={fieldClass} />
       </label>
       <SubmitButton className={btnPrimary} pendingLabel="Saving password…">
         Save password
