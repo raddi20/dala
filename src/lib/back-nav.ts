@@ -86,6 +86,7 @@ export function backBarTitle(place: BackPlace): string {
   if (/^\/people\/[^/]+$/.test(path)) return "Profile";
   if (/^\/occasions\/[^/]+$/.test(path)) return "Occasion";
   if (path.startsWith("/account/")) return "Account";
+  if (/^\/admin\/contact\/[^/]+\/[^/]+$/.test(path)) return "Edit contact";
   if (path.startsWith("/admin")) return "Admin";
   return "Back";
 }

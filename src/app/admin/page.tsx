@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminContactDetails } from "@/components/admin-contact-details";
 import { AdminMailTest } from "@/components/admin-mail-test";
 import { AgentCountTable } from "@/components/admin-agent-counts";
 import { AdminOccasions } from "@/components/admin-occasions";
@@ -19,6 +20,7 @@ import {
   setUserSuspended,
   setVerifiedPro,
 } from "@/lib/actions/admin";
+import { listingContactHref, userContactHref } from "@/lib/admin-contact";
 import { countAgentSignups, knownAgentCodes, resolveAgentRange } from "@/lib/agent-code";
 import { auditLabel, MODERATION_NOTICES } from "@/lib/moderation";
 import { PRO_DAYS } from "@/lib/constants";
@@ -57,7 +59,7 @@ export default async function AdminPage({
   });
   const [listings, reports, users, shops, agentUsers, auditLogs, reviews] = await Promise.all([
     prisma.listing.findMany({
-      include: { owner: { select: { name: true, email: true } } },
+      include: { owner: { select: { id: true, name: true, email: true, phone: true, whatsapp: true } } },
       orderBy: { createdAt: "desc" },
     }),
     prisma.report.findMany({
@@ -90,6 +92,8 @@ export default async function AdminPage({
             id: true,
             name: true,
             email: true,
+            phone: true,
+            whatsapp: true,
             city: true,
             verifiedPro: true,
             verifiedProUntil: true,
@@ -238,6 +242,12 @@ export default async function AdminPage({
                 </Link>
                 <span className="text-ink/60"> · {stickerScanLabel(shop.stickerScans)}</span>
               </p>
+              <div className="mt-3">
+                <AdminContactDetails
+                  owner={{ email: shop.user.email, phone: shop.user.phone, whatsapp: shop.user.whatsapp }}
+                  editHref={userContactHref(shop.user.id)}
+                />
+              </div>
               <p className="text-ink/70">
                 /b/{shop.slug} · {shop.user.city} · {shop.user.email}
                 {isProActive(shop.user)
@@ -477,6 +487,21 @@ export default async function AdminPage({
             </p>
             {listing.scamNotes ? <p className="mt-1">{listing.scamNotes}</p> : null}
             {listing.hiddenReason ? <p className="mt-1 text-ink/70">{listing.hiddenReason}</p> : null}
+            <div className="mt-3">
+              <AdminContactDetails
+                owner={{
+                  email: listing.owner.email,
+                  phone: listing.owner.phone,
+                  whatsapp: listing.owner.whatsapp,
+                }}
+                listing={{
+                  contactName: listing.contactName,
+                  contactPhone: listing.contactPhone,
+                  contactWhatsapp: listing.contactWhatsapp,
+                }}
+                editHref={listingContactHref(listing.id)}
+              />
+            </div>
             <div className="mt-3 flex flex-wrap items-end gap-2">
               <form action={setListingHidden} className="flex flex-wrap items-end gap-2">
                 <input type="hidden" name="id" value={listing.id} />
