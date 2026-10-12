@@ -20,9 +20,9 @@ export async function requireUser(next = "/") {
   return user;
 }
 
-export async function requireAdmin() {
+export async function requireAdmin(next = "/admin") {
   const user = await getSessionUser();
-  if (!user) redirect("/login?next=/admin");
+  if (!user) redirect(`/login?next=${encodeURIComponent(next)}`);
   if (user.role !== "admin") redirect("/");
   return user;
 }

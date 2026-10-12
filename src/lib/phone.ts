@@ -3,6 +3,7 @@
  * Kenya (Nairobi and any other city) and the UK (London) only.
  * Saved values are E.164: +254712345678 or +447123456789.
  */
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 export type PhoneCountry = "KE" | "GB";
 
@@ -255,12 +256,15 @@ export type PhoneRow = {
   city: string;
   phone: string;
   whatsapp: string;
+  /** Account name or listing title. Display only. */
+  label?: string;
 };
 
 export type PhoneRowPlan = ContactPlan & {
   kind: PhoneRowKind;
   id: string;
   city: string;
+  label: string;
   beforePhone: string;
   beforeWhatsapp: string;
 };
@@ -272,9 +276,61 @@ export function planPhoneRow(row: PhoneRow): PhoneRowPlan {
     kind: row.kind,
     id: row.id,
     city: row.city.trim() || "Nairobi",
+    label: row.label?.trim() ?? "",
     beforePhone: row.phone.trim(),
     beforeWhatsapp: row.whatsapp.trim(),
   };
+}
+
+export type PhoneFieldDiff = {
+  kind: PhoneRowKind;
+  id: string;
+  city: string;
+  label: string;
+  record: string;
+  field: "phone" | "whatsapp" | "contactPhone" | "contactWhatsapp";
+  current: string;
+  proposed: string;
+  /** True when this field would be saved as E.164. */
+  fixable: boolean;
+  /** Set when a person still has to fix this field. The stored value is not overwritten for that reason. */
+  manualReason: string;
+};
+
+export function phoneRecordLabel(plan: Pick<PhoneRowPlan, "kind" | "id" | "city" | "label">): string {
+  const kind = plan.kind === "listing" ? "Listing" : "User";
+  const name = plan.label ? ` ${plan.label}` : "";
+  return `${kind}${name} ${plan.id} (${plan.city})`;
+}
+
+/** Fields that would change, plus fields that stay put because they could not be read. */
+export function phoneFieldDiffs(plan: PhoneRowPlan): PhoneFieldDiff[] {
+  const specs: Array<{ field: PhoneField; before: string; after: string }> = [
+    { field: "phone", before: plan.beforePhone, after: plan.phone },
+    { field: "whatsapp", before: plan.beforeWhatsapp, after: plan.whatsapp },
+  ];
+  const diffs: PhoneFieldDiff[] = [];
+  for (const spec of specs) {
+    const manualReason = plan.reports
+      .filter((report) => report.field === spec.field)
+      .map((report) => report.message)
+      .join(" ");
+    const fixable = spec.after !== spec.before;
+    if (!fixable && !manualReason) continue;
+    diffs.push({
+      kind: plan.kind,
+      id: plan.id,
+      city: plan.city,
+      label: plan.label,
+      record: phoneRecordLabel(plan),
+      field: plan.kind === "listing" ? (spec.field === "phone" ? "contactPhone" : "contactWhatsapp") : spec.field,
+      current: spec.before,
+      proposed: spec.after,
+      fixable,
+      manualReason,
+    });
+  }
+  return diffs;
 }
 
 function plural(count: number, noun: string) {
@@ -283,6 +339,26 @@ function plural(count: number, noun: string) {
 
 function showValue(value: string) {
   return value.trim() ? value : "(empty)";
+}
+
+/** Before/after lines for the rows that will be written, then anything left for a person. */
+export function phoneAuditReason(plans: PhoneRowPlan[]): string {
+  const written = plans.filter((plan) => plan.changed);
+  const lines = [`Updated ${plural(written.length, "row")}.`];
+  for (const plan of written) {
+    for (const diff of phoneFieldDiffs(plan)) {
+      if (!diff.fixable) continue;
+      lines.push(`${diff.record} ${diff.field}: ${showValue(diff.current)} → ${showValue(diff.proposed)}`);
+    }
+  }
+  const flagged = plans.flatMap(phoneFieldDiffs).filter((diff) => diff.manualReason);
+  if (flagged.length > 0) {
+    lines.push("Left for a manual fix:");
+    for (const diff of flagged) {
+      lines.push(`${diff.record} ${diff.field}: ${showValue(diff.current)} — ${diff.manualReason}`);
+    }
+  }
+  return lines.join("\n");
 }
 
 export function formatPhoneRow(plan: PhoneRowPlan): string {
@@ -342,4 +418,46 @@ export async function commitPhonePlans(
     written += 1;
   }
   return written;
+}
+
+type PhoneDb = PrismaClient | Prisma.TransactionClient;
+
+/** User and listing phone fields. Shop pages use the account numbers. */
+export async function readPhoneRows(db: PhoneDb): Promise<PhoneRow[]> {
+  const [users, listings] = await Promise.all([
+    db.user.findMany({ select: { id: true, city: true, phone: true, whatsapp: true, name: true } }),
+    db.listing.findMany({
+      select: { id: true, city: true, contactPhone: true, contactWhatsapp: true, title: true },
+    }),
+  ]);
+  return [
+    ...users.map((user) => ({
+      kind: "user" as const,
+      id: user.id,
+      city: user.city,
+      phone: user.phone,
+      whatsapp: user.whatsapp,
+      label: user.name.trim(),
+    })),
+    ...listings.map((listing) => ({
+      kind: "listing" as const,
+      id: listing.id,
+      city: listing.city,
+      phone: listing.contactPhone,
+      whatsapp: listing.contactWhatsapp,
+      label: listing.title.trim(),
+    })),
+  ];
+}
+
+/** Writes one planned row. A number that could not be read is not passed here. */
+export async function writePhonePlan(db: PhoneDb, plan: PhoneRowPlan): Promise<void> {
+  if (plan.kind === "user") {
+    await db.user.update({ where: { id: plan.id }, data: { phone: plan.phone, whatsapp: plan.whatsapp } });
+    return;
+  }
+  await db.listing.update({
+    where: { id: plan.id },
+    data: { contactPhone: plan.phone, contactWhatsapp: plan.whatsapp },
+  });
 }

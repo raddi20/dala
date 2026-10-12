@@ -125,7 +125,7 @@ Auth is email and password so the demo runs without an email server. A magic-lin
 
 Forgot password is `/forgot-password`, linked from the sign-in form. It emails a one-time link to `/reset-password`. The link lasts 45 minutes. The token is stored as a SHA-256 hash, works once, and a new request invalidates the previous unused link. The page says the same thing whether or not that email is registered. After a successful reset, older signed-in sessions for that account stop working, and the person is signed in.
 
-The reset email goes through ZeptoMail. Set `ZEPTOMAIL_TOKEN` and `EMAIL_FROM` (a sender on a domain verified in ZeptoMail). Weekly seller tips still also need `TIPS_EMAIL=1` and an opt-in. Password reset does not use `TIPS_EMAIL`. The link is built from `APP_URL`, then `AUTH_URL`, then `NEXTAUTH_URL`. If the token or from-address is missing, the form does not send mail and tells the person to write to info@rangach.co.ke.
+The reset email goes through ZeptoMail. Set `ZEPTOMAIL_TOKEN` and `EMAIL_FROM` (a sender on a domain verified in ZeptoMail). The send URL defaults to the EU host (`https://api.zeptomail.eu/v1.1/email`). Set `ZEPTOMAIL_API_URL` only if the ZeptoMail account is in another data centre. Weekly seller tips still also need `TIPS_EMAIL=1` and an opt-in. Password reset does not use `TIPS_EMAIL`. The link is built from `APP_URL`, then `AUTH_URL`, then `NEXTAUTH_URL`. If the token or from-address is missing, the form does not send mail and tells the person to write to info@rangach.co.ke.
 
 The public controller name, registration number, proprietor line, phone, and postal address live in `src/lib/public-info.ts` (`LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_REG_NO`, `LEGAL_ENTITY_OWNER`, `BUSINESS_PHONE`, `BUSINESS_PHONE_TEL`, `BUSINESS_ADDRESS`). `BUSINESS_PHONE` is the spaced display number. `BUSINESS_PHONE_TEL` is the raw number used on tel: links. Proprietor and registration number render nothing while they are empty. Change the controller name in that one constant.
 
@@ -230,7 +230,7 @@ From the local clone, after the variables are saved:
 cd ~/dala && git pull && npx vercel --prod
 ```
 
-Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` stays public unless `HIDE_DEMO_SHOPS=1`. That page does not show the sample phone or WhatsApp number.
+Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. Phone and WhatsApp numbers that are not yet E.164 can be reviewed at `/admin/phones`. Apply writes only the numbers that can be read, leaves the rest for a manual fix, and appends one audit entry. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` stays public unless `HIDE_DEMO_SHOPS=1`. That page does not show the sample phone or WhatsApp number.
 
 If `ADMIN_EMAIL` is unset, the build still succeeds and nobody is promoted. A bad secret fails the build and does not change accounts.
 

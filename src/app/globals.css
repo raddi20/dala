@@ -96,45 +96,6 @@ h3,
   display: none;
 }
 
-.filter-sheet > summary {
-  list-style: none;
-  cursor: pointer;
-}
-
-.filter-sheet > summary::-webkit-details-marker {
-  display: none;
-}
-
-.filter-sheet > .filter-sheet-layer {
-  display: none;
-}
-
-.filter-sheet[open] > .filter-sheet-layer {
-  display: block;
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-}
-
-.filter-sheet-scrim {
-  position: absolute;
-  inset: 0;
-  background: rgb(20 26 36 / 0.45);
-}
-
-.filter-sheet-panel {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  max-height: min(85dvh, 40rem);
-  overflow: auto;
-  border-radius: 16px 16px 0 0;
-  background: var(--color-card);
-  padding: 1rem 1rem calc(4.5rem + env(safe-area-inset-bottom));
-  box-shadow: 0 -12px 40px rgb(20 26 36 / 0.18);
-}
-
 .sticky-cta-bar {
   bottom: calc(4rem + env(safe-area-inset-bottom));
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom));

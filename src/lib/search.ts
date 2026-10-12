@@ -67,12 +67,9 @@ function shopCardSelect(env: Env) {
   user: {
     select: {
       name: true,
-      email: true,
       bio: true,
       city: true,
       avatarUrl: true,
-      phone: true,
-      whatsapp: true,
       verifiedPro: true,
       verifiedProUntil: true,
       listings: {
@@ -322,11 +319,6 @@ function toShopCard(row: ShopRow): ShopCardData {
     servesDiaspora: row.servesDiaspora,
     coverUrl: firstPhoto([...content.offerings.map((offering) => offering.imageUrl), row.bannerUrl]),
     avatarUrl: row.user.avatarUrl,
-    whatsapp: publicSellerContacts({
-      email: row.user.email,
-      phone: row.user.phone,
-      whatsapp: row.user.whatsapp,
-    }).whatsapp,
   };
 }
 
@@ -441,8 +433,6 @@ export type ShopCardData = {
   servesDiaspora: boolean;
   coverUrl: string;
   avatarUrl: string;
-  /** Public WhatsApp only. Blank for a demo account. The login email is never copied onto the card. */
-  whatsapp?: string;
   coverThumb480?: string | null;
   coverThumb960?: string | null;
 };
