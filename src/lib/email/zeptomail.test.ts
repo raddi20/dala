@@ -68,6 +68,111 @@ test("send is skipped when ZeptoMail is not configured", async () => {
   assert.equal(calls, 0);
 });
 
+test("mail posts to the EU ZeptoMail URL by default", async () => {
+  let url = "";
+  const result = await sendMail(
+    { to: "a@example.com", name: "Amina", subject: "Reset your Rangach password", text: "Hello" },
+    {
+      env: env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+      fetchImpl: async (input) => {
+        url = String(input);
+        return new Response("{}", { status: 201 });
+      },
+    },
+  );
+  assert.equal(result, "sent");
+  assert.equal(url, "https://api.zeptomail.eu/v1.1/email");
+});
+
+test("ZEPTOMAIL_API_URL overrides the ZeptoMail send URL", async () => {
+  let url = "";
+  const result = await sendMail(
+    { to: "a@example.com", name: "Amina", subject: "Reset your Rangach password", text: "Hello" },
+    {
+      env: env({
+        ZEPTOMAIL_TOKEN: "zoho-token",
+        EMAIL_FROM: "Rangach <hello@rangach.co.ke>",
+        ZEPTOMAIL_API_URL: " https://api.zeptomail.com/v1.1/email ",
+      }),
+      fetchImpl: async (input) => {
+        url = String(input);
+        return new Response("{}", { status: 201 });
+      },
+    },
+  );
+  assert.equal(result, "sent");
+  assert.equal(url, "https://api.zeptomail.com/v1.1/email");
+});
+
+test("a leading Zoho-enczapikey prefix is stripped before the Authorization header", async () => {
+  const stored = [
+    "plain-token",
+    "Zoho-enczapikey plain-token",
+    "zoho-enczapikey plain-token",
+    "  Zoho-enczapikey    plain-token  ",
+  ];
+  const seen: string[] = [];
+  for (const token of stored) {
+    await sendMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset your Rangach password", text: "Hello" },
+      {
+        env: env({ ZEPTOMAIL_TOKEN: token, EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+        fetchImpl: async (_input, init) => {
+          seen.push(new Headers(init?.headers).get("authorization") ?? "");
+          return new Response("{}", { status: 201 });
+        },
+      },
+    );
+  }
+  assert.deepEqual(seen, [
+    "Zoho-enczapikey plain-token",
+    "Zoho-enczapikey plain-token",
+    "Zoho-enczapikey plain-token",
+    "Zoho-enczapikey plain-token",
+  ]);
+});
+
+test("a non-2xx ZeptoMail response logs the status and body without the token", async () => {
+  const token = "zepto-secret-token-9f3a";
+  const errors: unknown[][] = [];
+  const original = console.error;
+  console.error = (...args: unknown[]) => {
+    errors.push(args);
+  };
+  let authorization = "";
+  try {
+    const result = await sendMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset your Rangach password", text: "Hello" },
+      {
+        env: env({
+          ZEPTOMAIL_TOKEN: `Zoho-enczapikey ${token}`,
+          EMAIL_FROM: "Rangach <hello@rangach.co.ke>",
+        }),
+        fetchImpl: async (_input, init) => {
+          authorization = new Headers(init?.headers).get("authorization") ?? "";
+          const body = `rejected token=${token} ${"e".repeat(2500)}TAIL_NOT_LOGGED`;
+          return new Response(body, { status: 401 });
+        },
+      },
+    );
+    assert.equal(result, "failed");
+  } finally {
+    console.error = original;
+  }
+  assert.equal(authorization, `Zoho-enczapikey ${token}`);
+  assert.equal(errors.length, 1);
+  assert.equal(errors[0]?.[0], "ZeptoMail send failed");
+  assert.equal(errors[0]?.[1], 401);
+  const loggedBody = String(errors[0]?.[2]);
+  assert.match(loggedBody, /^rejected token=\[redacted\] /);
+  assert.equal(loggedBody.length <= 2048, true);
+  assert.equal(loggedBody.includes("TAIL_NOT_LOGGED"), false);
+  const dumped = JSON.stringify(errors);
+  assert.equal(dumped.includes(token), false);
+  assert.equal(dumped.toLowerCase().includes("zoho-enczapikey"), false);
+  assert.equal(dumped.includes("Authorization"), false);
+});
+
 test("a configured send posts plain text with the ZeptoMail key header", async () => {
   const seen: { authorization: string; body: { from: { address: string; name: string }; textbody: string } }[] = [];
   const result = await sendTipEmail(
