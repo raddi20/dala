@@ -14,9 +14,24 @@ export function parseEmailFrom(value: string): { address: string; name: string }
   return { address, name };
 }
 
+/** EU data centre. US accounts set ZEPTOMAIL_API_URL to https://api.zeptomail.com/v1.1/email. */
+export const ZEPTOMAIL_EU_URL = "https://api.zeptomail.eu/v1.1/email";
+
+const FAILURE_BODY_MAX = 2048;
+
+export function zeptoApiUrl(env: NodeJS.ProcessEnv): string {
+  const configured = env.ZEPTOMAIL_API_URL?.trim();
+  return configured || ZEPTOMAIL_EU_URL;
+}
+
+/** Trim, then drop one leading Zoho-enczapikey prefix so the header is not doubled. */
+export function zeptoSendToken(raw: string | undefined): string {
+  return (raw ?? "").trim().replace(/^zoho-enczapikey\s+/i, "").trim();
+}
+
 export function canSendMail(env: NodeJS.ProcessEnv = process.env): boolean {
   const from = parseEmailFrom(env.EMAIL_FROM ?? "");
-  return Boolean(env.ZEPTOMAIL_TOKEN?.trim()) && Boolean(from);
+  return Boolean(zeptoSendToken(env.ZEPTOMAIL_TOKEN)) && Boolean(from);
 }
 
 export function canSendTips(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -44,11 +59,11 @@ async function postZepto(
   env: NodeJS.ProcessEnv,
   fetchImpl: typeof fetch,
 ): Promise<"sent" | "failed"> {
-  const token = env.ZEPTOMAIL_TOKEN?.trim() ?? "";
+  const token = zeptoSendToken(env.ZEPTOMAIL_TOKEN);
   const from = parseEmailFrom(env.EMAIL_FROM ?? "");
   if (!from || !token) return "failed";
   try {
-    const response = await fetchImpl("https://api.zeptomail.com/v1.1/email", {
+    const response = await fetchImpl(zeptoApiUrl(env), {
       method: "POST",
       headers: {
         Authorization: `Zoho-enczapikey ${token}`,
@@ -61,8 +76,22 @@ async function postZepto(
         textbody: message.text,
       }),
     });
-    return response.ok ? "sent" : "failed";
+    if (response.ok) return "sent";
+    console.error("ZeptoMail send failed", response.status, await failureBody(response, token));
+    return "failed";
   } catch {
     return "failed";
   }
+}
+
+async function failureBody(response: Response, token: string): Promise<string> {
+  let body = "";
+  try {
+    body = await response.text();
+  } catch {
+    body = "";
+  }
+  const header = `Zoho-enczapikey ${token}`;
+  const redacted = body.split(header).join("[redacted]").split(token).join("[redacted]");
+  return redacted.slice(0, FAILURE_BODY_MAX);
 }

@@ -174,6 +174,10 @@ export default async function AdminPage({
           <Link href="/admin/ai/flags" className="font-semibold text-lake-dark underline">
             AI flags
           </Link>
+          <span className="text-ink/40"> · </span>
+          <Link href="/admin/phones" className="font-semibold text-lake-dark underline">
+            Phone numbers
+          </Link>
         </p>
       </div>
 

@@ -235,6 +235,7 @@ export const AUDIT_LABELS: Record<string, string> = {
   "report.action": "Actioned a report",
   "badge.grant": "Granted a shop check",
   "badge.remove": "Removed a shop check",
+  "phones.normalise": "Normalised phone numbers",
 };
 
 export function auditLabel(action: string): string {
