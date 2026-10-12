@@ -2,30 +2,22 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { BrowseHits } from "@/components/browse-hits";
-import { CategoryOptions } from "@/components/category-options";
 import { Pager } from "@/components/pager";
-import {
-  EmptyState,
-  btnPrimary,
-  btnSecondary,
-  cardClass,
-  chipActiveClass,
-  chipClass,
-  fieldClass,
-  sectionTitleClass,
-} from "@/components/ui";
+import { FilterSheet, ListingFilterForm, ResultsSearchBar, UnderstoodRow } from "@/components/results-chrome";
+import { EmptyState, btnSecondary, chipActiveClass, chipClass } from "@/components/ui";
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { categoryHref, isCategory } from "@/lib/categories";
 import { activeBrowseRegion, browseRegionChipHref } from "@/lib/browse-filters";
-import { LISTING_TYPES, cityChipLabel, cityInPhrase, isCityName } from "@/lib/constants";
-import { DIASPORA_ORDERS_LABEL, wantsDiasporaOrders } from "@/lib/diaspora";
+import { cityChipLabel, cityInPhrase, isCityName } from "@/lib/constants";
+import { wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
-import { SHOP_BADGE_FILTERS, parseShopBadgeFilter } from "@/lib/shop-badges";
+import { parseShopBadgeFilter } from "@/lib/shop-badges";
 import { visitorActorHash } from "@/lib/ai/actor";
 import { interpretSearch } from "@/lib/ai/search-parse";
 import { browsePage, searchCatalogue } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
+import { browseHref, chipBag, matchCountLabel, toggleFilterHref, understoodChips } from "@/lib/understood-chips";
 import { one } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -66,36 +58,6 @@ export async function generateMetadata({
   });
 }
 
-function listingsPageHref(base: Record<string, string>, page: number) {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(base)) {
-    if (value) params.set(key, value);
-  }
-  if (page > 1) params.set("page", String(page));
-  const qs = params.toString();
-  return qs ? `/listings?${qs}` : "/listings";
-}
-
-function resultLine(total: number, page: number, pageSize: number) {
-  if (total === 0) return "0 results";
-  if (total <= pageSize) return `${total} result${total === 1 ? "" : "s"}`;
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
-  return `${start}–${end} of ${total} results`;
-}
-
-function chipHref(base: Record<string, string>, key: string, value: string) {
-  const next = { ...base };
-  if (!value || next[key] === value) delete next[key];
-  else next[key] = value;
-  const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(next)) {
-    if (v) params.set(k, v);
-  }
-  const qs = params.toString();
-  return qs ? `/listings?${qs}` : "/listings";
-}
-
 export default async function ListingsPage({
   searchParams,
 }: {
@@ -123,17 +85,7 @@ export default async function ListingsPage({
     filters.city || filters.region || filters.category || filters.type || filters.verified || filters.badge || filters.diaspora || filters.occasion,
   );
   const optionalWords = !explicitQ && !structured ? hints : [];
-  const chipBase: Record<string, string> = {
-    q: filters.q,
-    city: filters.city,
-    region: filters.region,
-    category: filters.category,
-    type: filters.type,
-    verified: filters.verified ? "1" : "",
-    badge: filters.badge,
-    diaspora: filters.diaspora ? "1" : "",
-    occasion: filters.occasion,
-  };
+  const chipBase = chipBag({ ...filters, nl: nlRaw });
   const user = await getSessionUser();
   const page = browsePage(one(sp.page));
   let result = await searchCatalogue({
@@ -148,184 +100,73 @@ export default async function ListingsPage({
     result = await searchCatalogue({ ...filters, viewerId: user?.id, page });
     droppedWords = true;
   }
-  const hasFilters = Boolean(
-    filters.q ||
-      filters.city ||
-      filters.region ||
-      filters.category ||
-      filters.type ||
-      filters.verified ||
-      filters.badge ||
-      filters.diaspora ||
-      nlRaw,
-  );
+  const origin = await publicOrigin();
+  const closeHref = browseHref("/listings", chipBase);
+  const sheetActive = Boolean(filters.category || filters.badge || filters.diaspora || filters.occasion || (filters.type && filters.type !== "business"));
+  const chips = parsed ? understoodChips("/listings", chipBase, hints) : [];
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 px-4 py-8 pb-24 sm:pb-10">
-      <div>
-        <h1 className={sectionTitleClass}>Browse</h1>
-        <p className="mt-1 text-sm text-ink/65">Shops, offerings, and classifieds. Filters combine.</p>
-      </div>
-
-      <form id="search" action="/listings" method="get" className="flex flex-col gap-2 sm:flex-row">
-        <label className="sr-only" htmlFor="nl">
-          Search in a sentence
-        </label>
-        <input
-          id="nl"
-          name="nl"
-          defaultValue={nlRaw}
-          placeholder="housing in the Diaspora"
-          className={`${fieldClass} mt-0`}
-        />
-        <button className={`${btnPrimary} shrink-0`}>Search</button>
-      </form>
-      {parsed ? (
-        <p className="rounded-xl bg-teal-soft px-3.5 py-2.5 text-sm text-lake-dark">
-          Read as: {parsed.summary}.{" "}
-          {parsed.assist === "smart" ? (
-            <span className="mx-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-lake-dark">
-              Smart search
-            </span>
-          ) : null}
-          {parsed.assist === "fallback" ? (
-            <span className="mx-1 inline-flex items-center rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-clay">
-              Smart search did not answer. Showing the plain reading.
-            </span>
-          ) : null}
-          {droppedWords ? <span> Those extra words matched nothing, so they were left out.</span> : null}{" "}
-          <Link href="/listings" className="font-semibold underline-offset-2 hover:underline">
-            Clear
-          </Link>
-        </p>
-      ) : null}
-
-      <div className="grid gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-ink/45">Quick filters</p>
-        <div className="chip-scroll">
-          <Link
-            href={browseRegionChipHref(chipBase, "homeland")}
-            className={activeBrowseRegion(filters.city, filters.region) === "homeland" ? chipActiveClass : chipClass}
-          >
-            Homeland
-          </Link>
-          <Link
-            href={browseRegionChipHref(chipBase, "diaspora")}
-            className={activeBrowseRegion(filters.city, filters.region) === "diaspora" ? chipActiveClass : chipClass}
-          >
-            Diaspora
-          </Link>
-          <Link
-            href={chipHref(chipBase, "type", "business")}
-            className={filters.type === "business" ? chipActiveClass : chipClass}
-          >
-            Businesses
-          </Link>
-          <Link
-            href={chipHref(chipBase, "type", "classifieds")}
-            className={filters.type === "classifieds" ? chipActiveClass : chipClass}
-          >
-            Classifieds
-          </Link>
-          <Link
-            href={chipHref(chipBase, "verified", "1")}
-            className={filters.verified ? chipActiveClass : chipClass}
-          >
-            Verified only
-          </Link>
-          {SHOP_BADGE_FILTERS.map((filter) => (
+    <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
+      <h1 className="sr-only">Browse</h1>
+      <ResultsSearchBar
+        action="/listings"
+        inputId="nl"
+        inputName="nl"
+        defaultValue={nlRaw}
+        label="Search in a sentence"
+        sheet={
+          <FilterSheet active={sheetActive} closeHref={closeHref}>
+            <ListingFilterForm
+              action="/listings"
+              clearHref="/listings"
+              hidden={{ nl: nlRaw, q: filters.q, city: filters.city, occasion: filters.occasion }}
+              region={filters.region}
+              city={filters.city}
+              category={filters.category}
+              type={filters.type}
+              badge={filters.badge}
+              verified={filters.verified}
+              diaspora={filters.diaspora}
+            />
+          </FilterSheet>
+        }
+        pills={
+          <>
             <Link
-              key={filter.value}
-              href={chipHref(chipBase, "badge", filter.value)}
-              className={filters.badge === filter.value ? chipActiveClass : chipClass}
+              href={browseRegionChipHref(chipBase, "homeland")}
+              className={activeBrowseRegion(filters.city, filters.region) === "homeland" ? chipActiveClass : chipClass}
             >
-              {filter.label}
+              Homeland
             </Link>
-          ))}
-          <Link
-            href={chipHref(chipBase, "diaspora", "1")}
-            className={filters.diaspora ? chipActiveClass : chipClass}
-          >
-            {DIASPORA_ORDERS_LABEL}
-          </Link>
-          {hasFilters ? (
-            <Link href="/listings" className={`${chipClass} border-dashed`}>
-              Clear all
+            <Link
+              href={browseRegionChipHref(chipBase, "diaspora")}
+              className={activeBrowseRegion(filters.city, filters.region) === "diaspora" ? chipActiveClass : chipClass}
+            >
+              Diaspora
             </Link>
-          ) : null}
-        </div>
-      </div>
+            <Link
+              href={toggleFilterHref("/listings", chipBase, "verified", "1")}
+              className={filters.verified ? chipActiveClass : chipClass}
+            >
+              Checked
+            </Link>
+            <Link
+              href={toggleFilterHref("/listings", chipBase, "type", "business")}
+              className={filters.type === "business" ? chipActiveClass : chipClass}
+            >
+              Shops
+            </Link>
+          </>
+        }
+      />
 
-      <details className={`${cardClass} group`}>
-        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-navy marker:content-none [&::-webkit-details-marker]:hidden">
-          <span className="flex items-center justify-between gap-2">
-            More filters
-            <span className="text-ink/40 transition group-open:rotate-180">▾</span>
-          </span>
-        </summary>
-        <form action="/listings" method="get" className="grid gap-3 border-t border-sand/80 p-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filters.occasion ? <input type="hidden" name="occasion" value={filters.occasion} /> : null}
-          <label className="block text-sm font-medium text-ink/80">
-            Words
-            <input name="q" defaultValue={filters.q} className={fieldClass} />
-          </label>
-          <label className="block text-sm font-medium text-ink/80">
-            Homeland or Diaspora
-            <select name="region" defaultValue={activeBrowseRegion(filters.city, filters.region)} className={fieldClass}>
-              <option value="">Any</option>
-              <option value="homeland">Homeland</option>
-              <option value="diaspora">Diaspora</option>
-            </select>
-          </label>
-          <label className="block text-sm font-medium text-ink/80">
-            Category
-            <select name="category" defaultValue={filters.category} className={fieldClass}>
-              <CategoryOptions blank="Any" />
-            </select>
-          </label>
-          <label className="block text-sm font-medium text-ink/80">
-            Type
-            <select name="type" defaultValue={filters.type} className={fieldClass}>
-              <option value="">Any</option>
-              <option value="classifieds">All classifieds</option>
-              {LISTING_TYPES.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-sm font-medium text-ink/80">
-            Shop badge
-            <select name="badge" defaultValue={filters.badge} className={fieldClass}>
-              <option value="">Any</option>
-              {SHOP_BADGE_FILTERS.map((filter) => (
-                <option key={filter.value} value={filter.value}>
-                  {filter.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
-            <input type="checkbox" name="verified" value="1" defaultChecked={filters.verified} className="size-4 rounded border-sand" />
-            Verified listing only
-          </label>
-          <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink/80">
-            <input type="checkbox" name="diaspora" value="1" defaultChecked={filters.diaspora} className="size-4 rounded border-sand" />
-            {DIASPORA_ORDERS_LABEL}
-          </label>
-          <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
-            <button className={btnPrimary}>Apply filters</button>
-            <Link href="/listings" className={btnSecondary}>
-              Clear
-            </Link>
-          </div>
-        </form>
-      </details>
+      {parsed ? (
+        <UnderstoodRow chips={chips} spark={parsed.assist === "smart"} assist={parsed.assist} droppedWords={droppedWords} />
+      ) : null}
 
       <p className="text-sm text-ink/60">
         {filters.q ? <>Matches for “{filters.q}”. </> : null}
-        {resultLine(result.total, result.page, result.pageSize)}
+        {matchCountLabel(result.total, result.page, result.pageSize)}
       </p>
       {result.hits.length === 0 ? (
         <EmptyState
@@ -338,19 +179,9 @@ export default async function ListingsPage({
           }
         />
       ) : (
-        <BrowseHits hits={result.hits} />
+        <BrowseHits hits={result.hits} origin={origin} occasionSlug={filters.occasion} />
       )}
-      <Pager
-        page={result.page}
-        pageCount={result.pageCount}
-        hrefFor={(next) => listingsPageHref({ ...chipBase, nl: nlRaw }, next)}
-      />
-
-      <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur md:hidden">
-        <a href="#search" className={`${btnPrimary} w-full`}>
-          Search listings
-        </a>
-      </div>
+      <Pager page={result.page} pageCount={result.pageCount} hrefFor={(next) => browseHref("/listings", chipBase, next)} />
     </div>
   );
 }
