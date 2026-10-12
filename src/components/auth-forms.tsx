@@ -6,6 +6,7 @@ import { login, register } from "@/lib/actions/auth";
 import { CITIES, cityChoiceLabel } from "@/lib/constants";
 import { withNext } from "@/lib/utils";
 import type { ActionState } from "@/lib/validators";
+import { PasswordInput } from "@/components/password-input";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { SubmitButton } from "@/components/submit-button";
 
@@ -23,7 +24,7 @@ export function LoginForm({ nextPath, queryError }: { nextPath: string; queryErr
       </label>
       <label className="block text-sm">
         Password
-        <input name="password" type="password" autoComplete="current-password" required className={fieldClass} />
+        <PasswordInput name="password" autoComplete="current-password" required className={fieldClass} />
       </label>
       <p className="text-right text-sm">
         <Link href={withNext("/forgot-password", nextPath)} className="font-semibold text-lake-dark">
@@ -59,7 +60,7 @@ export function RegisterForm({ nextPath }: { nextPath: string }) {
       </label>
       <label className="block text-sm">
         Password
-        <input name="password" type="password" autoComplete="new-password" required minLength={8} className={fieldClass} />
+        <PasswordInput name="password" autoComplete="new-password" required minLength={8} className={fieldClass} />
       </label>
       <label className="block text-sm">
         Profile
