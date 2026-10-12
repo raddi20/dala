@@ -1,11 +1,24 @@
 import Link from "next/link";
 import { cityChipLabel } from "@/lib/constants";
+import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { shopIsChecked } from "@/lib/item-card";
 import type { ShopCardData } from "@/lib/search";
 
 export function ShopCard({ shop }: { shop: ShopCardData }) {
-  const cover = shop.coverUrl.trim();
-  const avatar = shop.avatarUrl.trim();
+  const photo = cardPhoto({
+    src: shop.coverUrl,
+    thumb480: shop.coverThumb480,
+    thumb960: shop.coverThumb960,
+    width: 480,
+    height: 360,
+    sizes: CARD_SIZES,
+  });
+  const avatar = cardPhoto({
+    src: shop.avatarUrl,
+    width: 80,
+    height: 80,
+    sizes: "40px",
+  });
   const checked = shopIsChecked(shop);
   const place = cityChipLabel(shop.city);
   const meta = [shop.category, place].filter(Boolean).join(" · ");
@@ -15,9 +28,20 @@ export function ShopCard({ shop }: { shop: ShopCardData }) {
     <article className="card-lift h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
       <Link href={`/b/${shop.slug}`} className="flex h-full flex-col">
         <div className="relative aspect-[4/3] bg-line">
-          {cover ? (
+          {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={cover} width={480} height={360} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+            <img
+              src={photo.src}
+              srcSet={photo.srcSet}
+              sizes={photo.sizes}
+              width={photo.width}
+              height={photo.height}
+              alt=""
+              loading={photo.loading}
+              decoding={photo.decoding}
+              fetchPriority={photo.fetchPriority}
+              className="h-full w-full object-cover"
+            />
           ) : (
             <div className="flex h-full items-end bg-navy p-3 text-white">
               <span className="font-serif text-2xl">{initial}</span>
@@ -29,7 +53,9 @@ export function ShopCard({ shop }: { shop: ShopCardData }) {
           {avatar ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={avatar}
+              src={avatar.src}
+              srcSet={avatar.srcSet}
+              sizes={avatar.sizes}
               width={40}
               height={40}
               alt=""

@@ -1,9 +1,10 @@
 import { ItemCard } from "@/components/item-card";
 import { cityChipLabel } from "@/lib/constants";
+import { variantMap } from "@/lib/image-variant-store";
 import { itemKindTag, shopIsChecked } from "@/lib/item-card";
 import type { ListingCardData } from "@/lib/search";
 
-export function ListingCard({
+export async function ListingCard({
   listing,
   priority = false,
 }: {
@@ -12,6 +13,7 @@ export function ListingCard({
 }) {
   const shop = listing.owner.storefront;
   const shopPublic = shop != null && shop.published && !shop.hidden;
+  const stored = listing.photoUrl ? (await variantMap([listing.photoUrl])).get(listing.photoUrl) : undefined;
   const checked = listing.verified || Boolean(shopPublic && shop && shopIsChecked(shop));
 
   return (
@@ -19,6 +21,8 @@ export function ListingCard({
       href={`/listings/${listing.id}`}
       title={listing.title}
       imageUrl={listing.photoUrl}
+      thumb480={stored?.thumb480}
+      thumb960={stored?.thumb960}
       tag={itemKindTag({ kind: "listing", type: listing.type, category: listing.category })}
       price={listing.priceLabel}
       seller={listing.owner.name}

@@ -1,6 +1,7 @@
 import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { extensionForImageType, MAX_IMAGE_BYTES, validateImagePayload } from "@/lib/image-file";
+import { storeImageVariants } from "@/lib/image-variant-store";
 import { decideUpload, type UploadContext } from "@/lib/image-upload";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -126,6 +127,11 @@ export async function POST(request: Request) {
     });
     if (!blob.url.startsWith("https://")) {
       return NextResponse.json({ error: "Could not store that photo. Try again." }, { status: 502 });
+    }
+    try {
+      await storeImageVariants(blob.url, Buffer.from(bytes));
+    } catch {
+      console.error("Photo variants were not stored");
     }
     return NextResponse.json({ url: blob.url });
   } catch {
