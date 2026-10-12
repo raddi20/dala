@@ -374,7 +374,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       </div>
 
       {chatUrl ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">
+        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
           <div className="grid gap-2">
             <FamilyOrderButton
               variant="bar"
@@ -390,7 +390,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           </div>
         </div>
       ) : (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden sticky-cta-bar">
+        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
           <a href={shareUrl} className={`${btnPrimary} w-full`} target="_blank" rel="noreferrer">
             Share on WhatsApp
           </a>

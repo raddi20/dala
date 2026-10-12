@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { UpgradeAction } from "@/components/upgrade-action";
+import { Suspense } from "react";
+import { BottomNav } from "@/components/bottom-nav";
 import { Wordmark } from "@/components/wordmark";
 import { paymentsLive } from "@/lib/payments/live";
 import { signOutAction } from "@/lib/actions/auth";
@@ -7,79 +8,100 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
 
-const navLink =
-  "inline-flex min-h-11 items-center rounded-lg px-2.5 text-ink/80 hover:bg-paper hover:text-navy";
+const deskLink = "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-white/80 hover:text-white";
 
 export async function Header() {
   const user = await getSessionUser();
-  const [openReports, shop] = await Promise.all([
-    user?.role === "admin" ? prisma.report.count({ where: { status: "open" } }) : Promise.resolve(0),
-    user ? prisma.storefront.findUnique({ where: { userId: user.id }, select: { id: true } }) : Promise.resolve(null),
-  ]);
-  const shopHref = continueHref(Boolean(user), "/account/storefront");
+  const openReports =
+    user?.role === "admin" ? await prisma.report.count({ where: { status: "open" } }) : 0;
   const listHref = continueHref(Boolean(user), "/listings/new");
-  const shopLabel = shop ? "Your shop" : "Open a shop";
+  const paymentsOpen = paymentsLive();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-sand/80 bg-card/90 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-        <Link href="/" className="group flex min-w-0 items-center">
-          <Wordmark />
-        </Link>
+    <>
+      <header className="sticky top-0 z-30 bg-navy/95 text-white backdrop-blur print:hidden">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
+          <Link href="/" className="group flex min-w-0 items-center">
+            <Wordmark tone="onDark" />
+          </Link>
 
-        <nav className="ml-auto flex flex-wrap items-center justify-end gap-1 text-sm font-medium sm:gap-1.5">
-          <Link href="/listings" className={navLink}>
-            Browse
-          </Link>
-          <Link href="/shops" className={navLink}>
-            Shops
-          </Link>
-          <Link href="/occasions" className={navLink}>
-            Occasions
-          </Link>
-          <Link href="/pricing" className={navLink}>
-            Pricing
-          </Link>
-          <Link href="/listings#search" className={`hidden sm:inline ${navLink}`}>
-            Search
-          </Link>
-          <Link href={listHref} className={navLink}>
-            <span className="md:hidden">List</span>
-            <span className="hidden md:inline">List your business</span>
-          </Link>
-          <UpgradeAction live={paymentsLive()} href="/upgrade" label="Promote" className={`hidden md:inline ${navLink}`} />
-          <Link
-            href={shopHref}
-            className="btn-press inline-flex min-h-11 items-center rounded-full bg-gold px-3 py-1.5 text-sm font-semibold text-navy shadow-sm hover:bg-gold-d"
-          >
-            {shopLabel}
-          </Link>
-          {user?.role === "admin" ? (
-            <Link href="/admin" className={navLink}>
-              Admin{openReports > 0 ? ` (${openReports})` : ""}
+          <nav className="ml-auto hidden items-center gap-0.5 md:flex" aria-label="Directory">
+            <Link href="/listings" className={deskLink}>
+              Explore
             </Link>
-          ) : null}
-          {user ? (
-            <>
-              <Link href="/account" className={navLink}>
+            <Link href="/shops" className={deskLink}>
+              Shops
+            </Link>
+            <Link href="/occasions" className={deskLink}>
+              Occasions
+            </Link>
+            <Link href="/listings?region=diaspora" className={deskLink}>
+              For the diaspora
+            </Link>
+            {paymentsOpen ? (
+              <Link href="/pricing" className={deskLink}>
+                Pricing
+              </Link>
+            ) : null}
+            {user?.role === "admin" ? (
+              <Link href="/admin" className={deskLink}>
+                Admin{openReports > 0 ? ` (${openReports})` : ""}
+              </Link>
+            ) : null}
+            <Link
+              href={listHref}
+              className="ml-1 inline-flex min-h-11 items-center rounded-full border border-gold-l px-3.5 text-sm font-semibold text-gold-l"
+            >
+              List your business free
+            </Link>
+            {user ? (
+              <>
+                <Link href="/account" className={deskLink}>
+                  Account
+                </Link>
+                <form action={signOutAction}>
+                  <button className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-white/70 hover:text-white">
+                    Sign out
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="ml-1 inline-flex min-h-11 items-center rounded-full border border-white/30 px-3.5 text-sm font-semibold text-white"
+              >
+                Sign in
+              </Link>
+            )}
+          </nav>
+
+          <div className="ml-auto flex items-center gap-1 md:hidden">
+            {user?.role === "admin" ? (
+              <Link href="/admin" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white">
+                Admin{openReports > 0 ? ` (${openReports})` : ""}
+              </Link>
+            ) : null}
+            {user ? (
+              <Link
+                href="/account"
+                className="inline-flex min-h-11 items-center rounded-full border border-white/30 px-3 text-sm font-semibold"
+              >
                 Account
               </Link>
-              <form action={signOutAction}>
-                <button className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-ink/55 hover:bg-paper hover:text-navy">
-                  Sign out
-                </button>
-              </form>
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="btn-press ml-1 inline-flex min-h-11 items-center rounded-full bg-navy px-3.5 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-soft"
-            >
-              Sign in
-            </Link>
-          )}
-        </nav>
-      </div>
-    </header>
+            ) : (
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center rounded-full border border-white/30 px-3.5 text-sm font-semibold"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+      <Suspense fallback={null}>
+        <BottomNav sellHref={listHref} />
+      </Suspense>
+    </>
   );
 }
