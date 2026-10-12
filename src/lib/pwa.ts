@@ -5,7 +5,7 @@ import { DEFAULT_APP_NAME } from "@/lib/brand";
  * theme_color is navy (the gate mark and wordmark). background_color is paper.
  */
 export const PWA_THEME_COLOR = "#1a2436";
-export const PWA_BACKGROUND_COLOR = "#f7f3ec";
+export const PWA_BACKGROUND_COLOR = "#fffcf6";
 
 /** Home-screen labels stay short. Twelve characters is the practical limit. */
 export const PWA_NAME_MAX = 12;

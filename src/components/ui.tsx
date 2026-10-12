@@ -4,33 +4,33 @@ export const fieldClass =
 export const labelClass = "block text-sm font-medium text-ink/80";
 
 export const btnPrimary =
-  "btn-press inline-flex items-center justify-center gap-2 rounded-xl bg-clay px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-clay-dark disabled:opacity-60";
+  "btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] bg-gold px-4 py-2.5 text-sm font-semibold text-navy shadow-sm hover:bg-gold-d disabled:opacity-60";
 
 export const btnSecondary =
-  "btn-press inline-flex items-center justify-center gap-2 rounded-xl border border-sand bg-white px-4 py-2.5 text-sm font-semibold text-ink shadow-sm hover:border-navy/20 hover:bg-paper disabled:opacity-60";
+  "btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-line bg-white px-4 py-2.5 text-sm font-semibold text-ink shadow-sm hover:border-navy/20 hover:bg-paper disabled:opacity-60";
 
 export const btnNavy =
-  "btn-press inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-soft disabled:opacity-60";
+  "btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] bg-navy px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-navy-soft disabled:opacity-60";
 
 export const btnDanger =
-  "btn-press inline-flex items-center justify-center gap-2 rounded-xl border border-danger/30 bg-white px-4 py-2.5 text-sm font-semibold text-danger hover:bg-red-50 disabled:opacity-60";
+  "btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-danger/30 bg-white px-4 py-2.5 text-sm font-semibold text-danger hover:bg-red-50 disabled:opacity-60";
 
 export const btnWhatsApp =
-  "btn-press inline-flex items-center justify-center gap-2 rounded-xl bg-[#128C7E] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-[#0e7368] disabled:opacity-60";
+  "btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] bg-wa px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-wa-d disabled:opacity-60";
 
 export const cardClass =
-  "rounded-[1.25rem] border border-sand/80 bg-card shadow-[var(--shadow-card)]";
+  "rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]";
 
 export const chipClass =
-  "inline-flex shrink-0 items-center rounded-full border border-sand bg-white px-3 py-1.5 text-sm font-medium text-ink/80 transition-colors duration-150 hover:border-navy/25 hover:bg-paper";
+  "inline-flex min-h-11 shrink-0 items-center rounded-full border border-line bg-white px-3 py-1.5 text-sm font-medium text-ink/80 hover:border-navy/25 hover:bg-paper";
 
 export const chipActiveClass =
-  "inline-flex shrink-0 items-center rounded-full border border-navy bg-navy px-3 py-1.5 text-sm font-medium text-white shadow-sm";
+  "inline-flex min-h-11 shrink-0 items-center rounded-full border border-navy bg-navy px-3 py-1.5 text-sm font-medium text-white shadow-sm";
 
 export const sectionTitleClass = "font-serif text-2xl text-navy sm:text-3xl";
 
 export const linkAccentClass =
-  "font-semibold text-lake-dark underline-offset-2 transition-colors hover:text-lake hover:underline";
+  "font-semibold text-gold-d underline-offset-2 hover:underline";
 
 export function Flash({ children }: { children: string }) {
   return (
