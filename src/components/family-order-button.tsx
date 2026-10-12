@@ -16,7 +16,7 @@ export function FamilyOrderButton({
   subjectName: string;
   path: string;
   siteName: string;
-  variant?: "inline" | "bar";
+  variant?: "inline" | "bar" | "link";
 }) {
   const titleId = useId();
   const [open, setOpen] = useState(false);
@@ -75,10 +75,16 @@ export function FamilyOrderButton({
     <>
       <button
         type="button"
-        className={variant === "bar" ? `${btnSecondary} w-full` : btnSecondary}
+        className={
+          variant === "bar"
+            ? `${btnSecondary} w-full`
+            : variant === "link"
+              ? "font-semibold text-gold-d underline-offset-2 hover:underline"
+              : btnSecondary
+        }
         onClick={() => setOpen(true)}
       >
-        Buying for family back home?
+        {variant === "link" ? "Send a family order" : "Buying for family back home?"}
       </button>
       {open ? (
         <div
