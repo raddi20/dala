@@ -33,6 +33,8 @@ test("back falls through to the parent for a cold visit", () => {
   assert.equal(backFallback({ pathname: "/account/storefront" }), "/account");
   assert.equal(backFallback({ pathname: "/account/insights" }), "/account");
   assert.equal(backFallback({ pathname: "/account/storefront/offerings/tray" }), "/account");
+  assert.equal(backFallback({ pathname: "/admin/phones" }), "/admin");
+  assert.equal(backFallback({ pathname: "/admin" }), "/");
   assert.equal(backFallback({ pathname: "/people/user_1" }), "/");
   assert.equal(backFallback({ pathname: "/shops" }), "/");
   assert.equal(backFallback({ pathname: "/safety" }), "/");
@@ -46,6 +48,8 @@ test("the bar title is the page, and the document title drops the brand suffix",
   assert.equal(backBarTitle({ pathname: "/b/mama-atieno", hash: "#offering-1" }), "Offering");
   assert.equal(backBarTitle({ pathname: "/b/mama-atieno/sticker" }), "Print sticker");
   assert.equal(backBarTitle({ pathname: "/listings", search: "category=Catering" }), "Catering");
+  assert.equal(backBarTitle({ pathname: "/admin/phones" }), "Phone numbers");
+  assert.equal(backBarTitle({ pathname: "/admin/ai" }), "Admin");
   assert.equal(pageTitleFromDocument("Atieno Odhiambo · Rangach", "Rangach"), "Atieno Odhiambo");
   assert.equal(pageTitleFromDocument("Rangach", "Rangach"), "");
   assert.equal(pageTitleFromDocument("Home catering tray · Rangach", "Rangach"), "Home catering tray");
