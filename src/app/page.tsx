@@ -3,33 +3,23 @@ import { HomeRail } from "@/components/home-rail";
 import { ListingCard } from "@/components/listing-card";
 import { OfferingCard } from "@/components/offering-card";
 import { ShopCard } from "@/components/shop-card";
-import { btnNavy, btnPrimary, btnSecondary, cardClass, fieldClass, sectionTitleClass } from "@/components/ui";
-import { GateMark } from "@/components/wordmark";
-import { APP_TAGLINE, AUDIENCE_LINE, appName } from "@/lib/brand";
-import { HOME_CATEGORIES, categoryHref } from "@/lib/categories";
-import { CITIES } from "@/lib/constants";
+import { btnPrimary, chipClass, EmptyState } from "@/components/ui";
+import { isAiFeatureOn } from "@/lib/ai/flags";
+import { AUDIENCE_LINE } from "@/lib/brand";
+import { occasionTileOrder } from "@/lib/home-fresh";
+import { HOME_ASK_PLACEHOLDER, HOME_CATEGORY_CHIPS, HOME_PROMPTS, homePromptHref } from "@/lib/home-prompts";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
+import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { prisma } from "@/lib/prisma";
 import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
-import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { continueHref } from "@/lib/utils";
-
-/** Local SVG: warm geometric shops + connection nodes (navy/amber/cream). Replaces Unsplash food plate. */
-const HERO_IMAGE = "/hero-community.svg";
 
 export default async function HomePage() {
   const user = await getSessionUser();
-  const shop = user
-    ? await prisma.storefront.findUnique({ where: { userId: user.id }, select: { id: true } })
-    : null;
-  const shopHref = continueHref(Boolean(user), "/account/storefront");
   const listHref = continueHref(Boolean(user), "/listings/new");
-  const sellerHint = !user
-    ? "Sign in first. We continue to shop setup or the listing form."
-    : shop
-      ? "Your shop is in the header. List another business in the directory any time."
-      : "Open a shop, add one offering, then publish. Buyers message you on WhatsApp.";
+  const paymentsOpen = paymentsLive();
+  const listingWriter = await isAiFeatureOn("listing_writer");
   await ensureOccasionDefinitions(prisma);
   const [rails, occasions] = await Promise.all([
     homeRails(user?.id),
@@ -38,241 +28,164 @@ export default async function HomePage() {
       select: { slug: true, title: true },
     }),
   ]);
-  const featured = rails.featured;
-  const classifieds = rails.classifieds;
+  const tiles = occasionTileOrder(occasions);
+  const fresh = rails.fresh;
 
   return (
     <div>
-      <section className="hero-banner relative isolate min-h-[min(88vh,760px)] overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={HERO_IMAGE}
-          alt=""
-          className="hero-visual absolute inset-0 h-full w-full object-cover object-right"
-        />
-        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-          <span className="hero-orb hero-orb-a" />
-          <span className="hero-orb hero-orb-b" />
-        </div>
-        {/* Left-weighted overlays keep copy readable while shop geometry stays visible on the right */}
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/90 via-navy/55 to-navy/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-navy/55 via-transparent to-navy/15" />
-
-        <div className="relative mx-auto flex min-h-[min(88vh,760px)] max-w-5xl flex-col justify-end px-4 pb-12 pt-20 sm:justify-center sm:pb-16 sm:pt-24">
-          <GateMark tone="onDark" className="hero-brand h-14 w-14 sm:h-16 sm:w-16" />
-          <p className="hero-brand mt-4 font-serif text-5xl leading-none tracking-tight text-white sm:text-6xl md:text-7xl">
-            {appName()}
-          </p>
-          <p className="hero-copy mt-4 text-lg font-medium text-amber-soft sm:text-xl">{APP_TAGLINE}</p>
-          <h1 className="hero-copy mt-3 max-w-xl text-xl font-medium leading-snug text-white/95 sm:text-2xl">
-            Browse trusted Luo shops and classifieds — then chat on WhatsApp.
-          </h1>
-
-          <form
-            action="/listings"
-            method="get"
-            className="hero-copy mt-8 flex w-full max-w-xl flex-col gap-2 sm:flex-row"
-            style={{ animationDelay: "140ms" }}
-          >
+      <section className="bg-navy text-white">
+        <div className="mx-auto max-w-5xl px-4 pb-4 pt-5">
+          <h1 className="font-serif text-3xl text-white">Ask Rangach</h1>
+          <p className="mt-1 text-sm text-white/75">Shops and classifieds in {AUDIENCE_LINE}. Chat stays on WhatsApp.</p>
+          <form action="/listings" method="get" className="mt-3 flex gap-2">
             <label className="sr-only" htmlFor="home-nl">
               Search in a sentence
             </label>
             <input
               id="home-nl"
               name="nl"
-              placeholder="Try: verified electricians in Kenya"
-              className={`${fieldClass} mt-0 border-0 bg-white/95 shadow-lg`}
+              placeholder={HOME_ASK_PLACEHOLDER}
+              className="min-h-11 w-full rounded-[14px] border-0 bg-white px-3.5 text-base text-ink placeholder:text-ink/40"
             />
-            <button className={`${btnPrimary} shrink-0 shadow-lg sm:px-6`}>Search</button>
+            <button className={`${btnPrimary} shrink-0 px-5`}>Ask</button>
           </form>
-
-          <div className="hero-copy mt-4 flex w-full max-w-xl flex-col gap-2 sm:flex-row" style={{ animationDelay: "200ms" }}>
-            <Link href={shopHref} className={`${btnPrimary} shadow-lg`}>
-              Open a shop
-            </Link>
-            <Link href={listHref} className={`${btnSecondary} shadow-lg`}>
-              List your business
-            </Link>
+          <div className="chip-scroll -mx-4 mt-3 px-4 pb-1">
+            {HOME_PROMPTS.map((prompt) => (
+              <Link key={prompt.query} href={homePromptHref(prompt.query)} className={`${chipClass} bg-white`}>
+                {prompt.label}
+              </Link>
+            ))}
           </div>
-          <p className="hero-copy mt-3 max-w-lg text-sm text-white/75" style={{ animationDelay: "240ms" }}>
-            {sellerHint}
-          </p>
         </div>
       </section>
 
-      <div className="mx-auto grid max-w-5xl gap-12 px-4 py-12 sm:gap-14 sm:py-16">
-        <section>
-          <h2 className={sectionTitleClass}>Where to start</h2>
-          <p className="mt-2 max-w-xl text-ink/65">
-            Browse the directory, or open a shop in three steps: create it from your profile, add an offering, then publish.{" "}
-            <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
-              See Featured and Pro prices
+      <div className="mx-auto max-w-5xl px-4">
+        <div className="chip-scroll -mx-4 px-4 py-3">
+          {HOME_CATEGORY_CHIPS.map((chip) => (
+            <Link key={chip.label} href={chip.href} className={chipClass}>
+              {chip.label}
             </Link>
-            .
-          </p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link href={shopHref} className={btnPrimary}>
-              Open a shop
-            </Link>
-            <Link href={listHref} className={btnNavy}>
-              List your business
-            </Link>
-            <Link href="/listings" className={btnSecondary}>
-              Browse
-            </Link>
-          </div>
-        </section>
+          ))}
+        </div>
 
         <section>
-          <h2 className={sectionTitleClass}>Homeland or Diaspora</h2>
-          <p className="mt-2 text-ink/65">Same community directory, in {AUDIENCE_LINE}.</p>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            {CITIES.map((city) => {
-              const diaspora = city.region === "diaspora";
-              return (
-                <Link
-                  key={city.name}
-                  href={`/listings?region=${city.region}`}
-                  className={`card-lift group relative overflow-hidden ${cardClass} p-6`}
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-lake">
-                    {diaspora ? "Diaspora" : "Homeland · Kenya"}
-                  </p>
-                  <h3 className="mt-2 font-serif text-3xl text-navy transition-colors group-hover:text-lake-dark">
-                    {diaspora ? "The Diaspora" : "Kenya / East Africa"}
-                  </h3>
-                </Link>
-              );
-            })}
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-xl text-navy">Fresh</h2>
+            <Link href="/listings" className="shrink-0 text-sm font-semibold text-gold-d">
+              See all
+            </Link>
           </div>
+          {fresh.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState
+                title="Nothing fresh yet"
+                body="Shops and classifieds show here as people publish them."
+                action={
+                  <Link href={listHref} className={btnPrimary}>
+                    List your business free
+                  </Link>
+                }
+              />
+            </div>
+          ) : (
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              {fresh.map((item, index) =>
+                item.kind === "listing" ? (
+                  <ListingCard key={item.id} listing={item.listing} priority={index < 2} />
+                ) : (
+                  <OfferingCard key={item.id} offering={item.offering} priority={index < 2} />
+                ),
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 [contain-intrinsic-size:auto_720px] [content-visibility:auto]">
+        <section>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-xl text-navy">Shops</h2>
+            <Link href="/shops" className="shrink-0 text-sm font-semibold text-gold-d">
+              All shops
+            </Link>
+          </div>
+          {rails.shops.length === 0 ? (
+            <div className="mt-3">
+              <EmptyState title="No shops yet" body="Shops show here after a seller adds an offering and publishes." />
+            </div>
+          ) : (
+            <div className="chip-scroll -mx-4 mt-3 items-stretch px-4 pb-1">
+              {rails.shops.map((shop) => (
+                <div key={shop.id} className="w-[46vw] max-w-[220px] shrink-0">
+                  <ShopCard shop={shop} />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
 
         <section>
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className={sectionTitleClass}>Occasions</h2>
-            <Link href="/occasions" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
+            <h2 className="font-serif text-xl text-navy">Occasions</h2>
+            <Link href="/occasions" className="shrink-0 text-sm font-semibold text-gold-d">
               All occasions
             </Link>
           </div>
-          <p className="mt-2 max-w-xl text-ink/65">
-            Homecomings, weddings and ayie, funerals, Christmas at home, and a house being built for the family. Shops
-            tagged for that moment.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {occasions.map((occasion) => (
-              <Link
-                key={occasion.slug}
-                href={`/occasions/${occasion.slug}`}
-                className="rounded-full border border-sand bg-card px-3.5 py-2 text-sm font-medium text-ink/80 shadow-sm transition-colors hover:border-navy/20 hover:bg-white hover:text-navy"
-              >
+          <p className="mt-1 text-sm text-muted">Homecomings, weddings and ayie, Christmas at home, and a house being built for the family.</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {tiles.map((occasion) => (
+              <Link key={occasion.slug} href={`/occasions/${occasion.slug}`} className={chipClass}>
                 {occasion.title}
               </Link>
             ))}
           </div>
         </section>
 
-        <section>
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className={sectionTitleClass}>Categories</h2>
-            <Link href="/categories" className="shrink-0 text-sm font-semibold text-lake-dark hover:text-lake">
-              See all
-            </Link>
-          </div>
-          <p className="mt-2 text-ink/65">A few places to start. The full list is grouped on its own page.</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {HOME_CATEGORIES.map((category) => (
-              <Link
-                key={category}
-                href={categoryHref(category)}
-                className="rounded-full border border-sand bg-card px-3.5 py-2 text-sm font-medium text-ink/80 shadow-sm transition-colors hover:border-navy/20 hover:bg-white hover:text-navy"
-              >
-                {category}
-              </Link>
-            ))}
-          </div>
+        <section className="rounded-[20px] bg-navy px-4 py-5 text-white">
+          <h2 className="font-serif text-2xl text-white">Buying for family back home?</h2>
+          <p className="mt-2 max-w-xl text-sm text-white/80">
+            Some shops take a WhatsApp order from the Diaspora for family in Kenya. Payment stays between you and the seller.
+          </p>
+          <Link href="/listings?diaspora=1" className={`${btnPrimary} mt-4`}>
+            See those shops
+          </Link>
         </section>
 
-        <HomeRail
-          title="New shops"
-          hint="Published shops buyers can open and message."
-          browseHref="/shops"
-          browseLabel="All shops"
-          empty={rails.shops.length === 0}
-          emptyTitle="No shops yet"
-          emptyBody="Shops show here after a seller adds an offering and publishes."
-          action={
-            <Link href={shopHref} className={btnSecondary}>
-              Open a shop
-            </Link>
-          }
-        >
-          {rails.shops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} />
-          ))}
-        </HomeRail>
+        <section className="rounded-[20px] border border-line bg-card px-4 py-5">
+          <h2 className="font-serif text-2xl text-navy">List your business free</h2>
+          <p className="mt-2 max-w-xl text-sm text-ink/70">
+            Open a shop, add what you sell, and buyers message you on WhatsApp. {AUDIENCE_LINE}.
+          </p>
+          {listingWriter ? <p className="mt-2 text-sm text-ink/70">Rangach can draft the listing words for you.</p> : null}
+          <p className="mt-2 text-sm text-muted">
+            {paymentsOpen ? "Featured and Pro prices are on the pricing page." : `${PAID_UPGRADES_COMING_SOON}. Listing a business is free.`}
+          </p>
+          <Link href={listHref} className={`${btnPrimary} mt-4`}>
+            List your business free
+          </Link>
+        </section>
 
-        <HomeRail
-          title="Offerings"
-          hint="What published shops are selling right now."
-          browseHref="/listings?type=business"
-          browseLabel="Browse businesses"
-          empty={rails.offerings.length === 0}
-          emptyTitle="No offerings yet"
-          emptyBody="Offerings show here once a published shop adds one."
-          action={
-            <Link href={shopHref} className={btnSecondary}>
-              Open a shop
-            </Link>
-          }
-        >
-          {rails.offerings.map((offering) => (
-            <OfferingCard key={offering.id} offering={offering} />
-          ))}
-        </HomeRail>
-
-        <HomeRail
-          title="Featured"
-          hint="Raised shops and listings worth a look first."
-          browseHref="/listings"
-          browseLabel="Browse all"
-          empty={featured.length === 0}
-          emptyTitle="No featured listings yet"
-          emptyBody={
-            paymentsLive()
-              ? "Featured listings show here after a seller pays for a place at the top of the directory. Listing a business is free."
-              : `${PAID_UPGRADES_COMING_SOON}. Listing a business is free.`
-          }
-          action={
-            <Link href={listHref} className={btnSecondary}>
-              List your business
-            </Link>
-          }
-        >
-          {featured.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </HomeRail>
-
-        <HomeRail
-          title="Recent classifieds"
-          hint="Housing, goods, and services from the community."
-          browseHref="/listings?type=classifieds"
-          browseLabel="All classifieds"
-          empty={classifieds.length === 0}
-          emptyTitle="No classifieds yet"
-          emptyBody="Housing, goods, and services will show here as people publish them. You can list something yourself."
-          action={
-            <Link href={listHref} className={btnSecondary}>
-              List your business
-            </Link>
-          }
-        >
-          {classifieds.map((listing) => (
-            <ListingCard key={listing.id} listing={listing} />
-          ))}
-        </HomeRail>
+        {paymentsOpen ? (
+          <HomeRail
+            title="Featured"
+            hint="Raised listings worth a look first."
+            browseHref="/listings"
+            browseLabel="Browse all"
+            empty={rails.featured.length === 0}
+            emptyTitle="No featured listings yet"
+            emptyBody="Featured listings show here after a seller pays for a place at the top. Listing a business is free."
+            action={
+              <Link href={listHref} className={btnPrimary}>
+                List your business free
+              </Link>
+            }
+          >
+            {rails.featured.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </HomeRail>
+        ) : null}
       </div>
-
     </div>
   );
 }

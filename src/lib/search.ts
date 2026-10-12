@@ -1,7 +1,9 @@
 import { Prisma } from "@prisma/client";
 import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
+import { mergeFreshItems } from "@/lib/home-fresh";
 import { firstPhoto } from "@/lib/item-card";
+import { paymentsLive } from "@/lib/payments/live";
 import { regionForCity } from "@/lib/constants";
 import { rankByHints } from "@/lib/nl-query";
 import { prisma } from "@/lib/prisma";
@@ -652,26 +654,49 @@ export async function homeRails(viewerId?: string | null, env: Env = process.env
   const blocked = await blockedIds(viewerId);
   const where = listingWhere({ viewerId }, blocked, env);
   const [featuredRows, classifiedRows, shops, offerings] = await Promise.all([
-    prisma.listing.findMany({
-      where: { AND: [where, { featured: true }] },
-      include,
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
+    paymentsLive(env as NodeJS.ProcessEnv)
+      ? prisma.listing.findMany({
+          where: { AND: [where, { featured: true }] },
+          include,
+          orderBy: { createdAt: "desc" },
+          take: 8,
+        })
+      : Promise.resolve([]),
     prisma.listing.findMany({
       where: { AND: [where, { type: { not: "business" } }] },
       include,
       orderBy: { createdAt: "desc" },
-      take: 4,
+      take: 12,
     }),
-    searchShops({ viewerId, page: 1, pageSize: 4 }, env),
-    recentOfferings(4, viewerId, env),
+    searchShops({ viewerId, page: 1, pageSize: 6 }, env),
+    recentOfferings(12, viewerId, env),
   ]);
+  const classifieds = classifiedRows.map((row) => toPublicListing(row));
+  const fresh = mergeFreshItems(
+    [
+      ...classifieds.map((listing) => ({
+        kind: "listing" as const,
+        id: listing.id,
+        createdAt: listing.createdAt,
+        hasPhoto: listing.photoUrl.trim().length > 0,
+        listing,
+      })),
+      ...offerings.map((offering) => ({
+        kind: "offering" as const,
+        id: offering.id,
+        createdAt: offering.createdAt,
+        hasPhoto: offering.imageUrl.trim().length > 0,
+        offering,
+      })),
+    ],
+    6,
+  );
   return {
     featured: featuredRows.map((row) => toPublicListing(row)).filter((listing) => isFeatured(listing)).slice(0, 4),
-    classifieds: classifiedRows.map((row) => toPublicListing(row)),
+    classifieds,
     shops: shops.shops,
     offerings,
+    fresh,
   };
 }
 
