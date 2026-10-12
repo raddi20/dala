@@ -5,7 +5,7 @@ import type { CatalogueHit } from "@/lib/search";
 
 export function BrowseHits({ hits }: { hits: CatalogueHit[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-2 gap-3 sm:gap-4">
       {hits.map((hit) => {
         if (hit.kind === "listing") return <ListingCard key={`listing-${hit.listing.id}`} listing={hit.listing} />;
         if (hit.kind === "shop") return <ShopCard key={`shop-${hit.shop.id}`} shop={hit.shop} />;

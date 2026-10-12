@@ -1,45 +1,57 @@
 import Link from "next/link";
-import { ShopBadgeChips } from "@/components/badges";
-import { cardClass } from "@/components/ui";
-import { regionLabel } from "@/lib/constants";
+import { cityChipLabel } from "@/lib/constants";
+import { shopIsChecked } from "@/lib/item-card";
 import type { ShopCardData } from "@/lib/search";
 
 export function ShopCard({ shop }: { shop: ShopCardData }) {
+  const cover = shop.coverUrl.trim();
+  const avatar = shop.avatarUrl.trim();
+  const checked = shopIsChecked(shop);
+  const place = cityChipLabel(shop.city);
+  const meta = [shop.category, place].filter(Boolean).join(" · ");
   const initial = shop.name.trim().charAt(0).toUpperCase() || "S";
+
   return (
-    <article className={`card-lift flex h-full flex-col overflow-hidden ${cardClass}`}>
-      <Link href={`/b/${shop.slug}`} className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex aspect-[16/10] items-end rounded-xl bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-4 text-white">
-          <span className="font-serif text-3xl">{initial}</span>
-          {shop.category ? (
-            <span className="ml-auto max-w-[60%] text-right text-xs font-medium uppercase tracking-wide text-white/75">
-              {shop.category}
-            </span>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          <span className="inline-flex items-center rounded-full bg-paper px-2.5 py-0.5 text-xs font-semibold text-ink/75 ring-1 ring-sand">
+    <article className="card-lift h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
+      <Link href={`/b/${shop.slug}`} className="flex h-full flex-col">
+        <div className="relative aspect-[4/3] bg-line">
+          {cover ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={cover} width={480} height={360} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full items-end bg-navy p-3 text-white">
+              <span className="font-serif text-2xl">{initial}</span>
+            </div>
+          )}
+          <span className="absolute left-2 top-2 inline-flex h-[22px] items-center rounded-full bg-white/90 px-2 text-[11.5px] font-bold text-navy">
             Shop
           </span>
-          <span className="inline-flex items-center rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-navy ring-1 ring-sand">
-            {regionLabel(shop.region)}
-          </span>
-          {shop.verified ? (
-            <span className="inline-flex items-center rounded-full bg-teal-soft px-2.5 py-0.5 text-xs font-semibold text-lake-dark ring-1 ring-lake/20">
-              Verified
-            </span>
+          {avatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatar}
+              width={40}
+              height={40}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="absolute bottom-2 left-2 h-10 w-10 rounded-full border-2 border-white object-cover"
+            />
           ) : null}
-          <ShopBadgeChips
-            flags={{
-              phoneVerified: shop.phoneVerified,
-              locationVerified: shop.locationVerified,
-              businessVerified: shop.businessVerified,
-            }}
-          />
         </div>
-        <h2 className="font-serif text-xl leading-snug text-navy">{shop.name}</h2>
-        {shop.category ? <p className="text-sm text-ink/60">{shop.category}</p> : null}
-        <p className="mt-auto text-sm font-semibold text-lake-dark">Visit shop →</p>
+        <div className="flex flex-1 flex-col px-2.5 pb-3 pt-2">
+          <h2 className="line-clamp-2 font-sans text-[14.5px] font-semibold leading-snug tracking-normal text-ink">{shop.name}</h2>
+          {meta ? (
+            <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-muted">
+              {checked ? (
+                <span className="text-ok" aria-label="Checked by Rangach">
+                  ✓
+                </span>
+              ) : null}
+              <span className="truncate">{meta}</span>
+            </p>
+          ) : null}
+        </div>
       </Link>
     </article>
   );

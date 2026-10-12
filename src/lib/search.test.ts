@@ -174,7 +174,7 @@ test("catering in any case matches a shop and its offering, and drafts, archived
     assert.match(html, new RegExp(`Catering Co ${stamp}`));
     assert.ok(html.includes(`href="/b/catering-${stamp}"`));
     assert.match(html, /Homeland/);
-    assert.match(html, /Phone verified/);
+    assert.match(html, /Checked by Rangach/);
     assert.match(html, /Showing shops for “catering”/);
     assert.ok(html.includes('action="/shops"'));
 

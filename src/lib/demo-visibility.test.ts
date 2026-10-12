@@ -129,7 +129,10 @@ test("a demo shop never shows its placeholder phone or WhatsApp", () => {
     assert.match(source, /publicSellerContacts|SellerContactChannels|DemoContactNote/, file);
   }
   const card = readFileSync(new URL("../components/listing-card.tsx", import.meta.url), "utf8");
-  assert.match(card, /contactWhatsapp/);
+  assert.equal(card.includes("contactWhatsapp"), false);
+  assert.equal(card.includes("contactPhone"), false);
+  assert.equal(card.includes("FamilyOrderButton"), false);
+  assert.equal(card.includes("wa.me"), false);
   const example = readFileSync(new URL("../../.env.example", import.meta.url), "utf8");
   const readme = readFileSync(new URL("../../README.md", import.meta.url), "utf8");
   assert.equal(example.includes("SHOW_DEMO_SHOPS"), false);

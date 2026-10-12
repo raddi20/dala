@@ -137,7 +137,7 @@ export default async function OccasionPage({ params }: Props) {
           {listings.length > 0 ? (
             <section className="grid gap-4">
               <h2 className="font-serif text-2xl text-navy">Listings</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 {listings.map((listing) => (
                   <div key={listing.id} className="grid gap-2">
                     {pinnedListings.has(listing.id) ? (

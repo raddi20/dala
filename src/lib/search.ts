@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
+import { firstPhoto } from "@/lib/item-card";
 import { regionForCity } from "@/lib/constants";
 import { rankByHints } from "@/lib/nl-query";
 import { prisma } from "@/lib/prisma";
@@ -59,11 +60,13 @@ function shopCardSelect(env: Env) {
   locationVerified: true,
   businessVerified: true,
   servesDiaspora: true,
+  bannerUrl: true,
   user: {
     select: {
       name: true,
       bio: true,
       city: true,
+      avatarUrl: true,
       verifiedPro: true,
       verifiedProUntil: true,
       listings: {
@@ -82,7 +85,7 @@ function shopCardSelect(env: Env) {
   offerings: {
     where: { archived: false, hidden: false },
     orderBy: offeringOrder,
-    select: { id: true, title: true, description: true },
+    select: { id: true, title: true, description: true, imageUrl: true },
   },
 } satisfies Prisma.StorefrontSelect;
 }
@@ -98,6 +101,9 @@ const offeringCardSelect = {
   storefront: {
     select: {
       slug: true,
+      phoneVerified: true,
+      locationVerified: true,
+      businessVerified: true,
       offerings: {
         where: { archived: false, hidden: false },
         orderBy: offeringOrder,
@@ -308,6 +314,8 @@ function toShopCard(row: ShopRow): ShopCardData {
     locationVerified: row.locationVerified,
     businessVerified: row.businessVerified,
     servesDiaspora: row.servesDiaspora,
+    coverUrl: firstPhoto([...content.offerings.map((offering) => offering.imageUrl), row.bannerUrl]),
+    avatarUrl: row.user.avatarUrl,
   };
 }
 
@@ -319,11 +327,15 @@ function toOfferingCard(row: OfferingRow): OfferingCardData {
     priceCents: row.priceCents,
     currency: row.currency,
     imageUrl: row.imageUrl,
+    createdAt: row.createdAt,
     category: displayOfferingCategory(row.title, row.description),
     shopSlug: row.storefront.slug,
     shopName: row.storefront.user.name,
     city: row.storefront.user.city,
     region: regionForCity(row.storefront.user.city),
+    phoneVerified: row.storefront.phoneVerified,
+    locationVerified: row.storefront.locationVerified,
+    businessVerified: row.storefront.businessVerified,
   };
 }
 
@@ -408,6 +420,8 @@ export type ShopCardData = {
   locationVerified: boolean;
   businessVerified: boolean;
   servesDiaspora: boolean;
+  coverUrl: string;
+  avatarUrl: string;
 };
 
 export type OfferingCardData = {
@@ -417,11 +431,15 @@ export type OfferingCardData = {
   priceCents: number | null;
   currency: string;
   imageUrl: string;
+  createdAt: Date;
   category: string;
   shopSlug: string;
   shopName: string;
   city: string;
   region: string;
+  phoneVerified: boolean;
+  locationVerified: boolean;
+  businessVerified: boolean;
 };
 
 export type CatalogueHit =
