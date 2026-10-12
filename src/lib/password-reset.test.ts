@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -16,6 +17,7 @@ import {
   hashResetToken,
   issueResetToken,
   newResetToken,
+  passwordResetTrace,
   planPasswordReset,
   resetEmailText,
   resetPasswordLink,
@@ -208,6 +210,50 @@ test("an expired reset link does not change the password", async () => {
   } finally {
     await prisma.user.delete({ where: { id: user.id } });
   }
+});
+
+test("the password reset log names the early exit and does not include an email address", () => {
+  const blocked = passwordResetTrace({
+    emailValid: true,
+    rateLimited: true,
+    userFound: true,
+    loginAllowed: true,
+    mailConfigured: true,
+    tokenIssued: false,
+    mailResult: "not attempted",
+  });
+  assert.match(blocked, /user found: yes/);
+  assert.match(blocked, /rate limited/);
+  assert.match(blocked, /token not issued/);
+  assert.match(blocked, /mail not attempted/);
+  assert.equal(blocked.includes("@"), false);
+
+  const missing = passwordResetTrace({
+    emailValid: true,
+    rateLimited: false,
+    userFound: false,
+    loginAllowed: false,
+    mailConfigured: false,
+    tokenIssued: false,
+    mailResult: "not attempted",
+  });
+  assert.match(missing, /user found: no/);
+  assert.match(missing, /mail not configured/);
+  assert.equal(passwordResetTrace({
+    emailValid: false,
+    rateLimited: false,
+    userFound: false,
+    loginAllowed: false,
+    mailConfigured: false,
+    tokenIssued: false,
+    mailResult: "not attempted",
+  }), "Password reset invalid email; mail not attempted");
+
+  const action = readFileSync(new URL("./actions/password-reset.ts", import.meta.url), "utf8");
+  assert.match(action, /console\.info\(\s*passwordResetTrace/);
+  assert.match(action, /zeptoSkipLine\(mailConfigProblems/);
+  assert.equal(action.includes("Password reset email was not sent"), false);
+  assert.equal(/console\.(info|warn|error)\([^)]*account\.email/.test(action), false);
 });
 
 test("a sixth reset token in an hour is not issued", async () => {
