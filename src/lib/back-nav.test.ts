@@ -49,6 +49,7 @@ test("the bar title is the page, and the document title drops the brand suffix",
   assert.equal(backBarTitle({ pathname: "/b/mama-atieno/sticker" }), "Print sticker");
   assert.equal(backBarTitle({ pathname: "/listings", search: "category=Catering" }), "Catering");
   assert.equal(backBarTitle({ pathname: "/admin/phones" }), "Phone numbers");
+  assert.equal(backBarTitle({ pathname: "/admin/contact/listing/cmv3w2lcb0001l806yoc1j4qq" }), "Edit contact");
   assert.equal(backBarTitle({ pathname: "/admin/ai" }), "Admin");
   assert.equal(pageTitleFromDocument("Atieno Odhiambo · Rangach", "Rangach"), "Atieno Odhiambo");
   assert.equal(pageTitleFromDocument("Rangach", "Rangach"), "");
