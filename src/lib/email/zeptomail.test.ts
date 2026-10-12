@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { cronAuthorized } from "@/lib/ai/cron-auth";
-import { canSendMail, canSendTips, parseEmailFrom, sendMail, sendTipEmail } from "@/lib/email/zeptomail";
+import { readFileSync } from "node:fs";
+import { canSendMail, canSendTips, deliverMail, parseEmailFrom, sendMail, sendTipEmail } from "@/lib/email/zeptomail";
 
 function env(values: Record<string, string>): NodeJS.ProcessEnv {
   return { NODE_ENV: "test", ...values } as unknown as NodeJS.ProcessEnv;
@@ -193,4 +194,151 @@ test("a configured send posts plain text with the ZeptoMail key header", async (
   assert.equal(seen[0]?.body.from.address, "hello@rangach.co.ke");
   assert.equal(seen[0]?.body.from.name, "Rangach");
   assert.equal(seen[0]?.body.textbody, "Hello Amina");
+});
+
+function spyLogs() {
+  const seen = { warn: [] as unknown[][], info: [] as unknown[][], error: [] as unknown[][] };
+  const originals = { warn: console.warn, info: console.info, error: console.error };
+  console.warn = (...args: unknown[]) => {
+    seen.warn.push(args);
+  };
+  console.info = (...args: unknown[]) => {
+    seen.info.push(args);
+  };
+  console.error = (...args: unknown[]) => {
+    seen.error.push(args);
+  };
+  return {
+    seen,
+    restore() {
+      console.warn = originals.warn;
+      console.info = originals.info;
+      console.error = originals.error;
+    },
+  };
+}
+
+test("a skipped send names each missing setting and does not print the values", async () => {
+  const logs = spyLogs();
+  const token = "super-secret-token";
+  try {
+    const both = await sendMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset", text: "Hello" },
+      { env: env({}), fetchImpl: async () => new Response("{}", { status: 201 }) },
+    );
+    const fromOnly = await sendMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset", text: "Hello" },
+      {
+        env: env({ ZEPTOMAIL_TOKEN: token, EMAIL_FROM: "not-an-email" }),
+        fetchImpl: async () => new Response("{}", { status: 201 }),
+      },
+    );
+    assert.equal(both, "skipped");
+    assert.equal(fromOnly, "skipped");
+  } finally {
+    logs.restore();
+  }
+  const dumped = JSON.stringify(logs.seen.warn);
+  assert.match(dumped, /ZEPTOMAIL_TOKEN missing/);
+  assert.match(dumped, /EMAIL_FROM missing\/invalid \(no @\)/);
+  assert.equal(dumped.includes(token), false);
+  assert.equal(dumped.includes("not-an-email"), false);
+  assert.equal(logs.seen.info.length, 0);
+  assert.equal(logs.seen.error.length, 0);
+});
+
+test("a send logs the endpoint and sent or failed status", async () => {
+  const logs = spyLogs();
+  try {
+    const sent = await deliverMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset", text: "Hello" },
+      {
+        env: env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+        fetchImpl: async () => new Response('{"message":"OK"}', { status: 201 }),
+      },
+    );
+    const failed = await deliverMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset", text: "Hello" },
+      {
+        env: env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+        fetchImpl: async () => new Response('{"error":"no"}', { status: 403 }),
+      },
+    );
+    assert.equal(sent.result, "sent");
+    assert.equal(sent.status, 201);
+    assert.equal(sent.endpoint, "https://api.zeptomail.eu/v1.1/email");
+    assert.equal(sent.body, '{"message":"OK"}');
+    assert.equal(failed.result, "failed");
+    assert.equal(failed.status, 403);
+    assert.equal(failed.body, '{"error":"no"}');
+  } finally {
+    logs.restore();
+  }
+  assert.deepEqual(logs.seen.info, [
+    ["ZeptoMail https://api.zeptomail.eu/v1.1/email sent 201"],
+    ["ZeptoMail https://api.zeptomail.eu/v1.1/email failed 403"],
+  ]);
+});
+
+test("a network error logs the error name, message, and endpoint host without the token", async () => {
+  const logs = spyLogs();
+  const token = "zepto-secret-token-9f3a";
+  try {
+    const result = await sendMail(
+      { to: "a@example.com", name: "Amina", subject: "Reset", text: "Hello" },
+      {
+        env: env({
+          ZEPTOMAIL_TOKEN: `Zoho-enczapikey ${token}`,
+          EMAIL_FROM: "Rangach <hello@rangach.co.ke>",
+        }),
+        fetchImpl: async () => {
+          throw new TypeError(`connect ECONNREFUSED ${token}`);
+        },
+      },
+    );
+    assert.equal(result, "failed");
+  } finally {
+    logs.restore();
+  }
+  assert.deepEqual(logs.seen.error, [["ZeptoMail send failed", "TypeError", "connect ECONNREFUSED [redacted]", "api.zeptomail.eu"]]);
+  assert.deepEqual(logs.seen.info, [["ZeptoMail https://api.zeptomail.eu/v1.1/email failed"]]);
+  const dumped = JSON.stringify(logs.seen);
+  assert.equal(dumped.includes(token), false);
+  assert.equal(dumped.toLowerCase().includes("zoho-enczapikey"), false);
+});
+
+test("tips that are switched off name TIPS_EMAIL and do not call ZeptoMail", async () => {
+  const logs = spyLogs();
+  let calls = 0;
+  try {
+    const result = await sendTipEmail(
+      { to: "a@example.com", name: "Amina", subject: "Week", text: "Hello" },
+      {
+        env: env({ ZEPTOMAIL_TOKEN: "zoho-token", EMAIL_FROM: "Rangach <hello@rangach.co.ke>" }),
+        fetchImpl: async () => {
+          calls += 1;
+          return new Response("{}", { status: 201 });
+        },
+      },
+    );
+    assert.equal(result, "skipped");
+    assert.equal(calls, 0);
+  } finally {
+    logs.restore();
+  }
+  assert.deepEqual(logs.seen.warn, [["ZeptoMail skipped: TIPS_EMAIL off"]]);
+});
+
+test("the admin test email is admin-only and shows the ZeptoMail result", () => {
+  const action = readFileSync(new URL("../actions/admin-mail.ts", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../../app/admin/page.tsx", import.meta.url), "utf8");
+  const widget = readFileSync(new URL("../../components/admin-mail-test.tsx", import.meta.url), "utf8");
+  const body = action.slice(action.indexOf("export async function sendAdminTestEmail"));
+  assert.match(body, /await requireAdmin\(\)/);
+  assert.equal(body.indexOf("requireAdmin") < body.indexOf("deliverMail"), true);
+  assert.match(page, /AdminMailTest/);
+  assert.match(widget, /Send test email/);
+  assert.match(widget, /Endpoint/);
+  assert.match(widget, /HTTP status/);
+  assert.match(widget, /Response body/);
 });

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AdminMailTest } from "@/components/admin-mail-test";
 import { AgentCountTable } from "@/components/admin-agent-counts";
 import { AdminOccasions } from "@/components/admin-occasions";
 import { ReasonInput } from "@/components/admin-reason";
@@ -180,6 +181,15 @@ export default async function AdminPage({
           </Link>
         </p>
       </div>
+
+      <section id="mail" className="grid gap-3">
+        <h2 className="font-serif text-2xl">Mail</h2>
+        <p className="text-sm text-ink/70">
+          Password reset uses ZeptoMail. If a reset sends nothing, this shows the endpoint, the HTTP status, and the
+          response body.
+        </p>
+        <AdminMailTest />
+      </section>
 
       <section id="audit-log" className="grid gap-3">
         <h2 className="font-serif text-2xl">Recent admin actions</h2>

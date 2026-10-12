@@ -74,6 +74,30 @@ export function resetEmailText(name: string, link: string, product = "Rangach"):
   ].join("\n");
 }
 
+export type PasswordResetTrace = {
+  emailValid: boolean;
+  rateLimited: boolean;
+  userFound: boolean;
+  loginAllowed: boolean;
+  mailConfigured: boolean;
+  tokenIssued: boolean;
+  mailResult: "sent" | "skipped" | "failed" | "not attempted";
+};
+
+/** One line for logs. No email address, token, or IP. */
+export function passwordResetTrace(input: PasswordResetTrace): string {
+  if (!input.emailValid) return "Password reset invalid email; mail not attempted";
+  return [
+    "Password reset",
+    `user found: ${input.userFound ? "yes" : "no"}`,
+    input.rateLimited ? "rate limited" : "not rate limited",
+    input.loginAllowed ? "login allowed" : "login blocked",
+    input.mailConfigured ? "mail configured" : "mail not configured",
+    input.tokenIssued ? "token issued" : "token not issued",
+    `mail ${input.mailResult}`,
+  ].join("; ");
+}
+
 export function planPasswordReset(input: {
   emailValid: boolean;
   mailConfigured: boolean;
