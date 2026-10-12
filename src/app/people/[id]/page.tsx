@@ -132,7 +132,7 @@ export default async function PersonPage({ params }: Props) {
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Listings</h2>
         {owned.length === 0 ? <p className="text-sm text-ink/70">No visible listings.</p> : null}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {owned.map((listing) => (
             <ListingCard key={listing.id} listing={listing} />
           ))}

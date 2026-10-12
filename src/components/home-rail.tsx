@@ -39,7 +39,7 @@ export function HomeRail({
           <EmptyState title={emptyTitle} body={emptyBody} action={action} />
         </div>
       ) : (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">{children}</div>
+        <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">{children}</div>
       )}
     </section>
   );
