@@ -44,6 +44,7 @@ export function backFallback(place: BackPlace): string {
   const occasion = path.match(/^\/occasions\/([^/]+)$/);
   if (occasion) return "/occasions";
   if (path.startsWith("/account/")) return "/account";
+  if (path.startsWith("/admin/")) return "/admin";
   return "/";
 }
 
@@ -72,6 +73,8 @@ export function backBarTitle(place: BackPlace): string {
     "/register": "Create account",
     "/forgot-password": "Forgot password",
     "/reset-password": "Choose a new password",
+    "/admin": "Admin",
+    "/admin/phones": "Phone numbers",
   };
   if (known[path]) return known[path];
   if (/^\/b\/[^/]+\/sticker$/.test(path)) return "Print sticker";
@@ -83,6 +86,7 @@ export function backBarTitle(place: BackPlace): string {
   if (/^\/people\/[^/]+$/.test(path)) return "Profile";
   if (/^\/occasions\/[^/]+$/.test(path)) return "Occasion";
   if (path.startsWith("/account/")) return "Account";
+  if (path.startsWith("/admin")) return "Admin";
   return "Back";
 }
 

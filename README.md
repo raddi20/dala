@@ -230,7 +230,7 @@ From the local clone, after the variables are saved:
 cd ~/dala && git pull && npx vercel --prod
 ```
 
-Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` stays public unless `HIDE_DEMO_SHOPS=1`. That page does not show the sample phone or WhatsApp number.
+Then sign in at `/login` as `admin@rangach.co.ke` with `ADMIN_CLAIM_SECRET`. Do not use **Create account**. Open `/admin`. Phone and WhatsApp numbers that are not yet E.164 can be reviewed at `/admin/phones`. Apply writes only the numbers that can be read, leaves the rest for a manual fix, and appends one audit entry. `akinyi@dala.local` / `demo1234` should fail. `/b/mama-atieno` stays public unless `HIDE_DEMO_SHOPS=1`. That page does not show the sample phone or WhatsApp number.
 
 If `ADMIN_EMAIL` is unset, the build still succeeds and nobody is promoted. A bad secret fails the build and does not change accounts.
 
