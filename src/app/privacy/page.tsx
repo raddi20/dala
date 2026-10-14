@@ -97,6 +97,12 @@ export default function PrivacyPage() {
           If you use the optional sentence helper, that sentence is sent to the AI provider to fill the form, and we
           do not store the sentence.
         </p>
+        <p>
+          Send-home waitlist. If you ask to hear when a basket can be sent home, we store your name, your email, the
+          country you are in, the home area or town, the baskets you ticked, a WhatsApp number if you typed one, and
+          the time you agreed. We use that to email you when a pilot shop is ready. We do not store your IP address
+          with it. We do not take a card order from this form. Write to us if you want the row deleted.
+        </p>
       </InfoSection>
 
       <InfoSection title="Who processes it">
@@ -117,7 +123,8 @@ export default function PrivacyPage() {
       <InfoSection title="Why we use it, and the lawful basis">
         <p>
           Running your account, your shop, your listings, and a Featured or Verified Pro upgrade you asked for. The
-          basis is the service you signed up for.
+          basis is the service you signed up for. A send-home waitlist entry is kept because you asked us to email you,
+          and you ticked that you agree.
         </p>
         <p>
           Keeping the site safe: scam checks on listing text, reports, blocks, and admin review of shop videos. An AI

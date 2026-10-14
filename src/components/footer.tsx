@@ -32,6 +32,9 @@ export function Footer() {
           <Link href="/pricing" className="hover:text-navy">
             Pricing
           </Link>
+          <Link href="/send-home" className="hover:text-navy">
+            Send home
+          </Link>
           <Link href="/video-policy" className="hover:text-navy">
             Video policy
           </Link>

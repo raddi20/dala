@@ -164,6 +164,8 @@ model Storefront {
   servesDiaspora   Boolean  @default(false)
   // Visits that opened the shop from a printed sticker (?ref=sticker). A count only.
   stickerScans     Int      @default(0)
+  // Admin-chosen send-home pilot. Existing shops stay off. Not a payment flag.
+  sendHomePilot    Boolean  @default(false)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   offerings        Offering[]
@@ -174,6 +176,7 @@ model Storefront {
 
   @@index([published])
   @@index([servesDiaspora])
+  @@index([sendHomePilot])
   @@index([published, createdAt])
 }
 
@@ -539,7 +542,7 @@ model ImageVariant {
   updatedAt DateTime @updatedAt
 }
 
-// Fixed-window counters for login, sign-up, reports, reviews, and password reset.
+// Fixed-window counters for login, sign-up, reports, reviews, password reset, and the send-home waitlist.
 // The key is the action, a hash of the subject, and the window start. No raw IP is stored.
 model RateLimitBucket {
   key         String   @id
@@ -548,4 +551,22 @@ model RateLimitBucket {
   updatedAt   DateTime @updatedAt
 
   @@index([windowStart])
+}
+
+// Diaspora send-home waitlist. No card order and no IP are stored.
+// whatsapp is empty when they did not leave a number. consentAt is when they agreed.
+model DiasporaWaitlist {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  country    String
+  homeArea   String
+  baskets    String   @default("")
+  whatsapp   String   @default("")
+  consentAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([country])
+  @@index([homeArea])
+  @@index([createdAt])
 }
