@@ -23,6 +23,10 @@ export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
 export const CLIENT_ERROR_LIMIT = 30;
 export const CLIENT_ERROR_WINDOW_MS = 60 * 1000;
 
+/** Rangach Business interest forms per hashed IP. */
+export const BUSINESS_LEAD_LIMIT = 5;
+export const BUSINESS_LEAD_WINDOW_MS = 60 * 60 * 1000;
+
 export const LOGIN_LIMIT_MESSAGE = "Too many sign-in attempts. Wait 15 minutes and try again.";
 export const REGISTER_LIMIT_MESSAGE = "Too many new accounts from this connection. Wait an hour and try again.";
 export const REPORT_LIMIT_MESSAGE = "You've sent enough reports for today. Try again tomorrow.";
@@ -202,6 +206,27 @@ export async function takeClientErrorSlot(
     memory: deps && "memory" in deps ? deps.memory : undefined,
     durable: deps && "durable" in deps ? deps.durable : undefined,
   });
+}
+
+/** Shop interest form. The stored key hashes the IP. */
+export async function limitBusinessLead(
+  ip: string,
+  deps?: {
+    now?: number;
+    memory?: Map<string, MemoryBucket> | null;
+    durable?: FixedWindowStore | null;
+  },
+) {
+  const hit = await consumeFixedWindow({
+    action: "business_lead",
+    subject: ip || "unknown",
+    limit: BUSINESS_LEAD_LIMIT,
+    windowMs: BUSINESS_LEAD_WINDOW_MS,
+    now: deps?.now,
+    memory: deps && "memory" in deps ? deps.memory : undefined,
+    durable: deps && "durable" in deps ? deps.durable : undefined,
+  });
+  return hit.limited;
 }
 
 /** Password reset keeps its 5/hour email and 20/hour IP limits, and now also writes the shared store. */

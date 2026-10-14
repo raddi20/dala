@@ -7,8 +7,8 @@ import { chargeFor, FEATURED_DAYS, PRO_DAYS, type PaidProduct } from "@/lib/cons
 
 /** Visible on each page. Change this when the copy changes. */
 export const PUBLIC_PAGES_UPDATED = {
-  label: "11 October 2026",
-  iso: "2026-10-11",
+  label: "14 October 2026",
+  iso: "2026-10-14",
 } as const;
 
 /**

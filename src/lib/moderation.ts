@@ -238,6 +238,8 @@ export const AUDIT_LABELS: Record<string, string> = {
   "phones.normalise": "Normalised phone numbers",
   "listing.contact": "Edited listing contact numbers",
   "user.contact": "Edited account contact numbers",
+  "business_lead.update": "Updated a business sign-up",
+  "business_lead.export": "Exported business sign-ups",
 };
 
 export function auditLabel(action: string): string {

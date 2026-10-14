@@ -97,6 +97,13 @@ export default function PrivacyPage() {
           If you use the optional sentence helper, that sentence is sent to the AI provider to fill the form, and we
           do not store the sentence.
         </p>
+        <p>
+          Rangach Business interest. If you ask about a shop plan, we store the business name, your name, your phone
+          number in international form, the town, the plan you chose, any note you wrote, the time, a short source code
+          if you opened a printed link (for example kisumu-qr), and an agent code if this browser already had a known
+          brochure code. We use that to contact you about the plan. We do not store your IP address with it. Write to
+          us if you want that sign-up deleted.
+        </p>
       </InfoSection>
 
       <InfoSection title="Who processes it">
@@ -117,7 +124,8 @@ export default function PrivacyPage() {
       <InfoSection title="Why we use it, and the lawful basis">
         <p>
           Running your account, your shop, your listings, and a Featured or Verified Pro upgrade you asked for. The
-          basis is the service you signed up for.
+          basis is the service you signed up for. A Rangach Business sign-up is the same kind of request: you asked us
+          to contact you about a plan.
         </p>
         <p>
           Keeping the site safe: scam checks on listing text, reports, blocks, and admin review of shop videos. An AI

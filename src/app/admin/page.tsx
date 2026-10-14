@@ -183,6 +183,10 @@ export default async function AdminPage({
           <Link href="/admin/phones" className="font-semibold text-lake-dark underline">
             Phone numbers
           </Link>
+          <span className="text-ink/40"> · </span>
+          <Link href="/admin/business" className="font-semibold text-lake-dark underline">
+            Business sign-ups
+          </Link>
         </p>
       </div>
 
