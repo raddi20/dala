@@ -33,6 +33,10 @@ const PROCESSORS = [
     name: "ZeptoMail",
     role: "Sends password-reset emails when someone asks, and optional weekly seller-tip emails when that feature is switched on and the seller has asked for them.",
   },
+  {
+    name: "Paystack",
+    role: "Processes a protected order when that feature is switched on. Paystack pays the shop directly. Rangach does not hold the money. Card numbers stay with Paystack.",
+  },
 ] as const;
 
 export default function PrivacyPage() {
@@ -93,6 +97,12 @@ export default function PrivacyPage() {
           on our payment record.
         </p>
         <p>
+          Protected orders. This stays off until it is switched on. When it is on and you place one, we store your
+          name, email, phone number, the items, the delivery choice, the Paystack reference, and a 6-digit collect
+          code. We do not store card numbers. Paystack pays the shop directly and processes the payment. Rangach takes
+          a commission on that payment. Rangach does not hold the money.
+        </p>
+        <p>
           The “Buying for family back home” note is written in your browser and opens in WhatsApp. We do not save it.
           If you use the optional sentence helper, that sentence is sent to the AI provider to fill the form, and we
           do not store the sentence.
@@ -118,6 +128,11 @@ export default function PrivacyPage() {
         <p>
           Running your account, your shop, your listings, and a Featured or Verified Pro upgrade you asked for. The
           basis is the service you signed up for.
+        </p>
+        <p>
+          A protected order, when that feature is switched on and you place one. We keep the order so the shop can
+          deliver it, and so an admin can ask Paystack to refund the buyer if it is not delivered within 72 hours.
+          Paystack pays the shop directly. Rangach does not hold the money. The basis is the order you asked for.
         </p>
         <p>
           Keeping the site safe: scam checks on listing text, reports, blocks, and admin review of shop videos. An AI

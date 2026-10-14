@@ -238,6 +238,9 @@ export const AUDIT_LABELS: Record<string, string> = {
   "phones.normalise": "Normalised phone numbers",
   "listing.contact": "Edited listing contact numbers",
   "user.contact": "Edited account contact numbers",
+  "order.subaccount": "Saved a Paystack subaccount",
+  "order.delivery": "Saved a delivery price",
+  "order.refund": "Refunded a protected order",
 };
 
 export function auditLabel(action: string): string {

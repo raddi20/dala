@@ -13,6 +13,7 @@ import { cityChipLabel, productLabel } from "@/lib/constants";
 import { formatPlanDate, isProActive, proLapsed } from "@/lib/pro";
 import { paymentConfig } from "@/lib/payments/config";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
+import { protectedOrdersOn } from "@/lib/protected-order";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { formatWhen, one } from "@/lib/utils";
@@ -100,6 +101,11 @@ export default async function AccountPage({
         <Link href="/account/insights" className="mt-1 block text-sm font-semibold text-lake-dark underline">
           Your week
         </Link>
+        {protectedOrdersOn() ? (
+          <Link href="/account/orders" className="mt-1 block text-sm font-semibold text-lake-dark underline">
+            Protected orders
+          </Link>
+        ) : null}
         {isProActive(user) || proLapsed(user) ? (
           live ? (
             <Link href="/upgrade?product=verified_pro" className="mt-1 block text-sm font-semibold text-lake-dark underline">

@@ -23,6 +23,10 @@ export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
 export const CLIENT_ERROR_LIMIT = 30;
 export const CLIENT_ERROR_WINDOW_MS = 60 * 1000;
 
+/** Collect-code attempts per order. */
+export const ORDER_COLLECT_LIMIT = 8;
+export const ORDER_COLLECT_WINDOW_MS = 15 * 60 * 1000;
+
 export const LOGIN_LIMIT_MESSAGE = "Too many sign-in attempts. Wait 15 minutes and try again.";
 export const REGISTER_LIMIT_MESSAGE = "Too many new accounts from this connection. Wait an hour and try again.";
 export const REPORT_LIMIT_MESSAGE = "You've sent enough reports for today. Try again tomorrow.";
@@ -202,6 +206,27 @@ export async function takeClientErrorSlot(
     memory: deps && "memory" in deps ? deps.memory : undefined,
     durable: deps && "durable" in deps ? deps.durable : undefined,
   });
+}
+
+/** Collect code attempts. The stored key hashes the order id. */
+export async function limitOrderCollect(
+  orderId: string,
+  deps?: {
+    now?: number;
+    memory?: Map<string, MemoryBucket> | null;
+    durable?: FixedWindowStore | null;
+  },
+) {
+  const hit = await consumeFixedWindow({
+    action: "order_collect",
+    subject: orderId,
+    limit: ORDER_COLLECT_LIMIT,
+    windowMs: ORDER_COLLECT_WINDOW_MS,
+    now: deps?.now,
+    memory: deps && "memory" in deps ? deps.memory : undefined,
+    durable: deps && "durable" in deps ? deps.durable : undefined,
+  });
+  return hit.limited;
 }
 
 /** Password reset keeps its 5/hour email and 20/hour IP limits, and now also writes the shared store. */

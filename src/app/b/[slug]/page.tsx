@@ -15,7 +15,9 @@ import {
   publicSellerContacts,
   publicTextWithoutDemoNumbers,
 } from "@/lib/demo-visibility";
+import { ProtectedOrderPanel } from "@/components/protected-order-panel";
 import { DemoContactNote, PaymentSafetyNote } from "@/components/seller-contact";
+import { protectedOrdersOn } from "@/lib/protected-order";
 import { isProActive, visibleOfferings } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
@@ -450,6 +452,20 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         ) : null}
         <PaymentSafetyNote />
       </section>
+
+      {protectedOrdersOn() ? (
+        <ProtectedOrderPanel
+          slug={shop.slug}
+          subaccount={shop.paystackSubaccountCode}
+          offerings={publicOfferings
+            .filter((offering) => offering.currency === "KES" && offering.priceCents != null && offering.priceCents > 0)
+            .map((offering) => ({
+              id: offering.id,
+              title: offering.title,
+              unitSubunit: offering.priceCents as number,
+            }))}
+        />
+      ) : null}
 
       <section id="about" className="scroll-mt-28 grid gap-2">
         <h2 className="font-serif text-xl text-navy">About</h2>

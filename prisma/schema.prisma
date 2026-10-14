@@ -164,6 +164,9 @@ model Storefront {
   servesDiaspora   Boolean  @default(false)
   // Visits that opened the shop from a printed sticker (?ref=sticker). A count only.
   stickerScans     Int      @default(0)
+  // Paystack subaccount for a protected order. Null until an admin enters it.
+  // The shop is paid on this code. Rangach does not hold the money.
+  paystackSubaccountCode String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   offerings        Offering[]
@@ -171,6 +174,8 @@ model Storefront {
   occasions        ShopOccasion[]
   videos           ShopVideo[]
   videoEvents      ShopVideoEvent[]
+  deliveryOptions  ShopDeliveryOption[]
+  orders           Order[]
 
   @@index([published])
   @@index([servesDiaspora])
@@ -548,4 +553,77 @@ model RateLimitBucket {
   updatedAt   DateTime @updatedAt
 
   @@index([windowStart])
+}
+
+// Shop delivery prices for a protected order. New rows only. Pickup stays free in the app.
+model ShopDeliveryOption {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  kind         String
+  label        String
+  feeKes       Int        @default(0)
+  active       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+
+  @@index([storefrontId])
+}
+
+// A protected order. Paystack pays the shop's subaccount. Rangach does not hold the money.
+model Order {
+  id                  String    @id @default(cuid())
+  storefrontId        String
+  storefront          Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  buyerName           String
+  buyerEmail          String
+  buyerPhone          String
+  status              String    @default("pending_payment")
+  itemsSubunit        Int
+  deliverySubunit     Int       @default(0)
+  deliveryKind        String    @default("pickup")
+  deliveryLabel       String    @default("")
+  commissionPercent   Int       @default(4)
+  paystackReference   String    @unique
+  subaccountCode      String    @default("")
+  collectCode         String    @default("")
+  paidAt              DateTime?
+  deliveredAt         DateTime?
+  flaggedAt           DateTime?
+  refundedAt          DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  items               OrderItem[]
+  events              OrderEvent[]
+
+  @@index([storefrontId, createdAt])
+  @@index([status, paidAt])
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  title    String
+  qty      Int
+  unitSubunit Int
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    String
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+// One row per Paystack webhook event. A repeat delivery does not apply twice.
+model PaystackEvent {
+  id        String   @id
+  reference String   @default("")
+  createdAt DateTime @default(now())
 }
