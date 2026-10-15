@@ -32,6 +32,9 @@ export function Footer() {
           <Link href="/pricing" className="hover:text-navy">
             Pricing
           </Link>
+          <Link href="/send-home" className="hover:text-navy">
+            Send home
+          </Link>
           <Link href="/business" className="hover:text-navy">
             Rangach Business
           </Link>

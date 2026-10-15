@@ -39,6 +39,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/categories" },
     { path: "/occasions" },
     { path: "/pricing" },
+    { path: "/send-home" },
     { path: "/business" },
     { path: "/video-policy" },
     ...PUBLIC_INFO_PAGES.map((page) => ({ path: page.path, updatedAt: publicPagesUpdatedAt() })),
@@ -76,6 +77,7 @@ export function buildSitemap(input: {
             path.path === "/shops" ||
             path.path === "/occasions" ||
             path.path === "/pricing" ||
+            path.path === "/send-home" ||
             path.path === "/business" ||
             path.path === "/welcome" ||
             path.path === "/list"

@@ -23,6 +23,10 @@ export const REVIEW_WINDOW_MS = 24 * 60 * 60 * 1000;
 export const CLIENT_ERROR_LIMIT = 30;
 export const CLIENT_ERROR_WINDOW_MS = 60 * 1000;
 
+/** Send-home waitlist sign-ups per hashed IP. */
+export const DIASPORA_WAITLIST_LIMIT = 5;
+export const DIASPORA_WAITLIST_WINDOW_MS = 60 * 60 * 1000;
+
 /** Rangach Business interest forms per hashed IP. */
 export const BUSINESS_LEAD_LIMIT = 5;
 export const BUSINESS_LEAD_WINDOW_MS = 60 * 60 * 1000;
@@ -206,6 +210,27 @@ export async function takeClientErrorSlot(
     memory: deps && "memory" in deps ? deps.memory : undefined,
     durable: deps && "durable" in deps ? deps.durable : undefined,
   });
+}
+
+/** Send-home waitlist. The stored key hashes the IP. */
+export async function limitDiasporaWaitlist(
+  ip: string,
+  deps?: {
+    now?: number;
+    memory?: Map<string, MemoryBucket> | null;
+    durable?: FixedWindowStore | null;
+  },
+) {
+  const hit = await consumeFixedWindow({
+    action: "diaspora_waitlist",
+    subject: ip || "unknown",
+    limit: DIASPORA_WAITLIST_LIMIT,
+    windowMs: DIASPORA_WAITLIST_WINDOW_MS,
+    now: deps?.now,
+    memory: deps && "memory" in deps ? deps.memory : undefined,
+    durable: deps && "durable" in deps ? deps.durable : undefined,
+  });
+  return hit.limited;
 }
 
 /** Shop interest form. The stored key hashes the IP. */

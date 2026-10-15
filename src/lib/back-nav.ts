@@ -70,6 +70,8 @@ export function backBarTitle(place: BackPlace): string {
     "/welcome": "Welcome",
     "/list": "List your business",
     "/pricing": "Pricing",
+    "/send-home": "Send home",
+    "/admin/send-home": "Send-home waitlist",
     "/business": "Rangach Business",
     "/business/kisumu": "Kisumu sheet",
     "/admin/business": "Business sign-ups",
