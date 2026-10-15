@@ -241,6 +241,8 @@ export const AUDIT_LABELS: Record<string, string> = {
   "shop.send_home_on": "Turned on a send-home pilot",
   "shop.send_home_off": "Turned off a send-home pilot",
   "diaspora_waitlist.export": "Exported the send-home waitlist",
+  "business_lead.update": "Updated a business sign-up",
+  "business_lead.export": "Exported business sign-ups",
 };
 
 export function auditLabel(action: string): string {

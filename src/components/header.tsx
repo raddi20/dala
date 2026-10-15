@@ -41,6 +41,9 @@ export async function Header() {
             <Link href="/send-home" className={deskLink}>
               Send home
             </Link>
+            <Link href="/business" className={deskLink}>
+              For shops
+            </Link>
             {paymentsOpen ? (
               <Link href="/pricing" className={deskLink}>
                 Pricing

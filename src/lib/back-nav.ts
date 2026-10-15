@@ -43,6 +43,7 @@ export function backFallback(place: BackPlace): string {
 
   const occasion = path.match(/^\/occasions\/([^/]+)$/);
   if (occasion) return "/occasions";
+  if (path === "/business/kisumu") return "/business";
   if (path.startsWith("/account/")) return "/account";
   if (path.startsWith("/admin/")) return "/admin";
   return "/";
@@ -71,6 +72,9 @@ export function backBarTitle(place: BackPlace): string {
     "/pricing": "Pricing",
     "/send-home": "Send home",
     "/admin/send-home": "Send-home waitlist",
+    "/business": "Rangach Business",
+    "/business/kisumu": "Kisumu sheet",
+    "/admin/business": "Business sign-ups",
     "/login": "Sign in",
     "/register": "Create account",
     "/forgot-password": "Forgot password",

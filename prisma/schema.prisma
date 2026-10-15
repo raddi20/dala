@@ -542,7 +542,7 @@ model ImageVariant {
   updatedAt DateTime @updatedAt
 }
 
-// Fixed-window counters for login, sign-up, reports, reviews, password reset, and the send-home waitlist.
+// Fixed-window counters for login, sign-up, reports, reviews, password reset, the send-home waitlist, and shop interest.
 // The key is the action, a hash of the subject, and the window start. No raw IP is stored.
 model RateLimitBucket {
   key         String   @id
@@ -568,5 +568,26 @@ model DiasporaWaitlist {
 
   @@index([country])
   @@index([homeArea])
+  @@index([createdAt])
+}
+
+// A shop asking about Rangach Business. Billing is manual. No payment and no IP are stored.
+// agentCode is null when the visit had no known brochure code.
+model BusinessLead {
+  id           String   @id @default(cuid())
+  businessName String
+  contactName  String
+  phone        String
+  town         String
+  tier         String
+  notes        String   @default("")
+  status       String   @default("new")
+  adminNotes   String   @default("")
+  refCode      String   @default("")
+  agentCode    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status, createdAt])
   @@index([createdAt])
 }

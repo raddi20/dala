@@ -187,6 +187,10 @@ export default async function AdminPage({
           <Link href="/admin/send-home" className="font-semibold text-lake-dark underline">
             Send-home waitlist
           </Link>
+          <span className="text-ink/40"> · </span>
+          <Link href="/admin/business" className="font-semibold text-lake-dark underline">
+            Business sign-ups
+          </Link>
         </p>
       </div>
 
