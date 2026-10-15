@@ -186,5 +186,6 @@ test("counts and CSV group the waitlist without a payment column", () => {
   assert.match(form, /href="\/privacy"/);
   assert.match(schema, /sendHomePilot\s+Boolean\s+@default\(false\)/);
   assert.match(schema, /model DiasporaWaitlist/);
-  assert.equal(schema.includes("model Order "), false);
+  assert.match(schema, /model Order \{/);
+  assert.equal(/escrow/i.test(schema), false);
 });

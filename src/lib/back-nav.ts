@@ -81,6 +81,8 @@ export function backBarTitle(place: BackPlace): string {
     "/reset-password": "Choose a new password",
     "/admin": "Admin",
     "/admin/phones": "Phone numbers",
+    "/admin/orders": "Protected orders",
+    "/account/orders": "Orders",
   };
   if (known[path]) return known[path];
   if (/^\/b\/[^/]+\/sticker$/.test(path)) return "Print sticker";
@@ -92,6 +94,7 @@ export function backBarTitle(place: BackPlace): string {
   if (/^\/people\/[^/]+$/.test(path)) return "Profile";
   if (/^\/occasions\/[^/]+$/.test(path)) return "Occasion";
   if (path.startsWith("/account/")) return "Account";
+  if (/^\/orders\/[^/]+$/.test(path)) return "Order";
   if (/^\/admin\/contact\/[^/]+\/[^/]+$/.test(path)) return "Edit contact";
   if (path.startsWith("/admin")) return "Admin";
   return "Back";

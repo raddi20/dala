@@ -25,6 +25,7 @@ import { countAgentSignups, knownAgentCodes, resolveAgentRange } from "@/lib/age
 import { auditLabel, MODERATION_NOTICES } from "@/lib/moderation";
 import { PRO_DAYS } from "@/lib/constants";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
+import { protectedOrdersOn } from "@/lib/protected-order";
 import { prisma } from "@/lib/prisma";
 import { formatPlanDate, isProActive } from "@/lib/pro";
 import {
@@ -191,6 +192,14 @@ export default async function AdminPage({
           <Link href="/admin/business" className="font-semibold text-lake-dark underline">
             Business sign-ups
           </Link>
+          {protectedOrdersOn() ? (
+            <>
+              <span className="text-ink/40"> · </span>
+              <Link href="/admin/orders" className="font-semibold text-lake-dark underline">
+                Protected orders
+              </Link>
+            </>
+          ) : null}
         </p>
       </div>
 

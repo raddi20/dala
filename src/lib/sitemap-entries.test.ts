@@ -65,6 +65,7 @@ test("static paths include pricing and every category, and private prefixes stay
     "/register",
     "/forgot-password",
     "/reset-password",
+    "/orders",
   ]);
 });
 
@@ -83,6 +84,7 @@ test("robots allows the public site, blocks private prefixes, and points at the 
     "/register",
     "/forgot-password",
     "/reset-password",
+    "/orders",
   ]);
 });
 

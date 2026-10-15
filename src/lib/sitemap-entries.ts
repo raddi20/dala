@@ -12,6 +12,7 @@ export const PRIVATE_PREFIXES = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/orders",
 ] as const;
 
 export function isPrivatePath(path: string) {
