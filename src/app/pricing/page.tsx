@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { BusinessTierSection } from "@/components/business-tiers";
 import { UpgradeAction } from "@/components/upgrade-action";
 import { btnPrimary, btnSecondary, cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { CHARGE, FEATURED_DAYS, FREE_OFFERING_CAP, PRO_DAYS } from "@/lib/constants";
-import { kesPerUsd, pricingPlans } from "@/lib/pricing-display";
+import { kesPerGbp, kesPerUsd, pricingPlans } from "@/lib/pricing-display";
 import { readVisitorCountry } from "@/lib/visitor-country";
 import { cachedUsdRates, needsLiveRates, visitorPrice } from "@/lib/visitor-currency";
 import { paymentsLive } from "@/lib/payments/live";
@@ -121,6 +122,14 @@ export default async function PricingPage() {
         Already signed in?{" "}
         <UpgradeAction live={live} href="/upgrade" label="Open Promote" className={`${btnSecondary} ml-1`} />
       </p>
+
+      <BusinessTierSection
+        country={country}
+        rates={rates}
+        kesPerUsd={shillingsPerDollar}
+        kesPerGbp={kesPerGbp()}
+        live={live}
+      />
     </div>
   );
 }
