@@ -56,10 +56,10 @@ export default async function SendHomePage() {
           Send a basket home. A grocery basket, fresh tilapia, or catering for an ayie.
         </p>
         <p className="mt-2 text-sm leading-relaxed text-ink/80" lang="sw">
-          Tuma chakula nyumbani. Hii ni orodha ya kusubiri. Hatuchukui oda ya kadi bado.
+          Tuma chakula nyumbani. Hatuchukui oda ya kadi bado.
         </p>
         <p className="mt-2 text-sm text-ink/70" lang="luo">
-          Chiemo · dala
+          Oor chiemo dala
         </p>
         <p className="mt-3 text-sm leading-relaxed text-ink/70">{SEND_HOME_WAITLIST_NOTE}</p>
       </header>

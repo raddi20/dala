@@ -183,6 +183,10 @@ test("counts and CSV group the waitlist without a payment column", () => {
     assert.equal(/checkout/i.test(source), false);
   }
   assert.match(page, /Kenya, East Africa and the Diaspora|AUDIENCE_LINE/);
+  assert.match(page, /Oor chiemo dala/);
+  assert.equal(page.includes("Chiemo · dala"), false);
+  assert.equal(page.includes("Hii ni orodha ya kusubiri."), false);
+  assert.match(page, /Tuma chakula nyumbani\. Hatuchukui oda ya kadi bado\./);
   assert.match(form, /href="\/privacy"/);
   assert.match(schema, /sendHomePilot\s+Boolean\s+@default\(false\)/);
   assert.match(schema, /model DiasporaWaitlist/);
