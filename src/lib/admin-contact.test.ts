@@ -27,13 +27,16 @@ type AuditRow = { action: string; reason: string; actorId: string; targetType: s
 type MemoryDb = {
   user: {
     findUnique: (args: { where: { id: string } }) => Promise<(Stored & { phone: string; whatsapp: string }) | null>;
-    update: (args: { where: { id: string }; data: { phone: string; whatsapp: string } }) => Promise<void>;
+    update: (args: { where: { id: string }; data: { phone: string; whatsapp: string; city?: string } }) => Promise<void>;
   };
   listing: {
     findUnique: (args: {
       where: { id: string };
     }) => Promise<{ id: string; city: string; contactPhone: string; contactWhatsapp: string } | null>;
-    update: (args: { where: { id: string }; data: { contactPhone: string; contactWhatsapp: string } }) => Promise<void>;
+    update: (args: {
+      where: { id: string };
+      data: { contactPhone: string; contactWhatsapp: string; city?: string; region?: string };
+    }) => Promise<void>;
   };
   adminAuditLog: { create: (args: { data: AuditRow }) => Promise<void> };
   $transaction: <T>(fn: (tx: MemoryDb) => Promise<T>) => Promise<T>;
@@ -51,6 +54,7 @@ function memory(users: Stored[], listings: Stored[]) {
         if (!row) throw new Error(`missing user ${where.id}`);
         row.phone = data.phone;
         row.whatsapp = data.whatsapp;
+        if (typeof data.city === "string") row.city = data.city;
       },
     },
     listing: {
@@ -64,6 +68,7 @@ function memory(users: Stored[], listings: Stored[]) {
         if (!row) throw new Error(`missing listing ${where.id}`);
         row.phone = data.contactPhone;
         row.whatsapp = data.contactWhatsapp;
+        if (typeof data.city === "string") row.city = data.city;
       },
     },
     adminAuditLog: {
@@ -279,4 +284,27 @@ test("the edit action and pages require an admin, and public pages do not render
     assert.equal(source.includes("AdminContactDetails"), false, file);
     assert.equal(source.includes("admin-contact"), false, file);
   }
+});
+
+test("an admin town change writes the city and leaves a blank town alone", async () => {
+  const { db, audits, listingRows } = memory([], [{ id: SAMURAI, city: "Nairobi", phone: "0712345678", whatsapp: "" }]);
+  const saved = await updateListingContact(db, actor, SAMURAI, {
+    phone: "0712345678",
+    whatsapp: "",
+    reason: "Shop is in Kisumu",
+    city: "kisumu",
+  });
+  assert.equal(saved.ok, true);
+  assert.equal(listingRows.get(SAMURAI)?.city, "Kisumu");
+  assert.match(audits[0]?.reason ?? "", /city: Nairobi → Kisumu/);
+
+  const kept = await updateListingContact(db, actor, SAMURAI, {
+    phone: "0712345678",
+    whatsapp: "",
+    reason: "Numbers only",
+    city: "",
+  });
+  assert.equal(kept.ok, true);
+  assert.equal(listingRows.get(SAMURAI)?.city, "Kisumu");
+  assert.equal((audits[1]?.reason ?? "").includes("city:"), false);
 });

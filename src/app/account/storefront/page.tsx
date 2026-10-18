@@ -289,6 +289,7 @@ export default async function ManageStorefrontPage({
         <div className="mt-4">
           <StorefrontSettingsForm
             slug={shop.slug}
+            city={user.city}
             bannerUrl={shop.bannerUrl}
             bio={user.bio}
             published={shop.published}

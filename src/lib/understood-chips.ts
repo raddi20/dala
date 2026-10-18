@@ -1,4 +1,4 @@
-import { regionLabel, typeLabel, cityChipLabel } from "@/lib/constants";
+import { regionLabel, typeLabel } from "@/lib/constants";
 import { occasionDefinition } from "@/lib/occasions";
 
 export type UnderstoodChip = {
@@ -57,7 +57,7 @@ export function toggleFilterHref(path: string, base: Record<string, string>, key
 }
 
 function chipLabel(key: string, value: string): string {
-  if (key === "city") return cityChipLabel(value) || value;
+  if (key === "city") return value;
   if (key === "region") return regionLabel(value);
   if (key === "type") return value === "business" ? "Shops" : typeLabel(value);
   if (key === "verified") return "Checked";

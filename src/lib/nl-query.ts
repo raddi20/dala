@@ -1,5 +1,5 @@
 import { CATEGORIES } from "@/lib/categories";
-import { typeLabel, regionLabel } from "@/lib/constants";
+import { canonicalCity, cityAliasTerms, regionForCity, regionLabel, typeLabel } from "@/lib/constants";
 
 export type NlParse = {
   city: string;
@@ -58,16 +58,15 @@ const STOP = new Set([
   "tonight", "yesterday", "soon", "weekend", "year", "just", "really",
 ]);
 
-/** Catalogue cities are only Nairobi and London. These towns still mean homeland, not a text search. */
-const HOMELAND_TOWNS = ["homa bay", "kendu bay", "kisumu", "siaya", "migori", "bondo", "kisii"];
-
 const OCCASION_TERMS = ["homecomings", "homecoming", "weddings", "wedding", "funerals", "funeral", "christmas", "dowry", "ayie"];
+
+const CITY_TERMS = cityAliasTerms();
 
 const TIME_PHRASES = ["next month", "next week", "next year", "this month", "this week", "this weekend", "this year"];
 
 export function isHomelandTown(value: string): boolean {
-  const text = value.trim().toLowerCase();
-  return HOMELAND_TOWNS.some((term) => term === text);
+  const city = canonicalCity(value);
+  return Boolean(city) && regionForCity(city) === "homeland";
 }
 
 function escapeRegExp(value: string) {
@@ -126,6 +125,20 @@ function bestCategoryKey(text: string): { category: string; key: string } {
   return { category, key: categoryKey };
 }
 
+/** A named town wins over a generic place such as "kenya" or "homeland", even when the generic word comes first. */
+function earliestTown(text: string) {
+  let best: { index: number; length: number; term: string; city: string; region: string } | null = null;
+  for (const alias of CITY_TERMS) {
+    const match = termPattern(alias.term, "i").exec(text);
+    if (!match) continue;
+    const length = alias.term.length;
+    if (best === null || match.index < best.index || (match.index === best.index && length > best.length)) {
+      best = { index: match.index, length, term: alias.term, city: alias.city, region: alias.region };
+    }
+  }
+  return best;
+}
+
 function earliestPlace(text: string) {
   let best: { index: number; term: string; city: string; region: string } | null = null;
   for (const place of PLACES) {
@@ -161,15 +174,6 @@ function stripTerms(text: string, terms: string[]) {
   return next;
 }
 
-function earliestTerm(text: string, terms: string[]) {
-  let best: { index: number; term: string } | null = null;
-  for (const term of terms) {
-    const match = termPattern(term, "i").exec(text);
-    if (match && (best === null || match.index < best.index)) best = { index: match.index, term };
-  }
-  return best;
-}
-
 function hintTokens(text: string, matched: string[]): string[] {
   const leftover = stripTerms(text, matched);
   const seen = new Set<string>();
@@ -186,17 +190,12 @@ function hintTokens(text: string, matched: string[]): string[] {
 export function parseNlQuery(input: string): NlParse {
   const text = input.trim().toLowerCase();
   const matched: string[] = [];
-  const place = earliestPlace(text);
-  const city = place?.city ?? "";
-  let region = place?.region ?? "";
-  if (place) matched.push(place.term);
-  if (!region) {
-    const town = earliestTerm(text, HOMELAND_TOWNS);
-    if (town) {
-      region = "homeland";
-      matched.push(town.term);
-    }
-  }
+  const town = earliestTown(text);
+  const place = town ? null : earliestPlace(text);
+  const city = town?.city ?? place?.city ?? "";
+  const region = town?.region ?? place?.region ?? "";
+  if (town) matched.push(town.term);
+  else if (place) matched.push(place.term);
 
   const categoryHit = bestCategoryKey(text);
   const category = categoryHit.category;

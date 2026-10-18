@@ -6,7 +6,9 @@ test("old city links map onto homeland and diaspora chips", () => {
   assert.equal(browseRegionFromCity("Nairobi"), "homeland");
   assert.equal(browseRegionFromCity("London"), "diaspora");
   assert.equal(browseRegionFromCity(""), "");
-  assert.equal(browseRegionFromCity("Kisumu"), "");
+  assert.equal(browseRegionFromCity("Kisumu"), "homeland");
+  assert.equal(browseRegionFromCity("kisumu"), "homeland");
+  assert.equal(browseRegionFromCity("Homa Bay"), "homeland");
 });
 
 test("an explicit region wins over a city link", () => {

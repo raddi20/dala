@@ -18,6 +18,7 @@ import {
 } from "@/lib/rate-limit";
 import { createRegisteredUser } from "@/lib/register-user";
 import { safePath } from "@/lib/utils";
+import { registerCity } from "@/lib/constants";
 import { field, registerSchema, type ActionState } from "@/lib/validators";
 
 export async function login(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -45,7 +46,7 @@ export async function register(_prev: ActionState, formData: FormData): Promise<
     email: field(formData, "email"),
     password: field(formData, "password"),
     kind: field(formData, "kind"),
-    city: field(formData, "city"),
+    city: registerCity(field(formData, "city"), field(formData, "town")),
     terms: field(formData, "terms"),
   });
   if (!parsed.success) {

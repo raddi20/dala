@@ -5,7 +5,7 @@ import { variantMap } from "@/lib/image-variant-store";
 import { mergeFreshItems } from "@/lib/home-fresh";
 import { firstPhoto } from "@/lib/item-card";
 import { paymentsLive } from "@/lib/payments/live";
-import { regionForCity } from "@/lib/constants";
+import { canonicalCity, regionForCity } from "@/lib/constants";
 import { rankByHints } from "@/lib/nl-query";
 import { prisma } from "@/lib/prisma";
 import { shopBadgeWhere, storefrontBadgeWhere } from "@/lib/shop-badges";
@@ -170,11 +170,50 @@ type Indexed = {
   address: string;
 };
 
+/** Town filter matches the stored city or a mention in the address. Region-only adds no city clause. */
+export function listingTownWhere(city: string, env: Env = process.env): Prisma.ListingWhereInput | undefined {
+  const name = canonicalCity(city);
+  if (!name) return undefined;
+  const contains = containsFilter(name, env);
+  return { OR: [{ city: contains }, { address: contains }] };
+}
+
+/** Shop town filter matches the account city or a mention in the bio. */
+export function shopTownWhere(city: string, env: Env = process.env): Prisma.UserWhereInput | undefined {
+  const name = canonicalCity(city);
+  if (!name) return undefined;
+  const contains = containsFilter(name, env);
+  return { OR: [{ city: contains }, { bio: contains }] };
+}
+
+export function cataloguePlaceWhere(
+  filters: { city?: string; region?: string },
+  env: Env = process.env,
+): Prisma.ListingWhereInput {
+  const extra: Prisma.ListingWhereInput = {};
+  const town = filters.city ? listingTownWhere(filters.city, env) : undefined;
+  if (filters.region === "homeland" || filters.region === "diaspora") extra.region = filters.region;
+  if (town) extra.AND = [town];
+  return extra;
+}
+
+export function shopPlaceClauses(
+  filters: { city?: string; region?: string },
+  env: Env = process.env,
+): Prisma.UserWhereInput[] {
+  const and: Prisma.UserWhereInput[] = [];
+  const town = filters.city ? shopTownWhere(filters.city, env) : undefined;
+  if (town) and.push(town);
+  if (filters.region === "diaspora") and.push({ city: "London" });
+  if (filters.region === "homeland") and.push({ city: { not: "London" } });
+  return and;
+}
+
 function listingWhere(filters: SearchFilters, blocked: string[], env: Env): Prisma.ListingWhereInput {
   const extra: Prisma.ListingWhereInput = {};
   if (filters.ids) extra.id = { in: filters.ids };
-  if (filters.city) extra.city = filters.city;
-  if (filters.region) extra.region = filters.region;
+  const place = cataloguePlaceWhere(filters, env);
+  if (place.region) extra.region = place.region;
   if (filters.category) extra.category = filters.category;
   if (filters.type === "classifieds") extra.type = { not: "business" };
   else if (filters.type) extra.type = filters.type;
@@ -182,6 +221,10 @@ function listingWhere(filters: SearchFilters, blocked: string[], env: Env): Pris
   if (filters.occasion) extra.occasions = { some: { occasion: { slug: filters.occasion } } };
 
   const and: Prisma.ListingWhereInput[] = [];
+  if (place.AND) {
+    const bits = Array.isArray(place.AND) ? place.AND : [place.AND];
+    and.push(...bits);
+  }
   const badgeWhere = shopBadgeWhere(filters.badge);
   const diasporaWhere = diasporaOrdersWhere(filters.diaspora);
   if (badgeWhere) and.push(badgeWhere);
@@ -208,11 +251,8 @@ function listingWhere(filters: SearchFilters, blocked: string[], env: Env): Pris
   return publicListingWhere(extra, env);
 }
 
-function userWhere(filters: SearchFilters, blocked: string[]): Prisma.UserWhereInput | undefined {
-  const and: Prisma.UserWhereInput[] = [];
-  if (filters.city) and.push({ city: filters.city });
-  if (filters.region === "diaspora") and.push({ city: "London" });
-  if (filters.region === "homeland") and.push({ city: { not: "London" } });
+function userWhere(filters: SearchFilters, blocked: string[], env: Env): Prisma.UserWhereInput | undefined {
+  const and: Prisma.UserWhereInput[] = shopPlaceClauses(filters, env);
   if (blocked.length > 0) and.push({ id: { notIn: blocked } });
   if (and.length === 0) return undefined;
   if (and.length === 1) return and[0];
@@ -244,7 +284,7 @@ function storefrontWhere(
       ],
     });
   }
-  const user = userWhere(filters, blocked);
+  const user = userWhere(filters, blocked, env);
   if (user) and.push({ user });
   if (withText) {
     const terms = matchTerms(filters);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CATEGORIES,
   CITIES,
+  canonicalCity,
   isCategory,
   isCityName,
   isOfferingCurrency,
@@ -160,7 +161,10 @@ export function parseStorefrontForm(formData: FormData) {
   const servesDiaspora = formData.getAll("servesDiaspora").map(String).includes("1");
   const occasionsPresent = formData.getAll("occasionsPresent").map(String).includes("1");
   const occasionSlugs = formData.getAll("occasion").flatMap((value) => (typeof value === "string" ? [value] : []));
-  return { ok: true as const, data: { ...parsed.data, published, servesDiaspora, occasionsPresent, occasionSlugs } };
+  const rawCity = field(formData, "city").trim();
+  const city = rawCity ? canonicalCity(rawCity) : "";
+  if (rawCity && !city) return { ok: false as const, error: "Choose a town." };
+  return { ok: true as const, data: { ...parsed.data, published, servesDiaspora, occasionsPresent, occasionSlugs, city } };
 }
 
 export function parsePriceCents(raw: string) {

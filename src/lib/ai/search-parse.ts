@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { isCategory } from "@/lib/categories";
-import { isCityName, isListingType, regionLabel, typeLabel } from "@/lib/constants";
+import { canonicalCity, isListingType, regionForCity, regionLabel, typeLabel } from "@/lib/constants";
 import { isHomelandTown, parseNlQuery, type NlParse } from "@/lib/nl-query";
 import { occasionDefinition } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
@@ -108,9 +108,11 @@ function hintList(value: string): string[] {
 
 export function applySearchParse(rules: NlParse, ai: SearchParse): SearchInterpretation {
   if (ai.confidence < MIN_CONFIDENCE) return fromRules(rules, "fallback");
-  const city = ai.city && isCityName(ai.city) ? ai.city : rules.city;
+  const named = ai.city ? canonicalCity(ai.city) : "";
+  const city = named || rules.city;
   let region = ai.region === "homeland" || ai.region === "diaspora" ? ai.region : rules.region;
-  if (ai.city && !isCityName(ai.city) && isHomelandTown(ai.city) && region !== "diaspora") region = "homeland";
+  if (named) region = regionForCity(named);
+  else if (ai.city && isHomelandTown(ai.city) && region !== "diaspora") region = "homeland";
   const category = ai.category && isCategory(ai.category) ? ai.category : rules.category;
   const type = ai.type && isListingType(ai.type) ? ai.type : rules.type;
   const occasion = ai.occasion && occasionDefinition(ai.occasion) ? ai.occasion : "";

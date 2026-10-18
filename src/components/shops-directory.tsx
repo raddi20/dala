@@ -62,7 +62,7 @@ export function ShopsDirectory({
   });
   const activeRegion = activeBrowseRegion(city, region);
   const closeHref = browseHref("/shops", filters);
-  const sheetActive = Boolean(category || diaspora || occasion);
+  const sheetActive = Boolean(city || category || diaspora || occasion);
 
   return (
     <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
@@ -78,7 +78,7 @@ export function ShopsDirectory({
             <ShopFilterForm
               action="/shops"
               clearHref="/shops"
-              hidden={{ nl, q: query, city, occasion }}
+              hidden={{ nl, q: query, occasion }}
               region={region}
               city={city}
               category={category}

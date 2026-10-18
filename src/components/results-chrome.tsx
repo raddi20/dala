@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 import { CategoryOptions } from "@/components/category-options";
 import { btnPrimary, btnSecondary, chipActiveClass, chipClass, fieldClass } from "@/components/ui";
 import { HOME_ASK_PLACEHOLDER } from "@/lib/home-prompts";
-import { LISTING_TYPES } from "@/lib/constants";
+import { LISTING_TYPES, canonicalCity } from "@/lib/constants";
+import { TownOptions } from "@/components/town-options";
 import { DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
 import { familiesAlsoNeed } from "@/lib/occasion-needs";
 import { SHOP_BADGE_FILTERS } from "@/lib/shop-badges";
@@ -132,6 +133,12 @@ export function ListingFilterForm({
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
+        Town
+        <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
+          <TownOptions includeDiaspora blank="Any town" />
+        </select>
+      </label>
+      <label className="block text-sm font-medium text-ink/80">
         Category
         <select name="category" defaultValue={category} className={fieldClass}>
           <CategoryOptions blank="Any" />
@@ -206,6 +213,12 @@ export function ShopFilterForm({
           <option value="">Any</option>
           <option value="homeland">Homeland</option>
           <option value="diaspora">Diaspora</option>
+        </select>
+      </label>
+      <label className="block text-sm font-medium text-ink/80">
+        Town
+        <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
+          <TownOptions includeDiaspora blank="Any town" />
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ShopsDirectory } from "@/components/shops-directory";
 import { visitorActorHash } from "@/lib/ai/actor";
 import { interpretSearch } from "@/lib/ai/search-parse";
+import { chosenBrowseCity } from "@/lib/browse-filters";
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
@@ -38,7 +39,7 @@ export default async function ShopsPage({
   const parsed = nlRaw ? await interpretSearch(nlRaw, { actorHash }) : null;
   const filters = {
     q: explicitQ,
-    city: one(sp.city) || parsed?.city || "",
+    city: chosenBrowseCity(one(sp.city), parsed?.city || ""),
     region: one(sp.region) || parsed?.region || "",
     category: one(sp.category) || parsed?.category || "",
     verified: one(sp.verified) === "1" || parsed?.verified === true,

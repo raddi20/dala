@@ -76,6 +76,7 @@ export default async function AdminContactPage({ params, searchParams }: Props) 
           id={listing.id}
           phone={listing.contactPhone}
           whatsapp={listing.contactWhatsapp}
+          city={listing.city}
           phoneLabel="Listing phone"
           whatsappLabel="Listing WhatsApp"
         />
@@ -116,6 +117,7 @@ export default async function AdminContactPage({ params, searchParams }: Props) 
         id={user.id}
         phone={user.phone}
         whatsapp={user.whatsapp}
+        city={user.city}
         phoneLabel="Account phone"
         whatsappLabel="Account WhatsApp"
       />
