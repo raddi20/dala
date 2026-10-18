@@ -1,16 +1,23 @@
 /**
- * Browse place filters. Catalogue cities still exist as stored values and as
- * old ?city= links. The chips and the More filters menu offer Homeland or
- * Diaspora only, so a city link lights the matching region chip.
+ * Browse place filters. A town link lights the matching Homeland or Diaspora chip.
+ * An unknown or empty city stays unset so it does not pretend to be a region.
  */
+
+import { canonicalCity, regionForCity } from "@/lib/constants";
 
 export type BrowseRegion = "homeland" | "diaspora";
 
 /** Map a stored city onto a region chip. Unknown or empty cities stay unset. */
 export function browseRegionFromCity(city: string): BrowseRegion | "" {
-  if (city === "Nairobi") return "homeland";
-  if (city === "London") return "diaspora";
-  return "";
+  const name = canonicalCity(city);
+  if (!name) return "";
+  return regionForCity(name);
+}
+
+/** ?city=kisumu becomes Kisumu. An empty param keeps the sentence parser's town. A bad param clears it. */
+export function chosenBrowseCity(param: string, parsed = ""): string {
+  if (param.trim()) return canonicalCity(param);
+  return canonicalCity(parsed);
 }
 
 /** An explicit ?region= wins. An old ?city= link counts only when region is absent. */

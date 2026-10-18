@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { saveAdminContact } from "@/lib/actions/admin-contact";
 import type { ContactFormState, ContactKind } from "@/lib/admin-contact";
+import { TownOptions } from "@/components/town-options";
+import { canonicalCity } from "@/lib/constants";
 import { PHONE_HINT } from "@/lib/phone";
 import { btnPrimary, FieldError, fieldClass } from "@/components/ui";
 
@@ -11,6 +13,7 @@ export function AdminContactForm({
   id,
   phone,
   whatsapp,
+  city,
   phoneLabel,
   whatsappLabel,
 }: {
@@ -18,6 +21,7 @@ export function AdminContactForm({
   id: string;
   phone: string;
   whatsapp: string;
+  city: string;
   phoneLabel: string;
   whatsappLabel: string;
 }) {
@@ -55,6 +59,19 @@ export function AdminContactForm({
         />
         <span className="mt-1 block text-xs text-ink/55">Leave blank to clear.</span>
         <FieldError>{state?.field === "whatsapp" ? state.error : ""}</FieldError>
+      </label>
+      <label className="block text-sm" htmlFor="admin-contact-city">
+        Town
+        <select
+          id="admin-contact-city"
+          name="city"
+          defaultValue={canonicalCity(city)}
+          aria-invalid={state?.field === "city" || undefined}
+          className={fieldClass}
+        >
+          <TownOptions blank="Leave town as it is" />
+        </select>
+        <FieldError>{state?.field === "city" ? state.error : ""}</FieldError>
       </label>
       <label className="block text-sm" htmlFor="admin-contact-reason">
         Reason

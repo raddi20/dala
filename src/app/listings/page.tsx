@@ -7,7 +7,7 @@ import { FilterSheet, ListingFilterForm, ResultsSearchBar, UnderstoodRow } from 
 import { EmptyState, btnSecondary, chipActiveClass, chipClass } from "@/components/ui";
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
 import { categoryHref, isCategory } from "@/lib/categories";
-import { activeBrowseRegion, browseRegionChipHref } from "@/lib/browse-filters";
+import { activeBrowseRegion, browseRegionChipHref, chosenBrowseCity } from "@/lib/browse-filters";
 import { cityChipLabel, cityInPhrase, isCityName } from "@/lib/constants";
 import { wantsDiasporaOrders } from "@/lib/diaspora";
 import { publicOrigin } from "@/lib/payments/origin";
@@ -27,7 +27,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const sp = await searchParams;
   const category = one(sp.category);
-  const city = one(sp.city);
+  const city = chosenBrowseCity(one(sp.city));
   const origin = await publicOrigin();
   const name = appName();
   if (isCategory(category)) {
@@ -71,7 +71,7 @@ export default async function ListingsPage({
   const explicitQ = one(sp.q).trim();
   const filters = {
     q: explicitQ,
-    city: one(sp.city) || parsed?.city || "",
+    city: chosenBrowseCity(one(sp.city), parsed?.city || ""),
     region: one(sp.region) || parsed?.region || "",
     category: one(sp.category) || parsed?.category || "",
     type: one(sp.type) || parsed?.type || "",
@@ -102,7 +102,9 @@ export default async function ListingsPage({
   }
   const origin = await publicOrigin();
   const closeHref = browseHref("/listings", chipBase);
-  const sheetActive = Boolean(filters.category || filters.badge || filters.diaspora || filters.occasion || (filters.type && filters.type !== "business"));
+  const sheetActive = Boolean(
+    filters.city || filters.category || filters.badge || filters.diaspora || filters.occasion || (filters.type && filters.type !== "business"),
+  );
   const chips = parsed ? understoodChips("/listings", chipBase, hints) : [];
 
   return (
@@ -119,7 +121,7 @@ export default async function ListingsPage({
             <ListingFilterForm
               action="/listings"
               clearHref="/listings"
-              hidden={{ nl: nlRaw, q: filters.q, city: filters.city, occasion: filters.occasion }}
+              hidden={{ nl: nlRaw, q: filters.q, occasion: filters.occasion }}
               region={filters.region}
               city={filters.city}
               category={filters.category}

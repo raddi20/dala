@@ -3,7 +3,8 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { updateStorefront } from "@/lib/actions/storefront";
-import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP } from "@/lib/constants";
+import { TownOptions } from "@/components/town-options";
+import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, canonicalCity } from "@/lib/constants";
 import { PAID_UPGRADES_COMING_SOON } from "@/lib/payments/live";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { PhotoField } from "@/components/photo-field";
@@ -14,6 +15,7 @@ const initial: ActionState = { error: "" };
 
 export function StorefrontSettingsForm({
   slug,
+  city,
   bannerUrl,
   bio,
   published,
@@ -25,6 +27,7 @@ export function StorefrontSettingsForm({
   paymentsOpen,
 }: {
   slug: string;
+  city: string;
   bannerUrl: string;
   bio: string;
   published: boolean;
@@ -50,6 +53,12 @@ export function StorefrontSettingsForm({
       <p className="text-sm text-ink/70">
         The name on the shop is your profile name. Change that on Account. The address stays put until you edit it here.
       </p>
+      <label className="block text-sm">
+        Town
+        <select name="city" defaultValue={canonicalCity(city) || "Nairobi"} className={fieldClass}>
+          <TownOptions />
+        </select>
+      </label>
       <label className="block text-sm">
         About
         {!bio ? <span className="mt-1 block text-ink/70">Your profile has no about text yet. A sentence is enough.</span> : null}

@@ -2,7 +2,8 @@
 
 import { useActionState, useState } from "react";
 import { createListing, updateListing } from "@/lib/actions/listings";
-import { CITIES, LISTING_TYPES, cityChoiceLabel } from "@/lib/constants";
+import { LISTING_TYPES, canonicalCity } from "@/lib/constants";
+import { TownOptions } from "@/components/town-options";
 import { draftListing } from "@/lib/draft";
 import { btnPrimary, btnSecondary, ErrorNote, FieldError, fieldClass } from "@/components/ui";
 import { PHONE_HINT } from "@/lib/phone";
@@ -37,7 +38,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [category, setCategory] = useState(initial.category);
-  const [city, setCity] = useState(initial.city);
+  const [city, setCity] = useState<string>(canonicalCity(initial.city) || "Nairobi");
   const [type, setType] = useState(initial.type);
   const [priceLabel, setPriceLabel] = useState(initial.priceLabel);
   const [aiReview, setAiReview] = useState("");
@@ -162,7 +163,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
             </select>
           </label>
           <label className="block text-sm">
-            City
+            Town
             <select
               name="city"
               value={city}
@@ -172,11 +173,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
               }}
               className={fieldClass}
             >
-              {CITIES.map((item) => (
-                <option key={item.name} value={item.name}>
-                  {cityChoiceLabel(item.name)}
-                </option>
-              ))}
+              <TownOptions />
             </select>
           </label>
         </div>

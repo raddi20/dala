@@ -27,7 +27,7 @@ test("shop categories use the listing keyword map and the place parser stays put
   const placed = parseNlQuery("catering in Kisumu");
   assert.equal(placed.category, "Food & restaurants");
   assert.equal(placed.region, "homeland");
-  assert.equal(placed.city, "");
+  assert.equal(placed.city, "Kisumu");
   assert.equal(placed.q, "");
   assert.equal(categoryCountLabel(2, 1), "2 listings, 1 shop");
   assert.equal(categoryCountLabel(0, 1), "1 shop");

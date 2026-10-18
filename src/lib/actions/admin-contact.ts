@@ -54,6 +54,7 @@ export async function saveAdminContact(
     phone: field(formData, "phone"),
     whatsapp: field(formData, "whatsapp"),
     reason: field(formData, "reason"),
+    city: field(formData, "city"),
   };
   if ((kind !== "listing" && kind !== "user") || !id) {
     return { error: "That record is no longer there.", field: "phone" };

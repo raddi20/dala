@@ -95,7 +95,7 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
       }),
       prisma.user.update({
         where: { id: user.id },
-        data: { bio: parsed.data.bio },
+        data: { bio: parsed.data.bio, ...(parsed.data.city ? { city: parsed.data.city } : {}) },
       }),
     ]);
   } catch (error) {

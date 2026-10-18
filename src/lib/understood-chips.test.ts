@@ -28,6 +28,13 @@ test("removing an understood chip drops that filter and the sentence", () => {
   assert.ok(hints.href.includes("region=homeland"));
   assert.ok(hints.href.includes("verified=1"));
 
+  const townFilters = { ...filters, city: "Kisumu" };
+  const town = understoodChips("/listings", townFilters).find((chip) => chip.key === "city");
+  assert.ok(town);
+  assert.equal(town.label, "Kisumu");
+  const nairobi = understoodChips("/listings", { city: "Nairobi", region: "homeland" }).find((chip) => chip.key === "city");
+  assert.equal(nairobi?.label, "Nairobi");
+
   const occasion = chips.find((chip) => chip.key === "occasion");
   assert.ok(occasion);
   assert.match(occasion.label, /ayie/i);

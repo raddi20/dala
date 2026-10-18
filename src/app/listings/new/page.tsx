@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ListingForm } from "@/components/listing-form";
+import { canonicalCity } from "@/lib/constants";
 import { requireUser } from "@/lib/session";
 
 export const metadata: Metadata = { title: "New listing" };
@@ -27,7 +28,7 @@ export default async function NewListingPage() {
             title: "",
             description: "",
             category: "Food & restaurants",
-            city: user.city === "London" ? "London" : "Nairobi",
+            city: canonicalCity(user.city) || "Nairobi",
             address: "",
             priceLabel: "",
             contactName: user.name,

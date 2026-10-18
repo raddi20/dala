@@ -2,7 +2,8 @@
 
 import { useActionState } from "react";
 import { updateProfile } from "@/lib/actions/profile";
-import { CITIES, cityChoiceLabel } from "@/lib/constants";
+import { canonicalCity } from "@/lib/constants";
+import { TownOptions } from "@/components/town-options";
 import { btnPrimary, ErrorNote, FieldError, fieldClass } from "@/components/ui";
 import { PHONE_HINT } from "@/lib/phone";
 import { PhotoField } from "@/components/photo-field";
@@ -43,13 +44,9 @@ export function ProfileForm({
           </select>
         </label>
         <label className="block text-sm">
-          City
-          <select name="city" defaultValue={user.city} className={fieldClass}>
-            {CITIES.map((city) => (
-              <option key={city.name} value={city.name}>
-                {cityChoiceLabel(city.name)}
-              </option>
-            ))}
+          Town
+          <select name="city" defaultValue={canonicalCity(user.city) || "Nairobi"} className={fieldClass}>
+            <TownOptions />
           </select>
         </label>
       </div>

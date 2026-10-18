@@ -64,7 +64,7 @@ export default function PrivacyPage() {
       </InfoSection>
 
       <InfoSection title="What we collect">
-        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and your city (Kenya / East Africa or the Diaspora). The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo. If you arrived from a brochure link with an agent code, we store that short code and the time you registered. We do not change it later.</p>
+        <p>Account data. When you register we ask for your name, email, a password, whether you are a person or a business, and whether you are in Kenya / East Africa or the Diaspora. You can also name a town. The password is stored as a hash. We do not keep the password itself. You can also add a phone number, a WhatsApp number, a short bio, and a profile photo. If you arrived from a brochure link with an agent code, we store that short code and the time you registered. We do not change it later.</p>
         <p>
           Your sign-in email is not shown on your shop, your listings, or your public profile. Buyers see the phone and
           WhatsApp number you choose to add. When you create an account you agree to the Terms and this privacy notice,

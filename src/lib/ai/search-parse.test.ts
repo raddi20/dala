@@ -53,17 +53,17 @@ test("short queries and complete rule matches stay on the existing parser", () =
   assert.equal(shouldAskSmartSearch("chairs in Siaya", parseNlQuery("chairs in Siaya")), true);
 });
 
-test("an unknown homeland town sets the region and is not a required text filter", () => {
+test("a catalogue town sets the city and is not a required text filter", () => {
   const rules = parseNlQuery("chairs in Siaya");
   assert.equal(rules.region, "homeland");
-  assert.equal(rules.city, "");
+  assert.equal(rules.city, "Siaya");
   assert.equal(rules.q, "");
   assert.equal(rules.hints.includes("siaya"), false);
   assert.equal(rules.hints.includes("chairs"), true);
   const applied = applySearchParse(rules, chairs);
   assert.equal(applied.smart, true);
   assert.equal(applied.assist, "smart");
-  assert.equal(applied.city, "");
+  assert.equal(applied.city, "Siaya");
   assert.equal(applied.region, "homeland");
   assert.equal(applied.q, "");
   assert.equal(applied.hints.includes("siaya"), false);
@@ -73,13 +73,15 @@ test("an unknown homeland town sets the region and is not a required text filter
   assert.equal(weak.smart, false);
   assert.equal(weak.assist, "fallback");
   assert.equal(weak.occasion, "");
+  const unknown = applySearchParse(parseNlQuery("chairs in Busia"), { ...chairs, city: "Busia" });
+  assert.equal(unknown.city, "");
 });
 
 test("leftover time and place words do not become a hard text filter", () => {
   const catering = parseNlQuery("catering for a homecoming in Kisumu");
   assert.equal(catering.category, "Food & restaurants");
   assert.equal(catering.region, "homeland");
-  assert.equal(catering.city, "");
+  assert.equal(catering.city, "Kisumu");
   assert.equal(catering.q, "");
   assert.deepEqual(catering.hints, []);
 
@@ -92,6 +94,7 @@ test("leftover time and place words do not become a hard text filter", () => {
   assert.equal(dj.hints.includes("month"), false);
 
   const roof = parseNlQuery("someone to fix my mum's roof in Siaya");
+  assert.equal(roof.city, "Siaya");
   assert.equal(roof.region, "homeland");
   assert.equal(roof.q, "");
   assert.equal(roof.hints.includes("roof"), true);
