@@ -18,6 +18,8 @@ import { interpretSearch } from "@/lib/ai/search-parse";
 import { browsePage, searchCatalogue } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { browseHref, chipBag, matchCountLabel, toggleFilterHref, understoodChips } from "@/lib/understood-chips";
+import { requestLang } from "@/lib/i18n/request-lang";
+import { uiFill, uiText } from "@/lib/i18n/strings";
 import { one } from "@/lib/utils";
 
 export async function generateMetadata({
@@ -101,6 +103,7 @@ export default async function ListingsPage({
     droppedWords = true;
   }
   const origin = await publicOrigin();
+  const lang = await requestLang();
   const closeHref = browseHref("/listings", chipBase);
   const sheetActive = Boolean(
     filters.city || filters.category || filters.badge || filters.diaspora || filters.occasion || (filters.type && filters.type !== "business"),
@@ -109,15 +112,16 @@ export default async function ListingsPage({
 
   return (
     <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
-      <h1 className="sr-only">Browse</h1>
+      <h1 className="sr-only">{uiText(lang, "browse_title")}</h1>
       <ResultsSearchBar
         action="/listings"
         inputId="nl"
         inputName="nl"
         defaultValue={nlRaw}
-        label="Search in a sentence"
+        label={uiText(lang, "home_search_label")}
+        lang={lang}
         sheet={
-          <FilterSheet active={sheetActive} closeHref={closeHref}>
+          <FilterSheet active={sheetActive} closeHref={closeHref} lang={lang}>
             <ListingFilterForm
               action="/listings"
               clearHref="/listings"
@@ -129,6 +133,7 @@ export default async function ListingsPage({
               badge={filters.badge}
               verified={filters.verified}
               diaspora={filters.diaspora}
+              lang={lang}
             />
           </FilterSheet>
         }
@@ -138,45 +143,51 @@ export default async function ListingsPage({
               href={browseRegionChipHref(chipBase, "homeland")}
               className={activeBrowseRegion(filters.city, filters.region) === "homeland" ? chipActiveClass : chipClass}
             >
-              Homeland
+              {uiText(lang, "homeland")}
             </Link>
             <Link
               href={browseRegionChipHref(chipBase, "diaspora")}
               className={activeBrowseRegion(filters.city, filters.region) === "diaspora" ? chipActiveClass : chipClass}
             >
-              Diaspora
+              {uiText(lang, "diaspora")}
             </Link>
             <Link
               href={toggleFilterHref("/listings", chipBase, "verified", "1")}
               className={filters.verified ? chipActiveClass : chipClass}
             >
-              Checked
+              {uiText(lang, "pill_checked")}
             </Link>
             <Link
               href={toggleFilterHref("/listings", chipBase, "type", "business")}
               className={filters.type === "business" ? chipActiveClass : chipClass}
             >
-              Shops
+              {uiText(lang, "chip_shops")}
             </Link>
           </>
         }
       />
 
       {parsed ? (
-        <UnderstoodRow chips={chips} spark={parsed.assist === "smart"} assist={parsed.assist} droppedWords={droppedWords} />
+        <UnderstoodRow
+          chips={chips}
+          spark={parsed.assist === "smart"}
+          assist={parsed.assist}
+          droppedWords={droppedWords}
+          lang={lang}
+        />
       ) : null}
 
       <p className="text-sm text-ink/60">
-        {filters.q ? <>Matches for “{filters.q}”. </> : null}
+        {filters.q ? <>{uiFill(lang, "matches_for", { q: filters.q })} </> : null}
         {matchCountLabel(result.total, result.page, result.pageSize)}
       </p>
       {result.hits.length === 0 ? (
         <EmptyState
-          title="Nothing matches"
-          body="Try clearing a filter or searching with different words."
+          title={uiText(lang, "nothing_matches")}
+          body={uiText(lang, "nothing_matches_body")}
           action={
             <Link href="/listings" className={btnSecondary}>
-              Clear filters
+              {uiText(lang, "clear_filters")}
             </Link>
           }
         />

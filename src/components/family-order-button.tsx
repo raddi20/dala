@@ -4,6 +4,8 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { FamilyAssist, type FamilyAssistFields } from "@/components/ai/family-assist";
 import { FAMILY_PAYERS, familyOrderMessage, familyOrderWhatsappLink } from "@/lib/family-order";
 import { btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
+import type { Lang } from "@/lib/i18n/lang";
+import { uiText } from "@/lib/i18n/strings";
 
 export function FamilyOrderButton({
   phone,
@@ -11,12 +13,14 @@ export function FamilyOrderButton({
   path,
   siteName,
   variant = "inline",
+  lang = "en",
 }: {
   phone: string;
   subjectName: string;
   path: string;
   siteName: string;
   variant?: "inline" | "bar" | "link";
+  lang?: Lang;
 }) {
   const titleId = useId();
   const [open, setOpen] = useState(false);
@@ -84,7 +88,7 @@ export function FamilyOrderButton({
         }
         onClick={() => setOpen(true)}
       >
-        {variant === "link" ? "Send a family order" : "Buying for family back home?"}
+        {variant === "link" ? uiText(lang, "send_family_order") : uiText(lang, "buying_for_family")}
       </button>
       {open ? (
         <div
@@ -100,7 +104,7 @@ export function FamilyOrderButton({
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id={titleId} className="font-serif text-2xl text-navy">
-              Buying for family back home?
+              {uiText(lang, "buying_for_family")}
             </h2>
             <p className="mt-2 text-sm leading-relaxed text-ink/70">
               Add who it is for, if you want. We open WhatsApp with this note for {subjectName}. Nothing is saved on

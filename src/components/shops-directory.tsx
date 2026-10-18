@@ -10,6 +10,8 @@ import {
 import { EmptyState, btnSecondary, chipActiveClass, chipClass } from "@/components/ui";
 import { activeBrowseRegion, browseRegionChipHref } from "@/lib/browse-filters";
 import type { ShopCardData } from "@/lib/search";
+import type { Lang } from "@/lib/i18n/lang";
+import { uiFill, uiText } from "@/lib/i18n/strings";
 import { browseHref, chipBag, toggleFilterHref, type UnderstoodChip } from "@/lib/understood-chips";
 
 function pageHref(base: Record<string, string>, page: number) {
@@ -30,6 +32,7 @@ export function ShopsDirectory({
   pageCount,
   total,
   understood = null,
+  lang = "en",
 }: {
   shops: ShopCardData[];
   query: string;
@@ -49,6 +52,7 @@ export function ShopsDirectory({
     assist: "rules" | "smart" | "fallback";
     droppedWords: boolean;
   } | null;
+  lang?: Lang;
 }) {
   const filters = chipBag({
     q: query,
@@ -66,15 +70,16 @@ export function ShopsDirectory({
 
   return (
     <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
-      <h1 className="sr-only">Shops</h1>
+      <h1 className="sr-only">{uiText(lang, "home_shops")}</h1>
       <ResultsSearchBar
         action="/shops"
         inputId="shop-nl"
         inputName="nl"
         defaultValue={nl || query}
-        label="Search shops"
+        label={uiText(lang, "search_shops_label")}
+        lang={lang}
         sheet={
-          <FilterSheet active={sheetActive} closeHref={closeHref}>
+          <FilterSheet active={sheetActive} closeHref={closeHref} lang={lang}>
             <ShopFilterForm
               action="/shops"
               clearHref="/shops"
@@ -84,6 +89,7 @@ export function ShopsDirectory({
               category={category}
               verified={verified}
               diaspora={diaspora}
+              lang={lang}
             />
           </FilterSheet>
         }
@@ -93,16 +99,16 @@ export function ShopsDirectory({
               href={browseRegionChipHref(filters, "homeland", "/shops")}
               className={activeRegion === "homeland" ? chipActiveClass : chipClass}
             >
-              Homeland
+              {uiText(lang, "homeland")}
             </Link>
             <Link
               href={browseRegionChipHref(filters, "diaspora", "/shops")}
               className={activeRegion === "diaspora" ? chipActiveClass : chipClass}
             >
-              Diaspora
+              {uiText(lang, "diaspora")}
             </Link>
             <Link href={toggleFilterHref("/shops", filters, "verified", "1")} className={verified ? chipActiveClass : chipClass}>
-              Checked
+              {uiText(lang, "pill_checked")}
             </Link>
           </>
         }
@@ -114,18 +120,19 @@ export function ShopsDirectory({
           spark={understood.spark}
           assist={understood.assist}
           droppedWords={understood.droppedWords}
+          lang={lang}
         />
       ) : null}
-      {query ? <p className="text-sm text-ink/70">Showing shops for “{query}”.</p> : null}
+      {query ? <p className="text-sm text-ink/70">{uiFill(lang, "showing_shops", { q: query })}</p> : null}
 
       <p className="text-sm text-ink/60">{total === 0 ? "0 shops" : total === 1 ? "1 shop" : `${total} shops`}</p>
       {shops.length === 0 ? (
         <EmptyState
-          title="No shops match"
-          body="Try another word, or clear a filter. Draft shops stay off this page."
+          title={uiText(lang, "no_shops_match")}
+          body={uiText(lang, "no_shops_match_body")}
           action={
             <Link href="/shops" className={btnSecondary}>
-              Clear filters
+              {uiText(lang, "clear_filters")}
             </Link>
           }
         />
