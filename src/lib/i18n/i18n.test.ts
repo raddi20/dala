@@ -40,12 +40,13 @@ test("the Dholuo option is hidden while the flag is off", () => {
   assert.match(header, /LanguageSwitchControl/);
 });
 
-test("every English key has a Dholuo draft and the copy stays clean", () => {
+test("every English key has a Dholuo line and the copy stays clean", () => {
+  const held = new Set(["home_draft_help", "no_offerings", "type_for_sale"]);
   const keys = Object.keys(UI_STRINGS);
   assert.ok(keys.length > 20);
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, held.has(key), key);
     assert.ok(row.en.trim(), key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en), false, key);
