@@ -10,46 +10,62 @@ export const LISTING_TYPES = [
 
 export type ListingType = (typeof LISTING_TYPES)[number]["value"];
 
-export const CITIES = [
-  { name: "Kisumu", region: "homeland", country: "Kenya" },
-  { name: "Homa Bay", region: "homeland", country: "Kenya" },
-  { name: "Siaya", region: "homeland", country: "Kenya" },
-  { name: "Migori", region: "homeland", country: "Kenya" },
-  { name: "Kisii", region: "homeland", country: "Kenya" },
-  { name: "Bondo", region: "homeland", country: "Kenya" },
-  { name: "Kendu Bay", region: "homeland", country: "Kenya" },
-  { name: "Mbita", region: "homeland", country: "Kenya" },
-  { name: "Nakuru", region: "homeland", country: "Kenya" },
-  { name: "Eldoret", region: "homeland", country: "Kenya" },
-  { name: "Mombasa", region: "homeland", country: "Kenya" },
-  { name: "Nairobi", region: "homeland", country: "Kenya" },
-  { name: "London", region: "diaspora", country: "United Kingdom" },
+/**
+ * add new towns here
+ * One line: name, slug, and aliases only when a spelling is not already the name or the slug.
+ * Forms, filters (?city=slug), and sentence search all read this list.
+ * Town URLs stay off the sitemap; Homeland already covers them.
+ */
+export const TOWNS = [
+  { name: "Kisumu", slug: "kisumu", aliases: ["kisumu city"] },
+  { name: "Oyugis", slug: "oyugis" },
+  { name: "Kosele", slug: "kosele" },
+  { name: "Homa Bay", slug: "homa-bay" },
+  { name: "Siaya", slug: "siaya" },
+  { name: "Migori", slug: "migori" },
+  { name: "Kisii", slug: "kisii" },
+  { name: "Bondo", slug: "bondo" },
+  { name: "Kendu Bay", slug: "kendu-bay", aliases: ["kendu"] },
+  { name: "Mbita", slug: "mbita" },
+  { name: "Nakuru", slug: "nakuru" },
+  { name: "Eldoret", slug: "eldoret" },
+  { name: "Mombasa", slug: "mombasa" },
+  { name: "Nairobi", slug: "nairobi" },
 ] as const;
 
-export type CityName = (typeof CITIES)[number]["name"];
-export type RegionName = (typeof CITIES)[number]["region"];
+const LONDON = { name: "London", slug: "london", region: "diaspora", country: "United Kingdom" } as const;
 
-/** Spellings that are not the catalogue name. "kenya" and "homeland" stay out of this map. */
-const EXTRA_CITY_ALIASES: Record<string, CityName> = {
-  "kisumu city": "Kisumu",
-  kendu: "Kendu Bay",
-};
+export type CityName = (typeof TOWNS)[number]["name"] | typeof LONDON.name;
+export type RegionName = "homeland" | "diaspora";
+
+export const CITIES: { name: CityName; slug: string; region: RegionName; country: string }[] = [
+  ...TOWNS.map((town) => ({ name: town.name, slug: town.slug, region: "homeland" as const, country: "Kenya" })),
+  LONDON,
+];
 
 function cityLookupKey(value: string) {
   return value.trim().toLowerCase().replace(/[_-]+/g, " ").replace(/\s+/g, " ");
 }
 
 const CITY_BY_KEY = new Map<string, CityName>();
-for (const city of CITIES) {
-  const spaced = cityLookupKey(city.name);
-  CITY_BY_KEY.set(spaced, city.name);
-  CITY_BY_KEY.set(city.name.toLowerCase().replace(/[\s_-]+/g, ""), city.name);
-  if (spaced.includes(" ")) CITY_BY_KEY.set(spaced.replace(/ /g, "-"), city.name);
+
+function rememberCityKey(raw: string, name: CityName) {
+  const spaced = cityLookupKey(raw);
+  if (!spaced) return;
+  CITY_BY_KEY.set(spaced, name);
+  CITY_BY_KEY.set(spaced.replace(/\s+/g, ""), name);
+  if (spaced.includes(" ")) CITY_BY_KEY.set(spaced.replace(/ /g, "-"), name);
 }
-for (const [alias, name] of Object.entries(EXTRA_CITY_ALIASES)) {
-  CITY_BY_KEY.set(cityLookupKey(alias), name);
-  CITY_BY_KEY.set(alias.toLowerCase().replace(/[\s_-]+/g, ""), name);
+
+for (const town of TOWNS) {
+  rememberCityKey(town.name, town.name);
+  rememberCityKey(town.slug, town.name);
+  if ("aliases" in town) {
+    for (const alias of town.aliases) rememberCityKey(alias, town.name);
+  }
 }
+rememberCityKey(LONDON.name, LONDON.name);
+rememberCityKey(LONDON.slug, LONDON.name);
 
 /** Catalogue name for a town, or "" when the text is not one. Case and hyphens do not matter. */
 export function canonicalCity(value: string): CityName | "" {

@@ -295,5 +295,5 @@ test("one usage row is written per attempt", async () => {
   assert.equal(store.rows[0]?.ok, false);
   assert.equal(store.rows[1]?.attempt, 2);
   assert.equal(store.rows[1]?.ok, true);
-  assert.equal(store.rows[1]?.promptVersion, "smart_search@2");
+  assert.equal(store.rows[1]?.promptVersion, "smart_search@3");
 });
