@@ -33,7 +33,7 @@ Types: ${typeList.join(", ")}.`;
 
 export const smartSearchPrompt: PromptSpec<{ query: string }, SearchParse> = {
   feature: "smart_search",
-  version: "smart_search@2",
+  version: "smart_search@3",
   tier: "fast",
   system,
   schema: searchParseSchema,

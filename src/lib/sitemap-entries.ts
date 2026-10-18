@@ -50,6 +50,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/listings?type=classifieds" },
     { path: "/listings?region=homeland" },
     { path: "/listings?region=diaspora" },
+    // Town filters are ?city=<slug> from TOWNS in constants.ts. They stay off this list.
   ];
   for (const category of CATEGORIES) {
     paths.push({ path: categoryHref(category) });

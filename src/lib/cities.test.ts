@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { applySearchParse } from "@/lib/ai/search-parse";
 import type { SearchParse } from "@/lib/ai/prompts/smart-search";
+import { smartSearchPrompt } from "@/lib/ai/prompts/smart-search";
 import { chosenBrowseCity } from "@/lib/browse-filters";
-import { CITIES, canonicalCity, registerCity } from "@/lib/constants";
+import { CITIES, TOWNS, canonicalCity, registerCity } from "@/lib/constants";
 import { parseNlQuery } from "@/lib/nl-query";
 import { cataloguePlaceWhere, shopPlaceClauses } from "@/lib/search";
 import { understoodChips } from "@/lib/understood-chips";
@@ -24,6 +26,8 @@ test("Kenyan towns start with Kisumu and the Diaspora list stays London", () => 
     CITIES.map((city) => city.name),
     [
       "Kisumu",
+      "Oyugis",
+      "Kosele",
       "Homa Bay",
       "Siaya",
       "Migori",
@@ -43,6 +47,16 @@ test("Kenyan towns start with Kisumu and the Diaspora list stays London", () => 
     ["London"],
   );
   assert.equal(CITIES.filter((city) => city.region === "homeland").every((city) => city.country === "Kenya"), true);
+  assert.deepEqual(
+    CITIES.filter((city) => city.region === "homeland").map((city) => city.name),
+    TOWNS.map((town) => town.name),
+  );
+  assert.equal(CITIES.find((city) => city.name === "Oyugis")?.slug, "oyugis");
+  assert.equal(CITIES.find((city) => city.name === "Kosele")?.slug, "kosele");
+  const source = readFileSync(new URL("./constants.ts", import.meta.url), "utf8");
+  assert.match(source, /add new towns here/);
+  assert.equal(source.split("Oyugis").length - 1, 1);
+  assert.equal(source.split("Kosele").length - 1, 1);
 });
 
 test("town spellings resolve without treating Kenya as Nairobi", () => {
@@ -61,6 +75,12 @@ test("town spellings resolve without treating Kenya as Nairobi", () => {
   assert.equal(registerCity("Nairobi", ""), "Nairobi");
   assert.equal(registerCity("London", "Kisumu"), "London");
   assert.equal(registerCity("Kisumu", ""), "Kisumu");
+  assert.equal(canonicalCity("oyugis"), "Oyugis");
+  assert.equal(canonicalCity("OYUGIS"), "Oyugis");
+  assert.equal(canonicalCity("kosele"), "Kosele");
+  assert.equal(canonicalCity("KOSELE"), "Kosele");
+  assert.equal(chosenBrowseCity("oyugis"), "Oyugis");
+  assert.equal(chosenBrowseCity("kosele"), "Kosele");
   assert.equal(chosenBrowseCity("kisumu"), "Kisumu");
   assert.equal(chosenBrowseCity("", "Homa Bay"), "Homa Bay");
   assert.equal(chosenBrowseCity("not-a-town", "Kisumu"), "");
@@ -91,6 +111,10 @@ test("a town filter matches city or area text and a region filter does not requi
   assert.match(shopTown, /Kisumu/);
   assert.match(shopTown, /bio/);
   assert.equal(cataloguePlaceWhere({ city: "Busia" }).AND, undefined);
+  assert.match(JSON.stringify(cataloguePlaceWhere({ city: "oyugis" })), /Oyugis/);
+  assert.match(JSON.stringify(cataloguePlaceWhere({ city: "kosele", region: "homeland" })), /Kosele/);
+  assert.equal(cataloguePlaceWhere({ region: "homeland" }).region, "homeland");
+  assert.equal(JSON.stringify(cataloguePlaceWhere({ region: "homeland" })).includes("Oyugis"), false);
 });
 
 test("sentence search sets homeland plus the town", () => {
@@ -130,6 +154,21 @@ test("sentence search sets homeland plus the town", () => {
   assert.equal(parseNlQuery("FUNDI IN KISUMU").city, "Kisumu");
   assert.equal(parseNlQuery("kenya fundi in Kisumu").city, "Kisumu");
 
+  const oyugis = parseNlQuery("fundi in Oyugis");
+  assert.equal(oyugis.city, "Oyugis");
+  assert.equal(oyugis.region, "homeland");
+  assert.equal(oyugis.category, "Construction & trades");
+  assert.match(oyugis.summary, /Oyugis/);
+  assert.equal(parseNlQuery("FUNDI IN OYUGIS").city, "Oyugis");
+
+  const kosele = parseNlQuery("DJ for an ayie in Kosele");
+  assert.equal(kosele.city, "Kosele");
+  assert.equal(kosele.region, "homeland");
+  assert.equal(kosele.category, "Events & entertainment");
+  assert.match(kosele.summary, /Kosele/);
+  assert.doesNotMatch(kosele.summary, /funeral/i);
+  assert.equal(parseNlQuery("dj for an ayie in kosele").city, "Kosele");
+
   const read = applySearchParse(parseNlQuery("mechanic near homabay"), { ...blankAi, city: "Homabay" });
   assert.equal(read.city, "Homa Bay");
   assert.equal(read.region, "homeland");
@@ -137,4 +176,8 @@ test("sentence search sets homeland plus the town", () => {
     (item) => item.key === "city",
   );
   assert.equal(chip?.label, "Homa Bay");
+  assert.match(smartSearchPrompt.system, /Oyugis/);
+  assert.match(smartSearchPrompt.system, /Kosele/);
+  const oyugisChip = understoodChips("/listings", { city: "Oyugis", region: "homeland" }).find((item) => item.key === "city");
+  assert.equal(oyugisChip?.label, "Oyugis");
 });
