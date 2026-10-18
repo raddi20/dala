@@ -5,10 +5,11 @@ import { btnPrimary, btnSecondary, chipActiveClass, chipClass, fieldClass } from
 import { HOME_ASK_PLACEHOLDER } from "@/lib/home-prompts";
 import { LISTING_TYPES, canonicalCity } from "@/lib/constants";
 import { TownOptions } from "@/components/town-options";
-import { DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
+import type { Lang } from "@/lib/i18n/lang";
+import { uiText, type StringKey } from "@/lib/i18n/strings";
 import { familiesAlsoNeed } from "@/lib/occasion-needs";
 import { SHOP_BADGE_FILTERS } from "@/lib/shop-badges";
-import { DROPPED_WORDS_NOTE, type UnderstoodChip } from "@/lib/understood-chips";
+import { type UnderstoodChip } from "@/lib/understood-chips";
 import { activeBrowseRegion } from "@/lib/browse-filters";
 
 const searchFieldClass =
@@ -22,6 +23,7 @@ export function ResultsSearchBar({
   label,
   sheet,
   pills,
+  lang = "en",
 }: {
   action: string;
   inputId: string;
@@ -30,6 +32,7 @@ export function ResultsSearchBar({
   label: string;
   sheet: ReactNode;
   pills: ReactNode;
+  lang?: Lang;
 }) {
   return (
     <div className="results-search-bar sticky top-14 z-20 -mx-4 border-b border-line/80 bg-bg px-4 py-3">
@@ -43,11 +46,11 @@ export function ResultsSearchBar({
             id={inputId}
             name={inputName}
             defaultValue={defaultValue}
-            placeholder={HOME_ASK_PLACEHOLDER}
+            placeholder={lang === "dholuo" ? uiText(lang, "ask_placeholder") : HOME_ASK_PLACEHOLDER}
             className={searchFieldClass}
           />
         </label>
-        <button className={`${btnPrimary} shrink-0 px-3`}>Search</button>
+        <button className={`${btnPrimary} shrink-0 px-3`}>{uiText(lang, "search_button")}</button>
       </form>
       <div className="mt-2 flex items-start gap-2">
         {sheet}
@@ -61,28 +64,30 @@ export function FilterSheet({
   active,
   closeHref,
   children,
+  lang = "en",
 }: {
   active: boolean;
   closeHref: string;
   children: ReactNode;
+  lang?: Lang;
 }) {
   return (
     <details className="filter-sheet shrink-0">
       <summary className={active ? chipActiveClass : chipClass}>
         <span className="inline-flex items-center gap-1">
-          Filters
+          {uiText(lang, "filters")}
           <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">
             <path d="M4 6h16v2H4V6zm3 5h10v2H7v-2zm2 5h6v2H9v-2z" />
           </svg>
         </span>
       </summary>
       <div className="filter-sheet-layer">
-        <a className="filter-sheet-scrim" href={closeHref} aria-label="Close filters" />
-        <div className="filter-sheet-panel" role="dialog" aria-label="Filters">
+        <a className="filter-sheet-scrim" href={closeHref} aria-label={uiText(lang, "close_filters")} />
+        <div className="filter-sheet-panel" role="dialog" aria-label={uiText(lang, "filters")}>
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="font-serif text-xl text-navy">Filters</h2>
+            <h2 className="font-serif text-xl text-navy">{uiText(lang, "filters")}</h2>
             <a href={closeHref} className="text-sm font-semibold text-gold-d">
-              Close
+              {uiText(lang, "close")}
             </a>
           </div>
           {children}
@@ -98,6 +103,21 @@ function HiddenFields({ fields }: { fields: Record<string, string> }) {
   );
 }
 
+const TYPE_LABEL: Record<(typeof LISTING_TYPES)[number]["value"], StringKey> = {
+  business: "type_business",
+  for_sale: "type_for_sale",
+  wanted: "type_wanted",
+  housing: "type_housing",
+  services: "type_services",
+};
+
+const BADGE_LABEL: Record<(typeof SHOP_BADGE_FILTERS)[number]["value"], StringKey> = {
+  any: "badge_any",
+  phone: "badge_phone",
+  location: "badge_location",
+  business: "badge_business",
+};
+
 export function ListingFilterForm({
   action,
   clearHref,
@@ -109,6 +129,7 @@ export function ListingFilterForm({
   badge,
   verified,
   diaspora,
+  lang = "en",
 }: {
   action: string;
   clearHref: string;
@@ -120,65 +141,66 @@ export function ListingFilterForm({
   badge: string;
   verified: boolean;
   diaspora: boolean;
+  lang?: Lang;
 }) {
   return (
     <form action={action} method="get" className="grid gap-3 sm:grid-cols-2">
       <HiddenFields fields={hidden} />
       <label className="block text-sm font-medium text-ink/80">
-        Homeland or Diaspora
+        {uiText(lang, "place_label")}
         <select name="region" defaultValue={activeBrowseRegion(city, region)} className={fieldClass}>
-          <option value="">Any</option>
-          <option value="homeland">Homeland</option>
-          <option value="diaspora">Diaspora</option>
+          <option value="">{uiText(lang, "any")}</option>
+          <option value="homeland">{uiText(lang, "homeland")}</option>
+          <option value="diaspora">{uiText(lang, "diaspora")}</option>
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Town
+        {uiText(lang, "town")}
         <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
-          <TownOptions includeDiaspora blank="Any town" />
+          <TownOptions includeDiaspora blank={uiText(lang, "any_town")} />
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Category
+        {uiText(lang, "category")}
         <select name="category" defaultValue={category} className={fieldClass}>
-          <CategoryOptions blank="Any" />
+          <CategoryOptions blank={uiText(lang, "any")} />
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Type
+        {uiText(lang, "type")}
         <select name="type" defaultValue={type} className={fieldClass}>
-          <option value="">Any</option>
-          <option value="classifieds">All classifieds</option>
+          <option value="">{uiText(lang, "any")}</option>
+          <option value="classifieds">{uiText(lang, "all_classifieds")}</option>
           {LISTING_TYPES.map((item) => (
             <option key={item.value} value={item.value}>
-              {item.label}
+              {uiText(lang, TYPE_LABEL[item.value])}
             </option>
           ))}
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Shop badge
+        {uiText(lang, "shop_badge")}
         <select name="badge" defaultValue={badge} className={fieldClass}>
-          <option value="">Any</option>
+          <option value="">{uiText(lang, "any")}</option>
           {SHOP_BADGE_FILTERS.map((filter) => (
             <option key={filter.value} value={filter.value}>
-              {filter.label}
+              {uiText(lang, BADGE_LABEL[filter.value])}
             </option>
           ))}
         </select>
       </label>
       <label className="flex items-center gap-2 text-sm font-medium text-ink/80">
         <input type="checkbox" name="verified" value="1" defaultChecked={verified} className="size-4 rounded border-sand" />
-        Checked only
+        {uiText(lang, "checked_only")}
       </label>
       <label className="flex items-center gap-2 text-sm font-medium text-ink/80">
         <input type="checkbox" name="diaspora" value="1" defaultChecked={diaspora} className="size-4 rounded border-sand" />
-        {DIASPORA_ORDERS_LABEL}
+        {uiText(lang, "diaspora_orders")}
       </label>
       <div className="flex flex-wrap gap-2 sm:col-span-2">
-        <button className={btnPrimary}>Apply filters</button>
+        <button className={btnPrimary}>{uiText(lang, "apply_filters")}</button>
         <Link href={clearHref} className={btnSecondary}>
-          Clear
+          {uiText(lang, "clear")}
         </Link>
       </div>
     </form>
@@ -194,6 +216,7 @@ export function ShopFilterForm({
   category,
   verified,
   diaspora,
+  lang = "en",
 }: {
   action: string;
   clearHref: string;
@@ -203,42 +226,43 @@ export function ShopFilterForm({
   category: string;
   verified: boolean;
   diaspora: boolean;
+  lang?: Lang;
 }) {
   return (
     <form action={action} method="get" className="grid gap-3 sm:grid-cols-2">
       <HiddenFields fields={hidden} />
       <label className="block text-sm font-medium text-ink/80">
-        Homeland or Diaspora
+        {uiText(lang, "place_label")}
         <select name="region" defaultValue={activeBrowseRegion(city, region)} className={fieldClass}>
-          <option value="">Any</option>
-          <option value="homeland">Homeland</option>
-          <option value="diaspora">Diaspora</option>
+          <option value="">{uiText(lang, "any")}</option>
+          <option value="homeland">{uiText(lang, "homeland")}</option>
+          <option value="diaspora">{uiText(lang, "diaspora")}</option>
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Town
+        {uiText(lang, "town")}
         <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
-          <TownOptions includeDiaspora blank="Any town" />
+          <TownOptions includeDiaspora blank={uiText(lang, "any_town")} />
         </select>
       </label>
       <label className="block text-sm font-medium text-ink/80">
-        Category
+        {uiText(lang, "category")}
         <select name="category" defaultValue={category} className={fieldClass}>
-          <CategoryOptions blank="Any" />
+          <CategoryOptions blank={uiText(lang, "any")} />
         </select>
       </label>
       <label className="flex items-center gap-2 text-sm font-medium text-ink/80">
         <input type="checkbox" name="verified" value="1" defaultChecked={verified} className="size-4 rounded border-sand" />
-        Checked shops
+        {uiText(lang, "checked_shops")}
       </label>
       <label className="flex items-center gap-2 text-sm font-medium text-ink/80">
         <input type="checkbox" name="diaspora" value="1" defaultChecked={diaspora} className="size-4 rounded border-sand" />
-        {DIASPORA_ORDERS_LABEL}
+        {uiText(lang, "diaspora_orders")}
       </label>
       <div className="flex flex-wrap gap-2 sm:col-span-2">
-        <button className={btnPrimary}>Apply filters</button>
+        <button className={btnPrimary}>{uiText(lang, "apply_filters")}</button>
         <Link href={clearHref} className={btnSecondary}>
-          Clear
+          {uiText(lang, "clear")}
         </Link>
       </div>
     </form>
@@ -250,11 +274,13 @@ export function UnderstoodRow({
   spark,
   assist,
   droppedWords,
+  lang = "en",
 }: {
   chips: UnderstoodChip[];
   spark: boolean;
   assist: "rules" | "smart" | "fallback";
   droppedWords: boolean;
+  lang?: Lang;
 }) {
   return (
     <div className="grid gap-2">
@@ -264,11 +290,9 @@ export function UnderstoodRow({
             ✦{" "}
           </span>
         ) : null}
-        Rangach understood
+        {uiText(lang, "understood")}
       </p>
-      {assist === "fallback" ? (
-        <p className="text-sm text-muted">Smart search did not answer. Showing the plain reading.</p>
-      ) : null}
+      {assist === "fallback" ? <p className="text-sm text-muted">{uiText(lang, "understood_fallback")}</p> : null}
       {chips.length > 0 ? (
         <ul className="chip-scroll">
           {chips.map((chip) => (
@@ -276,15 +300,17 @@ export function UnderstoodRow({
               <Link href={chip.href} className={`${chipClass} gap-1.5 bg-cream`}>
                 {chip.label}
                 <span aria-hidden="true">×</span>
-                <span className="sr-only">Remove {chip.label}</span>
+                <span className="sr-only">
+                  {uiText(lang, "remove")} {chip.label}
+                </span>
               </Link>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted">No filters detected.</p>
+        <p className="text-sm text-muted">{uiText(lang, "no_filters")}</p>
       )}
-      {droppedWords ? <p className="text-sm text-muted">{DROPPED_WORDS_NOTE}</p> : null}
+      {droppedWords ? <p className="text-sm text-muted">{uiText(lang, "dropped_words")}</p> : null}
     </div>
   );
 }

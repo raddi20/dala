@@ -9,6 +9,8 @@ import { ReportForm } from "@/components/report-form";
 import { EmptyState, Flash, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { cityInPhrase } from "@/lib/constants";
+import { requestLang } from "@/lib/i18n/request-lang";
+import { uiFill, uiText } from "@/lib/i18n/strings";
 import {
   DEMO_SHOP_CONTACT_NOTE,
   isPublicDemoHidden,
@@ -152,6 +154,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   if (!shop || isPublicDemoHidden(shop.user.email)) notFound();
 
   const viewer = await getSessionUser();
+  const lang = await requestLang();
   const isOwner = viewer?.id === shop.userId;
   if (
     !shopOpenTo(viewer, {
@@ -315,12 +318,12 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                 <span aria-hidden="true"> ›</span>
               </summary>
               <div className="filter-sheet-layer">
-                <a className="filter-sheet-scrim" href={shopHref} aria-label="Close checks" />
-                <div className="filter-sheet-panel" role="dialog" aria-label="Checked by Rangach">
+                <a className="filter-sheet-scrim" href={shopHref} aria-label={uiText(lang, "close_checks")} />
+                <div className="filter-sheet-panel" role="dialog" aria-label={uiText(lang, "checked_by")}>
                   <div className="mb-3 flex items-center justify-between gap-3">
-                    <h2 className="font-serif text-xl text-navy">Checked by Rangach</h2>
+                    <h2 className="font-serif text-xl text-navy">{uiText(lang, "checked_by")}</h2>
                     <a href={shopHref} className="text-sm font-semibold text-gold-d">
-                      Close
+                      {uiText(lang, "close")}
                     </a>
                   </div>
                   <ShopBadgeNotes flags={shopBadges} events={shop.badgeEvents} />
@@ -339,7 +342,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                   <path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 6 6L17 13l4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 5a2 2 0 0 1 2-2z" />
                 </svg>
               </span>
-              Call
+              {uiText(lang, "call")}
             </a>
           ) : null}
           {shareUrl ? (
@@ -354,7 +357,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                   <path d="M14 4l6 6-6 6v-4H9a6 6 0 0 0-6 6v1h2v-1a4 4 0 0 1 4-4h5v-4z" />
                 </svg>
               </span>
-              Share
+              {uiText(lang, "share")}
             </a>
           ) : null}
         </div>
@@ -362,7 +365,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       </header>
 
       {showVideo && publicVideo ? (
-        <section aria-label="Shop video">
+        <section aria-label={uiText(lang, "shop_video")}>
           <ShopVideoPoster
             playbackId={publicVideo.publicPlaybackId}
             posterUrl={publicVideo.posterUrl}
@@ -372,22 +375,23 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </section>
       ) : null}
 
-      <nav aria-label="Shop sections" className="flex gap-1 border-b border-line">
+      <nav aria-label={uiText(lang, "shop_sections")} className="flex gap-1 border-b border-line">
         <a href="#offerings" className="inline-flex min-h-11 items-center border-b-2 border-navy px-2 text-sm font-semibold text-navy">
-          Offerings ({publicOfferings.length})
+          {uiText(lang, "offerings")} ({publicOfferings.length})
         </a>
         <a href="#about" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
-          About
+          {uiText(lang, "about")}
         </a>
         <a href="#reviews" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
-          Reviews{reviews.length > 0 ? ` (${reviews.length})` : ""}
+          {uiText(lang, "reviews")}
+          {reviews.length > 0 ? ` (${reviews.length})` : ""}
         </a>
       </nav>
 
       <section id="offerings" className="grid scroll-mt-28 gap-3">
-        <h2 className="sr-only">Offerings</h2>
+        <h2 className="sr-only">{uiText(lang, "offerings")}</h2>
         {publicOfferings.length === 0 ? (
-          <EmptyState title="No offerings yet" body="This shop has not listed products or services." />
+          <EmptyState title={uiText(lang, "no_offerings")} body={uiText(lang, "no_offerings_body")} />
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {publicOfferings.map((offering) => {
@@ -435,7 +439,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                         target="_blank"
                         rel="noreferrer"
                       >
-                        Ask on WhatsApp
+                        {uiText(lang, "ask_whatsapp")}
                       </a>
                     ) : null}
                   </div>
@@ -468,35 +472,36 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       ) : null}
 
       <section id="about" className="scroll-mt-28 grid gap-2">
-        <h2 className="font-serif text-xl text-navy">About</h2>
+        <h2 className="font-serif text-xl text-navy">{uiText(lang, "about")}</h2>
         {bio ? (
           <p className="whitespace-pre-wrap leading-relaxed text-ink/85">{bio}</p>
         ) : (
-          <p className="text-sm text-muted">This shop has not added a description yet.</p>
+          <p className="text-sm text-muted">{uiText(lang, "shop_no_about")}</p>
         )}
         {signals.address ? <p className="text-sm text-muted">{signals.address}</p> : null}
-        {shop.servesDiaspora ? <p className="text-sm text-ink/80">Takes orders for family back home.</p> : null}
+        {shop.servesDiaspora ? <p className="text-sm text-ink/80">{uiText(lang, "family_orders_note")}</p> : null}
         {signals.listingId ? (
           <Link href={`/listings/${signals.listingId}`} className="text-sm font-semibold text-gold-d">
-            Directory listing{signals.listingTitle ? `: ${signals.listingTitle}` : ""}
+            {uiText(lang, "directory_listing")}
+            {signals.listingTitle ? `: ${signals.listingTitle}` : ""}
           </Link>
         ) : null}
         <p className="text-sm">
           <Link href={`/people/${shop.user.id}`} className="font-semibold text-gold-d">
-            View profile
+            {uiText(lang, "view_profile")}
           </Link>
         </p>
       </section>
 
       <section id="reviews" className="grid scroll-mt-28 gap-3">
-        <h2 className="font-serif text-xl text-navy">Reviews</h2>
+        <h2 className="font-serif text-xl text-navy">{uiText(lang, "reviews")}</h2>
         {reviews.length === 0 ? (
-          <EmptyState title="No reviews yet" body="When a buyer leaves a review on a listing, it shows up here." />
+          <EmptyState title={uiText(lang, "no_reviews_shop")} body={uiText(lang, "no_reviews_shop_body")} />
         ) : (
           <>
             <p className="text-sm text-ink/60">
               {rating === null
-                ? "No reviews yet."
+                ? uiText(lang, "no_reviews_dot")
                 : `${rating.toFixed(1)} out of 5 from ${reviews.length} review${reviews.length === 1 ? "" : "s"} on this seller's listings.`}
             </p>
             <ul className="grid gap-3">
@@ -522,7 +527,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
 
       {viewer && !isOwner ? (
         <details className={`${cardClass} p-4`}>
-          <summary className="cursor-pointer text-sm font-semibold">Report this shop</summary>
+          <summary className="cursor-pointer text-sm font-semibold">{uiText(lang, "report_shop")}</summary>
           <div className="mt-3">
             <ReportForm targetUserId={shop.userId} />
           </div>
@@ -530,23 +535,23 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       ) : null}
       {!viewer ? (
         <Link href={`/login?next=/b/${shop.slug}`} className="text-sm font-semibold text-lake-dark hover:text-lake">
-          Sign in to report this shop
+          {uiText(lang, "sign_in_report")}
         </Link>
       ) : null}
 
       {chatUrl ? (
         <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-line/80 bg-card px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)]">
           <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-            WhatsApp {shop.user.name}
+            {lang === "dholuo" ? uiFill(lang, "whatsapp_name", { name: shop.user.name }) : <>WhatsApp {shop.user.name}</>}
           </a>
           <p className="mt-2 text-center text-sm text-muted">
-            Buying for family back home?{" "}
             <FamilyOrderButton
               variant="link"
               phone={phone}
               subjectName={shop.user.name}
               path={`/b/${shop.slug}`}
               siteName={appName()}
+              lang={lang}
             />
           </p>
         </div>

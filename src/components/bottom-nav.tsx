@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ASK_HREF, activeBottomTab, type BottomTab } from "@/lib/bottom-nav";
+import type { Lang } from "@/lib/i18n/lang";
+import { uiText, type StringKey } from "@/lib/i18n/strings";
 
 function Icon({ children }: { children: React.ReactNode }) {
   return (
@@ -51,15 +53,15 @@ function TabIcon({ id }: { id: BottomTab }) {
   );
 }
 
-const TABS: { id: BottomTab; label: string }[] = [
-  { id: "home", label: "Home" },
-  { id: "explore", label: "Explore" },
-  { id: "ask", label: "Ask" },
-  { id: "occasions", label: "Occasions" },
-  { id: "sell", label: "Sell" },
+const TABS: { id: BottomTab; label: StringKey }[] = [
+  { id: "home", label: "nav_home" },
+  { id: "explore", label: "nav_explore" },
+  { id: "ask", label: "nav_ask" },
+  { id: "occasions", label: "nav_occasions" },
+  { id: "sell", label: "nav_sell" },
 ];
 
-export function BottomNav({ sellHref }: { sellHref: string }) {
+export function BottomNav({ sellHref, lang = "en" }: { sellHref: string; lang?: Lang }) {
   const pathname = usePathname() || "/";
   const search = useSearchParams().toString();
   const active = activeBottomTab(pathname, search);
@@ -96,7 +98,7 @@ export function BottomNav({ sellHref }: { sellHref: string }) {
               ) : (
                 <TabIcon id={tab.id} />
               )}
-              {tab.label}
+              {uiText(lang, tab.label)}
             </Link>
           );
         })}

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
+import { LanguageSwitchControl } from "@/components/language-switch";
 import { Wordmark } from "@/components/wordmark";
+import { dholuoUiOn } from "@/lib/i18n/lang";
+import { requestLang } from "@/lib/i18n/request-lang";
 import { paymentsLive } from "@/lib/payments/live";
 import { signOutAction } from "@/lib/actions/auth";
 import { prisma } from "@/lib/prisma";
@@ -16,6 +19,8 @@ export async function Header() {
     user?.role === "admin" ? await prisma.report.count({ where: { status: "open" } }) : 0;
   const listHref = continueHref(Boolean(user), "/listings/new");
   const paymentsOpen = paymentsLive();
+  const lang = await requestLang();
+  const showLang = dholuoUiOn();
 
   return (
     <>
@@ -26,6 +31,7 @@ export async function Header() {
           </Link>
 
           <nav className="ml-auto hidden items-center gap-0.5 md:flex" aria-label="Directory">
+            {showLang ? <LanguageSwitchControl lang={lang} /> : null}
             <Link href="/listings" className={deskLink}>
               Explore
             </Link>
@@ -82,6 +88,7 @@ export async function Header() {
           </nav>
 
           <div className="ml-auto flex items-center gap-1 md:hidden">
+            {showLang ? <LanguageSwitchControl lang={lang} /> : null}
             {user?.role === "admin" ? (
               <Link href="/admin" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white">
                 Admin{openReports > 0 ? ` (${openReports})` : ""}
@@ -106,7 +113,7 @@ export async function Header() {
         </div>
       </header>
       <Suspense fallback={null}>
-        <BottomNav sellHref={listHref} />
+        <BottomNav sellHref={listHref} lang={lang} />
       </Suspense>
     </>
   );

@@ -11,6 +11,7 @@ import { browsePage, searchShops } from "@/lib/search";
 import { buildShareMetadata } from "@/lib/share-metadata";
 import { getSessionUser } from "@/lib/session";
 import { chipBag, understoodChips } from "@/lib/understood-chips";
+import { requestLang } from "@/lib/i18n/request-lang";
 import { one } from "@/lib/utils";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -48,6 +49,7 @@ export default async function ShopsPage({
     page: browsePage(one(sp.page)),
   };
   const user = await getSessionUser();
+  const lang = await requestLang();
   const result = await searchShops({ ...filters, viewerId: user?.id });
   const bag = chipBag({ ...filters, nl: nlRaw });
   return (
@@ -64,6 +66,7 @@ export default async function ShopsPage({
       page={result.page}
       pageCount={result.pageCount}
       total={result.total}
+      lang={lang}
       understood={
         parsed
           ? {

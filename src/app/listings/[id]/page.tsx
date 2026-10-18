@@ -12,6 +12,8 @@ import { setListingFeatured, setListingHidden, setListingVerified } from "@/lib/
 import { listingOpenTo, publicReviewWhere } from "@/lib/visibility";
 import { appName } from "@/lib/brand";
 import { cityChipLabel, cityInPhrase } from "@/lib/constants";
+import { requestLang } from "@/lib/i18n/request-lang";
+import { uiText } from "@/lib/i18n/strings";
 import {
   DEMO_LISTING_CONTACT_NOTE,
   isPublicDemoHidden,
@@ -115,6 +117,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
   if (!listing || isPublicDemoHidden(listing.owner.email)) notFound();
 
   const user = await getSessionUser();
+  const lang = await requestLang();
   const isOwner = user?.id === listing.ownerId;
   const upgradesOpen = paymentsLive();
   const isAdmin = user?.role === "admin";
@@ -204,13 +207,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
         />
         <h1 className="font-serif text-3xl leading-tight text-navy sm:text-4xl">{listing.title}</h1>
         <p className="text-ink/65">
-          {listing.region === "diaspora" ? "Diaspora" : `${cityChipLabel(listing.city)} · Homeland`} · {listing.category}
+          {listing.region === "diaspora" ? uiText(lang, "diaspora") : `${cityChipLabel(listing.city)} · ${uiText(lang, "homeland")}`} · {listing.category}
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
         {listing.priceLabel ? <p className="text-lg font-semibold text-ink">{listing.priceLabel}</p> : null}
         <p className="text-sm text-ink/55">
           {rating === null
-            ? "No reviews yet"
+            ? uiText(lang, "no_reviews")
             : `${rating.toFixed(1)} out of 5 from ${listing.reviews.length} review${listing.reviews.length === 1 ? "" : "s"}`}
           {" · "}
           {formatWhen(listing.createdAt)}
@@ -228,7 +231,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       <div className="hidden flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap">
         {chatUrl ? (
           <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
-            WhatsApp the seller
+            {uiText(lang, "whatsapp_seller")}
           </a>
         ) : null}
         {contacts.whatsapp ? (
@@ -237,33 +240,34 @@ export default async function ListingPage({ params, searchParams }: Props) {
             subjectName={listing.title}
             path={`/listings/${listing.id}`}
             siteName={appName()}
+            lang={lang}
           />
         ) : null}
         <a href={shareUrl} className={btnSecondary} target="_blank" rel="noreferrer">
-          Share on WhatsApp
+          {uiText(lang, "share_whatsapp")}
         </a>
         {callUrl ? (
           <a href={callUrl} className={btnSecondary}>
-            Call
+            {uiText(lang, "call")}
           </a>
         ) : null}
         {shop ? (
           <Link href={`/b/${shop.slug}`} className={btnSecondary}>
-            Visit storefront
+            {uiText(lang, "visit_shop")}
           </Link>
         ) : null}
         {isOwner ? (
           <>
             <Link href={`/listings/${listing.id}/edit`} className={btnSecondary}>
-              Edit
+              {uiText(lang, "edit")}
             </Link>
             <Link href="/account/storefront" className={btnSecondary}>
-              Manage storefront
+              {uiText(lang, "manage_shop")}
             </Link>
             <UpgradeAction
               live={upgradesOpen}
               href={`/upgrade?listing=${listing.id}`}
-              label="Feature this listing"
+              label={uiText(lang, "feature_listing")}
               className={btnSecondary}
             />
           </>
@@ -274,7 +278,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       <div className="whitespace-pre-wrap text-base leading-relaxed text-ink/90">{listing.description}</div>
 
       <section className={`${cardClass} p-5`}>
-        <h2 className="font-serif text-xl text-navy">Contact</h2>
+        <h2 className="font-serif text-xl text-navy">{uiText(lang, "contact")}</h2>
         <p className="mt-1">{listing.contactName || listing.owner.name}</p>
         {contacts.hidden ? (
           <DemoContactNote note={DEMO_LISTING_CONTACT_NOTE} />
@@ -285,13 +289,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
           </>
         )}
         <Link href={`/people/${listing.owner.id}`} className="mt-3 inline-block text-sm font-semibold text-lake-dark hover:text-lake">
-          View {listing.owner.kind === "business" ? "business" : "person"} profile
+          {listing.owner.kind === "business" ? uiText(lang, "view_business") : uiText(lang, "view_person")}
         </Link>
       </section>
 
       <section id="reviews" className="grid gap-4">
-        <h2 className="font-serif text-2xl text-navy">Reviews</h2>
-        {listing.reviews.length === 0 ? <p className="text-sm text-ink/60">No reviews yet.</p> : null}
+        <h2 className="font-serif text-2xl text-navy">{uiText(lang, "reviews")}</h2>
+        {listing.reviews.length === 0 ? <p className="text-sm text-ink/60">{uiText(lang, "no_reviews_dot")}</p> : null}
         <ul className="grid gap-3">
           {listing.reviews.map((review) => (
             <li key={review.id} className={`${cardClass} p-4`}>
@@ -306,7 +310,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         {user && !isOwner ? <ReviewForm listingId={listing.id} /> : null}
         {!user ? (
           <Link href={`/login?next=/listings/${listing.id}`} className="text-sm font-semibold text-lake-dark hover:text-lake">
-            Sign in to review
+            {uiText(lang, "sign_in_review")}
           </Link>
         ) : null}
       </section>
@@ -314,7 +318,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       {user && !isOwner ? (
         <section className="grid gap-3">
           <details className={`${cardClass} p-4`}>
-            <summary className="cursor-pointer text-sm font-semibold">Report this listing</summary>
+            <summary className="cursor-pointer text-sm font-semibold">{uiText(lang, "report_listing")}</summary>
             <div className="mt-3">
               <ReportForm listingId={listing.id} targetUserId={listing.ownerId} />
             </div>
@@ -325,7 +329,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
             <form action={blockUser}>
               <input type="hidden" name="userId" value={listing.ownerId} />
               <input type="hidden" name="returnTo" value={`/listings/${listing.id}`} />
-              <button className="text-sm font-semibold text-danger">Block this person</button>
+              <button className="text-sm font-semibold text-danger">{uiText(lang, "block_person")}</button>
             </form>
           )}
         </section>
@@ -361,31 +365,31 @@ export default async function ListingPage({ params, searchParams }: Props) {
       {/* Mobile action row for non-WhatsApp actions */}
       <div className="flex flex-col gap-2 sm:hidden">
         <a href={shareUrl} className={btnSecondary} target="_blank" rel="noreferrer">
-          Share on WhatsApp
+          {uiText(lang, "share_whatsapp")}
         </a>
         {callUrl ? (
           <a href={callUrl} className={btnSecondary}>
-            Call
+            {uiText(lang, "call")}
           </a>
         ) : null}
         {callUrl ? <PaymentSafetyNote /> : null}
         {shop ? (
           <Link href={`/b/${shop.slug}`} className={btnSecondary}>
-            Visit storefront
+            {uiText(lang, "visit_shop")}
           </Link>
         ) : null}
         {isOwner ? (
           <>
             <Link href={`/listings/${listing.id}/edit`} className={btnSecondary}>
-              Edit
+              {uiText(lang, "edit")}
             </Link>
             <Link href="/account/storefront" className={btnSecondary}>
-              Manage storefront
+              {uiText(lang, "manage_shop")}
             </Link>
             <UpgradeAction
               live={upgradesOpen}
               href={`/upgrade?listing=${listing.id}`}
-              label="Feature this listing"
+              label={uiText(lang, "feature_listing")}
               className={btnSecondary}
             />
           </>
@@ -401,9 +405,10 @@ export default async function ListingPage({ params, searchParams }: Props) {
               subjectName={listing.title}
               path={`/listings/${listing.id}`}
               siteName={appName()}
+              lang={lang}
             />
             <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
-              WhatsApp the seller
+              {uiText(lang, "whatsapp_seller")}
             </a>
             <PaymentSafetyNote />
           </div>
@@ -411,7 +416,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
       ) : (
         <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
           <a href={shareUrl} className={`${btnPrimary} w-full`} target="_blank" rel="noreferrer">
-            Share on WhatsApp
+            {uiText(lang, "share_whatsapp")}
           </a>
         </div>
       )}
