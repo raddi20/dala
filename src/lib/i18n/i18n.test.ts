@@ -41,12 +41,11 @@ test("the Dholuo option is hidden while the flag is off", () => {
 });
 
 test("every English key has a Dholuo line and the copy stays clean", () => {
-  const held = new Set(["home_draft_help", "no_offerings", "type_for_sale"]);
   const keys = Object.keys(UI_STRINGS);
   assert.ok(keys.length > 20);
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, held.has(key), key);
+    assert.equal(row.draft, false, key);
     assert.ok(row.en.trim(), key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en), false, key);
@@ -60,6 +59,9 @@ test("every English key has a Dholuo line and the copy stays clean", () => {
   assert.equal(uiText("en", "prompt_ayie"), HOME_PROMPTS[0].label);
   assert.equal(uiText("en", "diaspora_orders"), DIASPORA_ORDERS_LABEL);
   assert.match(uiText("en", "home_ask_sub"), /Kenya, East Africa and the Diaspora/);
+  assert.equal(uiText("dholuo", "home_draft_help"), "Rangach nyalo ndiko ni weche mag listing");
+  assert.equal(uiText("dholuo", "no_offerings"), "Onge Duka");
+  assert.equal(uiText("dholuo", "type_for_sale"), "Sale");
   const doc = readFileSync(new URL("../../../docs/dholuo-ui-strings.md", import.meta.url), "utf8");
   assert.equal(doc, dholuoStringsMarkdown());
   for (const key of keys) assert.match(doc, new RegExp(`\\| ${key} \\|`));

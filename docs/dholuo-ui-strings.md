@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Reviewed lines are signed off (`draft: false`). Held lines stay drafts (`draft: true`) until Kevin answers.
+Kevin signed off every Dholuo line (`draft: false`). A held status would mean an answer is still pending.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -47,7 +47,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | home_family_body | Home | Some shops take a WhatsApp order from the Diaspora for family in Kenya. Payment stays between you and the seller. | Duka moko kawo oda WhatsApp koa Diaspora ne joodu Kenya. Chudo bedo e kindi kod wuon Duka. | reviewed | Review. Payment stays with the seller. Do not say Rangach holds the money. |
 | home_see_shops | Home | See those shops | Ne duka go | reviewed | Review. |
 | home_list_body | Home | Open a shop, add what you sell, and buyers message you on WhatsApp. Kenya, East Africa and the Diaspora. | Yaw duka, ket gima iuso, kendo jang'iew gocho e WhatsApp. Kenya, East Africa kod Diaspora. | reviewed | Review. English keeps the audience line. |
-| home_draft_help | Home | Rangach can draft the listing words for you. | Rangach nyalo ndiko weche mag listing ni. | held | Review. listing kept. |
+| home_draft_help | Home | Rangach can draft the listing words for you. | Rangach nyalo ndiko ni weche mag listing | reviewed | Review. listing kept. |
 | search_button | Browse | Search | Manyo | reviewed | Review. |
 | filters | Browse | Filters | Yiero | reviewed | Review. yier = choose. |
 | close | Browse | Close | Lor | reviewed | Review. lor = close or shut. |
@@ -67,7 +67,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | badge_business | Browse | Business verified | Ohala ong'ere | reviewed | Review. |
 | all_classifieds | Browse | All classifieds | Gik ma ipso te | reviewed | Review. |
 | type_business | Browse | Business | Ohala | reviewed | Review. |
-| type_for_sale | Browse | For sale | Ni uso | held | Review. |
+| type_for_sale | Browse | For sale | Sale | reviewed | Review. |
 | type_wanted | Browse | Wanted | Midwaro | reviewed | Review. |
 | type_housing | Browse | Housing | Ot | reviewed | Review. |
 | type_services | Browse | Services | Tich | reviewed | Review. tich = work. |
@@ -113,7 +113,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | offerings | Shop | Offerings | Gik ma iuso | reviewed | Review. |
 | about | Shop | About | Kuom | reviewed | Review. kuom = about. |
 | ask_whatsapp | Shop | Ask on WhatsApp | Penj e WhatsApp | reviewed | Review. |
-| no_offerings | Shop | No offerings yet | Pok nitie gik ma use | held | Review. |
+| no_offerings | Shop | No offerings yet | Onge Duka | reviewed | Review. |
 | no_offerings_body | Shop | This shop has not listed products or services. | Duka ni pok oketo gik ma iuso. | reviewed | Review. |
 | shop_no_about | Shop | This shop has not added a description yet. | Duka ni pok ondiko wach kuome. | reviewed | Review. The seller's own words are not translated. |
 | family_orders_note | Shop | Takes orders for family back home. | Kawo oda ne joma ni dala. | reviewed | Review. |

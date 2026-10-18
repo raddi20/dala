@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Reviewed lines are `draft: false`. Held lines stay `draft: true` until Kevin answers.
+ * Kevin signed off every Dholuo line (`draft: false`).
  */
 export type UiString = {
   en: string;
@@ -128,8 +128,8 @@ export const UI_STRINGS = {
   },
   home_draft_help: {
     en: "Rangach can draft the listing words for you.",
-    dholuo: "Rangach nyalo ndiko weche mag listing ni.",
-    draft: true,
+    dholuo: "Rangach nyalo ndiko ni weche mag listing",
+    draft: false,
     page: "Home",
     notes: "Review. listing kept.",
   },
@@ -153,7 +153,7 @@ export const UI_STRINGS = {
   badge_business: { en: "Business verified", dholuo: "Ohala ong'ere", draft: false, page: "Browse", notes: "Review." },
   all_classifieds: { en: "All classifieds", dholuo: "Gik ma ipso te", draft: false, page: "Browse", notes: "Review." },
   type_business: { en: "Business", dholuo: "Ohala", draft: false, page: "Browse", notes: "Review." },
-  type_for_sale: { en: "For sale", dholuo: "Ni uso", draft: true, page: "Browse", notes: "Review." },
+  type_for_sale: { en: "For sale", dholuo: "Sale", draft: false, page: "Browse", notes: "Review." },
   type_wanted: { en: "Wanted", dholuo: "Midwaro", draft: false, page: "Browse", notes: "Review." },
   type_housing: { en: "Housing", dholuo: "Ot", draft: false, page: "Browse", notes: "Review." },
   type_services: { en: "Services", dholuo: "Tich", draft: false, page: "Browse", notes: "Review. tich = work." },
@@ -225,7 +225,7 @@ export const UI_STRINGS = {
   offerings: { en: "Offerings", dholuo: "Gik ma iuso", draft: false, page: "Shop", notes: "Review." },
   about: { en: "About", dholuo: "Kuom", draft: false, page: "Shop", notes: "Review. kuom = about." },
   ask_whatsapp: { en: "Ask on WhatsApp", dholuo: "Penj e WhatsApp", draft: false, page: "Shop", notes: "Review." },
-  no_offerings: { en: "No offerings yet", dholuo: "Pok nitie gik ma use", draft: true, page: "Shop", notes: "Review." },
+  no_offerings: { en: "No offerings yet", dholuo: "Onge Duka", draft: false, page: "Shop", notes: "Review." },
   no_offerings_body: {
     en: "This shop has not listed products or services.",
     dholuo: "Duka ni pok oketo gik ma iuso.",
@@ -286,7 +286,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Reviewed lines are signed off (`draft: false`). Held lines stay drafts (`draft: true`) until Kevin answers.",
+    "Kevin signed off every Dholuo line (`draft: false`). A held status would mean an answer is still pending.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
