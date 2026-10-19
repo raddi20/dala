@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome and the first tour (`draft: false`). Newer `tour2_` and `sulwe_` lines are drafts.
+ * Kevin signed off the chrome, the first tour and the visual tour (`draft: false`). Newer `sulwe_` lines are drafts.
  */
 export type UiString = {
   en: string;
@@ -336,51 +336,51 @@ export const UI_STRINGS = {
     notes: "Kevin signed off.",
   },
 
-  tour2_back: { en: "Back", dholuo: "Chien", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour2_home_body: { en: "This tab is Home.", dholuo: "Ma e Dala.", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_back: { en: "Back", dholuo: "Chien", draft: false, page: "Tour", notes: "Kevin signed off." },
+  tour2_home_body: { en: "This tab is Home.", dholuo: "Ma e Dala.", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour2_explore_body: {
     en: "Explore opens listings and shops.",
     dholuo: "Manyo yawo listings kod dukni.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
   tour2_ask_tab_body: {
     en: "Ask searches with a sentence, like fresh tilapia.",
     dholuo: "Penj manyo gi wach, kaka rech ngege.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
   tour2_occasions_body: {
     en: "Occasions gathers what a family needs, like an ayie.",
-    dholuo: "nyasi keto gik ma jo ot dwaro, kaka ayie.",
-    draft: true,
+    dholuo: "nyasi keto gik ma jogi dwaro, kaka ayie.",
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
   tour2_town_body: {
     en: "Choose a town, such as Kisumu.",
     dholuo: "Yier boma, kaka Kisumu.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour2_photo_title: { en: "Photo", dholuo: "Picha", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_photo_title: { en: "Photo", dholuo: "Picha", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour2_photo_body: {
     en: "Add a photo of what you sell, like fresh tilapia.",
     dholuo: "Ket picha mar gima iuso, kaka rech ngege.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour2_price_title: { en: "Price", dholuo: "Nengo", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_price_title: { en: "Price", dholuo: "Nengo", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour2_price_body: {
     en: "Add a price, or leave it blank and talk on WhatsApp.",
-    dholuo: "Ket nengo, kata weye nono kendo wuoy e WhatsApp.",
-    draft: true,
+    dholuo: "Ket nengo, kata weye nono twak e WhatsApp.",
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review. No payment-holding wording.",
+    notes: "Kevin signed off. No payment-holding wording.",
   },
 
   sulwe_talk: { en: "Talk to Sulwe", dholuo: "Wuoy gi Sulwe", draft: true, page: "Sulwe", notes: "Draft for Kevin. Review." },
@@ -438,7 +438,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off the chrome and the first tour (`draft: false`). A held status means a newer line, including tour2_ and sulwe_, is still a draft.",
+    "Kevin signed off the chrome, the first tour and the visual tour (`draft: false`). A held status means a newer line, including sulwe_, is still a draft.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
@@ -468,14 +468,14 @@ export function tourStringsMarkdown(): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** New visual-tour copy only. Every Dholuo line is a draft for Kevin. */
+/** New visual-tour copy only. Kevin signed off every line. */
 export function tourV2StringsMarkdown(): string {
   const lines = [
-    "# Guided tour Dholuo drafts (visual tour)",
+    "# Guided tour Dholuo (visual tour)",
     "",
-    "New strings for the visual tour. Every Dholuo line is a draft (`draft: true`) for Kevin. Signed-off tour lines are unchanged.",
+    "Strings for the visual tour. Kevin signed off every Dholuo line (`draft: false`).",
     "",
-    "| Key | English | Dholuo draft |",
+    "| Key | English | Dholuo |",
     "| --- | --- | --- |",
   ];
   for (const [key, row] of Object.entries(UI_STRINGS)) {
