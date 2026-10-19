@@ -159,7 +159,7 @@ test("Sulwe stays beside the bubble on a 360px screen", () => {
   assert.ok(tight.left >= 8 && tight.left + 72 <= 352);
 });
 
-test("new Sulwe strings have Dholuo drafts and stay clear of funeral and escrow wording", () => {
+test("Sulwe strings have signed-off Dholuo and stay clear of funeral and escrow wording", () => {
   const keys = Object.keys(UI_STRINGS).filter((key) => key.startsWith("sulwe_"));
   assert.ok(keys.includes("sulwe_hi"));
   assert.ok(keys.includes("sulwe_chip_fundi"));
@@ -167,11 +167,17 @@ test("new Sulwe strings have Dholuo drafts and stay clear of funeral and escrow 
   assert.equal(uiText("en", "understood"), "Rangach understood");
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, false, key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en + row.dholuo), false, key);
     assert.equal(/escrow/i.test(row.en + row.dholuo), false, key);
   }
+  assert.equal(uiText("dholuo", "sulwe_talk"), "Wuo gi Sulwe");
+  assert.equal(uiText("dholuo", "sulwe_minimise"), "Shrink Sulwe");
+  assert.equal(uiText("dholuo", "sulwe_hi"), "Misawa, an Sulwe, ere kaka anyalo konyi?");
+  assert.equal(uiText("dholuo", "sulwe_found"), "Magi ema ayudo ne {query}.");
+  assert.equal(uiText("dholuo", "sulwe_see_all"), "Duoko duto");
+  assert.equal(uiText("dholuo", "sulwe_chat"), "Chat gi Sulwe");
   const doc = readFileSync(new URL("../../docs/sulwe-dholuo-strings.md", import.meta.url), "utf8");
   assert.equal(doc, sulweStringsMarkdown());
 });
