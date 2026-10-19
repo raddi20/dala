@@ -45,7 +45,7 @@ test("every English key has a Dholuo line and the copy stays clean", () => {
   assert.ok(keys.length > 20);
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, key.startsWith("tour2_"), key);
+    assert.equal(row.draft, key.startsWith("tour2_") || key.startsWith("sulwe_"), key);
     assert.ok(row.en.trim(), key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en), false, key);
