@@ -155,11 +155,13 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
   assert.ok(keysV2.length >= 5);
   for (const key of keysV2) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, false, key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en + row.dholuo), false, key);
     assert.equal(/escrow/i.test(row.en + row.dholuo), false, key);
   }
+  assert.equal(UI_STRINGS.tour2_occasions_body.dholuo, "nyasi keto gik ma jogi dwaro, kaka ayie.");
+  assert.equal(UI_STRINGS.tour2_price_body.dholuo, "Ket nengo, kata weye nono twak e WhatsApp.");
   const v2 = readFileSync(new URL("../../docs/tour-dholuo-strings-v2.md", import.meta.url), "utf8");
   assert.equal(v2, tourV2StringsMarkdown());
   assert.match(card, /role="dialog"/);
