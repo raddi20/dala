@@ -175,3 +175,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | sulwe_empty | Sulwe | Nothing matched yet. Try a town such as Kisumu. | Pod onge. Tem boma kaka Kisumu. | reviewed | Kevin signed off. |
 | sulwe_searching | Sulwe | Looking… | Manyo… | reviewed | Kevin signed off. |
 | sulwe_chat | Sulwe | Chat with Sulwe | Chat gi Sulwe | reviewed | Kevin signed off. Dialog label. |
+| invite_tour_hi | Tour invite | Hi! Want a quick tour? | Misawa! Idwaro tour machiek? | held | Draft for Kevin. Sulwe says this. machiek = short or quick. |
+| invite_tour_card | Tour invite | New here? Want a quick tour of Rangach? | In ng'at manyien? Idwaro tour machiek mar Rangach? | held | Draft for Kevin. Shown when Sulwe is off. |
+| invite_tour_yes | Tour invite | Yes, show me | Ee, nyisa | held | Draft for Kevin. nyisa = show me. |
+| invite_tour_no | Tour invite | Not now | Ok sani | held | Draft for Kevin. sani = now. |

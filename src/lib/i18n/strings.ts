@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`).
+ * Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). Newer `invite_` lines are drafts.
  */
 export type UiString = {
   en: string;
@@ -416,6 +416,17 @@ export const UI_STRINGS = {
   },
   sulwe_searching: { en: "Looking…", dholuo: "Manyo…", draft: false, page: "Sulwe", notes: "Kevin signed off." },
   sulwe_chat: { en: "Chat with Sulwe", dholuo: "Chat gi Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off. Dialog label." },
+
+  invite_tour_hi: { en: "Hi! Want a quick tour?", dholuo: "Misawa! Idwaro tour machiek?", draft: true, page: "Tour invite", notes: "Draft for Kevin. Sulwe says this. machiek = short or quick." },
+  invite_tour_card: {
+    en: "New here? Want a quick tour of Rangach?",
+    dholuo: "In ng'at manyien? Idwaro tour machiek mar Rangach?",
+    draft: true,
+    page: "Tour invite",
+    notes: "Draft for Kevin. Shown when Sulwe is off.",
+  },
+  invite_tour_yes: { en: "Yes, show me", dholuo: "Ee, nyisa", draft: true, page: "Tour invite", notes: "Draft for Kevin. nyisa = show me." },
+  invite_tour_no: { en: "Not now", dholuo: "Ok sani", draft: true, page: "Tour invite", notes: "Draft for Kevin. sani = now." },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;

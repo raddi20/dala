@@ -21,7 +21,6 @@ import {
   resumedStepId,
   serializeTourRecord,
   serializeTourRun,
-  shouldShowTour,
   skipTour,
   stepById,
   stepPath,
@@ -34,6 +33,7 @@ import {
   type TourPlacement,
   type TourRun,
 } from "@/lib/tour";
+import { TOUR_ACCEPT_KEY, TOUR_PROMPT_EVENT, tourEntry } from "@/lib/tour";
 
 const EMPTY_PLACEMENT: TourPlacement & { target: string; sulwe: { top: number; left: number } | null } = {
   spot: null,
@@ -217,6 +217,8 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
       function onReplay() {
         const storageKey = storageKeyForKind(tourKindForPath(window.location.pathname));
         document.cookie = persistTourRecord(window.localStorage, storageKey, replayTour());
+        // A replay starts the tour straight away, without the invite.
+        sessionStorage.setItem(TOUR_ACCEPT_KEY, "1");
         clearRun();
         setClosedFor(null);
         notify();
@@ -231,9 +233,20 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
     () => serializeTourRecord(readTourRecord(window.localStorage, document.cookie, key)),
     () => "seen",
   );
+  const accepted = useSyncExternalStore(
+    (notify) => {
+      window.addEventListener(TOUR_PROMPT_EVENT, notify);
+      return () => window.removeEventListener(TOUR_PROMPT_EVENT, notify);
+    },
+    () => sessionStorage.getItem(TOUR_ACCEPT_KEY) === "1",
+    () => false,
+  );
   const record = parseTourRecord(seenRaw);
   const sessionClosed = closedFor === key;
-  const open = !sessionClosed && shouldShowTour({ path, flag: enabled, force, seen: record.seen, activeRun: Boolean(storedRun) });
+  // First-time visitors get the invite (TourPrompt) instead of an automatic start.
+  const open =
+    !sessionClosed &&
+    tourEntry({ path, flag: enabled, force, seen: record.seen, activeRun: Boolean(storedRun), accepted, declined: false }) === "tour";
   const stepId = open ? resumedStepId(runRaw, kind, steps) : steps[0]?.id ?? "";
   const step = stepById(steps, stepId);
   const stepIndex = Math.max(0, steps.findIndex((item) => item.id === step.id));
@@ -299,6 +312,9 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
       if (!node || typeof ResizeObserver === "undefined") return;
       observer = new ResizeObserver(scheduled);
       observer.observe(node);
+      // Re-place when the bubble changes size too (late fonts, Dholuo text), so Sulwe keeps clear of it.
+      const bubbleNode = document.querySelector<HTMLElement>("[data-tour-dialog]");
+      if (bubbleNode) observer.observe(bubbleNode);
     });
     window.addEventListener("resize", scheduled);
     window.addEventListener("scroll", scheduled, true);
@@ -340,6 +356,7 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
 
   function endTour() {
     document.cookie = persistTourRecord(window.localStorage, key, skipTour());
+    sessionStorage.removeItem(TOUR_ACCEPT_KEY);
     clearRun();
     setClosedFor(key);
     window.dispatchEvent(new Event("rangach-tour-change"));

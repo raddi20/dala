@@ -96,6 +96,24 @@ h3,
   display: none;
 }
 
+/* Tour invite: a short pop-in. Reduced motion shows it without movement. */
+@media (prefers-reduced-motion: no-preference) {
+  .tour-prompt {
+    animation: tour-prompt-in 240ms ease-out both;
+  }
+}
+
+@keyframes tour-prompt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .filter-sheet > summary {
   list-style: none;
   cursor: pointer;
