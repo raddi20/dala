@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off every Dholuo line (`draft: false`). A held status would mean an answer is still pending.
+Kevin signed off the chrome (`draft: false`). A held status means the line is still a draft, including the guided tour.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -128,3 +128,25 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | close_checks | Shop | Close checks | Lor ranyisi | reviewed | Review. |
 | shop_sections | Shop | Shop sections | Kuonde mag duka | reviewed | Review. Screen-reader label. |
 | shop_video | Shop | Shop video | Video mar duka | reviewed | Review. |
+| tour_dialog | Tour | Guided tour | Nyiso | held | Draft for Kevin. Review. |
+| tour_ask_title | Tour | Ask Rangach | Penj Rangach | held | Draft for Kevin. Review penj. |
+| tour_ask_body | Tour | Type a sentence, like fresh tilapia or a fundi in Kisumu. | Ndik wach, kaka rech ngege kata fundi Kisumu. | held | Draft for Kevin. Review. Examples are tilapia and a fundi in Kisumu. |
+| tour_nav_title | Tour | Along the bottom | Piny ka | held | Draft for Kevin. Review. |
+| tour_nav_body | Tour | {home}, {explore}, {ask}, {occasions}, and {sell}. | {home}, {explore}, {ask}, {occasions}, kod {sell}. | held | Draft for Kevin. The words in braces are the live bottom-nav labels. |
+| tour_filters_title | Tour | Filters and town | Yiero kod boma | held | Draft for Kevin. Review. |
+| tour_filters_body | Tour | On Browse, open Filters and choose a town such as Kisumu. | E manyo, yaw Yiero kendo yier boma kaka Kisumu. | held | Draft for Kevin. Review. |
+| tour_whatsapp_title | Tour | WhatsApp the seller | WhatsApp wuon ohala | held | Draft for Kevin. Review. |
+| tour_whatsapp_body | Tour | Message the seller on WhatsApp. Ask about an ayie, or a fundi in Kisumu. | Goch ng'at uso e WhatsApp. Penj kuom ayie kata fundi Kisumu. | held | Draft for Kevin. Review. No payment-holding wording. |
+| tour_sell_title | Tour | Sell or open a shop | Uso kata yaw duka | held | Draft for Kevin. Review. |
+| tour_sell_body | Tour | List your business free, then open a shop for what you sell. | Ket ohala mari nono, eka yaw duka. | held | Draft for Kevin. Review. |
+| tour_next | Tour | Next | Machielo | held | Draft for Kevin. Review. |
+| tour_skip | Tour | Skip | Wey | held | Draft for Kevin. Review. |
+| tour_done | Tour | Done | Otimore | held | Draft for Kevin. Review. |
+| tour_replay | Tour | Show me around | Nyisa | held | Draft for Kevin. Review. |
+| tour_step | Tour | Step {n} of {total} | Okang' {n} kuom {total} | held | Draft for Kevin. Review. Screen reader. |
+| tour_seller_offer_title | Tour | What you sell | Gima iuso | held | Draft for Kevin. Review. |
+| tour_seller_offer_body | Tour | Name it clearly. Catering for an ayie is enough to start. | Ket nying maber. Chiemo mar ayie oromo. | held | Draft for Kevin. Review. |
+| tour_seller_town_title | Tour | Your town | Boma mari | held | Draft for Kevin. Review. |
+| tour_seller_town_body | Tour | Pick a town, such as Kisumu, so nearby people can find you. | Yier boma, kaka Kisumu. | held | Draft for Kevin. Review. |
+| tour_seller_publish_title | Tour | Publish | Yaw | held | Draft for Kevin. Review. |
+| tour_seller_publish_body | Tour | Publish when it looks right. Buyers message you on WhatsApp. | Yaw ka owinjo maber. Joma ng'iewo gochi e WhatsApp. | held | Draft for Kevin. Review. |

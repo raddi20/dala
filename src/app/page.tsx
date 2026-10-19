@@ -58,6 +58,7 @@ export default async function HomePage() {
             <input
               id="home-nl"
               name="nl"
+              data-tour="ask"
               placeholder={lang === "dholuo" ? uiText(lang, "ask_placeholder") : HOME_ASK_PLACEHOLDER}
               className="min-h-11 w-full rounded-[14px] border-0 bg-white px-3.5 text-base text-ink placeholder:text-ink/40"
             />

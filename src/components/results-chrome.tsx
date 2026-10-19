@@ -45,6 +45,7 @@ export function ResultsSearchBar({
           <input
             id={inputId}
             name={inputName}
+            data-tour="ask"
             defaultValue={defaultValue}
             placeholder={lang === "dholuo" ? uiText(lang, "ask_placeholder") : HOME_ASK_PLACEHOLDER}
             className={searchFieldClass}
@@ -73,7 +74,7 @@ export function FilterSheet({
 }) {
   return (
     <details className="filter-sheet shrink-0">
-      <summary className={active ? chipActiveClass : chipClass}>
+      <summary data-tour="filters" className={active ? chipActiveClass : chipClass}>
         <span className="inline-flex items-center gap-1">
           {uiText(lang, "filters")}
           <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4 fill-current">

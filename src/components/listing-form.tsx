@@ -122,6 +122,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           Title
           <input
             name="title"
+            data-tour="sell-offer"
             value={title}
             onChange={(event) => {
               setTitle(event.target.value);
@@ -166,6 +167,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
             Town
             <select
               name="city"
+              data-tour="sell-town"
               value={city}
               onChange={(event) => {
                 setCity(event.target.value);
@@ -236,9 +238,11 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           defaultUrl={initial.photoUrl}
           hint="Optional. Shows on the listing. You can crop and brighten it before it uploads."
         />
-        <SubmitButton className={btnPrimary} pendingLabel="Saving…">
-          {mode === "create" ? "Publish listing" : "Save changes"}
-        </SubmitButton>
+        <span data-tour="sell-publish">
+          <SubmitButton className={btnPrimary} pendingLabel="Saving…">
+            {mode === "create" ? "Publish listing" : "Save changes"}
+          </SubmitButton>
+        </span>
       </form>
     </div>
   );

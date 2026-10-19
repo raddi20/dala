@@ -91,7 +91,7 @@ export default async function ManageStorefrontPage({
         <div className={`${cardClass} grid gap-5 p-6`}>
           <SellerSteps current={1} />
           <div className="border-t border-sand/80 pt-5">
-            <p className="text-sm text-ink/70">
+            <p data-tour="sell-offer" className="text-sm text-ink/70">
               Shop name will be <span className="font-semibold text-navy">{user.name}</span>.
               {hasWhatsapp
                 ? ` Buyers reach you on ${user.whatsapp || user.phone}.`
@@ -113,7 +113,7 @@ export default async function ManageStorefrontPage({
               </p>
             )}
             <form action={createStorefront} className="mt-4">
-              <button className={btnPrimary}>Start your shop</button>
+              <button data-tour="sell-publish" className={btnPrimary}>Start your shop</button>
             </form>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default async function ManageStorefrontPage({
           ) : null}
           <div className="flex flex-wrap gap-2">
             <form action={publishStorefront}>
-              <button className={btnPrimary}>Publish shop</button>
+              <button data-tour="sell-publish" className={btnPrimary}>Publish shop</button>
             </form>
             <Link href={`/b/${shop.slug}`} className={btnSecondary}>
               Preview shop
