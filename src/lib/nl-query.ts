@@ -64,6 +64,11 @@ const CITY_TERMS = cityAliasTerms();
 
 const TIME_PHRASES = ["next month", "next week", "next year", "this month", "this week", "this weekend", "this year"];
 
+/** Category and place words the sentence parser knows. Sulwe's voice correction uses them as vocabulary. */
+export function nlKeywords(): string[] {
+  return [...CATEGORY_KEYS.flatMap((row) => row.keys), ...PLACES.map((place) => place.term)];
+}
+
 export function isHomelandTown(value: string): boolean {
   const city = canonicalCity(value);
   return Boolean(city) && regionForCity(city) === "homeland";

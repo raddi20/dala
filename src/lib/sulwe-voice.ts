@@ -54,7 +54,8 @@ export type RecognitionLike = {
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
-  onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null;
+  onresult: ((event: { resultIndex: number; results: ArrayLike<ArrayLike<{ transcript: string; confidence?: number }> & { isFinal: boolean }> }) => void) | null;
+  grammars?: unknown;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
   start(): void;
@@ -102,15 +103,42 @@ export function voiceErrorKey(error: string): StringKey | null {
   }
 }
 
+/** How many guesses the browser is asked for. Each is scored after correction. */
+export const SULWE_ALTERNATIVES = 5;
+
+export type HeardAlternative = { transcript: string; confidence?: number };
+
 export type ListenHandlers = {
   onInterim(text: string): void;
-  onFinal(text: string): void;
+  /** text is the browser's first guess. alternatives holds up to five guesses, best first. */
+  onFinal(text: string, alternatives: HeardAlternative[]): void;
   onError(key: StringKey): void;
   /** Always called once, whatever happened. The mic is off after this. */
   onEnd(): void;
 };
 
 export type Listener = { stop(): void; abort(): void };
+
+export type GrammarWindow = { SpeechGrammarList?: unknown; webkitSpeechGrammarList?: unknown };
+
+type GrammarListLike = { addFromString(grammar: string, weight?: number): void };
+
+/**
+ * Hint Rangach words to the recogniser where SpeechGrammarList exists. Many browsers ignore it,
+ * some lack it, and some throw: each case leaves recognition as it was. Returns true when attached.
+ */
+export function addGrammarHint(recognition: RecognitionLike, grammar: string, win: GrammarWindow | null): boolean {
+  const List = win?.SpeechGrammarList ?? win?.webkitSpeechGrammarList;
+  if (typeof List !== "function" || !grammar) return false;
+  try {
+    const list = new (List as new () => GrammarListLike)();
+    list.addFromString(grammar, 1);
+    recognition.grammars = list;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Listen once. One utterance, stops on silence or a result. Only call this from a tap.
@@ -120,6 +148,7 @@ export function listenOnce(
   ctor: RecognitionCtor,
   lang: string,
   handlers: ListenHandlers,
+  options: { grammar?: string; win?: GrammarWindow | null } = {},
   timers: { set(fn: () => void, ms: number): unknown; clear(id: unknown): void } = {
     set: (fn, ms) => setTimeout(fn, ms),
     clear: (id) => clearTimeout(id as ReturnType<typeof setTimeout>),
@@ -144,19 +173,32 @@ export function listenOnce(
   recognition.lang = lang;
   recognition.continuous = false;
   recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
+  recognition.maxAlternatives = SULWE_ALTERNATIVES;
+  if (options.grammar) addGrammarHint(recognition, options.grammar, options.win ?? null);
   recognition.onresult = (event) => {
     let interim = "";
     let final = "";
+    let finalResult: ArrayLike<{ transcript: string; confidence?: number }> | null = null;
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
       const result = event.results[i];
       const text = result?.[0]?.transcript ?? "";
-      if (result?.isFinal) final += text;
-      else interim += text;
+      if (result?.isFinal) {
+        final += text;
+        finalResult = result;
+      } else interim += text;
     }
     if (final.trim() && !heardFinal) {
       heardFinal = true;
-      handlers.onFinal(final.trim());
+      const alternatives: HeardAlternative[] = [];
+      const many = finalResult && event.results.length - event.resultIndex === 1 ? finalResult : null;
+      if (many) {
+        for (let k = 0; k < Math.min(many.length, SULWE_ALTERNATIVES); k += 1) {
+          const option = many[k];
+          if (option?.transcript?.trim()) alternatives.push({ transcript: option.transcript.trim(), confidence: option.confidence });
+        }
+      }
+      if (alternatives.length === 0) alternatives.push({ transcript: final.trim() });
+      handlers.onFinal(final.trim(), alternatives);
       try {
         recognition.stop();
       } catch {

@@ -4,7 +4,8 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).
+ * Kevin signed off the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).
+ * Newer `hear_` lines (voice corrections) are drafts.
  */
 export type UiString = {
   en: string;
@@ -540,6 +541,35 @@ export const UI_STRINGS = {
     page: "Sulwe voice",
     notes: "Kevin signed off. Spoken reply.",
   },
+
+  hear_did_you_mean: {
+    en: "Did you mean: {query}?",
+    dholuo: "Ne idwaro wacho ni: {query}?",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Shown, and said in English, when Sulwe fixed a misheard word. {query} is the fixed search.",
+  },
+  hear_search_this: {
+    en: "Search this",
+    dholuo: "Manyo ma",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Main button under Did you mean. manyo = look for.",
+  },
+  hear_search_said: {
+    en: "Search what I said",
+    dholuo: "Manyo gima ne awacho",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Searches the words as heard, without the fix.",
+  },
+  hear_heard: {
+    en: "I heard: {raw}",
+    dholuo: "Ne awinjo: {raw}",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Small line with the raw words. Hidden when the raw words were rude or awkward.",
+  },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
@@ -562,7 +592,9 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).",
+    Object.values(UI_STRINGS).some((row) => row.draft)
+      ? "Kevin signed off the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`). A held status means a line is still waiting on Kevin."
+      : "Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",

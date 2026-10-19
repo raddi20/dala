@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).
+Kevin signed off the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`). A held status means a line is still waiting on Kevin.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -195,3 +195,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | voice_found | Sulwe voice | I found {count} for {query}. | Ayudo {count} ne {query}. | reviewed | Kevin signed off. Spoken reply. Spoken in English while the voices are English. |
 | voice_found_one | Sulwe voice | I found 1 for {query}. | Ayudo achiel ne {query}. | reviewed | Kevin signed off. Spoken reply. |
 | voice_none | Sulwe voice | Nothing yet for {query}. Try a town like Kisumu. | Pod onge ne {query}. Tem boma kaka Kisumu. | reviewed | Kevin signed off. Spoken reply. |
+| hear_did_you_mean | Sulwe voice | Did you mean: {query}? | Ne idwaro wacho ni: {query}? | held | Draft for Kevin. Shown, and said in English, when Sulwe fixed a misheard word. {query} is the fixed search. |
+| hear_search_this | Sulwe voice | Search this | Manyo ma | held | Draft for Kevin. Main button under Did you mean. manyo = look for. |
+| hear_search_said | Sulwe voice | Search what I said | Manyo gima ne awacho | held | Draft for Kevin. Searches the words as heard, without the fix. |
+| hear_heard | Sulwe voice | I heard: {raw} | Ne awinjo: {raw} | held | Draft for Kevin. Small line with the raw words. Hidden when the raw words were rude or awkward. |

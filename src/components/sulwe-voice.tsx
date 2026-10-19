@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { Lang } from "@/lib/i18n/lang";
-import { uiText, type StringKey } from "@/lib/i18n/strings";
+import { btnPrimary, btnSecondary } from "@/components/ui";
+import { uiFill, uiText, type StringKey } from "@/lib/i18n/strings";
 import type { SulweAskResult } from "@/lib/sulwe";
 import {
   listenOnce,
@@ -15,9 +16,22 @@ import {
   voiceSupport,
   writeMuted,
   writeVoiceChoice,
+  type HeardAlternative,
   type Listener,
   type VoiceChoice,
 } from "@/lib/sulwe-voice";
+import { buildVocabulary, defaultVocabulary, displaySafe, pickBestAlternative, voiceGrammar, type Vocabulary, type VoicePick } from "@/lib/voice-correct";
+
+let catalogueWords: Promise<string[]> | null = null;
+
+/** Catalogue words, fetched once per page load. The chat works without them. */
+function loadCatalogueWords(): Promise<string[]> {
+  catalogueWords ??= fetch("/api/sulwe/vocab")
+    .then((response) => (response.ok ? response.json() : { words: [] }))
+    .then((body: { words?: unknown }) => (Array.isArray(body.words) ? body.words.filter((word): word is string => typeof word === "string") : []))
+    .catch(() => []);
+  return catalogueWords;
+}
 
 const MUTE_EVENT = "rangach-sulwe-mute";
 const LANG_EVENT = "rangach-sulwe-voice-lang";
@@ -74,6 +88,18 @@ export default function SulweVoice({
   const [message, setMessage] = useState<StringKey | null>(null);
   const listener = useRef<Listener | null>(null);
   const pending = useRef<string | null>(null);
+  const [suggestion, setSuggestion] = useState<VoicePick | null>(null);
+  const vocab = useRef<Vocabulary>(defaultVocabulary());
+
+  useEffect(() => {
+    let live = true;
+    void loadCatalogueWords().then((words) => {
+      if (live && words.length) vocab.current = buildVocabulary(words);
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
 
   // Never leave the mic on or keep talking after the chat closes.
   useEffect(
@@ -121,20 +147,49 @@ export default function SulweVoice({
     synth()?.cancel();
     setMessage(null);
     setHeard("");
+    setSuggestion(null);
+    let grammar = "";
+    try {
+      grammar = voiceGrammar(vocab.current);
+    } catch {
+      grammar = "";
+    }
     setListening(true);
-    listener.current = listenOnce(ctor, recognitionLang(lang, choice), {
-      onInterim: (text) => setHeard(text),
-      onFinal: (text) => {
-        setHeard(text);
-        pending.current = text;
-        onAsk(text);
+    listener.current = listenOnce(
+      ctor,
+      recognitionLang(lang, choice),
+      {
+        onInterim: (text) => setHeard(displaySafe(text)),
+        onFinal: (text, alternatives) => heardFinal(text, alternatives),
+        onError: (key) => setMessage(key),
+        onEnd: () => {
+          listener.current = null;
+          setListening(false);
+        },
       },
-      onError: (key) => setMessage(key),
-      onEnd: () => {
-        listener.current = null;
-        setListening(false);
-      },
-    });
+      { grammar, win: window as never },
+    );
+  }
+
+  function search(text: string) {
+    setSuggestion(null);
+    setHeard(displaySafe(text));
+    pending.current = text;
+    onAsk(text);
+  }
+
+  /** Clear speech searches straight away. A corrected one waits for a tap on Search this. */
+  function heardFinal(text: string, alternatives: HeardAlternative[]) {
+    const pick = pickBestAlternative(alternatives.length ? alternatives : [{ transcript: text }], vocab.current);
+    if (!pick) return;
+    if (!pick.changed) {
+      search(pick.text);
+      return;
+    }
+    setHeard("");
+    setSuggestion(pick);
+    const win = window as VoiceWindow;
+    speakSulwe(synth(), win.SpeechSynthesisUtterance as never, uiFill("en", "hear_did_you_mean", { query: pick.text }), muted);
   }
 
   function pickLang(next: VoiceChoice) {
@@ -192,6 +247,28 @@ export default function SulweVoice({
           </button>
         ) : null}
       </div>
+      {suggestion ? (
+        <div className="mt-3 rounded-2xl border border-gold-l bg-sand/50 p-3" data-sulwe-suggest="" role="group" aria-live="polite">
+          <p className="text-base text-ink" data-sulwe-suggest-text="">
+            {uiFill(lang, "hear_did_you_mean", { query: suggestion.text })}
+          </p>
+          {suggestion.hideRaw ? null : (
+            <p className="mt-1 text-xs text-muted" data-sulwe-suggest-raw-text="">
+              {uiFill(lang, "hear_heard", { raw: suggestion.raw })}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" className={`${btnPrimary} min-h-11`} data-sulwe-suggest-yes="" onClick={() => search(suggestion.text)}>
+              {uiText(lang, "hear_search_this")}
+            </button>
+            {suggestion.hideRaw ? null : (
+              <button type="button" className={`${btnSecondary} min-h-11`} data-sulwe-suggest-raw="" onClick={() => search(suggestion.raw)}>
+                {uiText(lang, "hear_search_said")}
+              </button>
+            )}
+          </div>
+        </div>
+      ) : null}
       <div className="mt-2 flex items-center gap-2 text-xs text-muted">
         <span>{uiText(lang, "voice_hint")}</span>
         <span role="group" aria-label={uiText(lang, "voice_lang")} className="ml-auto inline-flex overflow-hidden rounded-full border border-line">

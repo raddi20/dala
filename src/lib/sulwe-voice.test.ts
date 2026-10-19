@@ -282,7 +282,7 @@ test("a silent browser that never fires end is cut off after the guard", () => {
   const { log, handlers } = record();
   let pending: (() => void) | null = null;
   let waited = 0;
-  listenOnce(FakeRec, "en-KE", handlers, {
+  listenOnce(FakeRec, "en-KE", handlers, {}, {
     set: (fn, ms) => {
       pending = fn;
       waited = ms;
