@@ -28,6 +28,8 @@ import {
   writeSulweMinimised,
   type SulweReaction,
 } from "@/lib/sulwe";
+import { SULWE_TOUR_SIZE } from "@/lib/sulwe";
+import { placeTourBubble } from "@/lib/tour";
 
 const off = { NODE_ENV: "test" } as NodeJS.ProcessEnv;
 const on = { NODE_ENV: "test", NEXT_PUBLIC_SULWE: "on" } as NodeJS.ProcessEnv;
@@ -153,6 +155,7 @@ test("Sulwe stays beside the bubble on a 360px screen", () => {
     target: { top: 80, left: 24, width: 300, height: 48 },
     viewport: { width: 360, height: 740 },
   });
+  assert.ok(at);
   assert.ok(at.left >= 8);
   assert.ok(at.left + 72 <= 352);
   assert.ok(at.top >= 8);
@@ -165,8 +168,58 @@ test("Sulwe stays beside the bubble on a 360px screen", () => {
     target: { top: 120, left: 16, width: 328, height: 86 },
     viewport: { width: 360, height: 740 },
   });
-  assert.ok(tight.top >= 206);
+  assert.ok(tight);
+  assert.ok(tight.top >= 406, String(tight.top));
   assert.ok(tight.left >= 8 && tight.left + 72 <= 352);
+});
+
+function overlaps(a: { top: number; left: number; width: number; height: number }, b: typeof a) {
+  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
+}
+
+test("the guide Sulwe never covers the bubble or the spotlight on any tour step", () => {
+  const viewports = [
+    { width: 360, height: 740 },
+    { width: 390, height: 844 },
+    { width: 1280, height: 800 },
+  ];
+  for (const viewport of viewports) {
+    const mobile = viewport.width < 768;
+    const tab = (index: number) => ({ top: viewport.height - 64, left: (viewport.width / 5) * index, width: viewport.width / 5, height: 64 });
+    const targets = [
+      // Ask Rangach box on Home (the first step), then the bottom tabs, Filters, Town, WhatsApp, Sell.
+      { top: 166, left: 16, width: viewport.width - 120, height: 44 },
+      ...(mobile ? [0, 1, 2, 3, 4].map(tab) : [{ top: 12, left: viewport.width - 420, width: 80, height: 40 }]),
+      { top: 132, left: 16, width: 96, height: 40 },
+      { top: 300, left: 16, width: Math.min(viewport.width - 32, 600), height: 44 },
+      { top: viewport.height - (mobile ? 130 : 70), left: 16, width: Math.min(viewport.width - 32, 400), height: 48 },
+      { top: viewport.height / 2 - 20, left: viewport.width / 2 - 60, width: 120, height: 40 },
+    ];
+    for (const target of targets) {
+      for (const bubbleHeight of [160, 200, 240]) {
+        const placed = placeTourBubble({ target, viewport, bubbleHeight });
+        const at = placeSulwe({ bubble: placed.bubble, target: placed.spot, viewport });
+        const label = `${viewport.width} ${JSON.stringify(target)} ${bubbleHeight}`;
+        assert.ok(at, label);
+        const box = { top: at.top, left: at.left, width: SULWE_TOUR_SIZE, height: SULWE_TOUR_SIZE };
+        assert.equal(overlaps(box, placed.bubble), false, `bubble ${label}`);
+        assert.ok(placed.spot);
+        assert.equal(overlaps(box, placed.spot), false, `spot ${label}`);
+        assert.ok(box.left >= 0 && box.left + box.width <= viewport.width, label);
+        assert.ok(box.top >= 0 && box.top + box.height <= viewport.height, label);
+      }
+    }
+  }
+  // No target: he still stays off the centred bubble.
+  const centred = placeTourBubble({ target: null, viewport: { width: 360, height: 740 }, bubbleHeight: 220 });
+  const solo = placeSulwe({ bubble: centred.bubble, target: null, viewport: { width: 360, height: 740 } });
+  assert.ok(solo);
+  assert.equal(overlaps({ ...solo, width: SULWE_TOUR_SIZE, height: SULWE_TOUR_SIZE }, centred.bubble), false);
+  // A screen with no room at all returns null rather than covering the text.
+  assert.equal(
+    placeSulwe({ bubble: { top: 0, left: 0, width: 80, height: 80 }, target: null, viewport: { width: 80, height: 80 } }),
+    null,
+  );
 });
 
 test("Sulwe strings have signed-off Dholuo and stay clear of funeral and escrow wording", () => {

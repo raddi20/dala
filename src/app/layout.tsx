@@ -4,6 +4,7 @@ import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
 import { GuidedTour } from "@/components/guided-tour";
 import { Sulwe } from "@/components/sulwe";
+import { TourPrompt } from "@/components/tour-prompt";
 import { Header } from "@/components/header";
 import { TourReplay } from "@/components/tour-replay";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -84,6 +85,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <Footer replay={tourOn ? <TourReplay lang={lang} /> : null} />
         <Suspense fallback={null}>
           <GuidedTour enabled={tourOn} lang={lang} sulwe={sulweFlag} />
+          <TourPrompt enabled={tourOn} lang={lang} sulwe={sulweFlag} />
           <Sulwe enabled={sulweFlag} lang={lang} />
         </Suspense>
       </body>

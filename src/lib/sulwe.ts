@@ -211,44 +211,89 @@ export async function sulweAsk(
   }
 }
 
-function coversTarget(
-  pos: { top: number; left: number },
-  size: number,
-  target: { top: number; left: number; width: number; height: number },
-): boolean {
-  const overlapX = Math.min(pos.left + size, target.left + target.width) - Math.max(pos.left, target.left);
-  const overlapY = Math.min(pos.top + size, target.top + target.height) - Math.max(pos.top, target.top);
-  return overlapX > 4 && overlapY > 4;
+type SulweBox = { top: number; left: number; width: number; height: number };
+
+/** Space Sulwe keeps from the bubble and the spotlight. */
+export const SULWE_GUIDE_GAP = 6;
+
+function boxesTouch(a: SulweBox, b: SulweBox, gap: number): boolean {
+  return (
+    a.left < b.left + b.width + gap &&
+    a.left + a.width + gap > b.left &&
+    a.top < b.top + b.height + gap &&
+    a.top + a.height + gap > b.top
+  );
 }
 
-/** Sit Sulwe on the bubble edge facing the spotlight, without covering the hole. */
+/**
+ * Put Sulwe next to the bubble without covering any of it (title, body, dots, buttons)
+ * and without covering the spotlight. Tries, in order: the gap between bubble and spotlight,
+ * beside the bubble, the far side of the bubble, beside the spotlight, then the screen corners.
+ * Returns null when no spot on screen is free; the tour then runs without him for that step.
+ */
 export function placeSulwe(input: {
   bubble: { top: number; left: number; width: number; height: number };
   target: { top: number; left: number; width: number; height: number } | null;
   viewport: { width: number; height: number };
   size?: number;
-}): { top: number; left: number } {
+}): { top: number; left: number } | null {
   const size = input.size ?? SULWE_TOUR_SIZE;
   const margin = 8;
+  const gap = SULWE_GUIDE_GAP;
   const bubble = input.bubble;
   const target = input.target && input.target.width >= 2 && input.target.height >= 2 ? input.target : null;
-  const maxLeft = Math.max(margin, input.viewport.width - size - margin);
-  const maxTop = Math.max(margin, input.viewport.height - size - margin);
-  const clamp = (top: number, left: number) => ({
-    top: Math.min(Math.max(margin, top), maxTop),
-    left: Math.min(Math.max(margin, left), maxLeft),
-  });
-  if (!target) return clamp(bubble.top, bubble.left);
+  const { width: vw, height: vh } = input.viewport;
+  const maxLeft = vw - size - margin;
+  const maxTop = vh - size - margin;
+  if (maxLeft < margin || maxTop < margin) return null;
+  const clampLeft = (left: number) => Math.min(Math.max(margin, left), maxLeft);
+  const clampTop = (top: number) => Math.min(Math.max(margin, top), maxTop);
+  const free = (pos: { top: number; left: number }) => {
+    const box = { top: pos.top, left: pos.left, width: size, height: size };
+    if (pos.top < margin || pos.left < margin || pos.top > maxTop || pos.left > maxLeft) return false;
+    if (boxesTouch(box, bubble, gap)) return false;
+    return !(target && boxesTouch(box, target, gap));
+  };
 
-  const bubbleBelow = bubble.top + bubble.height / 2 > target.top + target.height / 2;
-  const gap = bubbleBelow ? bubble.top - (target.top + target.height) : target.top - (bubble.top + bubble.height);
-  const overhang = Math.max(0, Math.min(size * 0.42, gap - 6));
-  const top = bubbleBelow ? bubble.top - overhang : bubble.top + bubble.height - (size - overhang);
-  const centered = clamp(top, target.left + target.width / 2 - size / 2);
-  if (!coversTarget(centered, size, target)) return centered;
-  const beside = clamp(top, bubble.left + bubble.width - size * 0.85);
-  if (!coversTarget(beside, size, target)) return beside;
-  return clamp(bubbleBelow ? bubble.top + 8 : bubble.top + bubble.height - size - 8, bubble.left + 8);
+  const candidates: { top: number; left: number }[] = [];
+  const bubbleBottom = bubble.top + bubble.height;
+  const bubbleRight = bubble.left + bubble.width;
+  if (target) {
+    const targetBottom = target.top + target.height;
+    const targetRight = target.left + target.width;
+    const targetMid = target.left + target.width / 2 - size / 2;
+    const bubbleBelow = bubble.top + bubble.height / 2 > target.top + target.height / 2;
+    // 1. In the gap between the bubble and the spotlight, under or over the target.
+    const gapTop = bubbleBelow ? (targetBottom + bubble.top - size) / 2 : (bubbleBottom + target.top - size) / 2;
+    candidates.push({ top: gapTop, left: clampLeft(targetMid) });
+    // 2. Beside the bubble, on the side nearer the target first.
+    const besideTop = clampTop(bubbleBelow ? bubble.top : bubbleBottom - size);
+    const right = { top: besideTop, left: bubbleRight + gap };
+    const left = { top: besideTop, left: bubble.left - gap - size };
+    candidates.push(...(targetMid > bubble.left + bubble.width / 2 ? [right, left] : [left, right]));
+    // 3. The far side of the bubble, away from the target.
+    const farTop = bubbleBelow ? bubbleBottom + gap : bubble.top - gap - size;
+    candidates.push({ top: farTop, left: clampLeft(bubbleRight - size) }, { top: farTop, left: clampLeft(bubble.left) });
+    // 4. Beside the spotlight.
+    const sideTop = clampTop(target.top + target.height / 2 - size / 2);
+    candidates.push({ top: sideTop, left: targetRight + gap }, { top: sideTop, left: target.left - gap - size });
+  } else {
+    candidates.push(
+      { top: bubbleBottom + gap, left: clampLeft(bubbleRight - size) },
+      { top: bubble.top - gap - size, left: clampLeft(bubbleRight - size) },
+      { top: clampTop(bubble.top), left: bubbleRight + gap },
+      { top: clampTop(bubble.top), left: bubble.left - gap - size },
+    );
+  }
+  // 5. Screen corners.
+  candidates.push(
+    { top: maxTop, left: maxLeft },
+    { top: maxTop, left: margin },
+    { top: margin, left: maxLeft },
+    { top: margin, left: margin },
+  );
+  const spot = candidates.map((pos) => ({ top: Math.round(pos.top), left: Math.round(pos.left) })).find(free);
+  return spot ?? null;
 }
 
 /** Arrow from Sulwe toward the spotlight, so the speech comes from him. */

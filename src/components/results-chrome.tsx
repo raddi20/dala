@@ -34,8 +34,10 @@ export function ResultsSearchBar({
   pills: ReactNode;
   lang?: Lang;
 }) {
+  // min-w-0: this bar is a grid or flex item. Without it the item's min width is its content,
+  // so the nowrap pill row (Homeland, Diaspora, Checked, Shops) widened the page past a phone screen.
   return (
-    <div className="results-search-bar sticky top-14 z-20 -mx-4 border-b border-line/80 bg-bg px-4 py-3">
+    <div className="results-search-bar sticky top-14 z-20 -mx-4 min-w-0 border-b border-line/80 bg-bg px-4 py-3">
       <form id={inputId === "nl" ? "search" : undefined} action={action} method="get" className="flex items-center gap-2">
         <label className="relative min-w-0 flex-1" htmlFor={inputId}>
           <span className="sr-only">{label}</span>

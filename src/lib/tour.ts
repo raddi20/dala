@@ -217,6 +217,56 @@ export function shouldShowTour(input: {
   return !input.seen;
 }
 
+/** Session flag: the visitor said yes to the tour invite, or asked for a replay. */
+export const TOUR_ACCEPT_KEY = "rangach_tour_yes";
+/** Fired when the invite is answered. */
+export const TOUR_PROMPT_EVENT = "rangach-tour-prompt";
+
+/** Remembers "Not now" per tour kind, so the invite is not asked again on this device. */
+export function tourPromptKey(kind: TourKind): string {
+  return `rangach_tour_prompt_${kind}`;
+}
+
+export function readTourDeclined(store: { getItem(key: string): string | null } | null, kind: TourKind): boolean {
+  try {
+    return store?.getItem(tourPromptKey(kind)) === "no";
+  } catch {
+    return false;
+  }
+}
+
+export function writeTourDeclined(store: { setItem(key: string, value: string): void } | null, kind: TourKind): void {
+  try {
+    store?.setItem(tourPromptKey(kind), "no");
+  } catch {
+    // Private mode can throw. The invite then shows again next visit, which is harmless.
+  }
+}
+
+export type TourEntry = "tour" | "prompt" | "none";
+
+/**
+ * What a visit gets. A first-time visitor is invited instead of the tour starting on its own.
+ * ?tour=1, a run already in progress, a "Yes, show me", or a replay go straight to the tour.
+ * "Not now", finishing, or skipping (seen) stop the invite coming back.
+ */
+export function tourEntry(input: {
+  path: string;
+  flag: boolean;
+  force: boolean;
+  seen: boolean;
+  activeRun?: boolean;
+  accepted: boolean;
+  declined: boolean;
+}): TourEntry {
+  if (isAdminPath(input.path)) return "none";
+  if (input.force || input.activeRun) return "tour";
+  if (!input.flag || input.seen) return "none";
+  if (input.accepted) return "tour";
+  if (input.declined) return "none";
+  return "prompt";
+}
+
 export type TourBox = { top: number; left: number; width: number; height: number };
 
 /** The first box that is actually on screen. A missing or hidden target has no spotlight. */
