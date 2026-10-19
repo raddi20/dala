@@ -39,8 +39,15 @@ export function shouldShowSulwe(input: { path: string; flag: boolean; force: boo
 export const SULWE_MIN_KEY = "rangach_sulwe_min";
 export const SULWE_PREVIEW_KEY = "rangach_sulwe_preview";
 export const SULWE_TOUR_KEY = "rangach_sulwe_tour";
-export const SULWE_SIZE = 56;
+/** Docked size in px. Was 56; Kevin asked for him to stand out (about 1.6 times). */
+export const SULWE_SIZE = 92;
+/** The minimised star badge. Was 32. */
+export const SULWE_MIN_SIZE = 44;
 export const SULWE_TOUR_SIZE = 72;
+/** Gap between Sulwe and the bar or nav he sits above. */
+export const SULWE_DOCK_GAP = 10;
+/** Distance from the bottom edge when nothing is docked there (desktop). */
+export const SULWE_DOCK_FALLBACK = 20;
 
 export function readSulweMinimised(store: { getItem(key: string): string | null } | null): boolean {
   try {
@@ -256,4 +263,89 @@ export function sulweGuideArrow(
     x2: target.left + target.width / 2,
     y2: target.top + target.height / 2,
   };
+}
+
+/**
+ * Bottom offset for the docked Sulwe. He sits above the highest bar fixed to the bottom
+ * of the screen (bottom nav, sticky WhatsApp or call bar), so he never covers its buttons.
+ * `obstacleTops` are the viewport tops of those bars; bars above mid-screen are ignored.
+ */
+export function sulweDockBottom(input: {
+  viewportHeight: number;
+  obstacleTops: readonly number[];
+  gap?: number;
+  fallback?: number;
+}): number {
+  const gap = input.gap ?? SULWE_DOCK_GAP;
+  const fallback = input.fallback ?? SULWE_DOCK_FALLBACK;
+  const height = input.viewportHeight;
+  if (!(height > 0)) return fallback;
+  const tops = input.obstacleTops.filter((top) => Number.isFinite(top) && top > height / 2 && top < height);
+  if (tops.length === 0) return fallback;
+  return Math.round(height - Math.min(...tops) + gap);
+}
+
+export type SulweSpark = { x: number; y: number; delay: number };
+
+export type SulweWand = {
+  /** Where he holds the wand, in viewport px. */
+  hand: { x: number; y: number };
+  /** Aim at the target, degrees clockwise from pointing right. */
+  angle: number;
+  /** The star tip once the swing ends. */
+  tip: { x: number; y: number };
+  /** Sparkle stops from the tip to the target, as offsets from the tip. */
+  trail: SulweSpark[];
+  /** Burst around the target, as offsets from the target centre. */
+  burst: SulweSpark[];
+  target: { x: number; y: number };
+};
+
+export const SULWE_WAND_LENGTH = 34;
+/** Whole wand step: swing, trail, burst, then the spotlight and bubble. */
+export const SULWE_WAND_MS = 850;
+/** When the spotlight and bubble start to appear. */
+export const SULWE_VOILA_MS = 480;
+
+/** The wand swing, sparkle trail, and burst for one tour step. */
+export function sulweWand(
+  sulwe: { top: number; left: number },
+  target: { top: number; left: number; width: number; height: number },
+  size = SULWE_TOUR_SIZE,
+  counts: { trail?: number; burst?: number } = {},
+): SulweWand {
+  const hand = { x: sulwe.left + (size * 132) / 200, y: sulwe.top + (size * 172) / 200 };
+  const centre = { x: target.left + target.width / 2, y: target.top + target.height / 2 };
+  const raw = (Math.atan2(centre.y - hand.y, centre.x - hand.x) * 180) / Math.PI;
+  const angle = Math.round(raw * 10) / 10;
+  const rad = (angle * Math.PI) / 180;
+  const tip = { x: hand.x + Math.cos(rad) * SULWE_WAND_LENGTH, y: hand.y + Math.sin(rad) * SULWE_WAND_LENGTH };
+  const dx = centre.x - tip.x;
+  const dy = centre.y - tip.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  // A gentle arc: bend the path sideways by up to a fifth of its length.
+  const bend = Math.min(60, dist * 0.2);
+  const nx = -dy / dist;
+  const ny = dx / dist;
+  const control = { x: dx / 2 + nx * bend, y: dy / 2 + ny * bend };
+  const trailCount = counts.trail ?? 10;
+  const trail: SulweSpark[] = [];
+  for (let i = 1; i <= trailCount; i += 1) {
+    const t = i / trailCount;
+    const u = 1 - t;
+    trail.push({
+      x: Math.round(2 * u * t * control.x + t * t * dx),
+      y: Math.round(2 * u * t * control.y + t * t * dy),
+      delay: 120 + Math.round(t * 240),
+    });
+  }
+  const burstCount = counts.burst ?? 10;
+  const rx = Math.min(70, target.width / 2 + 12);
+  const ry = Math.min(50, target.height / 2 + 12);
+  const burst: SulweSpark[] = [];
+  for (let i = 0; i < burstCount; i += 1) {
+    const a = (i / burstCount) * Math.PI * 2 - Math.PI / 2;
+    burst.push({ x: Math.round(Math.cos(a) * rx), y: Math.round(Math.sin(a) * ry), delay: 380 + (i % 2) * 50 });
+  }
+  return { hand, angle, tip, trail, burst, target: centre };
 }
