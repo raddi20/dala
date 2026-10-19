@@ -179,3 +179,19 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | invite_tour_card | Tour invite | New here? Want a quick tour of Rangach? | In ng'at manyien? Idwaro tour machiek mar Rangach? | held | Draft for Kevin. Shown when Sulwe is off. |
 | invite_tour_yes | Tour invite | Yes, show me | Ee, nyisa | held | Draft for Kevin. nyisa = show me. |
 | invite_tour_no | Tour invite | Not now | Ok sani | held | Draft for Kevin. sani = now. |
+| voice_mic | Sulwe voice | Tap and speak | Mul, eka iwuo | held | Draft for Kevin. Mic button. mul = touch. |
+| voice_stop | Sulwe voice | Stop listening | Weye winjo | held | Draft for Kevin. Second tap stops the mic. |
+| voice_listening | Sulwe voice | Listening… | Awinjo… | held | Draft for Kevin. Shown while the mic is on. |
+| voice_hint | Sulwe voice | I understand English and Swahili. | Awinjo Kisungu gi Kiswahili. | held | Draft for Kevin. Under the mic. Voice does not promise Dholuo. |
+| voice_lang | Sulwe voice | Voice language | Dhok mar dwol | held | Draft for Kevin. Label for the EN/SW toggle. |
+| voice_type_instead | Sulwe voice | Voice isn't available in this browser. Type instead, like fundi Kisumu. | Dwol ok tiyo e browser ni. Ndik, kaka fundi Kisumu. | held | Draft for Kevin. Shown when the browser has no speech recognition. |
+| voice_denied | Sulwe voice | I can't hear you yet. Allow the microphone, or type instead. | Pod ok anyal winji. Yie ne mic, kata ndik. | held | Draft for Kevin. Microphone permission was refused. |
+| voice_nospeech | Sulwe voice | I didn't catch that. Tap the mic and try again. | Ok awinjo maber. Mul mic kendo tem kendo. | held | Draft for Kevin. Nothing was heard. |
+| voice_network | Sulwe voice | Voice needs a connection. Try again, or type instead. | Dwol dwaro intanet. Tem kendo, kata ndik. | held | Draft for Kevin. Recognition network error. |
+| voice_nomic | Sulwe voice | No microphone found. Type instead. | Onge mic. Ndik. | held | Draft for Kevin. No audio input. |
+| voice_error | Sulwe voice | Voice stopped. Type instead, or try again. | Dwol ochungo. Ndik, kata tem kendo. | held | Draft for Kevin. Any other recognition error. |
+| voice_mute | Sulwe voice | Mute Sulwe | Ling'o Sulwe | held | Draft for Kevin. Toggle. Remembered on the device. |
+| voice_unmute | Sulwe voice | Unmute Sulwe | Dwok dwond Sulwe | held | Draft for Kevin. Toggle. |
+| voice_found | Sulwe voice | I found {count} for {query}. | Ayudo {count} ne {query}. | held | Draft for Kevin. Spoken reply. Spoken in English while the voices are English. |
+| voice_found_one | Sulwe voice | I found 1 for {query}. | Ayudo achiel ne {query}. | held | Draft for Kevin. Spoken reply. |
+| voice_none | Sulwe voice | Nothing yet for {query}. Try a town like Kisumu. | Pod onge ne {query}. Tem boma kaka Kisumu. | held | Draft for Kevin. Spoken reply. |

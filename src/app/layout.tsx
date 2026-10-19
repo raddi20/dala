@@ -13,6 +13,7 @@ import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { sulweOn } from "@/lib/sulwe";
+import { sulweVoiceOn } from "@/lib/sulwe-voice-flag";
 import { guidedTourOn } from "@/lib/tour";
 import { publicOrigin } from "@/lib/payments/origin";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
@@ -86,7 +87,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <Suspense fallback={null}>
           <GuidedTour enabled={tourOn} lang={lang} sulwe={sulweFlag} />
           <TourPrompt enabled={tourOn} lang={lang} sulwe={sulweFlag} />
-          <Sulwe enabled={sulweFlag} lang={lang} />
+          <Sulwe enabled={sulweFlag} lang={lang} voice={sulweVoiceOn()} />
         </Suspense>
       </body>
     </html>

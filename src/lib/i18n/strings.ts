@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). Newer `invite_` lines are drafts.
+ * Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). Newer `invite_` and `voice_` lines are drafts.
  */
 export type UiString = {
   en: string;
@@ -427,6 +427,119 @@ export const UI_STRINGS = {
   },
   invite_tour_yes: { en: "Yes, show me", dholuo: "Ee, nyisa", draft: true, page: "Tour invite", notes: "Draft for Kevin. nyisa = show me." },
   invite_tour_no: { en: "Not now", dholuo: "Ok sani", draft: true, page: "Tour invite", notes: "Draft for Kevin. sani = now." },
+
+  voice_mic: {
+    en: "Tap and speak",
+    dholuo: "Mul, eka iwuo",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Mic button. mul = touch.",
+  },
+  voice_stop: {
+    en: "Stop listening",
+    dholuo: "Weye winjo",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Second tap stops the mic.",
+  },
+  voice_listening: {
+    en: "Listening…",
+    dholuo: "Awinjo…",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Shown while the mic is on.",
+  },
+  voice_hint: {
+    en: "I understand English and Swahili.",
+    dholuo: "Awinjo Kisungu gi Kiswahili.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Under the mic. Voice does not promise Dholuo.",
+  },
+  voice_lang: {
+    en: "Voice language",
+    dholuo: "Dhok mar dwol",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Label for the EN/SW toggle.",
+  },
+  voice_type_instead: {
+    en: "Voice isn't available in this browser. Type instead, like fundi Kisumu.",
+    dholuo: "Dwol ok tiyo e browser ni. Ndik, kaka fundi Kisumu.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Shown when the browser has no speech recognition.",
+  },
+  voice_denied: {
+    en: "I can't hear you yet. Allow the microphone, or type instead.",
+    dholuo: "Pod ok anyal winji. Yie ne mic, kata ndik.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Microphone permission was refused.",
+  },
+  voice_nospeech: {
+    en: "I didn't catch that. Tap the mic and try again.",
+    dholuo: "Ok awinjo maber. Mul mic kendo tem kendo.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Nothing was heard.",
+  },
+  voice_network: {
+    en: "Voice needs a connection. Try again, or type instead.",
+    dholuo: "Dwol dwaro intanet. Tem kendo, kata ndik.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Recognition network error.",
+  },
+  voice_nomic: {
+    en: "No microphone found. Type instead.",
+    dholuo: "Onge mic. Ndik.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. No audio input.",
+  },
+  voice_error: {
+    en: "Voice stopped. Type instead, or try again.",
+    dholuo: "Dwol ochungo. Ndik, kata tem kendo.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Any other recognition error.",
+  },
+  voice_mute: {
+    en: "Mute Sulwe",
+    dholuo: "Ling'o Sulwe",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Toggle. Remembered on the device.",
+  },
+  voice_unmute: {
+    en: "Unmute Sulwe",
+    dholuo: "Dwok dwond Sulwe",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Toggle.",
+  },
+  voice_found: {
+    en: "I found {count} for {query}.",
+    dholuo: "Ayudo {count} ne {query}.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Spoken reply. Spoken in English while the voices are English.",
+  },
+  voice_found_one: {
+    en: "I found 1 for {query}.",
+    dholuo: "Ayudo achiel ne {query}.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Spoken reply.",
+  },
+  voice_none: {
+    en: "Nothing yet for {query}. Try a town like Kisumu.",
+    dholuo: "Pod onge ne {query}. Tem boma kaka Kisumu.",
+    draft: true,
+    page: "Sulwe voice",
+    notes: "Draft for Kevin. Spoken reply.",
+  },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
