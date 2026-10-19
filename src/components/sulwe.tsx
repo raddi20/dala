@@ -11,6 +11,7 @@ import {
   SULWE_CHIPS,
   SULWE_IDLES,
   SULWE_PREVIEW_KEY,
+  SULWE_MIN_SIZE,
   SULWE_SIZE,
   SULWE_TOUR_KEY,
   classifySulwePointer,
@@ -18,6 +19,7 @@ import {
   nextSulweReaction,
   readSulweMinimised,
   shouldShowSulwe,
+  sulweDockBottom,
   sulweHaptic,
   sulweQueryOn,
   writeSulweMinimised,
@@ -62,6 +64,7 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<SulweAskResult | null>(null);
+  const [dock, setDock] = useState<number | null>(null);
   const bag = useRef<readonly SulweReaction[]>([]);
   const downAt = useRef(0);
   const lastTap = useRef<number | null>(null);
@@ -117,6 +120,34 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
       window.clearTimeout(timer);
     };
   }, [show, reduced, chat, minimised, touring]);
+
+  useEffect(() => {
+    if (!show || touring || chat) return;
+    let frame = 0;
+    const measureDock = () => {
+      frame = 0;
+      const tops: number[] = [];
+      for (const bar of document.querySelectorAll<HTMLElement>(".bottom-nav, .sticky-cta-bar")) {
+        const box = bar.getBoundingClientRect();
+        if (box.width > 0 && box.height > 0 && getComputedStyle(bar).display !== "none") tops.push(box.top);
+      }
+      setDock(sulweDockBottom({ viewportHeight: window.innerHeight, obstacleTops: tops }));
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(measureDock);
+    };
+    measureDock();
+    const late = window.setTimeout(schedule, 600);
+    window.addEventListener("resize", schedule);
+    const observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(schedule);
+    observer?.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.clearTimeout(late);
+      window.removeEventListener("resize", schedule);
+      observer?.disconnect();
+    };
+  }, [show, touring, chat, path, minimised]);
 
   if (!show || touring) return null;
   if (keyboard && !chat) return null;
@@ -207,11 +238,11 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
         />
       ) : (
         <div
-          className="fixed z-[45]"
+          className="sulwe-dock fixed z-[45]"
           style={{
             right: 12,
-            bottom: "calc(4.5rem + env(safe-area-inset-bottom) + 0.35rem)",
-            width: minimised ? 32 : SULWE_SIZE,
+            bottom: dock ?? "calc(4rem + env(safe-area-inset-bottom) + 10px)",
+            width: minimised ? SULWE_MIN_SIZE : SULWE_SIZE,
           }}
           data-sulwe-root=""
           data-sulwe-pose={pose}
@@ -220,20 +251,25 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
             {uiText(lang, "sulwe_talk")}
           </button>
           {minimised ? (
-            <button
-              type="button"
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-cream shadow-md"
-              aria-label={uiText(lang, "sulwe_restore")}
-              data-sulwe-restore=""
-              onClick={() => rememberMin(false)}
-            >
-              <SulweStar className="h-5 w-5" />
-            </button>
-          ) : (
-            <div className="relative h-14 w-14">
+            <div className="relative" style={{ width: SULWE_MIN_SIZE, height: SULWE_MIN_SIZE }}>
+              <span aria-hidden="true" className={`sulwe-halo${hidden ? " sulwe-paused" : ""}`} data-sulwe-halo="" />
               <button
                 type="button"
-                className="absolute -right-1 -top-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-navy text-xs font-bold text-white"
+                className="sulwe-badge relative flex h-full w-full items-center justify-center rounded-full"
+                aria-label={uiText(lang, "sulwe_restore")}
+                data-sulwe-restore=""
+                onClick={() => rememberMin(false)}
+              >
+                <SulweStar className={`sulwe-min-star h-7 w-7${hidden ? " sulwe-paused" : ""}`} />
+              </button>
+            </div>
+          ) : (
+            <div className="relative" style={{ width: SULWE_SIZE, height: SULWE_SIZE }}>
+              <span aria-hidden="true" className={`sulwe-halo${hidden ? " sulwe-paused" : ""}`} data-sulwe-halo="" />
+              <span aria-hidden="true" className="sulwe-badge absolute inset-[6px] rounded-full" data-sulwe-badge="" />
+              <button
+                type="button"
+                className="absolute right-0 top-0 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-navy text-sm font-bold text-white shadow-md"
                 aria-label={uiText(lang, "sulwe_minimise")}
                 data-sulwe-min=""
                 onPointerDown={(event) => event.stopPropagation()}
@@ -243,7 +279,7 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
               </button>
               <button
                 type="button"
-                className="block h-14 w-14"
+                className="relative block h-full w-full rounded-full"
                 aria-label={uiText(lang, "sulwe_talk")}
                 data-sulwe-tap=""
                 onPointerDown={onPointerDown}
@@ -256,7 +292,9 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
                   }
                 }}
               >
-                <SulweArt pose={pose} paused={hidden} />
+                <span className={`sulwe-bob block h-full w-full${hidden ? " sulwe-paused" : ""}`}>
+                  <SulweArt pose={pose} paused={hidden} twinkle />
+                </span>
               </button>
             </div>
           )}

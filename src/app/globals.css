@@ -550,6 +550,223 @@ h3,
   }
 }
 
+/* Docked Sulwe: gold halo, a navy badge with a gold ring, and a soft shadow so he stands out. */
+.sulwe-halo {
+  position: absolute;
+  inset: -4px;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: rgb(233 184 92 / 0.4);
+  box-shadow: 0 0 16px 10px rgb(233 184 92 / 0.45);
+}
+
+.sulwe-badge {
+  background: var(--color-navy-soft);
+  box-shadow:
+    0 0 0 3px var(--color-gold-l),
+    0 0 0 5px #fff,
+    0 8px 18px rgb(20 26 36 / 0.32);
+}
+
+.sulwe-dock .sulwe-art {
+  filter: drop-shadow(0 3px 3px rgb(58 36 24 / 0.35));
+}
+
+.sulwe-wand {
+  width: 46px;
+  height: 25px;
+  margin-left: -3px;
+  margin-top: -12.5px;
+  transform-origin: 3px 50%;
+  transform: rotate(var(--wand-aim, 0deg));
+}
+
+.sulwe-spark-fly {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sulwe-halo {
+    animation: sulwe-halo 3.2s ease-in-out infinite;
+  }
+
+  .sulwe-bob {
+    animation: sulwe-bob 3.6s ease-in-out infinite;
+  }
+
+  .sulwe-twinkle:not(.sulwe-glow) #glow {
+    animation: sulwe-twinkle 2.8s ease-in-out infinite;
+  }
+
+  .sulwe-twinkle:not(.sulwe-spin) #star,
+  .sulwe-min-star {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sulwe-star-twinkle 2.8s ease-in-out infinite;
+  }
+
+  .sulwe-wand {
+    animation: sulwe-wand-swing 420ms cubic-bezier(0.3, 0.7, 0.35, 1.25) both;
+  }
+
+  .sulwe-spark-trail {
+    animation: sulwe-spark-trail 460ms ease-out both;
+  }
+
+  .sulwe-spark-burst {
+    animation: sulwe-spark-burst 500ms ease-out both;
+  }
+
+  .tour-voila {
+    animation: tour-voila 320ms ease-out 480ms both;
+  }
+
+  .tour-ring.tour-voila {
+    animation:
+      tour-voila 320ms ease-out 480ms both,
+      tour-pulse 1.4s ease-out 800ms infinite;
+  }
+
+  .tour-dim-out {
+    animation: tour-dim-out 320ms ease-out 480ms both;
+  }
+}
+
+@keyframes sulwe-halo {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes sulwe-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes sulwe-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes sulwe-star-twinkle {
+  0%,
+  70%,
+  100% {
+    transform: scale(1);
+  }
+  80% {
+    transform: scale(1.14) rotate(8deg);
+  }
+}
+
+@keyframes sulwe-wand-swing {
+  0% {
+    opacity: 0;
+    transform: rotate(calc(var(--wand-aim, 0deg) - 75deg)) scale(0.6);
+  }
+  25% {
+    opacity: 1;
+  }
+  65% {
+    transform: rotate(calc(var(--wand-aim, 0deg) + 10deg)) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(var(--wand-aim, 0deg)) scale(1);
+  }
+}
+
+@keyframes sulwe-spark-trail {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(1) rotate(90deg);
+  }
+}
+
+@keyframes sulwe-spark-burst {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.2);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--sx), var(--sy)) scale(1.15) rotate(45deg);
+  }
+}
+
+@keyframes tour-voila {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tour-dim-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sulwe-halo,
+  .sulwe-bob,
+  .sulwe-min-star,
+  .sulwe-wand {
+    animation: none !important;
+  }
+
+  .sulwe-spark-trail,
+  .sulwe-spark-burst:nth-child(even),
+  .tour-dim-out {
+    display: none;
+  }
+
+  .sulwe-spark-burst {
+    animation: none !important;
+    opacity: 1;
+    transform: translate(var(--sx), var(--sy));
+  }
+
+  .tour-voila,
+  .tour-ring.tour-voila {
+    animation: tour-voila 200ms ease-out both !important;
+  }
+}
+
 @media print {
   .back-bar,
   .bottom-nav {

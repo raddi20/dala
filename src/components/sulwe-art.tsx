@@ -1,11 +1,20 @@
 /** Inline Sulwe (option B, star antenna). Groups keep the ids from sulwe-b.svg. */
-export function SulweArt({ pose = "", paused = false }: { pose?: string; paused?: boolean }) {
+export function SulweArt({
+  pose = "",
+  paused = false,
+  twinkle = false,
+}: {
+  pose?: string;
+  paused?: boolean;
+  /** Gentle antenna twinkle while he waits in the corner. */
+  twinkle?: boolean;
+}) {
   const poseClass = pose ? ` sulwe-${pose}` : "";
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 200 200"
-      className={`sulwe-art h-full w-full${poseClass}${paused ? " sulwe-paused" : ""}`}
+      className={`sulwe-art h-full w-full${poseClass}${twinkle ? " sulwe-twinkle" : ""}${paused ? " sulwe-paused" : ""}`}
       aria-hidden="true"
     >
       <ellipse id="shadow" cx="100" cy="194" rx="36" ry="4" fill="#3A2418" opacity=".15" />
@@ -80,6 +89,35 @@ export function SulweStar({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
       <polygon points="12,1.5 14.2,8 21,8.7 15.8,13.2 17.4,20 12,16.4 6.6,20 8.2,13.2 3,8.7 9.8,8" fill="#C8881A" stroke="#3A2418" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** A small fairy wand pointing right, pivot at the left end. The tip matches his gold antenna star. */
+export function SulweWandArt({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 44 24" className={className} aria-hidden="true">
+      <path d="M3 12H31" stroke="#3A2418" strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M3 12H31" stroke="#FBF1DC" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="35" cy="12" r="9" fill="#E9B85C" opacity=".45" />
+      <polygon
+        points="35,3.5 37.3,8.8 43,9.4 38.7,13.2 40,18.8 35,15.9 30,18.8 31.3,13.2 27,9.4 32.7,8.8"
+        fill="#C8881A"
+        stroke="#3A2418"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** One four-point sparkle with a soft glow baked in (no CSS filter, so it stays cheap to animate). */
+export function SulweSparkArt({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" className={className} aria-hidden="true">
+      <circle cx="10" cy="10" r="9" fill="#FBF1DC" opacity=".35" />
+      <circle cx="10" cy="10" r="5" fill="#E9B85C" opacity=".55" />
+      <path d="M10 1 11.9 8.1 19 10 11.9 11.9 10 19 8.1 11.9 1 10 8.1 8.1Z" fill="#FFF6DD" stroke="#C8881A" strokeWidth="1" strokeLinejoin="round" />
     </svg>
   );
 }

@@ -2,8 +2,18 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { UI_STRINGS, sulweStringsMarkdown, uiText } from "@/lib/i18n/strings";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { SulweArt, SulweSparkArt, SulweWandArt } from "@/components/sulwe-art";
 import {
+  SULWE_MIN_SIZE,
   SULWE_REACTIONS,
+  SULWE_SIZE,
+  SULWE_VOILA_MS,
+  SULWE_WAND_LENGTH,
+  SULWE_WAND_MS,
+  sulweDockBottom,
+  sulweWand,
   classifySulwePointer,
   keyboardCoversScreen,
   nextSulweReaction,
@@ -180,4 +190,72 @@ test("Sulwe strings have signed-off Dholuo and stay clear of funeral and escrow 
   assert.equal(uiText("dholuo", "sulwe_chat"), "Chat gi Sulwe");
   const doc = readFileSync(new URL("../../docs/sulwe-dholuo-strings.md", import.meta.url), "utf8");
   assert.equal(doc, sulweStringsMarkdown());
+});
+
+test("docked Sulwe is about 1.6 times his old 56px and the minimised star grew too", () => {
+  assert.ok(SULWE_SIZE >= 56 * 1.5 && SULWE_SIZE <= 56 * 1.8, String(SULWE_SIZE));
+  assert.ok(SULWE_MIN_SIZE > 32 && SULWE_MIN_SIZE >= 44);
+});
+
+test("Sulwe docks above the bottom nav and above a sticky WhatsApp bar", () => {
+  // 390x844 phone: nav top 779.
+  const navOnly = sulweDockBottom({ viewportHeight: 844, obstacleTops: [779] });
+  assert.equal(navOnly, 844 - 779 + 10);
+  assert.ok(844 - navOnly - SULWE_SIZE >= 0);
+  // Listing page: the WhatsApp bar sits above the nav, so he moves above it.
+  const withBar = sulweDockBottom({ viewportHeight: 844, obstacleTops: [779, 711] });
+  assert.equal(withBar, 844 - 711 + 10);
+  // Desktop: no nav, no bar.
+  assert.equal(sulweDockBottom({ viewportHeight: 800, obstacleTops: [] }), 20);
+  // A bar near the top of the page is not a bottom bar.
+  assert.equal(sulweDockBottom({ viewportHeight: 800, obstacleTops: [60] }), 20);
+  assert.equal(sulweDockBottom({ viewportHeight: 0, obstacleTops: [779] }), 20);
+});
+
+test("the wand aims at the target and the sparkles end on it", () => {
+  const sulwe = { top: 600, left: 20 };
+  const target = { top: 780, left: 0, width: 78, height: 64 };
+  const wand = sulweWand(sulwe, target, 72);
+  assert.equal(wand.target.x, 39);
+  assert.equal(wand.target.y, 812);
+  // Target is below him, so the wand points down (between 0 and 180 degrees).
+  assert.ok(wand.angle > 0 && wand.angle < 180, String(wand.angle));
+  assert.ok(Math.abs(Math.hypot(wand.tip.x - wand.hand.x, wand.tip.y - wand.hand.y) - SULWE_WAND_LENGTH) < 0.01);
+  const last = wand.trail[wand.trail.length - 1];
+  assert.ok(Math.abs(wand.tip.x + last.x - wand.target.x) <= 1);
+  assert.ok(Math.abs(wand.tip.y + last.y - wand.target.y) <= 1);
+  assert.ok(wand.trail.length >= 6 && wand.burst.length >= 6);
+  for (let i = 1; i < wand.trail.length; i += 1) assert.ok(wand.trail[i].delay >= wand.trail[i - 1].delay);
+  const up = sulweWand({ top: 300, left: 150 }, { top: 40, left: 20, width: 300, height: 48 }, 72);
+  assert.ok(up.angle < 0, String(up.angle));
+  // Quick and playful: the whole step lands in 0.6 to 1.0 s, and the bubble appears after the sparkles start.
+  assert.ok(SULWE_WAND_MS >= 600 && SULWE_WAND_MS <= 1000);
+  assert.ok(SULWE_VOILA_MS > 0 && SULWE_VOILA_MS < SULWE_WAND_MS);
+  for (const spark of [...wand.trail, ...wand.burst]) assert.ok(spark.delay + 500 <= 1000, String(spark.delay));
+});
+
+test("the wand, sparkle, and twinkle art render", () => {
+  assert.match(renderToStaticMarkup(createElement(SulweWandArt)), /<polygon/);
+  assert.match(renderToStaticMarkup(createElement(SulweSparkArt)), /<path/);
+  assert.match(renderToStaticMarkup(createElement(SulweArt, { twinkle: true })), /sulwe-twinkle/);
+  assert.doesNotMatch(renderToStaticMarkup(createElement(SulweArt)), /sulwe-twinkle/);
+});
+
+test("new Sulwe motion animates only transform and opacity and stops under reduced motion", () => {
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  const names = ["sulwe-halo", "sulwe-bob", "sulwe-twinkle", "sulwe-star-twinkle", "sulwe-wand-swing", "sulwe-spark-trail", "sulwe-spark-burst", "tour-voila", "tour-dim-out"];
+  for (const name of names) {
+    const start = css.indexOf(`@keyframes ${name} {`);
+    assert.ok(start >= 0, name);
+    const body = css.slice(start, css.indexOf("\n}\n", start));
+    const props = [...body.matchAll(/^\s+([a-z-]+):/gm)].map((match) => match[1]);
+    assert.ok(props.length > 0, name);
+    for (const prop of props) assert.ok(prop === "transform" || prop === "opacity", `${name} ${prop}`);
+  }
+  const reduced = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
+  for (const selector of [".sulwe-halo", ".sulwe-bob", ".sulwe-min-star", ".sulwe-wand", ".sulwe-spark-trail", ".tour-dim-out"]) {
+    assert.ok(reduced.includes(selector), selector);
+  }
+  assert.match(css, /\.sulwe-art \*,[\s\S]*?animation: none !important/);
+  assert.match(css, /\.sulwe-badge \{[\s\S]*?box-shadow/);
 });

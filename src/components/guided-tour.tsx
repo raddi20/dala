@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useId, useSyncExternalStore, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, useState, type CSSProperties, type KeyboardEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { SulweArt } from "@/components/sulwe-art";
+import { SulweArt, SulweSparkArt, SulweWandArt } from "@/components/sulwe-art";
 import { btnPrimary } from "@/components/ui";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiFill, uiText } from "@/lib/i18n/strings";
-import { SULWE_PREVIEW_KEY, SULWE_TOUR_KEY, SULWE_TOUR_SIZE, placeSulwe, sulweGuideArrow, sulweQueryOn } from "@/lib/sulwe";
+import {
+  SULWE_PREVIEW_KEY,
+  SULWE_TOUR_KEY,
+  SULWE_TOUR_SIZE,
+  SULWE_VOILA_MS,
+  placeSulwe,
+  sulweQueryOn,
+  sulweWand,
+  type SulweSpark,
+} from "@/lib/sulwe";
 import {
   TOUR_RUN_KEY,
   finishHref,
@@ -336,6 +345,28 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
     };
   }, [open, stepIndex]);
 
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const magicKey =
+    open && step && guide && placement.target === step.target && placement.spot && placement.sulwe ? step.id : "";
+
+  useEffect(() => {
+    // "Voila": the bubble appears once the wand sparkles land. It then stays until Next, Back, or Skip.
+    if (!magicKey) return;
+    const node = dialogRef.current;
+    if (!node || typeof node.animate !== "function") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const animation = node.animate(
+      reduce
+        ? [{ opacity: 0 }, { opacity: 1 }]
+        : [
+            { opacity: 0, transform: "translateY(8px) scale(0.94)" },
+            { opacity: 1, transform: "none" },
+          ],
+      { duration: reduce ? 200 : 320, delay: reduce ? 0 : SULWE_VOILA_MS, easing: "cubic-bezier(.2,.9,.3,1.15)", fill: "backwards" },
+    );
+    return () => animation.cancel();
+  }, [magicKey]);
+
   if (!open || !step) return null;
 
   function endTour() {
@@ -378,21 +409,22 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
   }
 
   const arrowId = "tour-arrow";
-  const guideArrow =
-    placement.target === step.target
-      ? placement.sulwe && placement.spot
-        ? sulweGuideArrow(placement.sulwe, placement.spot)
-        : placement.arrow
-      : null;
+  const placed = placement.target === step.target;
+  const wand = placed && placement.sulwe && placement.spot ? sulweWand(placement.sulwe, placement.spot, SULWE_TOUR_SIZE) : null;
+  // With Sulwe the wand replaces the arrow. Without him the plain arrow stays.
+  const guideArrow = placed && !placement.sulwe ? placement.arrow : null;
+  const voila = wand ? " tour-voila" : "";
 
   return (
     <div className="print:hidden" data-tour-layer="">
       <div className="fixed inset-0 z-[80]" aria-hidden="true" />
-      {placement.target === step.target && placement.spot ? (
+      {placed && placement.spot ? (
         <>
+          {wand ? <div key={`dim-${step.id}`} className="tour-dim-out pointer-events-none fixed inset-0 z-[81] bg-navy/60" aria-hidden="true" /> : null}
           <div
+            key={`spot-${step.id}`}
             aria-hidden="true"
-            className="pointer-events-none fixed z-[81] rounded-2xl"
+            className={`pointer-events-none fixed z-[81] rounded-2xl${voila}`}
             style={{
               top: placement.spot.top,
               left: placement.spot.left,
@@ -402,8 +434,9 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
             }}
           />
           <div
+            key={`ring-${step.id}`}
             aria-hidden="true"
-            className="tour-ring pointer-events-none fixed z-[81] rounded-2xl border-2 border-gold"
+            className={`tour-ring pointer-events-none fixed z-[81] rounded-2xl border-2 border-gold${voila}`}
             style={{
               top: placement.spot.top,
               left: placement.spot.left,
@@ -415,13 +448,34 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
       ) : (
         <div className="fixed inset-0 z-[81] bg-navy/60" aria-hidden="true" />
       )}
-      {placement.sulwe && placement.target === step.target ? (
+      {placement.sulwe && placed ? (
         <div
           className="sulwe-guide pointer-events-none fixed z-[84]"
           data-sulwe-guide=""
           style={{ top: placement.sulwe.top, left: placement.sulwe.left, width: SULWE_TOUR_SIZE, height: SULWE_TOUR_SIZE }}
         >
-          <SulweArt pose="wave" />
+          <SulweArt pose={wand ? "" : "wave"} />
+        </div>
+      ) : null}
+      {wand ? (
+        <div key={`wand-${step.id}`} className="pointer-events-none fixed inset-0 z-[85]" aria-hidden="true" data-sulwe-magic="">
+          <div
+            className="sulwe-wand absolute"
+            data-sulwe-wand=""
+            style={{ left: wand.hand.x, top: wand.hand.y, ["--wand-aim" as string]: `${wand.angle}deg` } as CSSProperties}
+          >
+            <SulweWandArt className="block h-[25px] w-[46px]" />
+          </div>
+          <div className="absolute" style={{ left: wand.tip.x, top: wand.tip.y }}>
+            {wand.trail.map((spark, index) => (
+              <Spark key={`t${index}`} spark={spark} kind="trail" />
+            ))}
+          </div>
+          <div className="absolute" style={{ left: wand.target.x, top: wand.target.y }}>
+            {wand.burst.map((spark, index) => (
+              <Spark key={`b${index}`} spark={spark} kind="burst" />
+            ))}
+          </div>
         </div>
       ) : null}
       {guideArrow ? (
@@ -443,8 +497,14 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
         </svg>
       ) : null}
       <div
+        ref={dialogRef}
         className="fixed z-[83]"
-        style={{ top: placement.bubble.top, left: placement.bubble.left, width: placement.bubble.width }}
+        style={{
+          top: placement.bubble.top,
+          left: placement.bubble.left,
+          width: placement.bubble.width,
+          opacity: guide && !placed ? 0 : undefined,
+        }}
         data-tour-dialog=""
         onKeyDown={onDialogKey}
       >
@@ -462,5 +522,17 @@ export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean;
         />
       </div>
     </div>
+  );
+}
+
+function Spark({ spark, kind }: { spark: SulweSpark; kind: "trail" | "burst" }) {
+  return (
+    <span
+      className={`sulwe-spark-fly sulwe-spark-${kind} absolute -ml-[9px] -mt-[9px] block h-[18px] w-[18px]`}
+      data-sulwe-spark={kind}
+      style={{ ["--sx" as string]: `${spark.x}px`, ["--sy" as string]: `${spark.y}px`, animationDelay: `${spark.delay}ms` } as CSSProperties}
+    >
+      <SulweSparkArt className="block h-full w-full" />
+    </span>
   );
 }
