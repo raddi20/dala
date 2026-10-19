@@ -394,11 +394,11 @@ test("spoken summaries stay short and never read the whole card", () => {
   );
 });
 
-test("voice strings are Dholuo drafts and keep to house rules", () => {
+test("voice strings are signed off and keep to house rules", () => {
   const voice = Object.entries(STRINGS).filter(([key]) => key.startsWith("voice_"));
   assert.ok(voice.length >= 16);
   for (const [key, row] of voice) {
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, false, key);
     assert.ok(row.en.trim() && row.dholuo.trim(), key);
     const text = `${row.en} ${row.dholuo}`.toLowerCase();
     assert.doesNotMatch(text, /funeral|burial|escrow/, key);
@@ -413,4 +413,36 @@ test("listening shows ears up, and reduced motion keeps it still", () => {
   assert.match(motion.slice(0, 400), /animation: sulwe-ears/);
   const sulwe = readFileSync("src/components/sulwe.tsx", "utf8");
   assert.match(sulwe, /pose=\{listening \? "listen" : "wave"\}/);
+});
+
+test("Kevin's five Dholuo corrections for Sulwe voice", () => {
+  assert.equal(STRINGS.voice_stop.dholuo, "We winjo");
+  assert.equal(STRINGS.voice_lang.dholuo, "Voice language");
+  assert.equal(STRINGS.voice_type_instead.dholuo, "Dwol ok ti e browser ni. Ndik, kaka fundi Kisumu.");
+  assert.equal(STRINGS.voice_error.dholuo, "Dwol ochung. Ndik, kata tem kendo.");
+  assert.equal(STRINGS.voice_mute.dholuo, "Mute Sulwe");
+  for (const key of ["voice_stop", "voice_lang", "voice_type_instead", "voice_error", "voice_mute"] as const) {
+    assert.equal(STRINGS[key].draft, false, key);
+  }
+});
+
+test("the other eleven Sulwe voice lines stay as approved", () => {
+  const approved: Record<string, string> = {
+    voice_mic: "Mul, eka iwuo",
+    voice_listening: "Awinjo…",
+    voice_hint: "Awinjo Kisungu gi Kiswahili.",
+    voice_denied: "Pod ok anyal winji. Yie ne mic, kata ndik.",
+    voice_nospeech: "Ok awinjo maber. Mul mic kendo tem kendo.",
+    voice_network: "Dwol dwaro intanet. Tem kendo, kata ndik.",
+    voice_nomic: "Onge mic. Ndik.",
+    voice_unmute: "Dwok dwond Sulwe",
+    voice_found: "Ayudo {count} ne {query}.",
+    voice_found_one: "Ayudo achiel ne {query}.",
+    voice_none: "Pod onge ne {query}. Tem boma kaka Kisumu.",
+  };
+  const voice = Object.keys(STRINGS).filter((key) => key.startsWith("voice_"));
+  assert.equal(voice.length, 16);
+  for (const [key, dholuo] of Object.entries(approved)) {
+    assert.equal(STRINGS[key as keyof typeof STRINGS].dholuo, dholuo, key);
+  }
 });
