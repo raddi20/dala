@@ -103,6 +103,85 @@ h3,
   }
 }
 
+/* Sulwe listening: ears up and a glow. Reduced motion keeps the ears up with no movement. */
+.sulwe-listen #ears {
+  transform-box: fill-box;
+  transform-origin: center bottom;
+  transform: translateY(-14px) scaleY(1.45);
+}
+
+.sulwe-listen #glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0.85;
+}
+
+.sulwe-listening {
+  box-shadow: 0 0 0 4px rgb(233 184 92 / 0.55);
+}
+
+.sulwe-mic-live::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 3px solid rgb(233 184 92 / 0.8);
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sulwe-listen #ears {
+    animation: sulwe-ears 0.8s ease-in-out infinite alternate;
+  }
+
+  .sulwe-listen #glow {
+    animation: sulwe-listen-glow 1.1s ease-in-out infinite;
+  }
+
+  .sulwe-mic-live::after {
+    animation: sulwe-mic-pulse 1.2s ease-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sulwe-mic-live::after {
+    opacity: 1;
+  }
+}
+
+@keyframes sulwe-ears {
+  from {
+    transform: translateY(-11px) scaleY(1.35);
+  }
+  to {
+    transform: translateY(-16px) scaleY(1.5) rotate(3deg);
+  }
+}
+
+@keyframes sulwe-listen-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+@keyframes sulwe-mic-pulse {
+  from {
+    opacity: 0.9;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.35);
+  }
+}
+
 @keyframes tour-prompt-in {
   from {
     opacity: 0;

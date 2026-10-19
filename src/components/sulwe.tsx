@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore, type PointerEvent } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { SulweArt, SulweStar } from "@/components/sulwe-art";
 import { btnPrimary, chipClass } from "@/components/ui";
@@ -26,6 +27,10 @@ import {
   type SulweAskResult,
   type SulweReaction,
 } from "@/lib/sulwe";
+import { SULWE_VOICE_PREVIEW_KEY, voiceQueryOn } from "@/lib/sulwe-voice-flag";
+
+// Voice code is its own chunk, fetched only when voice is on and the chat opens.
+const SulweVoice = dynamic(() => import("@/components/sulwe-voice"), { ssr: false, loading: () => null });
 
 function useFlag(eventName: string, read: () => boolean, server: boolean) {
   return useSyncExternalStore(
@@ -39,12 +44,17 @@ function useFlag(eventName: string, read: () => boolean, server: boolean) {
   );
 }
 
-export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
+export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang: Lang; voice?: boolean }) {
   const path = usePathname() || "/";
   const search = useSearchParams();
   const router = useRouter();
   const queryOn = sulweQueryOn(search.toString());
   const preview = useFlag("rangach-sulwe-preview", () => sessionStorage.getItem(SULWE_PREVIEW_KEY) === "1", false);
+  const voiceQuery = voiceQueryOn(search.toString());
+  const voicePreview = useFlag("rangach-sulwe-voice-preview", () => sessionStorage.getItem(SULWE_VOICE_PREVIEW_KEY) === "1", false);
+  const voiceOn = voice || voiceQuery || voicePreview;
+  const [listening, setListening] = useState(false);
+  const onListening = useCallback((next: boolean) => setListening(next), []);
   const touring = useFlag("rangach-sulwe-tour", () => sessionStorage.getItem(SULWE_TOUR_KEY) === "1", false);
   const minimised = useFlag("rangach-sulwe-min", () => readSulweMinimised(window.localStorage), false);
   const keyboard = useFlag(
@@ -72,6 +82,12 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
   const poseTimer = useRef(0);
   const titleId = useId();
   const show = shouldShowSulwe({ path, flag: enabled, force: queryOn || preview, keyboard: false });
+
+  useEffect(() => {
+    if (!voiceQuery || sessionStorage.getItem(SULWE_VOICE_PREVIEW_KEY) === "1") return;
+    sessionStorage.setItem(SULWE_VOICE_PREVIEW_KEY, "1");
+    window.dispatchEvent(new Event("rangach-sulwe-voice-preview"));
+  }, [voiceQuery]);
 
   useEffect(() => {
     if (!queryOn) return;
@@ -233,8 +249,15 @@ export function Sulwe({ enabled, lang }: { enabled: boolean; lang: Lang }) {
           result={result}
           onDraft={setDraft}
           onAsk={ask}
-          onClose={() => setChat(false)}
+          onClose={() => {
+            setChat(false);
+            setListening(false);
+          }}
           onTour={showAround}
+          listening={listening}
+          voice={
+            voiceOn ? <SulweVoice lang={lang} busy={busy} result={result} onAsk={ask} onListening={onListening} /> : null
+          }
         />
       ) : (
         <div
@@ -314,6 +337,8 @@ function SulweChat({
   onAsk,
   onClose,
   onTour,
+  listening = false,
+  voice = null,
 }: {
   lang: Lang;
   titleId: string;
@@ -324,6 +349,8 @@ function SulweChat({
   onAsk: (query: string) => void;
   onClose: () => void;
   onTour: () => void;
+  listening?: boolean;
+  voice?: ReactNode;
 }) {
   return (
     <div className="fixed inset-0 z-[70] flex items-end bg-navy/40" data-sulwe-chat="">
@@ -337,8 +364,8 @@ function SulweChat({
         }}
       >
         <div className="flex items-start gap-3">
-          <div className="h-14 w-14 shrink-0">
-            <SulweArt pose="wave" />
+          <div className={`h-14 w-14 shrink-0${listening ? " sulwe-listening rounded-full" : ""}`} data-sulwe-chat-art="">
+            <SulweArt pose={listening ? "listen" : "wave"} />
           </div>
           <div className="min-w-0 flex-1">
             <h2 id={titleId} className="font-serif text-xl text-navy">
@@ -357,6 +384,7 @@ function SulweChat({
             </button>
           ))}
         </div>
+        {voice}
         <form
           className="mt-3 flex gap-2"
           onSubmit={(event) => {
