@@ -14,7 +14,9 @@
  * www.rangach.co.ke, so this list does not add a second HSTS header.
  *
  * Fonts: Georgia and the system sans. Nothing is downloaded. font-src stays 'self'.
- * Camera and microphone are unused (uploads are file pickers; shop video is playback).
+ * Camera is unused (uploads are file pickers; shop video is playback).
+ * Microphone is allowed for this origin only (microphone=(self)) so Sulwe's
+ * tap-to-talk voice search works in Chrome and Android. No third-party frame gets it.
  */
 
 /** Live Rangach Blob store. Exact host, not a wildcard. */
@@ -68,8 +70,11 @@ export function contentSecurityPolicy() {
   ].join("; ");
 }
 
+/** Features allowed for this origin only. Everything else in the list stays off. */
+const SELF_FEATURES: ReadonlySet<string> = new Set(["microphone"]);
+
 export function permissionsPolicy() {
-  return OFF_FEATURES.map((name) => `${name}=()`).join(", ");
+  return OFF_FEATURES.map((name) => `${name}=${SELF_FEATURES.has(name) ? "(self)" : "()"}`).join(", ");
 }
 
 export function securityHeaders() {

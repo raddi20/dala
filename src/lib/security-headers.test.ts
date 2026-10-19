@@ -24,12 +24,30 @@ test("security headers are present and CSP stays report-only", () => {
 
   const permissions = headers.get("Permissions-Policy") ?? "";
   assert.match(permissions, /(?:^|, )camera=\(\)/);
-  assert.match(permissions, /(?:^|, )microphone=\(\)/);
+  assert.match(permissions, /(?:^|, )microphone=\(self\)(?:,|$)/);
+  assert.equal(permissions.includes("microphone=()"), false);
   assert.equal(permissions.includes("camera=(self)"), false);
-  assert.equal(permissions.includes("microphone=(self)"), false);
   for (const name of ["geolocation", "payment", "usb", "bluetooth"]) {
     assert.match(permissions, new RegExp(`(?:^|, )${name}=\\(\\)`));
   }
+});
+
+// Every directive except microphone is exactly what shipped before Sulwe voice.
+const EXPECTED_PERMISSIONS_POLICY =
+  "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), " +
+  "encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), " +
+  "magnetometer=(), microphone=(self), midi=(), payment=(), picture-in-picture=(), " +
+  "publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=()";
+
+test("Permissions-Policy allows the microphone for self only and leaves every other directive unchanged", () => {
+  const permissions = headerMap(securityHeaders()).get("Permissions-Policy");
+  assert.equal(permissions, EXPECTED_PERMISSIONS_POLICY);
+  const directives = (permissions ?? "").split(", ");
+  assert.equal(directives.length, 21);
+  assert.deepEqual(
+    directives.filter((directive) => !directive.endsWith("=()")),
+    ["microphone=(self)"],
+  );
 });
 
 test("report-only CSP covers Blob, Mux, Flutterwave checkout, and self-hosted fonts", () => {
@@ -60,6 +78,7 @@ test("next.config sends these headers on every path and hides x-powered-by", asy
   assert.equal(headers.get("X-Content-Type-Options"), "nosniff");
   assert.equal(headers.get("Referrer-Policy"), "strict-origin-when-cross-origin");
   assert.ok(headers.get("Permissions-Policy")?.includes("camera=()"));
+  assert.equal(headers.get("Permissions-Policy"), EXPECTED_PERMISSIONS_POLICY);
 
   const worker = rules.find((rule) => rule.source === "/sw.js");
   assert.equal(worker?.headers.some((header) => header.key === "Service-Worker-Allowed"), true);
