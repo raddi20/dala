@@ -2,9 +2,11 @@
 
 import { useEffect, useId, useSyncExternalStore, useState, type KeyboardEvent } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { SulweArt } from "@/components/sulwe-art";
 import { btnPrimary } from "@/components/ui";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiFill, uiText } from "@/lib/i18n/strings";
+import { SULWE_PREVIEW_KEY, SULWE_TOUR_KEY, SULWE_TOUR_SIZE, placeSulwe, sulweGuideArrow, sulweQueryOn } from "@/lib/sulwe";
 import {
   TOUR_RUN_KEY,
   finishHref,
@@ -33,12 +35,13 @@ import {
   type TourRun,
 } from "@/lib/tour";
 
-const EMPTY_PLACEMENT: TourPlacement & { target: string } = {
+const EMPTY_PLACEMENT: TourPlacement & { target: string; sulwe: { top: number; left: number } | null } = {
   spot: null,
   side: "center",
   arrow: null,
   bubble: { top: 24, left: 12, width: 300, height: 220 },
   target: "",
+  sulwe: null,
 };
 
 export function TourCard({
@@ -152,11 +155,14 @@ function scrollTarget(node: HTMLElement) {
   node.scrollIntoView({ block: "center", inline: "nearest", behavior: reduce ? "auto" : "smooth" });
 }
 
-function measure(target: string, bubbleHeight: number): TourPlacement {
+function measure(target: string, bubbleHeight: number, guide: boolean) {
   const node = visibleTarget(target);
   const rect = node?.getBoundingClientRect();
   const box: TourBox | null = rect ? { top: rect.top, left: rect.left, width: rect.width, height: rect.height } : null;
-  return placeTourBubble({ target: box, viewport: viewportSize(), bubbleHeight });
+  const viewport = viewportSize();
+  const placed = placeTourBubble({ target: box, viewport, bubbleHeight });
+  const sulwe = guide ? placeSulwe({ bubble: placed.bubble, target: placed.spot, viewport, size: SULWE_TOUR_SIZE }) : null;
+  return { ...placed, target, sulwe };
 }
 
 function writeRun(run: TourRun) {
@@ -169,14 +175,25 @@ function clearRun() {
   window.dispatchEvent(new Event("rangach-tour-run"));
 }
 
-export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) {
+export function GuidedTour({ enabled, lang, sulwe = false }: { enabled: boolean; lang: Lang; sulwe?: boolean }) {
   const path = usePathname() || "/";
   const search = useSearchParams();
   const router = useRouter();
   const force = tourQueryOn(search.toString());
   const [closedFor, setClosedFor] = useState<string | null>(null);
   const [listingPath, setListingPath] = useState<string | null>(null);
-  const [placement, setPlacement] = useState<TourPlacement & { target: string }>(EMPTY_PLACEMENT);
+  const [placement, setPlacement] = useState(EMPTY_PLACEMENT);
+  const guideQuery = sulweQueryOn(search.toString());
+  const sulwePreview = useSyncExternalStore(
+    (notify) => {
+      const onChange = () => notify();
+      window.addEventListener("rangach-sulwe-preview", onChange);
+      return () => window.removeEventListener("rangach-sulwe-preview", onChange);
+    },
+    () => sessionStorage.getItem(SULWE_PREVIEW_KEY) === "1",
+    () => false,
+  );
+  const guide = sulwe || guideQuery || sulwePreview;
 
   const runRaw = useSyncExternalStore(
     (notify) => {
@@ -263,8 +280,8 @@ export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) 
       if (cancelled) return;
       openSheet();
       const dialog = document.querySelector<HTMLElement>("[data-tour-dialog]");
-      const next = measure(step.target, dialog?.offsetHeight || 220);
-      setPlacement({ ...next, target: step.target });
+      const next = measure(step.target, dialog?.offsetHeight || 220, guide);
+      setPlacement(next);
     };
     const scheduled = () => {
       if (frame) return;
@@ -298,7 +315,16 @@ export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) 
       window.visualViewport?.removeEventListener("resize", scheduled);
       window.visualViewport?.removeEventListener("scroll", scheduled);
     };
-  }, [open, step, path]);
+  }, [open, step, path, guide]);
+
+  useEffect(() => {
+    if (guideQuery && sessionStorage.getItem(SULWE_PREVIEW_KEY) !== "1") {
+      sessionStorage.setItem(SULWE_PREVIEW_KEY, "1");
+      window.dispatchEvent(new Event("rangach-sulwe-preview"));
+    }
+    sessionStorage.setItem(SULWE_TOUR_KEY, open ? "1" : "0");
+    window.dispatchEvent(new Event("rangach-sulwe-tour"));
+  }, [open, guideQuery]);
 
   useEffect(() => {
     if (!open) return;
@@ -352,6 +378,12 @@ export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) 
   }
 
   const arrowId = "tour-arrow";
+  const guideArrow =
+    placement.target === step.target
+      ? placement.sulwe && placement.spot
+        ? sulweGuideArrow(placement.sulwe, placement.spot)
+        : placement.arrow
+      : null;
 
   return (
     <div className="print:hidden" data-tour-layer="">
@@ -383,7 +415,16 @@ export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) 
       ) : (
         <div className="fixed inset-0 z-[81] bg-navy/60" aria-hidden="true" />
       )}
-      {placement.target === step.target && placement.arrow ? (
+      {placement.sulwe && placement.target === step.target ? (
+        <div
+          className="sulwe-guide pointer-events-none fixed z-[84]"
+          data-sulwe-guide=""
+          style={{ top: placement.sulwe.top, left: placement.sulwe.left, width: SULWE_TOUR_SIZE, height: SULWE_TOUR_SIZE }}
+        >
+          <SulweArt pose="wave" />
+        </div>
+      ) : null}
+      {guideArrow ? (
         <svg className="pointer-events-none fixed inset-0 z-[82] h-full w-full" aria-hidden="true">
           <defs>
             <marker id={arrowId} markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
@@ -391,10 +432,10 @@ export function GuidedTour({ enabled, lang }: { enabled: boolean; lang: Lang }) 
             </marker>
           </defs>
           <line
-            x1={placement.arrow.x1}
-            y1={placement.arrow.y1}
-            x2={placement.arrow.x2}
-            y2={placement.arrow.y2}
+            x1={guideArrow.x1}
+            y1={guideArrow.y1}
+            x2={guideArrow.x2}
+            y2={guideArrow.y2}
             stroke="#c8881a"
             strokeWidth="2.5"
             markerEnd={`url(#${arrowId})`}

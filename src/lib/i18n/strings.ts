@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome, the first tour and the visual tour (`draft: false`).
+ * Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`).
  */
 export type UiString = {
   en: string;
@@ -382,6 +382,40 @@ export const UI_STRINGS = {
     page: "Tour",
     notes: "Kevin signed off. No payment-holding wording.",
   },
+
+  sulwe_talk: { en: "Talk to Sulwe", dholuo: "Wuo gi Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_minimise: { en: "Shrink Sulwe", dholuo: "Shrink Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_restore: { en: "Show Sulwe", dholuo: "Nyis Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_close: { en: "Close", dholuo: "Lor", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_hi: {
+    en: "Hi, I'm Sulwe, what are you looking for?",
+    dholuo: "Misawa, an Sulwe, ere kaka anyalo konyi?",
+    draft: false,
+    page: "Sulwe",
+    notes: "Kevin signed off.",
+  },
+  sulwe_chip_ayie: { en: "ayie catering", dholuo: "chiemo mar ayie", draft: false, page: "Sulwe", notes: "Kevin signed off. The search sent is the English phrase." },
+  sulwe_chip_fundi: { en: "fundi in Kisumu", dholuo: "fundi Kisumu", draft: false, page: "Sulwe", notes: "Kevin signed off. The search sent is the English phrase." },
+  sulwe_chip_tilapia: { en: "fresh tilapia", dholuo: "rech ngege", draft: false, page: "Sulwe", notes: "Kevin signed off. The search sent is the English phrase." },
+  sulwe_placeholder: { en: "A fundi, tilapia, an ayie…", dholuo: "Fundi, rech ngege, ayie…", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_send: { en: "Send", dholuo: "Or", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_found: {
+    en: "Here's what I found for {query}.",
+    dholuo: "Magi ema ayudo ne {query}.",
+    draft: false,
+    page: "Sulwe",
+    notes: "Kevin signed off. {query} is the visitor's own words.",
+  },
+  sulwe_see_all: { en: "See all results", dholuo: "Duoko duto", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_empty: {
+    en: "Nothing matched yet. Try a town such as Kisumu.",
+    dholuo: "Pod onge. Tem boma kaka Kisumu.",
+    draft: false,
+    page: "Sulwe",
+    notes: "Kevin signed off.",
+  },
+  sulwe_searching: { en: "Looking…", dholuo: "Manyo…", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_chat: { en: "Chat with Sulwe", dholuo: "Chat gi Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off. Dialog label." },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
@@ -404,7 +438,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off the chrome, the first tour and the visual tour (`draft: false`). A held status means a line is still waiting on Kevin.",
+    "Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). A held status means a line is still waiting on Kevin.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
@@ -446,6 +480,24 @@ export function tourV2StringsMarkdown(): string {
   ];
   for (const [key, row] of Object.entries(UI_STRINGS)) {
     if (!key.startsWith("tour2_")) continue;
+    lines.push(`| ${key} | ${cell(row.en)} | ${cell(row.dholuo)} |`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/** Sulwe copy only. Kevin signed off every line. */
+export function sulweStringsMarkdown(): string {
+  const lines = [
+    "# Sulwe Dholuo",
+    "",
+    "Strings for Sulwe, the star mascot. Kevin signed off every Dholuo line (`draft: false`).",
+    "The chat reuses Ask Rangach. Examples stay ayie, a fundi in Kisumu, and fresh tilapia.",
+    "",
+    "| Key | English | Dholuo |",
+    "| --- | --- | --- |",
+  ];
+  for (const [key, row] of Object.entries(UI_STRINGS)) {
+    if (!key.startsWith("sulwe_")) continue;
     lines.push(`| ${key} | ${cell(row.en)} | ${cell(row.dholuo)} |`);
   }
   return `${lines.join("\n")}\n`;

@@ -40,5 +40,25 @@ if (!existing) {
   });
 }
 
+const fundiTitle = "Fundi in Kisumu";
+const fundi = await prisma.listing.findFirst({ where: { ownerId: user.id, title: fundiTitle } });
+if (!fundi) {
+  await prisma.listing.create({
+    data: {
+      type: "services",
+      title: fundiTitle,
+      description: "A fundi in Kisumu for a kitchen, a roof, or a small repair. Message on WhatsApp.",
+      category: "Construction & trades",
+      city: "Kisumu",
+      region: regionForCity("Kisumu"),
+      priceLabel: "Ask on WhatsApp",
+      contactName: user.name,
+      contactPhone: user.phone,
+      contactWhatsapp: user.whatsapp,
+      ownerId: user.id,
+    },
+  });
+}
+
 console.log("tour fixture ready", email);
 await prisma.$disconnect();
