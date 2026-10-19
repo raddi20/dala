@@ -330,14 +330,21 @@ test("grammar hint is used where it exists and never breaks browsers without it"
   assert.equal(made.length, 1);
 });
 
-test("new hear_ strings are Dholuo drafts and never rude", () => {
+test("hear_ strings are signed off with the exact approved text and never rude", () => {
   const keys = Object.keys(UI_STRINGS).filter((key) => key.startsWith("hear_"));
   assert.deepEqual(keys, ["hear_did_you_mean", "hear_search_this", "hear_search_said", "hear_heard"]);
+  const approved: Record<string, [string, string]> = {
+    hear_did_you_mean: ["Did you mean: {query}?", "Ne idwaro wacho ni: {query}?"],
+    hear_search_this: ["Search this", "Manyo ma"],
+    hear_search_said: ["Search what I said", "Manyo gima ne awacho"],
+    hear_heard: ["I heard: {raw}", "Ne awinjo: {raw}"],
+  };
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
-    assert.match(row.notes, /^Draft for Kevin\./, key);
+    assert.equal(row.draft, false, key);
+    assert.match(row.notes, /^Kevin signed off\./, key);
+    assert.equal(row.en, approved[key][0], key);
+    assert.equal(row.dholuo, approved[key][1], key);
     assert.doesNotMatch(`${row.en} ${row.dholuo}`, /gay|escrow/i, key);
   }
-  assert.equal(UI_STRINGS.hear_did_you_mean.en, "Did you mean: {query}?");
 });
