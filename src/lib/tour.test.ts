@@ -100,12 +100,19 @@ test("a missing target has no spotlight", () => {
   assert.equal(box?.width, 120);
 });
 
-test("tour copy has a Dholuo draft and stays clear of funeral and escrow wording", () => {
+test("tour copy is signed off and stays clear of funeral and escrow wording", () => {
   const keys = Object.keys(UI_STRINGS).filter((key) => key.startsWith("tour_"));
   assert.ok(keys.length >= 10);
+  assert.equal(UI_STRINGS.tour_dialog.dholuo, "Tour");
+  assert.equal(UI_STRINGS.tour_whatsapp_body.dholuo, "Goch ne wuon ohala e WhatsApp. Penj wach ayie kata fundi Kisumu.");
+  assert.equal(UI_STRINGS.tour_skip.dholuo, "Skip");
+  assert.equal(UI_STRINGS.tour_done.dholuo, "Done");
+  assert.equal(UI_STRINGS.tour_replay.dholuo, "Miya Tour");
+  assert.equal(UI_STRINGS.tour_seller_offer_body.dholuo, "Ket nying maber. Kaka Chiemo mar ayie oromo.");
+  assert.equal(UI_STRINGS.tour_seller_publish_body.dholuo, "Yaw ka gimoro amora ni maber. Joma ng'iewo gocho ni e WhatsApp.");
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, false, key);
     assert.ok(row.dholuo.trim(), key);
     assert.equal(/funeral/i.test(row.en + row.dholuo), false, key);
     assert.equal(/escrow/i.test(row.en + row.dholuo), false, key);
