@@ -315,6 +315,239 @@ h3,
   .tour-ring {
     animation: tour-pulse 1.4s ease-out infinite;
   }
+
+  .sulwe-guide {
+    transition: top 420ms ease, left 420ms ease;
+  }
+
+  .sulwe-blink #lidL,
+  .sulwe-blink #lidR {
+    animation: sulwe-blink 0.7s ease;
+  }
+
+  .sulwe-look #pupilL,
+  .sulwe-look #pupilR {
+    animation: sulwe-look 0.9s ease;
+  }
+
+  .sulwe-yawn .sulwe-yawn-mouth {
+    animation: sulwe-yawn 0.9s ease;
+  }
+
+  .sulwe-bounce #sulwe,
+  .sulwe-float #sulwe,
+  .sulwe-giggle #sulwe,
+  .sulwe-jump #sulwe,
+  .sulwe-peek #sulwe {
+    transform-box: fill-box;
+    transform-origin: center bottom;
+  }
+
+  .sulwe-bounce #sulwe {
+    animation: sulwe-bounce 0.55s ease;
+  }
+
+  .sulwe-float #sulwe {
+    animation: sulwe-float 1.4s ease-in-out;
+  }
+
+  .sulwe-glow #glow {
+    animation: sulwe-glow 0.9s ease-in-out 2;
+  }
+
+  .sulwe-giggle #sulwe {
+    animation: sulwe-giggle 0.45s ease-in-out 2;
+  }
+
+  .sulwe-jump #sulwe {
+    animation: sulwe-jump 0.7s ease;
+  }
+
+  .sulwe-peek #sulwe {
+    animation: sulwe-peek 0.7s ease;
+  }
+
+  .sulwe-jump .sulwe-spark {
+    animation: sulwe-spark 0.65s ease;
+  }
+
+  .sulwe-wave #armR {
+    transform-box: fill-box;
+    transform-origin: 20% 20%;
+    animation: sulwe-wave 0.55s ease-in-out 2;
+  }
+
+  .sulwe-spin #star {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: sulwe-spin 0.7s linear;
+  }
+
+  .sulwe-blush #cheeks {
+    animation: sulwe-blush 0.8s ease;
+  }
+}
+
+.sulwe-art {
+  overflow: visible;
+}
+
+.sulwe-spark {
+  opacity: 0;
+}
+
+.sulwe-jump .sulwe-spark {
+  opacity: 1;
+}
+
+.sulwe-paused,
+.sulwe-paused * {
+  animation-play-state: paused !important;
+}
+
+@keyframes sulwe-blink {
+  0%,
+  40%,
+  100% {
+    opacity: 0;
+  }
+  50%,
+  70% {
+    opacity: 1;
+  }
+}
+
+@keyframes sulwe-look {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-4px, -2px);
+  }
+}
+
+@keyframes sulwe-yawn {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  70% {
+    opacity: 1;
+  }
+}
+
+@keyframes sulwe-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes sulwe-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes sulwe-glow {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes sulwe-giggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-7deg);
+  }
+  75% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes sulwe-jump {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-22px) scale(1.08);
+  }
+}
+
+@keyframes sulwe-peek {
+  0%,
+  100% {
+    transform: translate(18px, 10px);
+  }
+  40%,
+  70% {
+    transform: translate(0, 0);
+  }
+}
+
+@keyframes sulwe-spark {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  40%,
+  70% {
+    opacity: 1;
+  }
+}
+
+@keyframes sulwe-wave {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-28deg);
+  }
+}
+
+@keyframes sulwe-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes sulwe-blush {
+  0%,
+  100% {
+    opacity: 0.75;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sulwe-art,
+  .sulwe-art *,
+  .sulwe-guide {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 @media print {

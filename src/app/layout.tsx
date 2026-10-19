@@ -3,6 +3,7 @@ import { Suspense, type ReactNode } from "react";
 import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
 import { GuidedTour } from "@/components/guided-tour";
+import { Sulwe } from "@/components/sulwe";
 import { Header } from "@/components/header";
 import { TourReplay } from "@/components/tour-replay";
 import { InstallPrompt } from "@/components/install-prompt";
@@ -10,6 +11,7 @@ import { PwaRegister } from "@/components/pwa-register";
 import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
 import { requestLang } from "@/lib/i18n/request-lang";
+import { sulweOn } from "@/lib/sulwe";
 import { guidedTourOn } from "@/lib/tour";
 import { publicOrigin } from "@/lib/payments/origin";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
@@ -59,6 +61,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const installName = pwaNames(appName()).shortName;
   const lang = await requestLang();
   const tourOn = guidedTourOn();
+  const sulweFlag = sulweOn();
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans print:pb-0 md:pb-0">
@@ -80,7 +83,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         </main>
         <Footer replay={tourOn ? <TourReplay lang={lang} /> : null} />
         <Suspense fallback={null}>
-          <GuidedTour enabled={tourOn} lang={lang} />
+          <GuidedTour enabled={tourOn} lang={lang} sulwe={sulweFlag} />
+          <Sulwe enabled={sulweFlag} lang={lang} />
         </Suspense>
       </body>
     </html>

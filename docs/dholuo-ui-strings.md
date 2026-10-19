@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off the chrome, the first tour and the visual tour (`draft: false`). A held status means a line is still waiting on Kevin.
+Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). A held status means a line is still waiting on Kevin.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -160,3 +160,18 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | tour2_photo_body | Tour | Add a photo of what you sell, like fresh tilapia. | Ket picha mar gima iuso, kaka rech ngege. | reviewed | Kevin signed off. |
 | tour2_price_title | Tour | Price | Nengo | reviewed | Kevin signed off. |
 | tour2_price_body | Tour | Add a price, or leave it blank and talk on WhatsApp. | Ket nengo, kata weye nono twak e WhatsApp. | reviewed | Kevin signed off. No payment-holding wording. |
+| sulwe_talk | Sulwe | Talk to Sulwe | Wuo gi Sulwe | reviewed | Kevin signed off. |
+| sulwe_minimise | Sulwe | Shrink Sulwe | Shrink Sulwe | reviewed | Kevin signed off. |
+| sulwe_restore | Sulwe | Show Sulwe | Nyis Sulwe | reviewed | Kevin signed off. |
+| sulwe_close | Sulwe | Close | Lor | reviewed | Kevin signed off. |
+| sulwe_hi | Sulwe | Hi, I'm Sulwe, what are you looking for? | Misawa, an Sulwe, ere kaka anyalo konyi? | reviewed | Kevin signed off. |
+| sulwe_chip_ayie | Sulwe | ayie catering | chiemo mar ayie | reviewed | Kevin signed off. The search sent is the English phrase. |
+| sulwe_chip_fundi | Sulwe | fundi in Kisumu | fundi Kisumu | reviewed | Kevin signed off. The search sent is the English phrase. |
+| sulwe_chip_tilapia | Sulwe | fresh tilapia | rech ngege | reviewed | Kevin signed off. The search sent is the English phrase. |
+| sulwe_placeholder | Sulwe | A fundi, tilapia, an ayie… | Fundi, rech ngege, ayie… | reviewed | Kevin signed off. |
+| sulwe_send | Sulwe | Send | Or | reviewed | Kevin signed off. |
+| sulwe_found | Sulwe | Here's what I found for {query}. | Magi ema ayudo ne {query}. | reviewed | Kevin signed off. {query} is the visitor's own words. |
+| sulwe_see_all | Sulwe | See all results | Duoko duto | reviewed | Kevin signed off. |
+| sulwe_empty | Sulwe | Nothing matched yet. Try a town such as Kisumu. | Pod onge. Tem boma kaka Kisumu. | reviewed | Kevin signed off. |
+| sulwe_searching | Sulwe | Looking… | Manyo… | reviewed | Kevin signed off. |
+| sulwe_chat | Sulwe | Chat with Sulwe | Chat gi Sulwe | reviewed | Kevin signed off. Dialog label. |
