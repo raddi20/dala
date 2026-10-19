@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome (`draft: false`). Guided-tour lines stay `draft: true` for his review.
+ * Kevin signed off the chrome and the guided tour (`draft: false`).
  */
 export type UiString = {
   en: string;
@@ -265,75 +265,75 @@ export const UI_STRINGS = {
   shop_sections: { en: "Shop sections", dholuo: "Kuonde mag duka", draft: false, page: "Shop", notes: "Review. Screen-reader label." },
   shop_video: { en: "Shop video", dholuo: "Video mar duka", draft: false, page: "Shop", notes: "Review." },
 
-  tour_dialog: { en: "Guided tour", dholuo: "Nyiso", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour_ask_title: { en: "Ask Rangach", dholuo: "Penj Rangach", draft: true, page: "Tour", notes: "Draft for Kevin. Review penj." },
+  tour_dialog: { en: "Guided tour", dholuo: "Tour", draft: false, page: "Tour", notes: "Kevin signed off." },
+  tour_ask_title: { en: "Ask Rangach", dholuo: "Penj Rangach", draft: false, page: "Tour", notes: "Kevin signed off. penj." },
   tour_ask_body: {
     en: "Type a sentence, like fresh tilapia or a fundi in Kisumu.",
     dholuo: "Ndik wach, kaka rech ngege kata fundi Kisumu.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review. Examples are tilapia and a fundi in Kisumu.",
+    notes: "Kevin signed off. Examples are tilapia and a fundi in Kisumu.",
   },
-  tour_nav_title: { en: "Along the bottom", dholuo: "Piny ka", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_nav_title: { en: "Along the bottom", dholuo: "Piny ka", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_nav_body: {
     en: "{home}, {explore}, {ask}, {occasions}, and {sell}.",
     dholuo: "{home}, {explore}, {ask}, {occasions}, kod {sell}.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. The words in braces are the live bottom-nav labels.",
+    notes: "Kevin signed off. The words in braces are the live bottom-nav labels.",
   },
-  tour_filters_title: { en: "Filters and town", dholuo: "Yiero kod boma", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_filters_title: { en: "Filters and town", dholuo: "Yiero kod boma", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_filters_body: {
     en: "On Browse, open Filters and choose a town such as Kisumu.",
     dholuo: "E manyo, yaw Yiero kendo yier boma kaka Kisumu.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour_whatsapp_title: { en: "WhatsApp the seller", dholuo: "WhatsApp wuon ohala", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_whatsapp_title: { en: "WhatsApp the seller", dholuo: "WhatsApp wuon ohala", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_whatsapp_body: {
     en: "Message the seller on WhatsApp. Ask about an ayie, or a fundi in Kisumu.",
-    dholuo: "Goch ng'at uso e WhatsApp. Penj kuom ayie kata fundi Kisumu.",
-    draft: true,
+    dholuo: "Goch ne wuon ohala e WhatsApp. Penj wach ayie kata fundi Kisumu.",
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review. No payment-holding wording.",
+    notes: "Kevin signed off. No payment-holding wording.",
   },
-  tour_sell_title: { en: "Sell or open a shop", dholuo: "Uso kata yaw duka", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_sell_title: { en: "Sell or open a shop", dholuo: "Uso kata yaw duka", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_sell_body: {
     en: "List your business free, then open a shop for what you sell.",
     dholuo: "Ket ohala mari nono, eka yaw duka.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour_next: { en: "Next", dholuo: "Machielo", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour_skip: { en: "Skip", dholuo: "Wey", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour_done: { en: "Done", dholuo: "Otimore", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour_replay: { en: "Show me around", dholuo: "Nyisa", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
-  tour_step: { en: "Step {n} of {total}", dholuo: "Okang' {n} kuom {total}", draft: true, page: "Tour", notes: "Draft for Kevin. Review. Screen reader." },
-  tour_seller_offer_title: { en: "What you sell", dholuo: "Gima iuso", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_next: { en: "Next", dholuo: "Machielo", draft: false, page: "Tour", notes: "Kevin signed off." },
+  tour_skip: { en: "Skip", dholuo: "Skip", draft: false, page: "Tour", notes: "Kevin signed off. Brand-style word stays." },
+  tour_done: { en: "Done", dholuo: "Done", draft: false, page: "Tour", notes: "Kevin signed off. Word stays." },
+  tour_replay: { en: "Show me around", dholuo: "Miya Tour", draft: false, page: "Tour", notes: "Kevin signed off." },
+  tour_step: { en: "Step {n} of {total}", dholuo: "Okang' {n} kuom {total}", draft: false, page: "Tour", notes: "Kevin signed off. Screen reader." },
+  tour_seller_offer_title: { en: "What you sell", dholuo: "Gima iuso", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_seller_offer_body: {
     en: "Name it clearly. Catering for an ayie is enough to start.",
-    dholuo: "Ket nying maber. Chiemo mar ayie oromo.",
-    draft: true,
+    dholuo: "Ket nying maber. Kaka Chiemo mar ayie oromo.",
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour_seller_town_title: { en: "Your town", dholuo: "Boma mari", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_seller_town_title: { en: "Your town", dholuo: "Boma mari", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_seller_town_body: {
     en: "Pick a town, such as Kisumu, so nearby people can find you.",
     dholuo: "Yier boma, kaka Kisumu.",
-    draft: true,
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
-  tour_seller_publish_title: { en: "Publish", dholuo: "Yaw", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_seller_publish_title: { en: "Publish", dholuo: "Yaw", draft: false, page: "Tour", notes: "Kevin signed off." },
   tour_seller_publish_body: {
     en: "Publish when it looks right. Buyers message you on WhatsApp.",
-    dholuo: "Yaw ka owinjo maber. Joma ng'iewo gochi e WhatsApp.",
-    draft: true,
+    dholuo: "Yaw ka gimoro amora ni maber. Joma ng'iewo gocho ni e WhatsApp.",
+    draft: false,
     page: "Tour",
-    notes: "Draft for Kevin. Review.",
+    notes: "Kevin signed off.",
   },
 } as const satisfies Record<string, UiString>;
 
@@ -357,7 +357,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off the chrome (`draft: false`). A held status means the line is still a draft, including the guided tour.",
+    "Kevin signed off the chrome and the guided tour (`draft: false`). A held status would mean a line is still a draft.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
@@ -370,14 +370,14 @@ export function dholuoStringsMarkdown(): string {
   return `${lines.join("\n")}\n`;
 }
 
-/** New tour copy only, for Kevin's review. */
+/** Tour copy only. Kevin signed off every line. */
 export function tourStringsMarkdown(): string {
   const lines = [
-    "# Guided tour Dholuo drafts",
+    "# Guided tour Dholuo",
     "",
-    "New tour copy only. Every Dholuo line is a draft (`draft: true`) for Kevin.",
+    "Tour copy only. Kevin signed off every Dholuo line (`draft: false`).",
     "",
-    "| Key | English | Dholuo draft |",
+    "| Key | English | Dholuo |",
     "| --- | --- | --- |",
   ];
   for (const [key, row] of Object.entries(UI_STRINGS)) {
