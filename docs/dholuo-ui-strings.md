@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off the chrome and the guided tour (`draft: false`). A held status would mean a line is still a draft.
+Kevin signed off the chrome and the first tour (`draft: false`). A held status means a newer line, including tour2_, is still a draft.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -150,3 +150,13 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | tour_seller_town_body | Tour | Pick a town, such as Kisumu, so nearby people can find you. | Yier boma, kaka Kisumu. | reviewed | Kevin signed off. |
 | tour_seller_publish_title | Tour | Publish | Yaw | reviewed | Kevin signed off. |
 | tour_seller_publish_body | Tour | Publish when it looks right. Buyers message you on WhatsApp. | Yaw ka gimoro amora ni maber. Joma ng'iewo gocho ni e WhatsApp. | reviewed | Kevin signed off. |
+| tour2_back | Tour | Back | Chien | held | Draft for Kevin. Review. |
+| tour2_home_body | Tour | This tab is Home. | Ma e Dala. | held | Draft for Kevin. Review. |
+| tour2_explore_body | Tour | Explore opens listings and shops. | Manyo yawo listings kod dukni. | held | Draft for Kevin. Review. |
+| tour2_ask_tab_body | Tour | Ask searches with a sentence, like fresh tilapia. | Penj manyo gi wach, kaka rech ngege. | held | Draft for Kevin. Review. |
+| tour2_occasions_body | Tour | Occasions gathers what a family needs, like an ayie. | nyasi keto gik ma jo ot dwaro, kaka ayie. | held | Draft for Kevin. Review. |
+| tour2_town_body | Tour | Choose a town, such as Kisumu. | Yier boma, kaka Kisumu. | held | Draft for Kevin. Review. |
+| tour2_photo_title | Tour | Photo | Picha | held | Draft for Kevin. Review. |
+| tour2_photo_body | Tour | Add a photo of what you sell, like fresh tilapia. | Ket picha mar gima iuso, kaka rech ngege. | held | Draft for Kevin. Review. |
+| tour2_price_title | Tour | Price | Nengo | held | Draft for Kevin. Review. |
+| tour2_price_body | Tour | Add a price, or leave it blank and talk on WhatsApp. | Ket nengo, kata weye nono kendo wuoy e WhatsApp. | held | Draft for Kevin. Review. No payment-holding wording. |

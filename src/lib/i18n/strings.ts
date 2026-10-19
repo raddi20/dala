@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off the chrome and the guided tour (`draft: false`).
+ * Kevin signed off the chrome and the first tour (`draft: false`). Newer `tour2_` lines are drafts.
  */
 export type UiString = {
   en: string;
@@ -335,6 +335,53 @@ export const UI_STRINGS = {
     page: "Tour",
     notes: "Kevin signed off.",
   },
+
+  tour2_back: { en: "Back", dholuo: "Chien", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_home_body: { en: "This tab is Home.", dholuo: "Ma e Dala.", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_explore_body: {
+    en: "Explore opens listings and shops.",
+    dholuo: "Manyo yawo listings kod dukni.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour2_ask_tab_body: {
+    en: "Ask searches with a sentence, like fresh tilapia.",
+    dholuo: "Penj manyo gi wach, kaka rech ngege.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour2_occasions_body: {
+    en: "Occasions gathers what a family needs, like an ayie.",
+    dholuo: "nyasi keto gik ma jo ot dwaro, kaka ayie.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour2_town_body: {
+    en: "Choose a town, such as Kisumu.",
+    dholuo: "Yier boma, kaka Kisumu.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour2_photo_title: { en: "Photo", dholuo: "Picha", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_photo_body: {
+    en: "Add a photo of what you sell, like fresh tilapia.",
+    dholuo: "Ket picha mar gima iuso, kaka rech ngege.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour2_price_title: { en: "Price", dholuo: "Nengo", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour2_price_body: {
+    en: "Add a price, or leave it blank and talk on WhatsApp.",
+    dholuo: "Ket nengo, kata weye nono kendo wuoy e WhatsApp.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review. No payment-holding wording.",
+  },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
@@ -357,7 +404,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off the chrome and the guided tour (`draft: false`). A held status would mean a line is still a draft.",
+    "Kevin signed off the chrome and the first tour (`draft: false`). A held status means a newer line, including tour2_, is still a draft.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
@@ -382,6 +429,23 @@ export function tourStringsMarkdown(): string {
   ];
   for (const [key, row] of Object.entries(UI_STRINGS)) {
     if (!key.startsWith("tour_")) continue;
+    lines.push(`| ${key} | ${cell(row.en)} | ${cell(row.dholuo)} |`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/** New visual-tour copy only. Every Dholuo line is a draft for Kevin. */
+export function tourV2StringsMarkdown(): string {
+  const lines = [
+    "# Guided tour Dholuo drafts (visual tour)",
+    "",
+    "New strings for the visual tour. Every Dholuo line is a draft (`draft: true`) for Kevin. Signed-off tour lines are unchanged.",
+    "",
+    "| Key | English | Dholuo draft |",
+    "| --- | --- | --- |",
+  ];
+  for (const [key, row] of Object.entries(UI_STRINGS)) {
+    if (!key.startsWith("tour2_")) continue;
     lines.push(`| ${key} | ${cell(row.en)} | ${cell(row.dholuo)} |`);
   }
   return `${lines.join("\n")}\n`;
