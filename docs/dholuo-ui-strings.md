@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off the chrome, the first tour, the visual tour and Sulwe (`draft: false`). A held status means a line is still waiting on Kevin.
+Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite and Sulwe voice (`draft: false`).
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -175,10 +175,10 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | sulwe_empty | Sulwe | Nothing matched yet. Try a town such as Kisumu. | Pod onge. Tem boma kaka Kisumu. | reviewed | Kevin signed off. |
 | sulwe_searching | Sulwe | Looking… | Manyo… | reviewed | Kevin signed off. |
 | sulwe_chat | Sulwe | Chat with Sulwe | Chat gi Sulwe | reviewed | Kevin signed off. Dialog label. |
-| invite_tour_hi | Tour invite | Hi! Want a quick tour? | Misawa! Idwaro tour machiek? | held | Draft for Kevin. Sulwe says this. machiek = short or quick. |
-| invite_tour_card | Tour invite | New here? Want a quick tour of Rangach? | In ng'at manyien? Idwaro tour machiek mar Rangach? | held | Draft for Kevin. Shown when Sulwe is off. |
-| invite_tour_yes | Tour invite | Yes, show me | Ee, nyisa | held | Draft for Kevin. nyisa = show me. |
-| invite_tour_no | Tour invite | Not now | Ok sani | held | Draft for Kevin. sani = now. |
+| invite_tour_hi | Tour invite | Hi! Want a quick tour? | Misawa! Idwaro tour machiek? | reviewed | Kevin signed off. Sulwe says this. machiek = short or quick. |
+| invite_tour_card | Tour invite | New here? Want a quick tour of Rangach? | In ng'at manyien? Idwaro tour machiek mar Rangach? | reviewed | Kevin signed off. Shown when Sulwe is off. |
+| invite_tour_yes | Tour invite | Yes, show me | Ee, nyisa | reviewed | Kevin signed off. nyisa = show me. |
+| invite_tour_no | Tour invite | Not now | Ok sani | reviewed | Kevin signed off. sani = now. |
 | voice_mic | Sulwe voice | Tap and speak | Mul, eka iwuo | reviewed | Kevin signed off. Mic button. mul = touch. |
 | voice_stop | Sulwe voice | Stop listening | We winjo | reviewed | Kevin signed off. Second tap stops the mic. |
 | voice_listening | Sulwe voice | Listening… | Awinjo… | reviewed | Kevin signed off. Shown while the mic is on. |

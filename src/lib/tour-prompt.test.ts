@@ -75,13 +75,19 @@ test("the invite card renders both buttons, in English and Dholuo, beside Sulwe 
   assert.match(luo, new RegExp(uiText("dholuo", "invite_tour_no")));
 });
 
-test("invite strings are Dholuo drafts and stay clear of funeral and escrow wording", () => {
+test("invite strings are signed off as drafted and stay clear of funeral and escrow wording", () => {
   const keys = Object.keys(UI_STRINGS).filter((key) => key.startsWith("invite_"));
   assert.deepEqual(keys, ["invite_tour_hi", "invite_tour_card", "invite_tour_yes", "invite_tour_no"]);
   for (const key of keys) {
     const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
-    assert.equal(row.draft, true, key);
+    assert.equal(row.draft, false, key);
+    assert.match(row.notes, /^Kevin signed off\./, key);
     assert.ok(row.en.trim() && row.dholuo.trim(), key);
     assert.equal(/funeral|escrow/i.test(row.en + row.dholuo), false, key);
   }
+  // Kevin approved these exactly as drafted.
+  assert.equal(UI_STRINGS.invite_tour_hi.dholuo, "Misawa! Idwaro tour machiek?");
+  assert.equal(UI_STRINGS.invite_tour_card.dholuo, "In ng'at manyien? Idwaro tour machiek mar Rangach?");
+  assert.equal(UI_STRINGS.invite_tour_yes.dholuo, "Ee, nyisa");
+  assert.equal(UI_STRINGS.invite_tour_no.dholuo, "Ok sani");
 });
