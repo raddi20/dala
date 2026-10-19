@@ -4,7 +4,7 @@ import type { Lang } from "@/lib/i18n/lang";
 
 /**
  * Chrome copy only. Listing titles, shop bios, offerings, and reviews stay as the seller wrote them.
- * Kevin signed off every Dholuo line (`draft: false`).
+ * Kevin signed off the chrome (`draft: false`). Guided-tour lines stay `draft: true` for his review.
  */
 export type UiString = {
   en: string;
@@ -264,6 +264,77 @@ export const UI_STRINGS = {
   close_checks: { en: "Close checks", dholuo: "Lor ranyisi", draft: false, page: "Shop", notes: "Review." },
   shop_sections: { en: "Shop sections", dholuo: "Kuonde mag duka", draft: false, page: "Shop", notes: "Review. Screen-reader label." },
   shop_video: { en: "Shop video", dholuo: "Video mar duka", draft: false, page: "Shop", notes: "Review." },
+
+  tour_dialog: { en: "Guided tour", dholuo: "Nyiso", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_ask_title: { en: "Ask Rangach", dholuo: "Penj Rangach", draft: true, page: "Tour", notes: "Draft for Kevin. Review penj." },
+  tour_ask_body: {
+    en: "Type a sentence, like fresh tilapia or a fundi in Kisumu.",
+    dholuo: "Ndik wach, kaka rech ngege kata fundi Kisumu.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review. Examples are tilapia and a fundi in Kisumu.",
+  },
+  tour_nav_title: { en: "Along the bottom", dholuo: "Piny ka", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_nav_body: {
+    en: "{home}, {explore}, {ask}, {occasions}, and {sell}.",
+    dholuo: "{home}, {explore}, {ask}, {occasions}, kod {sell}.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. The words in braces are the live bottom-nav labels.",
+  },
+  tour_filters_title: { en: "Filters and town", dholuo: "Yiero kod boma", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_filters_body: {
+    en: "On Browse, open Filters and choose a town such as Kisumu.",
+    dholuo: "E manyo, yaw Yiero kendo yier boma kaka Kisumu.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour_whatsapp_title: { en: "WhatsApp the seller", dholuo: "WhatsApp wuon ohala", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_whatsapp_body: {
+    en: "Message the seller on WhatsApp. Ask about an ayie, or a fundi in Kisumu.",
+    dholuo: "Goch ng'at uso e WhatsApp. Penj kuom ayie kata fundi Kisumu.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review. No payment-holding wording.",
+  },
+  tour_sell_title: { en: "Sell or open a shop", dholuo: "Uso kata yaw duka", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_sell_body: {
+    en: "List your business free, then open a shop for what you sell.",
+    dholuo: "Ket ohala mari nono, eka yaw duka.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour_next: { en: "Next", dholuo: "Machielo", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_skip: { en: "Skip", dholuo: "Wey", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_done: { en: "Done", dholuo: "Otimore", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_replay: { en: "Show me around", dholuo: "Nyisa", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_step: { en: "Step {n} of {total}", dholuo: "Okang' {n} kuom {total}", draft: true, page: "Tour", notes: "Draft for Kevin. Review. Screen reader." },
+  tour_seller_offer_title: { en: "What you sell", dholuo: "Gima iuso", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_seller_offer_body: {
+    en: "Name it clearly. Catering for an ayie is enough to start.",
+    dholuo: "Ket nying maber. Chiemo mar ayie oromo.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour_seller_town_title: { en: "Your town", dholuo: "Boma mari", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_seller_town_body: {
+    en: "Pick a town, such as Kisumu, so nearby people can find you.",
+    dholuo: "Yier boma, kaka Kisumu.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
+  tour_seller_publish_title: { en: "Publish", dholuo: "Yaw", draft: true, page: "Tour", notes: "Draft for Kevin. Review." },
+  tour_seller_publish_body: {
+    en: "Publish when it looks right. Buyers message you on WhatsApp.",
+    dholuo: "Yaw ka owinjo maber. Joma ng'iewo gochi e WhatsApp.",
+    draft: true,
+    page: "Tour",
+    notes: "Draft for Kevin. Review.",
+  },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
@@ -286,7 +357,7 @@ export function dholuoStringsMarkdown(): string {
   const lines = [
     "# Dholuo UI strings",
     "",
-    "Kevin signed off every Dholuo line (`draft: false`). A held status would mean an answer is still pending.",
+    "Kevin signed off the chrome (`draft: false`). A held status means the line is still a draft, including the guided tour.",
     "Seller titles, descriptions, bios, offerings, and reviews are not in this list.",
     "",
     "| Key | Page | English | Dholuo | Status | Notes |",
@@ -295,6 +366,23 @@ export function dholuoStringsMarkdown(): string {
   for (const [key, row] of Object.entries(UI_STRINGS)) {
     const status = row.draft ? "held" : "reviewed";
     lines.push(`| ${key} | ${cell(row.page)} | ${cell(row.en)} | ${cell(row.dholuo)} | ${status} | ${cell(row.notes)} |`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
+/** New tour copy only, for Kevin's review. */
+export function tourStringsMarkdown(): string {
+  const lines = [
+    "# Guided tour Dholuo drafts",
+    "",
+    "New tour copy only. Every Dholuo line is a draft (`draft: true`) for Kevin.",
+    "",
+    "| Key | English | Dholuo draft |",
+    "| --- | --- | --- |",
+  ];
+  for (const [key, row] of Object.entries(UI_STRINGS)) {
+    if (!key.startsWith("tour_")) continue;
+    lines.push(`| ${key} | ${cell(row.en)} | ${cell(row.dholuo)} |`);
   }
   return `${lines.join("\n")}\n`;
 }

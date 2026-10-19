@@ -230,7 +230,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
 
       <div className="hidden flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap">
         {chatUrl ? (
-          <a href={chatUrl} className={btnWhatsApp} target="_blank" rel="noreferrer">
+          <a href={chatUrl} data-tour="whatsapp" className={btnWhatsApp} target="_blank" rel="noreferrer">
             {uiText(lang, "whatsapp_seller")}
           </a>
         ) : null}
@@ -407,7 +407,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
               siteName={appName()}
               lang={lang}
             />
-            <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+            <a href={chatUrl} data-tour="whatsapp" className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
               {uiText(lang, "whatsapp_seller")}
             </a>
             <PaymentSafetyNote />

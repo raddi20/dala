@@ -2,11 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { Suspense, type ReactNode } from "react";
 import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
+import { GuidedTour } from "@/components/guided-tour";
 import { Header } from "@/components/header";
+import { TourReplay } from "@/components/tour-replay";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PwaRegister } from "@/components/pwa-register";
 import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
+import { requestLang } from "@/lib/i18n/request-lang";
+import { guidedTourOn } from "@/lib/tour";
 import { publicOrigin } from "@/lib/payments/origin";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
 import "./globals.css";
@@ -51,8 +55,10 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
   const installName = pwaNames(appName()).shortName;
+  const lang = await requestLang();
+  const tourOn = guidedTourOn();
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans print:pb-0 md:pb-0">
@@ -72,7 +78,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <InstallPrompt appName={installName} />
           {children}
         </main>
-        <Footer />
+        <Footer replay={tourOn ? <TourReplay lang={lang} /> : null} />
+        <Suspense fallback={null}>
+          <GuidedTour enabled={tourOn} lang={lang} />
+        </Suspense>
       </body>
     </html>
   );

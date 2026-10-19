@@ -1,9 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
 import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
 
-export function Footer() {
+export function Footer({ replay = null }: { replay?: ReactNode }) {
   return (
     <footer className="mt-auto border-t border-sand/80 bg-card/60 print:hidden">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-ink/65 sm:flex-row sm:items-start sm:justify-between">
@@ -53,6 +54,7 @@ export function Footer() {
           <Link href="/account/storefront" className="hover:text-navy">
             Open a shop
           </Link>
+          {replay}
           {PUBLIC_INFO_PAGES.map((page) => (
             <Link key={page.path} href={page.path} className="hover:text-navy">
               {page.label}

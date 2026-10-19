@@ -55,14 +55,14 @@ export function StorefrontSettingsForm({
       </p>
       <label className="block text-sm">
         Town
-        <select name="city" defaultValue={canonicalCity(city) || "Nairobi"} className={fieldClass}>
+        <select name="city" data-tour="sell-town" defaultValue={canonicalCity(city) || "Nairobi"} className={fieldClass}>
           <TownOptions />
         </select>
       </label>
       <label className="block text-sm">
         About
         {!bio ? <span className="mt-1 block text-ink/70">Your profile has no about text yet. A sentence is enough.</span> : null}
-        <textarea name="bio" defaultValue={bio} rows={4} maxLength={500} className={fieldClass} />
+        <textarea name="bio" data-tour="sell-offer" defaultValue={bio} rows={4} maxLength={500} className={fieldClass} />
       </label>
       {verifiedPro ? (
         <PhotoField
@@ -123,6 +123,7 @@ export function StorefrontSettingsForm({
       ) : null}
       <label
         id="published"
+        data-tour="sell-publish"
         className={
           emphasizePublish
             ? "flex items-start gap-2 rounded-xl bg-amber-soft/80 px-3 py-3 text-sm ring-1 ring-clay/30"

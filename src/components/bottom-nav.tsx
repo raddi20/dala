@@ -76,6 +76,7 @@ export function BottomNav({ sellHref, lang = "en" }: { sellHref: string; lang?: 
   return (
     <nav
       aria-label="Primary"
+      data-tour="nav"
       className="bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] print:hidden md:hidden"
     >
       <div className="grid h-16 grid-cols-5">
@@ -86,6 +87,7 @@ export function BottomNav({ sellHref, lang = "en" }: { sellHref: string; lang?: 
             <Link
               key={tab.id}
               href={hrefFor(tab.id)}
+              data-tour={tab.id === "sell" ? "sell" : undefined}
               aria-current={on ? "page" : undefined}
               className={`flex min-h-11 flex-col items-center justify-center gap-0.5 text-[11px] font-semibold ${
                 ask ? "text-gold-d" : on ? "text-navy" : "text-muted"

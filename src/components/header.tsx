@@ -62,6 +62,7 @@ export async function Header() {
             ) : null}
             <Link
               href={listHref}
+              data-tour="sell"
               className="ml-1 inline-flex min-h-11 items-center rounded-full border border-gold-l px-3.5 text-sm font-semibold text-gold-l"
             >
               List your business free
