@@ -4,17 +4,26 @@ import { createElement } from "react";
 import test from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TourCard } from "@/components/guided-tour";
-import { UI_STRINGS, tourStringsMarkdown, uiText } from "@/lib/i18n/strings";
+import { UI_STRINGS, tourStringsMarkdown, tourV2StringsMarkdown, uiText } from "@/lib/i18n/strings";
 import {
   SELLER_STEPS,
+  TAB_STEP_IDS,
   VISITOR_STEPS,
   advanceTour,
+  finishHref,
   guidedTourOn,
+  neighborStep,
+  parseTourRun,
   persistTourRecord,
+  placeTourBubble,
   readTourRecord,
   replayTour,
+  resumedStepId,
+  serializeTourRun,
   shouldShowTour,
   skipTour,
+  stepPath,
+  stepsForRun,
   tourBody,
   tourKindForPath,
   tourQueryOn,
@@ -81,13 +90,15 @@ test("the flag hides the tour, and the preview query or a replay can show it", (
   assert.equal(tourQueryOn("tour=1"), true);
   assert.equal(tourQueryOn("?tour=0"), false);
   assert.equal(shouldShowTour({ path: "/", flag: false, force: true, seen: true }), true);
+  assert.equal(shouldShowTour({ path: "/listings", flag: false, force: false, seen: false, activeRun: true }), true);
+  assert.equal(shouldShowTour({ path: "/admin", flag: false, force: false, seen: false, activeRun: true }), false);
   assert.equal(shouldShowTour({ path: "/admin", flag: true, force: true, seen: false }), false);
   assert.equal(shouldShowTour({ path: "/admin/phones", flag: true, force: false, seen: false }), false);
   assert.equal(tourKindForPath("/listings/new"), "seller");
   assert.equal(tourKindForPath("/account/storefront"), "seller");
   assert.equal(tourKindForPath("/"), "visitor");
-  assert.equal(SELLER_STEPS.length >= 2 && SELLER_STEPS.length <= 3, true);
-  assert.equal(VISITOR_STEPS.length >= 4 && VISITOR_STEPS.length <= 6, true);
+  assert.equal(SELLER_STEPS.length, 4);
+  assert.equal(VISITOR_STEPS.length >= 4, true);
 });
 
 test("a missing target has no spotlight", () => {
@@ -117,9 +128,13 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
     assert.equal(/funeral/i.test(row.en + row.dholuo), false, key);
     assert.equal(/escrow/i.test(row.en + row.dholuo), false, key);
   }
-  assert.equal(tourBody("en", VISITOR_STEPS[1]), "Home, Explore, Ask, Occasions, and Sell.");
-  assert.match(tourBody("dholuo", VISITOR_STEPS[1]), new RegExp(uiText("dholuo", "nav_home")));
-  assert.match(tourBody("dholuo", VISITOR_STEPS[1]), new RegExp(uiText("dholuo", "nav_sell")));
+  assert.equal(
+    tourBody("en", { id: "nav", target: "nav", title: "tour_nav_title", body: "tour_nav_body" }),
+    "Home, Explore, Ask, Occasions, and Sell.",
+  );
+  const navStep = { id: "nav", target: "nav", title: "tour_nav_title" as const, body: "tour_nav_body" as const };
+  assert.match(tourBody("dholuo", navStep), new RegExp(uiText("dholuo", "nav_home")));
+  assert.match(tourBody("dholuo", navStep), new RegExp(uiText("dholuo", "nav_sell")));
   const doc = readFileSync(new URL("../../docs/tour-dholuo-strings.md", import.meta.url), "utf8");
   assert.equal(doc, tourStringsMarkdown());
   const card = renderToStaticMarkup(
@@ -130,12 +145,82 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
       step: 0,
       total: 5,
       last: false,
+      showBack: false,
       onNext: () => undefined,
+      onBack: () => undefined,
       onSkip: () => undefined,
     }),
   );
+  const keysV2 = Object.keys(UI_STRINGS).filter((key) => key.startsWith("tour2_"));
+  assert.ok(keysV2.length >= 5);
+  for (const key of keysV2) {
+    const row = UI_STRINGS[key as keyof typeof UI_STRINGS];
+    assert.equal(row.draft, false, key);
+    assert.ok(row.dholuo.trim(), key);
+    assert.equal(/funeral/i.test(row.en + row.dholuo), false, key);
+    assert.equal(/escrow/i.test(row.en + row.dholuo), false, key);
+  }
+  assert.equal(UI_STRINGS.tour2_occasions_body.dholuo, "nyasi keto gik ma jogi dwaro, kaka ayie.");
+  assert.equal(UI_STRINGS.tour2_price_body.dholuo, "Ket nengo, kata weye nono twak e WhatsApp.");
+  const v2 = readFileSync(new URL("../../docs/tour-dholuo-strings-v2.md", import.meta.url), "utf8");
+  assert.equal(v2, tourV2StringsMarkdown());
   assert.match(card, /role="dialog"/);
   assert.match(card, /Next/);
   assert.match(card, /Skip/);
   assert.equal((card.match(/data-tour-dot=/g) ?? []).length, 5);
+});
+
+test("the bubble flips above a low target and stays on a 360px screen", () => {
+  const viewport = { width: 360, height: 740 };
+  const below = placeTourBubble({
+    target: { top: 80, left: 16, width: 200, height: 44 },
+    viewport,
+    bubbleHeight: 180,
+  });
+  assert.equal(below.side, "below");
+  assert.ok(below.spot);
+  assert.ok(below.arrow);
+  assert.ok(below.bubble.left >= 8);
+  assert.ok(below.bubble.left + below.bubble.width <= viewport.width - 8);
+
+  const above = placeTourBubble({
+    target: { top: 640, left: 8, width: 70, height: 64 },
+    viewport,
+    bubbleHeight: 180,
+  });
+  assert.equal(above.side, "above");
+  assert.ok(above.bubble.top >= 8);
+  assert.ok(above.bubble.top + above.bubble.height <= viewport.height - 8);
+  assert.ok(above.arrow && above.arrow.y1 < above.arrow.y2);
+
+  const missing = placeTourBubble({ target: null, viewport, bubbleHeight: 180 });
+  assert.equal(missing.side, "center");
+  assert.equal(missing.spot, null);
+  assert.equal(missing.arrow, null);
+  assert.equal(visibleTourBox([{ top: 0, left: 0, width: 0, height: 20 }]), null);
+});
+
+test("the tour resumes a step after navigation and returns to the start path", () => {
+  const run = { kind: "visitor" as const, stepId: "filters", startPath: "/shops" };
+  const raw = serializeTourRun(run);
+  assert.deepEqual(parseTourRun(raw), run);
+  assert.equal(resumedStepId(raw, "visitor", VISITOR_STEPS), "filters");
+  assert.equal(resumedStepId(raw, "seller", SELLER_STEPS), SELLER_STEPS[0].id);
+  assert.equal(neighborStep(VISITOR_STEPS, "filters", 1).id, "town");
+  assert.equal(stepPath(VISITOR_STEPS.find((step) => step.id === "town")!, null), "/listings");
+  assert.equal(stepPath(VISITOR_STEPS.find((step) => step.id === "whatsapp")!, "/listings/abc"), "/listings/abc");
+  assert.equal(stepPath(VISITOR_STEPS.find((step) => step.id === "whatsapp")!, null), null);
+  assert.equal(stepsForRun("visitor", null).some((step) => step.id === "whatsapp"), false);
+  assert.equal(stepsForRun("visitor", "/listings/abc").some((step) => step.id === "whatsapp"), true);
+  assert.equal(finishHref("/shops", "/listings/abc"), "/shops");
+  assert.equal(finishHref("/shops", "/shops"), null);
+  assert.equal(neighborStep(VISITOR_STEPS, "sell", 1).done, true);
+
+  const tabs = VISITOR_STEPS.filter((step) => (TAB_STEP_IDS as readonly string[]).includes(step.id)).map((step) => step.id);
+  assert.deepEqual(tabs, ["home", "explore", "ask-tab", "occasions", "sell"]);
+  assert.equal(VISITOR_STEPS.some((step) => step.target === "nav"), false);
+  assert.deepEqual(
+    SELLER_STEPS.map((step) => step.target),
+    ["sell-title", "sell-photo", "sell-price", "sell-publish"],
+  );
 });

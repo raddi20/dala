@@ -302,6 +302,21 @@ h3,
   }
 }
 
+@keyframes tour-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgb(200 136 26 / 0.75);
+  }
+  100% {
+    box-shadow: 0 0 0 12px rgb(200 136 26 / 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tour-ring {
+    animation: tour-pulse 1.4s ease-out infinite;
+  }
+}
+
 @media print {
   .back-bar,
   .bottom-nav {

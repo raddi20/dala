@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off the chrome and the guided tour (`draft: false`). A held status would mean a line is still a draft.
+Kevin signed off the chrome, the first tour and the visual tour (`draft: false`). A held status means a line is still waiting on Kevin.
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -150,3 +150,13 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | tour_seller_town_body | Tour | Pick a town, such as Kisumu, so nearby people can find you. | Yier boma, kaka Kisumu. | reviewed | Kevin signed off. |
 | tour_seller_publish_title | Tour | Publish | Yaw | reviewed | Kevin signed off. |
 | tour_seller_publish_body | Tour | Publish when it looks right. Buyers message you on WhatsApp. | Yaw ka gimoro amora ni maber. Joma ng'iewo gocho ni e WhatsApp. | reviewed | Kevin signed off. |
+| tour2_back | Tour | Back | Chien | reviewed | Kevin signed off. |
+| tour2_home_body | Tour | This tab is Home. | Ma e Dala. | reviewed | Kevin signed off. |
+| tour2_explore_body | Tour | Explore opens listings and shops. | Manyo yawo listings kod dukni. | reviewed | Kevin signed off. |
+| tour2_ask_tab_body | Tour | Ask searches with a sentence, like fresh tilapia. | Penj manyo gi wach, kaka rech ngege. | reviewed | Kevin signed off. |
+| tour2_occasions_body | Tour | Occasions gathers what a family needs, like an ayie. | nyasi keto gik ma jogi dwaro, kaka ayie. | reviewed | Kevin signed off. |
+| tour2_town_body | Tour | Choose a town, such as Kisumu. | Yier boma, kaka Kisumu. | reviewed | Kevin signed off. |
+| tour2_photo_title | Tour | Photo | Picha | reviewed | Kevin signed off. |
+| tour2_photo_body | Tour | Add a photo of what you sell, like fresh tilapia. | Ket picha mar gima iuso, kaka rech ngege. | reviewed | Kevin signed off. |
+| tour2_price_title | Tour | Price | Nengo | reviewed | Kevin signed off. |
+| tour2_price_body | Tour | Add a price, or leave it blank and talk on WhatsApp. | Ket nengo, kata weye nono twak e WhatsApp. | reviewed | Kevin signed off. No payment-holding wording. |

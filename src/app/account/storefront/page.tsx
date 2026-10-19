@@ -91,7 +91,7 @@ export default async function ManageStorefrontPage({
         <div className={`${cardClass} grid gap-5 p-6`}>
           <SellerSteps current={1} />
           <div className="border-t border-sand/80 pt-5">
-            <p data-tour="sell-offer" className="text-sm text-ink/70">
+            <p data-tour="sell-title" className="text-sm text-ink/70">
               Shop name will be <span className="font-semibold text-navy">{user.name}</span>.
               {hasWhatsapp
                 ? ` Buyers reach you on ${user.whatsapp || user.phone}.`

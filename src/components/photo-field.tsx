@@ -56,6 +56,7 @@ export function PhotoField({
   resourceId,
   defaultUrl = "",
   hint = "JPEG, PNG, or WebP. You can crop and brighten it before it uploads.",
+  dataTour,
 }: {
   name: string;
   label: string;
@@ -63,6 +64,7 @@ export function PhotoField({
   resourceId?: string;
   defaultUrl?: string;
   hint?: string;
+  dataTour?: string;
 }) {
   const inputId = useId().replace(/:/g, "");
   const hintId = `${inputId}-hint`;
@@ -150,7 +152,7 @@ export function PhotoField({
   const showPreview = Boolean(url) && /^https?:\/\//i.test(url) && !previewFailed;
 
   return (
-    <div ref={rootRef} className="grid gap-2">
+    <div ref={rootRef} data-tour={dataTour} className="grid gap-2">
       <div className="block text-sm">
         <span className="font-medium">{label}</span>
         <label

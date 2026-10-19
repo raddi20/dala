@@ -122,7 +122,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           Title
           <input
             name="title"
-            data-tour="sell-offer"
+            data-tour="sell-title"
             value={title}
             onChange={(event) => {
               setTitle(event.target.value);
@@ -187,6 +187,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           Price <span className="text-ink/60">(optional, shown as you type it)</span>
           <input
             name="priceLabel"
+            data-tour="sell-price"
             value={priceLabel}
             onChange={(event) => {
               setPriceLabel(event.target.value);
@@ -233,6 +234,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
         <PhotoField
           name="photoUrl"
           label="Photo"
+          dataTour="sell-photo"
           purpose="listing"
           resourceId={initial.id}
           defaultUrl={initial.photoUrl}

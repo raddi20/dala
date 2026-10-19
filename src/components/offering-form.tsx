@@ -35,7 +35,7 @@ export function OfferingForm({
       {offering ? <input type="hidden" name="id" value={offering.id} /> : null}
       <label className="block text-sm">
         Title
-        <input name="title" defaultValue={offering?.title ?? ""} required maxLength={80} className={fieldClass} />
+        <input name="title" data-tour="sell-title" defaultValue={offering?.title ?? ""} required maxLength={80} className={fieldClass} />
       </label>
       <label className="block text-sm">
         Short description
@@ -52,6 +52,7 @@ export function OfferingForm({
           Price
           <input
             name="price"
+            data-tour="sell-price"
             defaultValue={offering?.price ?? ""}
             inputMode="decimal"
             placeholder="450"
@@ -72,6 +73,7 @@ export function OfferingForm({
       <PhotoField
         name="imageUrl"
         label="Photo"
+        dataTour="sell-photo"
         purpose="offering"
         resourceId={offering?.id}
         defaultUrl={offering?.imageUrl ?? ""}

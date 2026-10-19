@@ -157,7 +157,7 @@ export function ListingFilterForm({
       </label>
       <label className="block text-sm font-medium text-ink/80">
         {uiText(lang, "town")}
-        <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
+        <select name="city" data-tour="tour-town" defaultValue={canonicalCity(city)} className={fieldClass}>
           <TownOptions includeDiaspora blank={uiText(lang, "any_town")} />
         </select>
       </label>
@@ -242,7 +242,7 @@ export function ShopFilterForm({
       </label>
       <label className="block text-sm font-medium text-ink/80">
         {uiText(lang, "town")}
-        <select name="city" defaultValue={canonicalCity(city)} className={fieldClass}>
+        <select name="city" data-tour="tour-town" defaultValue={canonicalCity(city)} className={fieldClass}>
           <TownOptions includeDiaspora blank={uiText(lang, "any_town")} />
         </select>
       </label>
