@@ -1,4 +1,6 @@
 import { appName } from "@/lib/brand";
+import type { Lang } from "@/lib/i18n/lang";
+import { UI_STRINGS } from "@/lib/i18n/strings";
 import { waMeDigits } from "@/lib/phone";
 
 function waMe(phone: string, text: string) {
@@ -15,16 +17,32 @@ export function whatsappPrefillLink(phone: string, text: string) {
   return waMe(phone, text);
 }
 
-export function whatsappChatLink(phone: string, title: string) {
-  return waMe(phone, `Hello, I found ${title} on ${appName()}.`);
+/**
+ * The one-tap buyer message: "Hi, I found you on Rangach – is this still available? <title> <link>".
+ * The Dholuo line is a draft. Until Kevin signs it off (draft: false), every buyer gets the English line.
+ */
+export function whatsappFoundYouText(item: { title: string; url: string }, lang: Lang = "en") {
+  const row = UI_STRINGS.wa_found_you;
+  const template = lang === "dholuo" && !row.draft ? row.dholuo : row.en;
+  const subject = [item.title.trim(), item.url.trim()].filter(Boolean).join(" ");
+  return template.replace("{app}", appName()).replace("{item}", subject).trim();
+}
+
+/** One-tap WhatsApp to the seller with the found-you message prefilled. */
+export function whatsappFoundYouLink(phone: string, item: { title: string; url: string }, lang: Lang = "en") {
+  return waMe(phone, whatsappFoundYouText(item, lang));
+}
+
+export function whatsappChatLink(phone: string, title: string, url = "", lang: Lang = "en") {
+  return whatsappFoundYouLink(phone, { title, url }, lang);
 }
 
 export function whatsappShareLink(title: string, url: string) {
   return waMe("", `${title}\n${url}\nShared from ${appName()}`);
 }
 
-export function whatsappShopLink(phone: string, url: string) {
-  return waMe(phone, `Hi, I saw your ${appName()} shop (${url})…`);
+export function whatsappShopLink(phone: string, url: string, name = "", lang: Lang = "en") {
+  return whatsappFoundYouLink(phone, { title: name, url }, lang);
 }
 
 export function whatsappOfferingText(offering: string, url: string) {
