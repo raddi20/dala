@@ -5,6 +5,8 @@ import { Badges } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
 import { ReviewForm } from "@/components/review-form";
+import { RecentlyViewedStrip, TrackRecent } from "@/components/recently-viewed";
+import { SaveHeart } from "@/components/save-heart";
 import { UpgradeAction } from "@/components/upgrade-action";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
@@ -158,6 +160,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
     sizes: "(min-width: 768px) 720px, 100vw",
     priority: true,
   });
+  const savedItem = {
+    id: listing.id,
+    title: listing.title,
+    photo: photo?.src ?? "",
+    price: listing.priceLabel,
+    place: cityChipLabel(listing.city),
+  };
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
 
@@ -212,6 +221,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
         {listing.priceLabel ? <p className="text-lg font-semibold text-ink">{listing.priceLabel}</p> : null}
+        <SaveHeart variant="page" item={savedItem} />
+        <TrackRecent item={savedItem} />
         <p className="text-sm text-ink/55">
           {rating === null
             ? uiText(lang, "no_reviews")
@@ -362,6 +373,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
           </div>
         </section>
       ) : null}
+
+      <RecentlyViewedStrip skipId={listing.id} />
 
       {/* Mobile action row for non-WhatsApp actions */}
       <div className="flex flex-col gap-2 sm:hidden">

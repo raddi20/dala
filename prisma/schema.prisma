@@ -669,3 +669,15 @@ model BusinessLead {
   @@index([status, createdAt])
   @@index([createdAt])
 }
+
+// A listing a signed-in person tapped the heart on. New table only, no relations, so existing rows are untouched.
+// Visitors without an account keep their hearts in localStorage. Signing in merges them here.
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId, createdAt])
+}
