@@ -215,7 +215,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   const url = `${await publicOrigin()}/b/${shop.slug}`;
   const contacts = publicSellerContacts(shop.user);
   const phone = contacts.whatsapp || contacts.phone;
-  const chatUrl = phone ? whatsappShopLink(phone, url) : "";
+  const chatUrl = phone ? whatsappShopLink(phone, url, shop.user.name, lang) : "";
   const callUrl = telHref(contacts.phone);
   const shareUrl = whatsappShareLink(shop.user.name, url);
   const initial = shop.user.name.trim().charAt(0).toUpperCase() || "·";

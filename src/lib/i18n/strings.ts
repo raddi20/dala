@@ -577,13 +577,22 @@ export const UI_STRINGS = {
     page: "Sulwe voice",
     notes: "Kevin signed off. Small line with the raw words. Hidden when the raw words were rude or awkward.",
   },
+  wa_found_you: {
+    en: "Hi, I found you on {app} – is this still available? {item}",
+    dholuo: "Misawa, ayudi e {app} – bende pod nitie? {item}",
+    draft: true,
+    page: "Listing, shop and sticky WhatsApp bar (prefilled message)",
+    notes:
+      "DRAFT for Kevin. Not confident: misawa = hello, ayudi = I found you, bende pod nitie = is it still there. Buyers get English until draft is false. {app} and {item} stay as they are.",
+  },
 } as const satisfies Record<string, UiString>;
 
 export type StringKey = keyof typeof UI_STRINGS;
 
 export function uiText(lang: Lang, key: StringKey): string {
-  const row = UI_STRINGS[key];
-  return lang === "dholuo" ? row.dholuo : row.en;
+  const row: UiString = UI_STRINGS[key];
+  // A draft line is never shown. It waits for Kevin's sign-off.
+  return lang === "dholuo" && !row.draft ? row.dholuo : row.en;
 }
 
 export function uiFill(lang: Lang, key: StringKey, vars: Record<string, string | number>): string {

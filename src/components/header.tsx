@@ -67,6 +67,9 @@ export async function Header() {
             >
               List your business free
             </Link>
+            <Link href="/saved" className={deskLink}>
+              Saved
+            </Link>
             {user ? (
               <>
                 <Link href="/account" className={deskLink}>
@@ -90,6 +93,16 @@ export async function Header() {
 
           <div className="ml-auto flex items-center gap-1 md:hidden">
             {showLang ? <LanguageSwitchControl lang={lang} /> : null}
+            <Link href="/saved" aria-label="Saved" data-saved-link className="inline-flex h-11 w-11 items-center justify-center text-white/90">
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path
+                  d="M12 20.5s-7.5-4.4-9.3-9.2C1.4 7.9 3.6 4.5 7 4.5c2 0 3.5 1.1 5 2.9 1.5-1.8 3-2.9 5-2.9 3.4 0 5.6 3.4 4.3 6.8-1.8 4.8-9.3 9.2-9.3 9.2z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+              </svg>
+            </Link>
             {user?.role === "admin" ? (
               <Link href="/admin" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white">
                 Admin{openReports > 0 ? ` (${openReports})` : ""}
