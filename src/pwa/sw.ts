@@ -10,8 +10,10 @@
  * Leave SW_MODE as "kill" until you want a worker again, then set it back to "on"
  * and deploy once more. Do not cache /sw.js from this worker.
  *
- * Caching rules live in src/lib/sw-policy.ts. HTML navigations are network-only.
- * The offline page is the only document this worker stores, and only under /offline.
+ * Caching rules live in src/lib/sw-policy.ts. HTML navigations are network-first.
+ * Weak-data mode: a public page the visitor already opened while signed out is kept
+ * (at most MAX_CACHED_PAGES) and shown when the network is gone or very slow.
+ * Admin, account, auth, pricing, forms and any page for a signed-in visitor are never kept.
  * Mux playback (stream.mux.com) and posters (image.mux.com) are never cached.
  */
 
@@ -20,11 +22,20 @@ import {
   OFFLINE_CACHE,
   OFFLINE_PATH,
   OFFLINE_SHELL_HTML,
+  PAGE_CACHE,
+  PRIVATE_HEADER,
+  SLOW_NETWORK_MS,
   STATIC_CACHE,
   cachesToDelete,
   imageKeysToEvict,
+  mayKeepPage,
   mayStoreAssetResponse,
   navigationCacheKey,
+  normalizePathname,
+  offlineAssetPaths,
+  offlineRedirectPath,
+  pageCacheKey,
+  pageKeysToEvict,
   planRequest,
 } from "../lib/sw-policy";
 
@@ -82,7 +93,12 @@ async function precache() {
     });
     if (response.ok && response.type === "basic" && !response.redirected) {
       const type = response.headers.get("content-type") ?? "";
-      if (type.includes("text/html")) await offlineCache.put(OFFLINE_PATH, response);
+      if (type.includes("text/html")) {
+        const html = await response.clone().text();
+        await offlineCache.put(OFFLINE_PATH, response);
+        // The offline page must hydrate without signal, so its own scripts and styles are stored too.
+        await precacheAssets(offlineAssetPaths(html));
+      }
     }
   } catch {
     // The inline shell covers a failed precache.
@@ -96,6 +112,21 @@ async function precache() {
         if (response.ok && !response.redirected) await staticCache.put(path, response);
       } catch {
         // Icons are also cache-first on the next request.
+      }
+    }),
+  );
+}
+
+async function precacheAssets(paths: string[]) {
+  const staticCache = await caches.open(STATIC_CACHE);
+  await Promise.all(
+    paths.map(async (path) => {
+      try {
+        if (await staticCache.match(path)) return;
+        const response = await fetch(path);
+        if (response.ok && !response.redirected) await staticCache.put(path, response);
+      } catch {
+        // Fetched again cache-first on the next visit.
       }
     }),
   );
@@ -125,9 +156,34 @@ async function fetchNavigation(request: Request): Promise<Response> {
   }
 }
 
+async function keepPage(key: string, response: Response) {
+  if (
+    !mayKeepPage({
+      ok: response.ok,
+      status: response.status,
+      redirected: response.redirected,
+      type: response.type,
+      contentType: response.headers.get("content-type"),
+      privateHeader: response.headers.get(PRIVATE_HEADER),
+      cacheControl: response.headers.get("cache-control"),
+    })
+  ) {
+    return;
+  }
+  const cache = await caches.open(PAGE_CACHE);
+  await cache.delete(key);
+  await cache.put(key, response);
+  const keys = await cache.keys();
+  const extra = pageKeysToEvict(keys.map((entry) => new URL(entry.url).pathname + new URL(entry.url).search));
+  await Promise.all(extra.map((entry) => cache.delete(entry)));
+}
+
 async function networkNavigation(request: Request): Promise<Response> {
   const url = new URL(request.url);
-  try {
+  const pageKey = pageCacheKey(url.pathname, url.search);
+  const kept = pageKey ? await (await caches.open(PAGE_CACHE)).match(pageKey) : undefined;
+
+  const network = (async () => {
     const response = await fetchNavigation(request);
     const cacheKey = navigationCacheKey(url.pathname);
     if (cacheKey && response.ok && response.type === "basic" && !response.redirected) {
@@ -137,9 +193,38 @@ async function networkNavigation(request: Request): Promise<Response> {
         await cache.put(cacheKey, response.clone());
       }
     }
+    if (response.headers.get(PRIVATE_HEADER)) {
+      // Signed in: keep nothing, and drop the kept pages so a shared phone shows nothing stale offline.
+      await caches.delete(PAGE_CACHE).catch(() => false);
+    } else if (pageKey) {
+      await keepPage(pageKey, response.clone()).catch(() => undefined);
+    }
     return response;
+  })();
+
+  if (!kept) {
+    try {
+      return await network;
+    } catch {
+      // Move to /offline so the fallback page hydrates on its own route; Try again returns here.
+      if (normalizePathname(url.pathname) !== OFFLINE_PATH) {
+        return Response.redirect(new URL(offlineRedirectPath(url.pathname + url.search), worker.location.origin).toString(), 302);
+      }
+      return offlineDocument();
+    }
+  }
+
+  // Weak signal: show the kept copy if the network is very slow; the fresh copy still lands in the cache.
+  let timer = 0;
+  const slow = new Promise<Response>((resolve) => {
+    timer = setTimeout(() => resolve(kept.clone()), SLOW_NETWORK_MS) as unknown as number;
+  });
+  try {
+    return await Promise.race([network, slow]);
   } catch {
-    return offlineDocument();
+    return kept;
+  } finally {
+    clearTimeout(timer);
   }
 }
 

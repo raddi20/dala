@@ -33,6 +33,7 @@ export function ShopsDirectory({
   total,
   understood = null,
   lang = "en",
+  lite = false,
 }: {
   shops: ShopCardData[];
   query: string;
@@ -53,6 +54,7 @@ export function ShopsDirectory({
     droppedWords: boolean;
   } | null;
   lang?: Lang;
+  lite?: boolean;
 }) {
   const filters = chipBag({
     q: query,
@@ -139,7 +141,7 @@ export function ShopsDirectory({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {shops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} />
+            <ShopCard key={shop.id} shop={shop} lite={lite} />
           ))}
         </div>
       )}

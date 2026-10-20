@@ -14,7 +14,11 @@
   var STATIC_CACHE = `${CACHE_PREFIX}-static`;
   var IMAGE_CACHE = `${CACHE_PREFIX}-images`;
   var OFFLINE_CACHE = `${CACHE_PREFIX}-offline`;
-  var ACTIVE_CACHES = [STATIC_CACHE, IMAGE_CACHE, OFFLINE_CACHE];
+  var PAGE_CACHE = `${CACHE_PREFIX}-pages`;
+  var ACTIVE_CACHES = [STATIC_CACHE, IMAGE_CACHE, OFFLINE_CACHE, PAGE_CACHE];
+  var MAX_CACHED_PAGES = 24;
+  var SLOW_NETWORK_MS = 6e3;
+  var PRIVATE_HEADER = "x-rangach-private";
   var MAX_CACHED_IMAGES = 32;
   var OFFLINE_PATH = "/offline";
   var NEVER_STORE_PREFIXES = [
@@ -160,6 +164,54 @@
 </main>
 </body>
 </html>`;
+  var PAGE_EXACT = /* @__PURE__ */ new Set(["/", "/listings", "/shops", "/occasions", "/categories", "/saved", "/about", "/faq", "/safety", "/people"]);
+  var PAGE_ONE_SEGMENT = ["/listings/", "/b/", "/occasions/", "/categories/", "/people/"];
+  var PAGE_BLOCKED_SEGMENTS = /* @__PURE__ */ new Set(["new", "edit", "sticker", "video-card"]);
+  var KEEP_QUERY = ["q", "nl", "city", "region", "category", "type", "verified", "page", "near", "occasion", "diaspora", "tab"];
+  function pageCacheKey(pathname, search = "") {
+    const path = normalizePathname(pathname);
+    if (isNeverStorePath(path) || isPricingPath(path) || path === OFFLINE_PATH) return null;
+    let ok = PAGE_EXACT.has(path);
+    if (!ok) {
+      for (const prefix of PAGE_ONE_SEGMENT) {
+        if (!path.startsWith(prefix)) continue;
+        const rest = path.slice(prefix.length);
+        if (rest && !rest.includes("/") && !PAGE_BLOCKED_SEGMENTS.has(rest)) ok = true;
+      }
+    }
+    if (!ok) return null;
+    const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+    const kept = new URLSearchParams();
+    for (const key of KEEP_QUERY) {
+      const value = params.get(key);
+      if (value) kept.set(key, value.slice(0, 120));
+    }
+    kept.sort();
+    const qs = kept.toString();
+    return qs ? `${path}?${qs}` : path;
+  }
+  function mayKeepPage(input) {
+    if (!input.ok || input.status !== 200 || input.redirected || input.type !== "basic") return false;
+    if (input.privateHeader) return false;
+    return (input.contentType ?? "").toLowerCase().includes("text/html");
+  }
+  function pageKeysToEvict(keys, max = MAX_CACHED_PAGES) {
+    if (keys.length <= max) return [];
+    return keys.slice(0, keys.length - max);
+  }
+  function offlineRedirectPath(from) {
+    return `${OFFLINE_PATH}?next=${encodeURIComponent(safeNext(from))}`;
+  }
+  function safeNext(value) {
+    const next = (value ?? "").trim();
+    if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\") || /^\/offline(?:[/?#]|$)/i.test(next)) return "/";
+    return next.slice(0, 300);
+  }
+  function offlineAssetPaths(html) {
+    const out = /* @__PURE__ */ new Set();
+    for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"?#]+\.(?:js|css))"/g)) out.add(match[1]);
+    return [...out].slice(0, 60);
+  }
 
   // src/pwa/sw.ts
   var SW_MODE = "on";
@@ -208,7 +260,11 @@
       });
       if (response.ok && response.type === "basic" && !response.redirected) {
         const type = response.headers.get("content-type") ?? "";
-        if (type.includes("text/html")) await offlineCache.put(OFFLINE_PATH, response);
+        if (type.includes("text/html")) {
+          const html = await response.clone().text();
+          await offlineCache.put(OFFLINE_PATH, response);
+          await precacheAssets(offlineAssetPaths(html));
+        }
       }
     } catch {
     }
@@ -216,6 +272,19 @@
     await Promise.all(
       PRECACHE_ICONS.map(async (path) => {
         try {
+          const response = await fetch(path);
+          if (response.ok && !response.redirected) await staticCache.put(path, response);
+        } catch {
+        }
+      })
+    );
+  }
+  async function precacheAssets(paths) {
+    const staticCache = await caches.open(STATIC_CACHE);
+    await Promise.all(
+      paths.map(async (path) => {
+        try {
+          if (await staticCache.match(path)) return;
           const response = await fetch(path);
           if (response.ok && !response.redirected) await staticCache.put(path, response);
         } catch {
@@ -243,9 +312,30 @@
       return fetch(request);
     }
   }
+  async function keepPage(key, response) {
+    if (!mayKeepPage({
+      ok: response.ok,
+      status: response.status,
+      redirected: response.redirected,
+      type: response.type,
+      contentType: response.headers.get("content-type"),
+      privateHeader: response.headers.get(PRIVATE_HEADER),
+      cacheControl: response.headers.get("cache-control")
+    })) {
+      return;
+    }
+    const cache = await caches.open(PAGE_CACHE);
+    await cache.delete(key);
+    await cache.put(key, response);
+    const keys = await cache.keys();
+    const extra = pageKeysToEvict(keys.map((entry) => new URL(entry.url).pathname + new URL(entry.url).search));
+    await Promise.all(extra.map((entry) => cache.delete(entry)));
+  }
   async function networkNavigation(request) {
     const url = new URL(request.url);
-    try {
+    const pageKey = pageCacheKey(url.pathname, url.search);
+    const kept = pageKey ? await (await caches.open(PAGE_CACHE)).match(pageKey) : void 0;
+    const network = (async () => {
       const response = await fetchNavigation(request);
       const cacheKey = navigationCacheKey(url.pathname);
       if (cacheKey && response.ok && response.type === "basic" && !response.redirected) {
@@ -255,9 +345,33 @@
           await cache.put(cacheKey, response.clone());
         }
       }
+      if (response.headers.get(PRIVATE_HEADER)) {
+        await caches.delete(PAGE_CACHE).catch(() => false);
+      } else if (pageKey) {
+        await keepPage(pageKey, response.clone()).catch(() => void 0);
+      }
       return response;
+    })();
+    if (!kept) {
+      try {
+        return await network;
+      } catch {
+        if (normalizePathname(url.pathname) !== OFFLINE_PATH) {
+          return Response.redirect(new URL(offlineRedirectPath(url.pathname + url.search), worker.location.origin).toString(), 302);
+        }
+        return offlineDocument();
+      }
+    }
+    let timer = 0;
+    const slow = new Promise((resolve) => {
+      timer = setTimeout(() => resolve(kept.clone()), SLOW_NETWORK_MS);
+    });
+    try {
+      return await Promise.race([network, slow]);
     } catch {
-      return offlineDocument();
+      return kept;
+    } finally {
+      clearTimeout(timer);
     }
   }
   async function offlineDocument() {

@@ -13,6 +13,7 @@ import { getSessionUser } from "@/lib/session";
 import { chipBag, understoodChips } from "@/lib/understood-chips";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { one } from "@/lib/utils";
+import { liteMode } from "@/lib/weak-data";
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await publicOrigin();
@@ -67,6 +68,7 @@ export default async function ShopsPage({
       pageCount={result.pageCount}
       total={result.total}
       lang={lang}
+      lite={await liteMode()}
       understood={
         parsed
           ? {

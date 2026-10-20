@@ -1,6 +1,7 @@
 /**
  * Service worker route policy. The worker in src/pwa/sw.ts bundles this module.
- * Navigations are network-only: nothing here stores an HTML document for replay.
+ * Navigations are network-first. Weak-data mode keeps a small offline copy of public pages
+ * the visitor already opened while signed out (see pageCacheKey). Nothing else is replayed.
  */
 
 export const SW_VERSION = "v2";
@@ -8,7 +9,14 @@ export const CACHE_PREFIX = `rangach-pwa-${SW_VERSION}`;
 export const STATIC_CACHE = `${CACHE_PREFIX}-static`;
 export const IMAGE_CACHE = `${CACHE_PREFIX}-images`;
 export const OFFLINE_CACHE = `${CACHE_PREFIX}-offline`;
-export const ACTIVE_CACHES = [STATIC_CACHE, IMAGE_CACHE, OFFLINE_CACHE] as const;
+export const PAGE_CACHE = `${CACHE_PREFIX}-pages`;
+export const ACTIVE_CACHES = [STATIC_CACHE, IMAGE_CACHE, OFFLINE_CACHE, PAGE_CACHE] as const;
+/** Pages kept for offline reading. Oldest go first. */
+export const MAX_CACHED_PAGES = 24;
+/** On a slow network, a page already kept is shown after this wait while the fresh copy loads behind it. */
+export const SLOW_NETWORK_MS = 6000;
+/** Response header set by src/proxy.ts when the request carries a session. Such pages are never kept. */
+export const PRIVATE_HEADER = "x-rangach-private";
 export const MAX_CACHED_IMAGES = 32;
 export const OFFLINE_PATH = "/offline";
 
@@ -147,8 +155,8 @@ export function mayStoreResponse(plan: RequestPlan): boolean {
 }
 
 /**
- * HTML navigations are never replayed from cache. The only stored document is the
- * offline fallback, and only under OFFLINE_PATH — never under /pricing or any other URL.
+ * Not a cache-first plan for HTML. A navigation is always tried on the network first.
+ * Only when the network fails (or is very slow) may a kept public page or the offline fallback answer.
  */
 export function servesStoredDocument(plan: RequestPlan): boolean {
   switch (plan.kind) {
@@ -229,3 +237,76 @@ export const OFFLINE_SHELL_HTML = `<!DOCTYPE html>
 </main>
 </body>
 </html>`;
+
+/**
+ * Public pages that may be kept for offline reading, by exact path or "prefix/<one segment>".
+ * Forms, edit pages, orders, pricing, auth, admin and account are never kept.
+ */
+const PAGE_EXACT = new Set(["/", "/listings", "/shops", "/occasions", "/categories", "/saved", "/about", "/faq", "/safety", "/people"]);
+const PAGE_ONE_SEGMENT = ["/listings/", "/b/", "/occasions/", "/categories/", "/people/"];
+const PAGE_BLOCKED_SEGMENTS = new Set(["new", "edit", "sticker", "video-card"]);
+const KEEP_QUERY = ["q", "nl", "city", "region", "category", "type", "verified", "page", "near", "occasion", "diaspora", "tab"];
+
+/** Cache key for an offline copy of a public page, or null when that page must not be kept. */
+export function pageCacheKey(pathname: string, search = ""): string | null {
+  const path = normalizePathname(pathname);
+  if (isNeverStorePath(path) || isPricingPath(path) || path === OFFLINE_PATH) return null;
+  let ok = PAGE_EXACT.has(path);
+  if (!ok) {
+    for (const prefix of PAGE_ONE_SEGMENT) {
+      if (!path.startsWith(prefix)) continue;
+      const rest = path.slice(prefix.length);
+      if (rest && !rest.includes("/") && !PAGE_BLOCKED_SEGMENTS.has(rest)) ok = true;
+    }
+  }
+  if (!ok) return null;
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const kept = new URLSearchParams();
+  for (const key of KEEP_QUERY) {
+    const value = params.get(key);
+    if (value) kept.set(key, value.slice(0, 120));
+  }
+  kept.sort();
+  const qs = kept.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
+/** Only a plain 200 HTML page for a signed-out visitor is kept. */
+export function mayKeepPage(input: {
+  ok: boolean;
+  status: number;
+  redirected: boolean;
+  type: string;
+  contentType: string | null;
+  privateHeader: string | null;
+  cacheControl: string | null;
+}): boolean {
+  if (!input.ok || input.status !== 200 || input.redirected || input.type !== "basic") return false;
+  // Next marks every dynamic page no-store for HTTP caches. This copy is the visitor's own, for reading
+  // without signal, so that header is not a reason to skip; the allowlist and the private header are.
+  if (input.privateHeader) return false;
+  return (input.contentType ?? "").toLowerCase().includes("text/html");
+}
+
+export function pageKeysToEvict(keys: readonly string[], max = MAX_CACHED_PAGES): string[] {
+  if (keys.length <= max) return [];
+  return keys.slice(0, keys.length - max);
+}
+
+/** Where an unvisited page goes without signal. Only a same-site path is carried, never a full URL. */
+export function offlineRedirectPath(from: string): string {
+  return `${OFFLINE_PATH}?next=${encodeURIComponent(safeNext(from))}`;
+}
+
+export function safeNext(value: string | null | undefined): string {
+  const next = (value ?? "").trim();
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("\\") || /^\/offline(?:[/?#]|$)/i.test(next)) return "/";
+  return next.slice(0, 300);
+}
+
+/** Same-origin hashed scripts and styles the offline page needs, read from its HTML. */
+export function offlineAssetPaths(html: string): string[] {
+  const out = new Set<string>();
+  for (const match of html.matchAll(/(?:src|href)="(\/_next\/static\/[^"?#]+\.(?:js|css))"/g)) out.add(match[1]);
+  return [...out].slice(0, 60);
+}
