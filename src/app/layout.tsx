@@ -9,6 +9,7 @@ import { Header } from "@/components/header";
 import { TourReplay } from "@/components/tour-replay";
 import { InstallPrompt } from "@/components/install-prompt";
 import { PwaRegister } from "@/components/pwa-register";
+import { OfflineNotice } from "@/components/offline-notice";
 import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
 import { requestLang } from "@/lib/i18n/request-lang";
@@ -74,6 +75,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           Skip to content
         </a>
         <Header />
+        <OfflineNotice />
         <PwaRegister />
         <StatBeacon />
         <main id="main" className="page-enter flex-1">

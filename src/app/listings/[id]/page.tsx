@@ -34,6 +34,7 @@ import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } fr
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
 import { cardPhoto } from "@/lib/image-variants";
 import { variantMap } from "@/lib/image-variant-store";
+import { liteMode } from "@/lib/weak-data";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -160,6 +161,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
     height: 600,
     sizes: "(min-width: 768px) 720px, 100vw",
     priority: true,
+    lite: await liteMode(),
   });
   const savedItem = {
     id: listing.id,

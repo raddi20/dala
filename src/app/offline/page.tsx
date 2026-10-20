@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OfflinePages } from "@/components/offline-pages";
 import { OfflineRetry } from "@/components/offline-retry";
 import { Wordmark } from "@/components/wordmark";
 import { APP_TAGLINE, appName } from "@/lib/brand";
@@ -18,6 +19,7 @@ export default function OfflinePage() {
         {APP_TAGLINE} Reconnect to see the latest listings and prices on {name}, then try again.
       </p>
       <OfflineRetry />
+      <OfflinePages />
     </div>
   );
 }

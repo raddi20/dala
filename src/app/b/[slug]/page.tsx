@@ -36,6 +36,7 @@ import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from 
 import { whatsappOfferingLink, whatsappShareLink, whatsappShopLink } from "@/lib/whatsapp";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { variantMap } from "@/lib/image-variant-store";
+import { liteMode } from "@/lib/weak-data";
 import { shopPlaceLine, shopTrustLine } from "@/lib/shop-trust";
 import { ShopVideoPoster } from "@/components/shop-video-poster";
 import { videoMode } from "@/lib/video/config";
@@ -230,6 +231,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     ...publicOfferings.map((offering) => offering.imageUrl),
   ]);
   const coverUrl = bannerSrc || publicOfferings.find((offering) => offering.imageUrl.trim())?.imageUrl || "";
+  const lite = await liteMode();
   const coverStored = coverUrl ? photoVariants.get(coverUrl) : undefined;
   const cover = cardPhoto({
     src: coverUrl,
@@ -238,6 +240,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     width: 960,
     height: 420,
     sizes: "(min-width: 768px) 768px, 100vw",
+    lite,
   });
   const avatarStored = shop.user.avatarUrl ? photoVariants.get(shop.user.avatarUrl) : undefined;
   const avatar = cardPhoto({
@@ -429,6 +432,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                 width: 480,
                 height: 360,
                 sizes: CARD_SIZES,
+                lite,
               });
               return (
                 <article

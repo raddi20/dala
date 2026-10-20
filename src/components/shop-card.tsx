@@ -5,7 +5,7 @@ import { shopIsChecked } from "@/lib/item-card";
 import { distanceLabel } from "@/lib/near-me";
 import type { ShopCardData } from "@/lib/search";
 
-export function ShopCard({ shop }: { shop: ShopCardData }) {
+export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: boolean }) {
   const photo = cardPhoto({
     src: shop.coverUrl,
     thumb480: shop.coverThumb480,
@@ -13,6 +13,7 @@ export function ShopCard({ shop }: { shop: ShopCardData }) {
     width: 480,
     height: 360,
     sizes: CARD_SIZES,
+    lite,
   });
   const avatar = cardPhoto({
     src: shop.avatarUrl,

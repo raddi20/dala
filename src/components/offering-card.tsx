@@ -1,4 +1,5 @@
 import { ItemCard } from "@/components/item-card";
+import { liteMode } from "@/lib/weak-data";
 import { cityChipLabel } from "@/lib/constants";
 import { variantMap } from "@/lib/image-variant-store";
 import { itemKindTag, shopIsChecked } from "@/lib/item-card";
@@ -13,6 +14,7 @@ export async function OfferingCard({
   priority?: boolean;
 }) {
   const stored = offering.imageUrl ? (await variantMap([offering.imageUrl])).get(offering.imageUrl) : undefined;
+  const lite = await liteMode();
   return (
     <ItemCard
       href={`/b/${offering.shopSlug}#offering-${offering.id}`}
@@ -26,6 +28,7 @@ export async function OfferingCard({
       place={cityChipLabel(offering.city)}
       checked={shopIsChecked(offering)}
       priority={priority}
+      lite={lite}
     />
   );
 }

@@ -16,6 +16,7 @@ export function ItemCard({
   checked,
   scamRisk,
   priority = false,
+  lite = false,
   saveId,
 }: {
   href: string;
@@ -30,6 +31,7 @@ export function ItemCard({
   checked?: boolean;
   scamRisk?: string | null;
   priority?: boolean;
+  lite?: boolean;
   /** Listing id. Shows the Saved heart. */
   saveId?: string;
 }) {
@@ -41,6 +43,7 @@ export function ItemCard({
     height: 360,
     sizes: CARD_SIZES,
     priority,
+    lite,
   });
   const amount = itemPriceText(price);
   const meta = [seller, place].filter(Boolean).join(" · ");

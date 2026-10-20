@@ -13,6 +13,7 @@ import { getSessionUser } from "@/lib/session";
 import { chipBag, understoodChips } from "@/lib/understood-chips";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { one } from "@/lib/utils";
+import { liteMode } from "@/lib/weak-data";
 import { parseNear } from "@/lib/near-me";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -69,6 +70,7 @@ export default async function ShopsPage({
       pageCount={result.pageCount}
       total={result.total}
       lang={lang}
+      lite={await liteMode()}
       near={near ? one(sp.near) : ""}
       understood={
         parsed

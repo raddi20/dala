@@ -34,6 +34,7 @@ export function ShopsDirectory({
   total,
   understood = null,
   lang = "en",
+  lite = false,
   near = "",
 }: {
   shops: ShopCardData[];
@@ -55,6 +56,7 @@ export function ShopsDirectory({
     droppedWords: boolean;
   } | null;
   lang?: Lang;
+  lite?: boolean;
   /** Rounded ?near= value while Near me is on. */
   near?: string;
 }) {
@@ -156,7 +158,7 @@ export function ShopsDirectory({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {shops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} />
+            <ShopCard key={shop.id} shop={shop} lite={lite} />
           ))}
         </div>
       )}

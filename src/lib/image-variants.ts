@@ -63,7 +63,7 @@ export type CardPhoto = {
   fetchPriority?: "high" | "auto";
 };
 
-function unsplashSized(url: string, width: number): string | null {
+function unsplashSized(url: string, width: number, quality = 60): string | null {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -74,7 +74,7 @@ function unsplashSized(url: string, width: number): string | null {
   parsed.searchParams.set("auto", "format");
   parsed.searchParams.set("fit", "crop");
   parsed.searchParams.set("fm", "webp");
-  parsed.searchParams.set("q", "60");
+  parsed.searchParams.set("q", String(quality));
   parsed.searchParams.set("w", String(width));
   return parsed.toString();
 }
@@ -92,17 +92,22 @@ export function cardPhoto(input: {
   height: number;
   sizes?: string;
   priority?: boolean;
+  /** Weak-data mode: the 480px copy only, never the 960px one. */
+  lite?: boolean;
 }): CardPhoto | null {
   const original = input.src.trim();
   if (!original) return null;
   const parts: string[] = [];
   if (input.thumb480) parts.push(`${input.thumb480} 480w`);
-  if (input.thumb960) parts.push(`${input.thumb960} 960w`);
+  if (input.thumb960 && !input.lite) parts.push(`${input.thumb960} 960w`);
   let src = input.thumb480 || input.thumb960 || original;
   if (parts.length === 0) {
-    const small = unsplashSized(original, 480);
-    const mid = unsplashSized(original, 960);
-    if (small && mid) {
+    const small = unsplashSized(original, input.lite ? 360 : 480, input.lite ? 45 : 60);
+    const mid = input.lite ? small : unsplashSized(original, 960);
+    if (small && input.lite) {
+      src = small;
+      parts.push(`${small} 360w`);
+    } else if (small && mid) {
       src = small;
       parts.push(`${small} 480w`, `${mid} 960w`);
     }
@@ -111,7 +116,8 @@ export function cardPhoto(input: {
   return {
     src,
     srcSet: parts.length > 0 ? parts.join(", ") : undefined,
-    sizes: input.sizes ?? CARD_SIZES,
+    // Lite: one small candidate, so the browser never reaches for a bigger file on a sharp screen.
+    sizes: input.lite && parts.length > 0 ? "100vw" : (input.sizes ?? CARD_SIZES),
     width: input.width,
     height: input.height,
     loading: priority ? "eager" : "lazy",

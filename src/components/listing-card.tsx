@@ -1,4 +1,5 @@
 import { ItemCard } from "@/components/item-card";
+import { liteMode } from "@/lib/weak-data";
 import { cityChipLabel } from "@/lib/constants";
 import { variantMap } from "@/lib/image-variant-store";
 import { itemKindTag, shopIsChecked } from "@/lib/item-card";
@@ -14,6 +15,7 @@ export async function ListingCard({
   const shop = listing.owner.storefront;
   const shopPublic = shop != null && shop.published && !shop.hidden;
   const stored = listing.photoUrl ? (await variantMap([listing.photoUrl])).get(listing.photoUrl) : undefined;
+  const lite = await liteMode();
   const checked = listing.verified || Boolean(shopPublic && shop && shopIsChecked(shop));
 
   return (
@@ -30,6 +32,7 @@ export async function ListingCard({
       checked={checked}
       scamRisk={listing.scamRisk}
       priority={priority}
+      lite={lite}
       saveId={listing.id}
     />
   );
