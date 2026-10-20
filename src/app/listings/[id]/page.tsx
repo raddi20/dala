@@ -137,13 +137,14 @@ export default async function ListingPage({ params, searchParams }: Props) {
       })
     : null;
   const rating = averageRating(listing.reviews);
-  const shareUrl = whatsappShareLink(listing.title, `${await publicOrigin()}/listings/${listing.id}`);
+  const listingUrl = `${await publicOrigin()}/listings/${listing.id}`;
+  const shareUrl = whatsappShareLink(listing.title, listingUrl);
   const contacts = publicSellerContacts({
     email: listing.owner.email,
     phone: listing.contactPhone,
     whatsapp: listing.contactWhatsapp,
   });
-  const chatUrl = contacts.whatsapp ? whatsappChatLink(contacts.whatsapp, listing.title) : "";
+  const chatUrl = contacts.whatsapp ? whatsappChatLink(contacts.whatsapp, listing.title, listingUrl, lang) : "";
   const shopRecord = listing.owner.storefront;
   const shop = shopRecord?.published && !shopRecord.hidden && !listing.owner.suspended ? shopRecord : null;
   const callUrl = telHref(contacts.phone);
