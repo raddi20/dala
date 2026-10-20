@@ -33,6 +33,9 @@ import {
   type SulweReaction,
 } from "@/lib/sulwe";
 import { SULWE_VOICE_PREVIEW_KEY, voiceQueryOn } from "@/lib/sulwe-voice-flag";
+import { CONTACTED_KEY, howWasItText, markAsked, parseContacted, pickHowWasIt } from "@/lib/shop-review";
+
+const HOW_WAS_EVENT = "rangach-how-was";
 
 // Voice code is its own chunk, fetched only when voice is on and the chat opens.
 const SulweVoice = dynamic(() => import("@/components/sulwe-voice"), { ssr: false, loading: () => null });
@@ -93,6 +96,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
   const [askPos, setAskPos] = useState<{ top: number; left: number; side: "left" | "above" } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const askRef = useRef<HTMLButtonElement>(null);
+  const howRef = useRef<HTMLDivElement>(null);
   const [pose, setPose] = useState("");
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
@@ -105,7 +109,42 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
   const poseTimer = useRef(0);
   const titleId = useId();
   const show = shouldShowSulwe({ path, flag: enabled, force: queryOn || preview, keyboard: false });
-  const askVisible = shouldShowAskLabel({ show, minimised, touring, invite, chat, keyboard, opens });
+  // "How was it?" after a WhatsApp or call tap on an earlier visit. Takes the pill's place, once per shop.
+  const howPick = useSyncExternalStore(
+    (notify) => {
+      window.addEventListener(HOW_WAS_EVENT, notify);
+      window.addEventListener("storage", notify);
+      return () => {
+        window.removeEventListener(HOW_WAS_EVENT, notify);
+        window.removeEventListener("storage", notify);
+      };
+    },
+    () => {
+      try {
+        const pick = pickHowWasIt(parseContacted(window.localStorage.getItem(CONTACTED_KEY)));
+        return pick ? `${pick.slug}\n${pick.name}` : "";
+      } catch {
+        return "";
+      }
+    },
+    () => "",
+  );
+  const [howSlug, howName = ""] = howPick ? howPick.split("\n") : [];
+  // Not on that shop's own page: the rating form is already there.
+  const howWas = howSlug && path !== `/b/${howSlug}` ? { slug: howSlug, name: howName } : null;
+  const howVisible = Boolean(howWas) && shouldShowAskLabel({ show, minimised, touring, invite, chat, keyboard, opens: 0 });
+  const askVisible = howVisible || shouldShowAskLabel({ show, minimised, touring, invite, chat, keyboard, opens });
+
+
+  const doneHowWas = useCallback((slug: string) => {
+    try {
+      const list = parseContacted(window.localStorage.getItem(CONTACTED_KEY));
+      window.localStorage.setItem(CONTACTED_KEY, JSON.stringify(markAsked(list, slug)));
+    } catch {
+      // No storage.
+    }
+    window.dispatchEvent(new Event(HOW_WAS_EVENT));
+  }, []);
 
   const openChat = useCallback(() => {
     try {
@@ -207,7 +246,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
     const place = () => {
       frame = 0;
       const root = rootRef.current;
-      const pill = askRef.current;
+      const pill = askRef.current ?? howRef.current;
       if (!root || !pill) return;
       const box = root.getBoundingClientRect();
       const obstacles: { top: number; left: number; width: number; height: number }[] = [];
@@ -236,7 +275,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
       window.removeEventListener("resize", schedule);
       window.removeEventListener("scroll", schedule);
     };
-  }, [askVisible, dock, lang, path]);
+  }, [askVisible, howVisible, dock, lang, path]);
 
   if (!show || touring) return null;
   if (keyboard && !chat) return null;
@@ -334,7 +373,38 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
         />
       ) : (
         <>
-        {askVisible ? (
+        {askVisible && howVisible && howWas ? (
+          <div
+            ref={howRef}
+            className={`sulwe-ask fixed z-[45] flex items-center whitespace-nowrap rounded-full border-2 border-gold bg-card text-sm font-semibold text-navy shadow-[0_6px_18px_rgb(20_26_36/0.2)]${askPos && !reduced ? " sulwe-ask-pop" : ""}`}
+            style={askPos ? { top: askPos.top, left: askPos.left } : { top: 0, left: 0, visibility: "hidden" }}
+            data-sulwe-how-was={howWas.slug}
+            data-sulwe-ask-side={askPos?.side ?? ""}
+          >
+            <button
+              type="button"
+              className="py-2 pl-3.5 pr-1"
+              onClick={() => {
+                doneHowWas(howWas.slug);
+                router.push(`/b/${howWas.slug}#rate`);
+              }}
+            >
+              {howWasItText(howWas.name)}
+            </button>
+            <button
+              type="button"
+              aria-label="Not now"
+              className="flex h-9 w-8 items-center justify-center text-base text-ink/50"
+              onClick={() => doneHowWas(howWas.slug)}
+            >
+              ×
+            </button>
+            <span
+              aria-hidden="true"
+              className={`sulwe-ask-tail absolute h-3 w-3 rotate-45 border-gold bg-card ${askPos?.side === "above" ? "-bottom-[7px] right-9 border-b-2 border-r-2" : "-right-[7px] top-1/2 -mt-1.5 border-r-2 border-t-2"}`}
+            />
+          </div>
+        ) : askVisible ? (
           <button
             ref={askRef}
             type="button"

@@ -674,6 +674,26 @@ model BusinessLead {
   @@index([createdAt])
 }
 
+// A star rating and short comment on a shop (not a listing). New table only, no relations.
+// status: "approved" shows publicly, "pending" waits for an admin (a link or phone number in the text),
+// "hidden" was taken down by an admin. One review per person per shop; posting again edits it.
+model ShopReview {
+  id           String    @id @default(cuid())
+  storefrontId String
+  authorId     String
+  rating       Int
+  body         String
+  status       String    @default("approved")
+  hiddenReason String    @default("")
+  moderatedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([storefrontId, authorId])
+  @@index([storefrontId, status])
+  @@index([status, createdAt])
+}
+
 // A listing a signed-in person tapped the heart on. New table only, no relations, so existing rows are untouched.
 // Visitors without an account keep their hearts in localStorage. Signing in merges them here.
 model SavedListing {

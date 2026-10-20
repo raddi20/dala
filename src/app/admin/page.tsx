@@ -5,6 +5,7 @@ import { AdminMailTest } from "@/components/admin-mail-test";
 import { AgentCountTable } from "@/components/admin-agent-counts";
 import { AdminOccasions } from "@/components/admin-occasions";
 import { ReasonInput } from "@/components/admin-reason";
+import { AdminShopReviews } from "@/components/admin-shop-reviews";
 import { AdminVideoQueue } from "@/components/admin-video-queue";
 import { btnDanger, btnSecondary, fieldClass } from "@/components/ui";
 import {
@@ -486,6 +487,8 @@ export default async function AdminPage({
           </article>
         ))}
       </section>
+
+      <AdminShopReviews />
 
       <section className="grid gap-3">
         <h2 className="font-serif text-2xl">Listings</h2>

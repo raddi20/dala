@@ -209,3 +209,28 @@ export async function resolveReport(formData: FormData) {
   }
   refresh(report.listingId ?? undefined);
 }
+
+/** Approve a held shop review, hide one, or restore it. Every change is in the audit log. */
+export async function setShopReviewStatus(formData: FormData) {
+  const admin = await requireAdmin();
+  const id = field(formData, "shopReviewId");
+  const status = field(formData, "status");
+  if (status !== "approved" && status !== "hidden") redirect("/admin?moderation=missing");
+  const reason = status === "hidden" ? needReason(formData) : reasonOrDefault(field(formData, "reason"), "Approved");
+  const review = await prisma.shopReview.findUnique({ where: { id }, select: { id: true, storefrontId: true } });
+  if (!review) redirect("/admin?moderation=missing");
+  await prisma.shopReview.update({
+    where: { id },
+    data: { status, hiddenReason: status === "hidden" ? reason : "", moderatedAt: new Date() },
+  });
+  await writeAdminAudit({
+    actor: actorOf(admin),
+    action: status === "hidden" ? "shop_review.hide" : "shop_review.approve",
+    targetType: "shop_review",
+    targetId: id,
+    reason,
+  });
+  const shop = await prisma.storefront.findUnique({ where: { id: review.storefrontId }, select: { slug: true } });
+  revalidatePath("/admin");
+  if (shop) revalidatePath(`/b/${shop.slug}`);
+}
