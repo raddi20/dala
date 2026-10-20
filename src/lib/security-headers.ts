@@ -71,7 +71,8 @@ export function contentSecurityPolicy() {
 }
 
 /** Features allowed for this origin only. Everything else in the list stays off. */
-const SELF_FEATURES: ReadonlySet<string> = new Set(["microphone"]);
+// geolocation: Near me on /shops, asked only after a tap. Same origin only, never third parties.
+const SELF_FEATURES: ReadonlySet<string> = new Set(["microphone", "geolocation"]);
 
 export function permissionsPolicy() {
   return OFF_FEATURES.map((name) => `${name}=${SELF_FEATURES.has(name) ? "(self)" : "()"}`).join(", ");
