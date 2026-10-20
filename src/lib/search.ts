@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { distanceToShop, sortByDistance, type LatLng } from "@/lib/near-me";
 import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { variantMap } from "@/lib/image-variant-store";
@@ -64,6 +65,8 @@ function shopCardSelect(env: Env) {
   businessVerified: true,
   servesDiaspora: true,
   bannerUrl: true,
+  latitude: true,
+  longitude: true,
   user: {
     select: {
       name: true,
@@ -150,6 +153,8 @@ export type SearchFilters = {
   includeHidden?: boolean;
   page?: number;
   pageSize?: number;
+  /** Near me. Rounded browser position. Sorts shops nearest first. */
+  near?: LatLng | null;
 };
 
 export const BROWSE_PAGE_SIZE = 24;
@@ -485,6 +490,8 @@ export type ShopCardData = {
   whatsapp?: string;
   coverThumb480?: string | null;
   coverThumb960?: string | null;
+  /** Set only when Near me is on. Null when the shop's place is unknown. */
+  distanceKm?: number | null;
 };
 
 export type OfferingCardData = {
@@ -640,16 +647,29 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
   const blocked = await blockedIds(filters.viewerId);
   const where = storefrontWhere(filters, blocked, env, filters.verified ? "shop" : "off", true);
   const category = filters.category ?? "";
-  if (category) {
+  const near = filters.near ?? null;
+  if (category || near) {
     const rows = await prisma.storefront.findMany({
       where,
       select: shopCardSelect(env),
       orderBy: { createdAt: "desc" },
     });
-    const matched = rows.filter((row) => shopMatches(row, category));
+    const filtered = category ? rows.filter((row) => shopMatches(row, category)) : rows;
+    const matched = near
+      ? sortByDistance(
+          filtered.map((row) => ({
+            row,
+            distanceKm: distanceToShop(near, { latitude: row.latitude, longitude: row.longitude, city: row.user.city }),
+          })),
+        )
+      : filtered.map((row) => ({ row, distanceKm: undefined }));
     const window = pageWindow(matched.length, filters.page ?? 1, pageSize);
     return {
-      shops: await attachCoverThumbs(matched.slice(window.start, window.start + pageSize).map(toShopCard)),
+      shops: await attachCoverThumbs(
+        matched
+          .slice(window.start, window.start + pageSize)
+          .map(({ row, distanceKm }) => (near ? { ...toShopCard(row), distanceKm } : toShopCard(row))),
+      ),
       total: matched.length,
       page: window.page,
       pageSize,
