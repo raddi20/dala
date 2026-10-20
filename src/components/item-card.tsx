@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SaveHeart } from "@/components/save-heart";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { itemPriceText, showScamChip } from "@/lib/item-card";
 
@@ -15,6 +16,7 @@ export function ItemCard({
   checked,
   scamRisk,
   priority = false,
+  saveId,
 }: {
   href: string;
   title: string;
@@ -28,6 +30,8 @@ export function ItemCard({
   checked?: boolean;
   scamRisk?: string | null;
   priority?: boolean;
+  /** Listing id. Shows the Saved heart. */
+  saveId?: string;
 }) {
   const photo = cardPhoto({
     src: imageUrl,
@@ -43,7 +47,7 @@ export function ItemCard({
   const warn = showScamChip(scamRisk);
 
   return (
-    <article className="card-lift h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
+    <article className="card-lift relative h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
       <Link href={href} className="flex h-full flex-col">
         <div className="relative aspect-[4/3] bg-line">
           {photo ? (
@@ -91,6 +95,7 @@ export function ItemCard({
           ) : null}
         </div>
       </Link>
+      {saveId ? <SaveHeart item={{ id: saveId, title, photo: photo?.src ?? "", price: price ?? "", place }} /> : null}
     </article>
   );
 }

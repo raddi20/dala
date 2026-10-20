@@ -30,6 +30,7 @@ export async function ListingCard({
       checked={checked}
       scamRisk={listing.scamRisk}
       priority={priority}
+      saveId={listing.id}
     />
   );
 }
