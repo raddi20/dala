@@ -163,6 +163,7 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | sulwe_talk | Sulwe | Talk to Sulwe | Wuo gi Sulwe | reviewed | Kevin signed off. |
 | sulwe_minimise | Sulwe | Shrink Sulwe | Shrink Sulwe | reviewed | Kevin signed off. |
 | sulwe_restore | Sulwe | Show Sulwe | Nyis Sulwe | reviewed | Kevin signed off. |
+| sulwe_ask_label | Sulwe | Ask Sulwe anything | Penj Sulwe gimoro amora | reviewed | Kevin signed off. Speech-bubble pill beside the docked Sulwe; opens the chat. |
 | sulwe_close | Sulwe | Close | Lor | reviewed | Kevin signed off. |
 | sulwe_hi | Sulwe | Hi, I'm Sulwe, what are you looking for? | Misawa, an Sulwe, ere kaka anyalo konyi? | reviewed | Kevin signed off. |
 | sulwe_chip_ayie | Sulwe | ayie catering | chiemo mar ayie | reviewed | Kevin signed off. The search sent is the English phrase. |

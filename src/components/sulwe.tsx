@@ -9,16 +9,21 @@ import type { Lang } from "@/lib/i18n/lang";
 import { uiFill, uiText } from "@/lib/i18n/strings";
 import {
   LONG_PRESS_MS,
+  SULWE_ASK_MAX_OPENS,
   SULWE_CHIPS,
   SULWE_IDLES,
   SULWE_PREVIEW_KEY,
   SULWE_MIN_SIZE,
   SULWE_SIZE,
   SULWE_TOUR_KEY,
+  bumpSulweOpens,
   classifySulwePointer,
   keyboardCoversScreen,
   nextSulweReaction,
+  placeAskLabel,
+  readSulweOpens,
   readSulweMinimised,
+  shouldShowAskLabel,
   shouldShowSulwe,
   sulweDockBottom,
   sulweHaptic,
@@ -69,7 +74,25 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
     false,
   );
 
+  const opens = useSyncExternalStore(
+    (notify) => {
+      window.addEventListener("rangach-sulwe-opens", notify);
+      window.addEventListener("storage", notify);
+      return () => {
+        window.removeEventListener("rangach-sulwe-opens", notify);
+        window.removeEventListener("storage", notify);
+      };
+    },
+    () => readSulweOpens(window.localStorage),
+    // Hidden on the server so a returning visitor never sees it flash.
+    () => SULWE_ASK_MAX_OPENS,
+  );
+
   const [chat, setChat] = useState(false);
+  const [invite, setInvite] = useState(false);
+  const [askPos, setAskPos] = useState<{ top: number; left: number; side: "left" | "above" } | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const askRef = useRef<HTMLButtonElement>(null);
   const [pose, setPose] = useState("");
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
@@ -82,6 +105,17 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
   const poseTimer = useRef(0);
   const titleId = useId();
   const show = shouldShowSulwe({ path, flag: enabled, force: queryOn || preview, keyboard: false });
+  const askVisible = shouldShowAskLabel({ show, minimised, touring, invite, chat, keyboard, opens });
+
+  const openChat = useCallback(() => {
+    try {
+      bumpSulweOpens(window.localStorage);
+    } catch {
+      // No storage: the pill keeps showing, the chat still opens.
+    }
+    window.dispatchEvent(new Event("rangach-sulwe-opens"));
+    setChat(true);
+  }, []);
 
   useEffect(() => {
     if (!voiceQuery || sessionStorage.getItem(SULWE_VOICE_PREVIEW_KEY) === "1") return;
@@ -148,6 +182,8 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
         if (box.width > 0 && box.height > 0 && getComputedStyle(bar).display !== "none") tops.push(box.top);
       }
       setDock(sulweDockBottom({ viewportHeight: window.innerHeight, obstacleTops: tops }));
+      // The tour invite is its own speech bubble beside Sulwe. Never show two.
+      setInvite(Boolean(document.querySelector("[data-tour-prompt]")));
     };
     const schedule = () => {
       if (!frame) frame = window.requestAnimationFrame(measureDock);
@@ -164,6 +200,43 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
       observer?.disconnect();
     };
   }, [show, touring, chat, path, minimised]);
+
+  useEffect(() => {
+    if (!askVisible) return;
+    let frame = 0;
+    const place = () => {
+      frame = 0;
+      const root = rootRef.current;
+      const pill = askRef.current;
+      if (!root || !pill) return;
+      const box = root.getBoundingClientRect();
+      const obstacles: { top: number; left: number; width: number; height: number }[] = [];
+      for (const bar of document.querySelectorAll<HTMLElement>(".bottom-nav, .sticky-cta-bar, header.sticky, [data-sulwe-avoid]")) {
+        if (getComputedStyle(bar).display === "none") continue;
+        const rect = bar.getBoundingClientRect();
+        obstacles.push({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+      }
+      setAskPos(
+        placeAskLabel({
+          sulwe: { top: box.top, left: box.left, width: box.width, height: box.height },
+          label: { width: pill.offsetWidth, height: pill.offsetHeight },
+          viewport: { width: window.innerWidth, height: window.innerHeight },
+          obstacles,
+        }),
+      );
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(place);
+    };
+    schedule();
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", schedule);
+    };
+  }, [askVisible, dock, lang, path]);
 
   if (!show || touring) return null;
   if (keyboard && !chat) return null;
@@ -190,7 +263,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
     if (gesture.react) playReaction();
     if (gesture.openChat) {
       lastTap.current = null;
-      setChat(true);
+      openChat();
       return;
     }
     if (gesture.react) lastTap.current = Date.now();
@@ -260,7 +333,27 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
           }
         />
       ) : (
+        <>
+        {askVisible ? (
+          <button
+            ref={askRef}
+            type="button"
+            className={`sulwe-ask fixed z-[45] whitespace-nowrap rounded-full border-2 border-gold bg-card px-3.5 py-2 text-sm font-semibold text-navy shadow-[0_6px_18px_rgb(20_26_36/0.2)]${askPos && !reduced ? " sulwe-ask-pop" : ""}`}
+            style={askPos ? { top: askPos.top, left: askPos.left } : { top: 0, left: 0, visibility: "hidden" }}
+            aria-label={uiText(lang, "sulwe_ask_label")}
+            data-sulwe-ask=""
+            data-sulwe-ask-side={askPos?.side ?? ""}
+            onClick={openChat}
+          >
+            {uiText(lang, "sulwe_ask_label")}
+            <span
+              aria-hidden="true"
+              className={`sulwe-ask-tail absolute h-3 w-3 rotate-45 border-gold bg-card ${askPos?.side === "above" ? "-bottom-[7px] right-9 border-b-2 border-r-2" : "-right-[7px] top-1/2 -mt-1.5 border-r-2 border-t-2"}`}
+            />
+          </button>
+        ) : null}
         <div
+          ref={rootRef}
           className="sulwe-dock fixed z-[45]"
           style={{
             right: 12,
@@ -270,7 +363,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
           data-sulwe-root=""
           data-sulwe-pose={pose}
         >
-          <button type="button" className="sr-only focus:not-sr-only focus:absolute focus:bottom-full focus:right-0 focus:mb-1 focus:rounded-full focus:bg-navy focus:px-3 focus:py-2 focus:text-sm focus:text-white" onClick={() => setChat(true)}>
+          <button type="button" className="sr-only focus:not-sr-only focus:absolute focus:bottom-full focus:right-0 focus:mb-1 focus:rounded-full focus:bg-navy focus:px-3 focus:py-2 focus:text-sm focus:text-white" onClick={openChat}>
             {uiText(lang, "sulwe_talk")}
           </button>
           {minimised ? (
@@ -311,7 +404,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    setChat(true);
+                    openChat();
                   }
                 }}
               >
@@ -322,6 +415,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
             </div>
           )}
         </div>
+        </>
       )}
     </div>
   );
