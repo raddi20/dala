@@ -394,3 +394,81 @@ export function sulweWand(
   }
   return { hand, angle, tip, trail, burst, target: centre };
 }
+
+/** How many times this browser has opened Sulwe's chat. The "Ask Sulwe anything" pill stops after this many. */
+export const SULWE_OPENS_KEY = "rangach_sulwe_opens";
+export const SULWE_ASK_MAX_OPENS = 3;
+
+export function readSulweOpens(store: { getItem(key: string): string | null } | null): number {
+  try {
+    const value = Number.parseInt(store?.getItem(SULWE_OPENS_KEY) ?? "0", 10);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Count one chat open. Returns the new count; storage errors never stop the chat. */
+export function bumpSulweOpens(store: { getItem(key: string): string | null; setItem(key: string, value: string): void } | null): number {
+  const next = readSulweOpens(store) + 1;
+  try {
+    store?.setItem(SULWE_OPENS_KEY, String(next));
+  } catch {
+    // Private mode or a full store: the pill just keeps showing.
+  }
+  return next;
+}
+
+/** The speech-bubble pill beside the docked Sulwe. One bubble at a time, never over the chat or keyboard. */
+export function shouldShowAskLabel(input: {
+  show: boolean;
+  minimised: boolean;
+  touring: boolean;
+  invite: boolean;
+  chat: boolean;
+  keyboard: boolean;
+  opens: number;
+}): boolean {
+  if (!input.show || input.minimised || input.touring || input.invite || input.chat || input.keyboard) return false;
+  return input.opens < SULWE_ASK_MAX_OPENS;
+}
+
+/** Gap between the pill's tail and Sulwe. */
+export const SULWE_ASK_GAP = 6;
+
+/**
+ * Where the pill goes, in viewport px. Same free-space rule as placeSulwe: never touch Sulwe,
+ * any obstacle (bottom nav, sticky WhatsApp bar, header) or the screen edge.
+ * Tries beside Sulwe (left, level with his face), then above him, then below his face line.
+ * Returns null when nothing is free; the pill then stays hidden.
+ */
+export function placeAskLabel(input: {
+  sulwe: SulweBox;
+  label: { width: number; height: number };
+  viewport: { width: number; height: number };
+  obstacles: readonly SulweBox[];
+}): { top: number; left: number; side: "left" | "above" } | null {
+  const margin = 8;
+  const { sulwe, label, viewport } = input;
+  const { width, height } = label;
+  if (!(width > 0 && height > 0)) return null;
+  const maxLeft = viewport.width - width - margin;
+  const maxTop = viewport.height - height - margin;
+  const clamp = (value: number, max: number) => Math.min(Math.max(margin, value), max);
+  const free = (pos: { top: number; left: number }) => {
+    if (pos.top < margin || pos.left < margin || pos.top > maxTop || pos.left > maxLeft) return false;
+    const box = { top: pos.top, left: pos.left, width, height };
+    if (boxesTouch(box, sulwe, 0)) return false;
+    return !input.obstacles.some((obstacle) => obstacle.width > 0 && obstacle.height > 0 && boxesTouch(box, obstacle, 4));
+  };
+  const leftOf = sulwe.left - SULWE_ASK_GAP - width;
+  const face = sulwe.top + sulwe.height * 0.32 - height / 2;
+  const candidates: { top: number; left: number; side: "left" | "above" }[] = [
+    { top: face, left: leftOf, side: "left" },
+    { top: sulwe.top, left: leftOf, side: "left" },
+    { top: sulwe.top + sulwe.height - height, left: leftOf, side: "left" },
+    { top: sulwe.top - SULWE_ASK_GAP - height, left: clamp(sulwe.left + sulwe.width - width, maxLeft), side: "above" },
+  ];
+  const spot = candidates.map((pos) => ({ ...pos, top: Math.round(pos.top), left: Math.round(pos.left) })).find(free);
+  return spot ?? null;
+}

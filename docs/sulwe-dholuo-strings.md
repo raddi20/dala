@@ -8,6 +8,7 @@ The chat reuses Ask Rangach. Examples stay ayie, a fundi in Kisumu, and fresh ti
 | sulwe_talk | Talk to Sulwe | Wuo gi Sulwe |
 | sulwe_minimise | Shrink Sulwe | Shrink Sulwe |
 | sulwe_restore | Show Sulwe | Nyis Sulwe |
+| sulwe_ask_label | Ask Sulwe anything | Penj Sulwe gimoro amora |
 | sulwe_close | Close | Lor |
 | sulwe_hi | Hi, I'm Sulwe, what are you looking for? | Misawa, an Sulwe, ere kaka anyalo konyi? |
 | sulwe_chip_ayie | ayie catering | chiemo mar ayie |

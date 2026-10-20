@@ -387,6 +387,13 @@ export const UI_STRINGS = {
   sulwe_talk: { en: "Talk to Sulwe", dholuo: "Wuo gi Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
   sulwe_minimise: { en: "Shrink Sulwe", dholuo: "Shrink Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
   sulwe_restore: { en: "Show Sulwe", dholuo: "Nyis Sulwe", draft: false, page: "Sulwe", notes: "Kevin signed off." },
+  sulwe_ask_label: {
+    en: "Ask Sulwe anything",
+    dholuo: "Penj Sulwe gimoro amora",
+    draft: false,
+    page: "Sulwe",
+    notes: "Kevin signed off. Speech-bubble pill beside the docked Sulwe; opens the chat.",
+  },
   sulwe_close: { en: "Close", dholuo: "Lor", draft: false, page: "Sulwe", notes: "Kevin signed off." },
   sulwe_hi: {
     en: "Hi, I'm Sulwe, what are you looking for?",
