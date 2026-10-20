@@ -580,10 +580,9 @@ export const UI_STRINGS = {
   wa_found_you: {
     en: "Hi, I found you on {app} – is this still available? {item}",
     dholuo: "Misawa, ayudi e {app} – bende pod nitie? {item}",
-    draft: true,
+    draft: false,
     page: "Listing, shop and sticky WhatsApp bar (prefilled message)",
-    notes:
-      "DRAFT for Kevin. Not confident: misawa = hello, ayudi = I found you, bende pod nitie = is it still there. Buyers get English until draft is false. {app} and {item} stay as they are.",
+    notes: "Kevin signed off. {app} and {item} stay as they are.",
   },
 } as const satisfies Record<string, UiString>;
 
