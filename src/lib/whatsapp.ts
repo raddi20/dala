@@ -19,7 +19,7 @@ export function whatsappPrefillLink(phone: string, text: string) {
 
 /**
  * The one-tap buyer message: "Hi, I found you on Rangach – is this still available? <title> <link>".
- * The Dholuo line is a draft. Until Kevin signs it off (draft: false), every buyer gets the English line.
+ * Dholuo buyers get Kevin's signed-off Dholuo line.
  */
 export function whatsappFoundYouText(item: { title: string; url: string }, lang: Lang = "en") {
   const row = UI_STRINGS.wa_found_you;
