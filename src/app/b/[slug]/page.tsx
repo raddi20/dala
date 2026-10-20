@@ -6,6 +6,9 @@ import { ShopBadgeNotes } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
+import { ContactTracker } from "@/components/contact-tracker";
+import { ShopReviewForm } from "@/components/shop-review-form";
+import { averageStars, starText } from "@/lib/shop-review";
 import { EmptyState, Flash, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { cityInPhrase } from "@/lib/constants";
@@ -186,7 +189,28 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     prefetch: isPrefetchRequest((name) => headerList.get(name)),
   });
 
-  const [signals, reviews] = await Promise.all([shopSignals(shop.userId), shopReviews(shop.userId)]);
+  const [signals, reviews, shopRatings, myShopReview] = await Promise.all([
+    shopSignals(shop.userId),
+    shopReviews(shop.userId),
+    prisma.shopReview.findMany({
+      where: { storefrontId: shop.id, status: "approved" },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    viewer && !isOwner
+      ? prisma.shopReview.findUnique({ where: { storefrontId_authorId: { storefrontId: shop.id, authorId: viewer.id } } })
+      : Promise.resolve(null),
+  ]);
+  const raterNames = new Map(
+    (
+      await prisma.user.findMany({
+        where: { id: { in: shopRatings.map((row) => row.authorId) }, suspended: false },
+        select: { id: true, name: true },
+      })
+    ).map((row) => [row.id, row.name]),
+  );
+  const publicRatings = shopRatings.filter((row) => raterNames.has(row.authorId));
+  const shopStars = averageStars(publicRatings);
   const rating = averageRating(reviews);
   const url = `${await publicOrigin()}/b/${shop.slug}`;
   const contacts = publicSellerContacts(shop.user);
@@ -336,7 +360,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         ) : null}
         <div className="mt-3 flex gap-6">
           {callUrl ? (
-            <a href={callUrl} className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink">
+            <a href={callUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink">
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white">
                 <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
                   <path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 6 6L17 13l4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 5a2 2 0 0 1 2-2z" />
@@ -435,6 +459,8 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                     {offeringChat ? (
                       <a
                         href={offeringChat}
+                        data-contact-shop={shop.slug}
+                        data-contact-name={shop.user.name}
                         className="mt-auto inline-flex min-h-11 items-center justify-center rounded-full bg-wa px-3 text-xs font-semibold text-white hover:bg-wa-d"
                         target="_blank"
                         rel="noreferrer"
@@ -493,6 +519,59 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </p>
       </section>
 
+      <section id="rate" className="grid scroll-mt-28 gap-3" data-shop-ratings>
+        <h2 className="font-serif text-xl text-navy">Rate this shop</h2>
+        <p className="text-sm text-ink/70">
+          {shopStars === null ? (
+            "No shop ratings yet. Bought or booked here? Say how it went."
+          ) : (
+            <>
+              <span className="text-gold" aria-hidden="true">
+                {starText(shopStars)}
+              </span>{" "}
+              {shopStars.toFixed(1)} out of 5 from {publicRatings.length} rating{publicRatings.length === 1 ? "" : "s"}
+            </>
+          )}
+        </p>
+        {publicRatings.length > 0 ? (
+          <ul className="grid gap-3">
+            {publicRatings.map((row) => (
+              <li key={row.id} className={`${cardClass} p-4`}>
+                <p className="text-sm font-semibold">
+                  <span className="text-gold" aria-label={`${row.rating} out of 5`}>
+                    {starText(row.rating)}
+                  </span>{" "}
+                  · {raterNames.get(row.authorId)}
+                </p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-ink/80">{row.body}</p>
+                <p className="mt-2 text-xs text-ink/45">{formatWhen(row.createdAt)}</p>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {viewer && !isOwner && shop.published && !shop.hidden ? (
+          myShopReview?.status === "hidden" ? (
+            <p className="text-sm text-ink/60">A moderator hid your review of this shop.</p>
+          ) : (
+            <>
+              {myShopReview?.status === "pending" ? (
+                <p className="text-sm text-ink/60">Your review is waiting for a moderator.</p>
+              ) : null}
+              <ShopReviewForm
+                storefrontId={shop.id}
+                slug={shop.slug}
+                current={myShopReview ? { rating: myShopReview.rating, body: myShopReview.body } : null}
+              />
+            </>
+          )
+        ) : null}
+        {!viewer ? (
+          <Link href={`/login?next=/b/${shop.slug}%23rate`} className="text-sm font-semibold text-lake-dark hover:text-lake">
+            Sign in to rate this shop
+          </Link>
+        ) : null}
+      </section>
+
       <section id="reviews" className="grid scroll-mt-28 gap-3">
         <h2 className="font-serif text-xl text-navy">{uiText(lang, "reviews")}</h2>
         {reviews.length === 0 ? (
@@ -539,9 +618,10 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </Link>
       ) : null}
 
+      <ContactTracker />
       {chatUrl ? (
         <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-line/80 bg-card px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)]">
-          <a href={chatUrl} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+          <a href={chatUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
             {lang === "dholuo" ? uiFill(lang, "whatsapp_name", { name: shop.user.name }) : <>WhatsApp {shop.user.name}</>}
           </a>
           <p className="mt-2 text-center text-sm text-muted">

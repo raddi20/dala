@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Badges } from "@/components/badges";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
+import { ContactTracker } from "@/components/contact-tracker";
 import { ReviewForm } from "@/components/review-form";
 import { UpgradeAction } from "@/components/upgrade-action";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
@@ -230,7 +231,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
 
       <div className="hidden flex-col gap-2 sm:flex sm:flex-row sm:flex-wrap">
         {chatUrl ? (
-          <a href={chatUrl} data-tour="whatsapp" className={btnWhatsApp} target="_blank" rel="noreferrer">
+          <a href={chatUrl} data-contact-shop={shop?.slug} data-contact-name={shop ? listing.owner.name : undefined} data-tour="whatsapp" className={btnWhatsApp} target="_blank" rel="noreferrer">
             {uiText(lang, "whatsapp_seller")}
           </a>
         ) : null}
@@ -396,6 +397,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         ) : null}
       </div>
 
+      {shop ? <ContactTracker /> : null}
       {chatUrl ? (
         <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
           <div className="grid gap-2">
@@ -407,7 +409,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
               siteName={appName()}
               lang={lang}
             />
-            <a href={chatUrl} data-tour="whatsapp" className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+            <a href={chatUrl} data-contact-shop={shop?.slug} data-contact-name={shop ? listing.owner.name : undefined} data-tour="whatsapp" className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
               {uiText(lang, "whatsapp_seller")}
             </a>
             <PaymentSafetyNote />
