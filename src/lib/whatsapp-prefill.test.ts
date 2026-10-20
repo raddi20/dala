@@ -24,9 +24,13 @@ test("the one-tap link is a wa.me link to the seller with the message encoded", 
   assert.equal(whatsappFoundYouLink("0722", listing), "");
 });
 
-test("the Dholuo prefill is a flagged draft, so Dholuo buyers still get English", () => {
-  assert.equal(UI_STRINGS.wa_found_you.draft, true);
-  assert.equal(whatsappFoundYouText(listing, "dholuo"), whatsappFoundYouText(listing, "en"));
+test("the signed-off Dholuo prefill goes to Dholuo buyers", () => {
+  assert.equal(UI_STRINGS.wa_found_you.draft, false);
+  assert.equal(
+    whatsappFoundYouText(listing, "dholuo"),
+    "Misawa, ayudi e Rangach – bende pod nitie? Fresh tilapia in Nairobi https://www.rangach.co.ke/listings/abc",
+  );
+  assert.match(whatsappFoundYouText(listing, "en"), /^Hi, I found you on Rangach/);
 });
 
 test("listing page, shop page and sticky bar all use the prefilled link", () => {

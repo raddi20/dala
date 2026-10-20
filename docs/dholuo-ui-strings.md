@@ -1,6 +1,6 @@
 # Dholuo UI strings
 
-Kevin signed off the chrome, the first tour, the visual tour, Sulwe, the tour invite, Sulwe voice and the voice corrections (`draft: false`). A held status means a line is still waiting on Kevin.
+Kevin signed off every line: the chrome, the first tour, the visual tour, Sulwe, the tour invite, Sulwe voice and the voice corrections (`draft: false`).
 Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 
 | Key | Page | English | Dholuo | Status | Notes |
@@ -200,4 +200,4 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | hear_search_this | Sulwe voice | Search this | Manyo ma | reviewed | Kevin signed off. Main button under Did you mean. manyo = look for. |
 | hear_search_said | Sulwe voice | Search what I said | Manyo gima ne awacho | reviewed | Kevin signed off. Searches the words as heard, without the fix. |
 | hear_heard | Sulwe voice | I heard: {raw} | Ne awinjo: {raw} | reviewed | Kevin signed off. Small line with the raw words. Hidden when the raw words were rude or awkward. |
-| wa_found_you | Listing, shop and sticky WhatsApp bar (prefilled message) | Hi, I found you on {app} – is this still available? {item} | Misawa, ayudi e {app} – bende pod nitie? {item} | held | DRAFT for Kevin. Not confident: misawa = hello, ayudi = I found you, bende pod nitie = is it still there. Buyers get English until draft is false. {app} and {item} stay as they are. |
+| wa_found_you | Listing, shop and sticky WhatsApp bar (prefilled message) | Hi, I found you on {app} – is this still available? {item} | Misawa, ayudi e {app} – bende pod nitie? {item} | reviewed | Kevin signed off. {app} and {item} stay as they are. |

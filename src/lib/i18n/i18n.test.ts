@@ -10,7 +10,7 @@ import { HOME_ASK_PLACEHOLDER, HOME_PROMPTS } from "@/lib/home-prompts";
 import { DIASPORA_ORDERS_LABEL } from "@/lib/diaspora";
 
 /** Lines still waiting on Kevin. Each must stay flagged as a draft. */
-const DRAFT_KEYS = ["wa_found_you"];
+const DRAFT_KEYS: string[] = [];
 
 const off = { NODE_ENV: "test" } as NodeJS.ProcessEnv;
 const on = { NODE_ENV: "test", NEXT_PUBLIC_DHOLUO_UI: "on" } as NodeJS.ProcessEnv;
@@ -77,5 +77,6 @@ test("draft Dholuo lines are flagged, listed as held, and never shown", () => {
     assert.match(row.notes, /DRAFT for Kevin/, key);
     assert.equal(uiText("dholuo", key as keyof typeof UI_STRINGS), row.en, key);
   }
-  assert.match(dholuoStringsMarkdown(), /\| wa_found_you \|.*\| held \|/);
+  assert.match(dholuoStringsMarkdown(), /\| wa_found_you \|.*\| reviewed \|/);
+  assert.equal(uiText("dholuo", "wa_found_you"), UI_STRINGS.wa_found_you.dholuo);
 });
