@@ -27,26 +27,27 @@ test("security headers are present and CSP stays report-only", () => {
   assert.match(permissions, /(?:^|, )microphone=\(self\)(?:,|$)/);
   assert.equal(permissions.includes("microphone=()"), false);
   assert.equal(permissions.includes("camera=(self)"), false);
-  for (const name of ["geolocation", "payment", "usb", "bluetooth"]) {
+  assert.match(permissions, /(?:^|, )geolocation=\(self\)(?:,|$)/);
+  for (const name of ["payment", "usb", "bluetooth"]) {
     assert.match(permissions, new RegExp(`(?:^|, )${name}=\\(\\)`));
   }
 });
 
-// Every directive except microphone is exactly what shipped before Sulwe voice.
+// Every directive except microphone (Sulwe voice) and geolocation (Near me) is exactly what shipped before.
 const EXPECTED_PERMISSIONS_POLICY =
   "accelerometer=(), autoplay=(), bluetooth=(), browsing-topics=(), camera=(), display-capture=(), " +
-  "encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), hid=(), idle-detection=(), " +
+  "encrypted-media=(), fullscreen=(), geolocation=(self), gyroscope=(), hid=(), idle-detection=(), " +
   "magnetometer=(), microphone=(self), midi=(), payment=(), picture-in-picture=(), " +
   "publickey-credentials-get=(), screen-wake-lock=(), serial=(), usb=()";
 
-test("Permissions-Policy allows the microphone for self only and leaves every other directive unchanged", () => {
+test("Permissions-Policy allows the microphone and geolocation for self only and leaves every other directive unchanged", () => {
   const permissions = headerMap(securityHeaders()).get("Permissions-Policy");
   assert.equal(permissions, EXPECTED_PERMISSIONS_POLICY);
   const directives = (permissions ?? "").split(", ");
   assert.equal(directives.length, 21);
   assert.deepEqual(
     directives.filter((directive) => !directive.endsWith("=()")),
-    ["microphone=(self)"],
+    ["geolocation=(self)", "microphone=(self)"],
   );
 });
 

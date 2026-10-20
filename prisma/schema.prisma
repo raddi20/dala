@@ -159,6 +159,10 @@ model Storefront {
   // Admin-granted shop checks. Independent of the paid Pro plan (User.verifiedPro).
   phoneVerified    Boolean  @default(false)
   locationVerified Boolean  @default(false)
+  // Optional exact shop pin for Near me. Null on every existing row. While null,
+  // Near me uses the centre of the shop's town (src/lib/near-me.ts), so nothing needs backfilling.
+  latitude         Float?
+  longitude        Float?
   businessVerified Boolean  @default(false)
   // Seller opt-in: this shop will take a WhatsApp order from abroad for family at home.
   servesDiaspora   Boolean  @default(false)
@@ -668,4 +672,16 @@ model BusinessLead {
 
   @@index([status, createdAt])
   @@index([createdAt])
+}
+
+// A listing a signed-in person tapped the heart on. New table only, no relations, so existing rows are untouched.
+// Visitors without an account keep their hearts in localStorage. Signing in merges them here.
+model SavedListing {
+  id        String   @id @default(cuid())
+  userId    String
+  listingId String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, listingId])
+  @@index([userId, createdAt])
 }

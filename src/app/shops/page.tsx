@@ -14,6 +14,7 @@ import { chipBag, understoodChips } from "@/lib/understood-chips";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { one } from "@/lib/utils";
 import { liteMode } from "@/lib/weak-data";
+import { parseNear } from "@/lib/near-me";
 
 export async function generateMetadata(): Promise<Metadata> {
   const origin = await publicOrigin();
@@ -51,7 +52,8 @@ export default async function ShopsPage({
   };
   const user = await getSessionUser();
   const lang = await requestLang();
-  const result = await searchShops({ ...filters, viewerId: user?.id });
+  const near = parseNear(one(sp.near));
+  const result = await searchShops({ ...filters, near, viewerId: user?.id });
   const bag = chipBag({ ...filters, nl: nlRaw });
   return (
     <ShopsDirectory
@@ -69,6 +71,7 @@ export default async function ShopsPage({
       total={result.total}
       lang={lang}
       lite={await liteMode()}
+      near={near ? one(sp.near) : ""}
       understood={
         parsed
           ? {

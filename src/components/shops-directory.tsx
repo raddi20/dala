@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NearMeButton, NearMeNote } from "@/components/near-me";
 import { Pager } from "@/components/pager";
 import { ShopCard } from "@/components/shop-card";
 import {
@@ -14,8 +15,8 @@ import type { Lang } from "@/lib/i18n/lang";
 import { uiFill, uiText } from "@/lib/i18n/strings";
 import { browseHref, chipBag, toggleFilterHref, type UnderstoodChip } from "@/lib/understood-chips";
 
-function pageHref(base: Record<string, string>, page: number) {
-  return browseHref("/shops", base, page);
+function pageHref(base: Record<string, string>, page: number, near = "") {
+  return browseHref("/shops", near ? { ...base, near } : base, page);
 }
 
 export function ShopsDirectory({
@@ -34,6 +35,7 @@ export function ShopsDirectory({
   understood = null,
   lang = "en",
   lite = false,
+  near = "",
 }: {
   shops: ShopCardData[];
   query: string;
@@ -55,6 +57,8 @@ export function ShopsDirectory({
   } | null;
   lang?: Lang;
   lite?: boolean;
+  /** Rounded ?near= value while Near me is on. */
+  near?: string;
 }) {
   const filters = chipBag({
     q: query,
@@ -97,6 +101,13 @@ export function ShopsDirectory({
         }
         pills={
           <>
+            <NearMeButton
+              active={Boolean(near)}
+              onHref={browseHref("/shops", filters)}
+              offHref={browseHref("/shops", filters)}
+              className={chipClass}
+              activeClassName={chipActiveClass}
+            />
             <Link
               href={browseRegionChipHref(filters, "homeland", "/shops")}
               className={activeRegion === "homeland" ? chipActiveClass : chipClass}
@@ -127,6 +138,12 @@ export function ShopsDirectory({
       ) : null}
       {query ? <p className="text-sm text-ink/70">{uiFill(lang, "showing_shops", { q: query })}</p> : null}
 
+      <NearMeNote />
+      {near ? (
+        <p data-near-on className="text-sm text-ink/70">
+          Nearest first. Distances are to the shop&apos;s town centre unless the shop has its own pin.
+        </p>
+      ) : null}
       <p className="text-sm text-ink/60">{total === 0 ? "0 shops" : total === 1 ? "1 shop" : `${total} shops`}</p>
       {shops.length === 0 ? (
         <EmptyState
@@ -145,7 +162,7 @@ export function ShopsDirectory({
           ))}
         </div>
       )}
-      <Pager page={page} pageCount={pageCount} hrefFor={(next) => pageHref(filters, next)} />
+      <Pager page={page} pageCount={pageCount} hrefFor={(next) => pageHref(filters, next, near)} />
     </div>
   );
 }

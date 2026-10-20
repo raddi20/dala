@@ -16,7 +16,7 @@ export function ShopResultRow({ shop, origin }: { shop: ShopCardData; origin: st
   const place = cityChipLabel(shop.city);
   const meta = [shop.category, place].filter(Boolean).join(" · ");
   const initial = shop.name.trim().charAt(0).toUpperCase() || "S";
-  const chat = shop.whatsapp ? whatsappShopLink(shop.whatsapp, `${origin}/b/${shop.slug}`) : "";
+  const chat = shop.whatsapp ? whatsappShopLink(shop.whatsapp, `${origin}/b/${shop.slug}`, shop.name) : "";
 
   return (
     <li className="flex items-center gap-2 rounded-[14px] border border-line/80 bg-card px-2.5 py-2 shadow-[var(--shadow-card)]">

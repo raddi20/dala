@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HomeRail } from "@/components/home-rail";
 import { ListingCard } from "@/components/listing-card";
+import { RecentlyViewedStrip } from "@/components/recently-viewed";
 import { OfferingCard } from "@/components/offering-card";
 import { ShopCard } from "@/components/shop-card";
 import { btnPrimary, chipClass, EmptyState } from "@/components/ui";
@@ -114,6 +115,7 @@ export default async function HomePage() {
             </div>
           )}
         </section>
+        <RecentlyViewedStrip />
       </div>
 
       <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 [contain-intrinsic-size:auto_720px] [content-visibility:auto]">

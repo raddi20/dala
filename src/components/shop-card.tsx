@@ -2,6 +2,7 @@ import Link from "next/link";
 import { cityChipLabel } from "@/lib/constants";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { shopIsChecked } from "@/lib/item-card";
+import { distanceLabel } from "@/lib/near-me";
 import type { ShopCardData } from "@/lib/search";
 
 export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: boolean }) {
@@ -76,6 +77,11 @@ export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: bo
                 </span>
               ) : null}
               <span className="truncate">{meta}</span>
+            </p>
+          ) : null}
+          {shop.distanceKm !== undefined ? (
+            <p data-distance className="mt-0.5 text-[12.5px] font-semibold text-lake-dark">
+              {distanceLabel(shop.distanceKm) || "Place not set"}
             </p>
           ) : null}
         </div>
