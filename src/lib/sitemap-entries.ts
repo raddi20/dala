@@ -108,13 +108,36 @@ export function buildSitemap(input: {
   return pages;
 }
 
+/** Heavy SEO/AI crawlers that wake the database without sending buyers. Blocked outright. */
+export const BLOCKED_CRAWLERS = [
+  "AhrefsBot",
+  "SemrushBot",
+  "MJ12bot",
+  "DotBot",
+  "PetalBot",
+  "BLEXBot",
+  "DataForSeoBot",
+  "Bytespider",
+  "GPTBot",
+  "CCBot",
+  "ClaudeBot",
+  "anthropic-ai",
+  "Amazonbot",
+  "meta-externalagent",
+  "ImagesiftBot",
+] as const;
+
 export function buildRobots(origin: string): MetadataRoute.Robots {
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: [...PRIVATE_PREFIXES],
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [...PRIVATE_PREFIXES],
+        crawlDelay: 10,
+      },
+      { userAgent: [...BLOCKED_CRAWLERS], disallow: "/" },
+    ],
     sitemap: absoluteUrl(origin, "/sitemap.xml"),
   };
 }
