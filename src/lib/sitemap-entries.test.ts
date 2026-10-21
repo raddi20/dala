@@ -86,6 +86,11 @@ test("robots allows the public site, blocks private prefixes, and points at the 
     "/reset-password",
     "/orders",
   ]);
+  assert.equal(rules.crawlDelay, 10);
+  const blocked = Array.isArray(robots.rules) ? robots.rules[1] : undefined;
+  assert.ok(blocked);
+  assert.ok(Array.isArray(blocked.userAgent) && blocked.userAgent.includes("AhrefsBot") && blocked.userAgent.includes("GPTBot"));
+  assert.equal(blocked.disallow, "/");
 });
 
 test("share metadata uses an absolute URL, card size, and twitter large image", () => {

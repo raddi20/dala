@@ -83,7 +83,7 @@ Leave the Mux variables unset and the rest of the site still builds and runs. Se
 
 | Variable | Local | Production (Vercel) |
 | --- | --- | --- |
-| `DATABASE_URL` | `file:./dev.db` (SQLite, resolved from `prisma/`). | Neon Postgres URL, including `sslmode=require`. Use the **direct** connection string (host without `-pooler`) so `prisma db push` can create tables. |
+| `DATABASE_URL` | `file:./dev.db` (SQLite, resolved from `prisma/`). | Neon Postgres URL, including `sslmode=require`. Use the **pooled** connection string (host with `-pooler`, plus `pgbouncer=true&connection_limit=1`) for the running app. `prisma db push` at build time needs the direct host; if the build fails on the pooled URL, keep the direct URL for the build only. |
 | `AUTH_SECRET` | Any dev string. | A long random string. `openssl rand -base64 32` |
 | `AUTH_TRUST_HOST` | `true` | `true`. Auth.js already sets `trustHost` in `src/auth.ts`. |
 | `AUTH_URL` | Omit. | `https://dala-sigma.vercel.app` (no path). Later, `https://rangach.co.ke`. |

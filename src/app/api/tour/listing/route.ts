@@ -20,5 +20,9 @@ export async function GET() {
     },
   });
   const pick = rows.find((row) => row.contactWhatsapp.trim() && !isDemoEmail(row.owner.email));
-  return Response.json({ path: pick ? `/listings/${pick.id}` : null });
+  return Response.json(
+    { path: pick ? `/listings/${pick.id}` : null },
+    // Same answer for every visitor; let the CDN absorb repeat tours.
+    { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" } },
+  );
 }

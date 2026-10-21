@@ -47,6 +47,15 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }],
       },
       {
+        // The sitemap runs four full-table queries; let the CDN serve it for an hour.
+        source: "/sitemap.xml",
+        headers: [{ key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" }],
+      },
+      {
+        source: "/robots.txt",
+        headers: [{ key: "Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=86400" }],
+      },
+      {
         source: "/:path*",
         headers: securityHeaders(),
       },
