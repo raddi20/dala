@@ -85,7 +85,7 @@ export default async function EditListingPage({ params }: { params: Promise<{ id
       </section>
       <details className="mt-8 rounded-2xl border border-danger/30 p-4">
         <summary className="cursor-pointer text-sm font-semibold text-danger">Delete listing</summary>
-        <p className="mt-2 text-sm text-ink/70">This removes the listing, its reviews, and reports.</p>
+        <p className="mt-2 text-sm text-ink/70">This removes the listing and its reviews. Reports about it stay with the moderators.</p>
         <form action={deleteListing} className="mt-3">
           <input type="hidden" name="id" value={listing.id} />
           <button className={btnDanger}>Delete permanently</button>

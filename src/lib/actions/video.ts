@@ -18,7 +18,7 @@ function refresh(slug: string) {
 }
 
 function back(message: string): never {
-  redirect(`/admin?videoNotice=${encodeURIComponent(message)}#shop-videos`);
+  redirect(`/admin/shop-checks?videoNotice=${encodeURIComponent(message)}#shop-videos`);
 }
 
 export async function approveShopVideoAction(formData: FormData) {

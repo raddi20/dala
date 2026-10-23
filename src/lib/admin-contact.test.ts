@@ -255,7 +255,7 @@ test("the edit action and pages require an admin, and public pages do not render
   const action = readFileSync(new URL("./actions/admin-contact.ts", import.meta.url), "utf8");
   const page = readFileSync(new URL("../app/admin/contact/[kind]/[id]/page.tsx", import.meta.url), "utf8");
   const phones = readFileSync(new URL("../app/admin/phones/page.tsx", import.meta.url), "utf8");
-  const admin = readFileSync(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
+  const admin = readFileSync(new URL("../app/admin/listings/page.tsx", import.meta.url), "utf8");
   const lib = readFileSync(new URL("./admin-contact.ts", import.meta.url), "utf8");
   const actionBody = action.slice(action.indexOf("export async function saveAdminContact"));
   assert.match(actionBody, /await requireAdmin\("\/admin"\)/);

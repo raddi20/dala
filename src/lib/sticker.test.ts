@@ -176,7 +176,7 @@ test("canonical URLs drop ref and the print page is not a public link", () => {
   assert.match(page, /sticker\.css/);
   assert.equal(page.includes("<script"), false);
   assert.match(read("src/app/account/storefront/page.tsx"), /Print sticker/);
-  assert.match(read("src/app/admin/page.tsx"), /Print sticker/);
+  assert.match(read("src/app/admin/shop-checks/page.tsx"), /Print sticker/);
   assert.equal(read("src/components/header.tsx").includes("/sticker"), false);
   assert.equal(read("src/components/footer.tsx").includes("/sticker"), false);
   assert.equal(/href=["'{].*\/sticker/.test(read("src/app/b/[slug]/page.tsx")), false);
