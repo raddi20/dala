@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Suspense, type ReactNode } from "react";
 import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
@@ -91,6 +92,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <TourPrompt enabled={tourOn} lang={lang} sulwe={sulweFlag} />
           <Sulwe enabled={sulweFlag} lang={lang} voice={sulweVoiceOn()} />
         </Suspense>
+        <Analytics />
       </body>
     </html>
   );

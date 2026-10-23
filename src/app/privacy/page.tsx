@@ -228,6 +228,7 @@ export default function PrivacyPage() {
           Signing in uses a session cookie so you stay signed in. That cookie is essential for the account. We do not
           use advertising cookies, and we do not set a third-party analytics cookie.
         </p>
+        <p>We use Vercel Web Analytics to count page visits. It sets no cookies and only reports aggregated totals.</p>
         <p>
           We also set rangach_visitor, described above. It lasts about a year, on this site only, with SameSite=Lax.
           It is there so view and tap counts, and the optional AI limits, can tell one browser from another without
