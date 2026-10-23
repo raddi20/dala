@@ -189,6 +189,7 @@ test("pages stay behind the flag and never say escrow or that Rangach holds the 
     "../app/account/orders/page.tsx",
     "../app/admin/orders/page.tsx",
     "../app/admin/page.tsx",
+    "../app/admin/layout.tsx",
     "../app/account/page.tsx",
     "../app/privacy/page.tsx",
     "protected-order.ts",
@@ -209,7 +210,7 @@ test("pages stay behind the flag and never say escrow or that Rangach holds the 
   assert.match(shop, /protectedOrdersOn\(\)/);
   assert.match(shop, /ProtectedOrderPanel/);
   const admin = readFileSync(new URL("../app/admin/page.tsx", import.meta.url), "utf8");
-  assert.match(admin, /protectedOrdersOn\(\) \?/);
+  assert.match(admin, /ordersOn: protectedOrdersOn\(\)/);
   const account = readFileSync(new URL("../app/account/page.tsx", import.meta.url), "utf8");
   assert.match(account, /protectedOrdersOn\(\) \?/);
   for (const page of ["../app/orders/[reference]/page.tsx", "../app/account/orders/page.tsx", "../app/admin/orders/page.tsx"]) {

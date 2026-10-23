@@ -331,7 +331,7 @@ test("tips that are switched off name TIPS_EMAIL and do not call ZeptoMail", asy
 
 test("the admin test email is admin-only and shows the ZeptoMail result", () => {
   const action = readFileSync(new URL("../actions/admin-mail.ts", import.meta.url), "utf8");
-  const page = readFileSync(new URL("../../app/admin/page.tsx", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../../app/admin/mail/page.tsx", import.meta.url), "utf8");
   const widget = readFileSync(new URL("../../components/admin-mail-test.tsx", import.meta.url), "utf8");
   const body = action.slice(action.indexOf("export async function sendAdminTestEmail"));
   assert.match(body, /await requireAdmin\(\)/);

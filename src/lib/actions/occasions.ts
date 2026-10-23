@@ -29,10 +29,10 @@ export async function curateOccasion(formData: FormData) {
   });
   if (!result.ok) {
     if (result.code === "forbidden") redirect("/");
-    redirect("/admin#occasions");
+    redirect("/admin/listings#occasions");
   }
   revalidateOccasion(result.slug);
-  redirect("/admin#occasions");
+  redirect("/admin/listings#occasions");
 }
 
 export async function setListingOccasions(formData: FormData) {

@@ -16,21 +16,21 @@ export function AgentCountTable({ rows, range }: { rows: AgentCountRow[]; range:
         other. Dates use Africa/Nairobi. This week starts on Monday. Launch weekend is 17–18 Oct 2026.
       </p>
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-        <a className={presetClass("all")} href="/admin#field-agents">
+        <a className={presetClass("all")} href="/admin/field-agents">
           All dates
         </a>
-        <a className={presetClass("today")} href="/admin?agents=today#field-agents">
+        <a className={presetClass("today")} href="/admin/field-agents?agents=today">
           Today
         </a>
-        <a className={presetClass("week")} href="/admin?agents=week#field-agents">
+        <a className={presetClass("week")} href="/admin/field-agents?agents=week">
           This week
         </a>
-        <a className={presetClass("launch")} href="/admin?agents=launch#field-agents">
+        <a className={presetClass("launch")} href="/admin/field-agents?agents=launch">
           Launch weekend
         </a>
         <span className="text-ink/60">{range.label}</span>
       </div>
-      <form action="/admin#field-agents" method="get" className="flex flex-wrap items-end gap-2">
+      <form action="/admin/field-agents" method="get" className="flex flex-wrap items-end gap-2">
         <input type="hidden" name="agents" value="custom" />
         <label className="grid gap-1 text-sm text-ink/80">
           From

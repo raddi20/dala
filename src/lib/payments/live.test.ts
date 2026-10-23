@@ -117,7 +117,7 @@ test("the pricing page keeps the prices and labels them coming soon", () => {
 });
 
 test("admin grants do not consult the payments flag", async () => {
-  const admin = readFileSync(new URL("../../app/admin/page.tsx", import.meta.url), "utf8");
+  const admin = ["people", "listings"].map((page) => readFileSync(new URL(`../../app/admin/${page}/page.tsx`, import.meta.url), "utf8")).join("\n");
   const actions = readFileSync(new URL("../actions/admin.ts", import.meta.url), "utf8");
   const pro = readFileSync(new URL("../pro.ts", import.meta.url), "utf8");
   const badges = readFileSync(new URL("../shop-badge-commit.ts", import.meta.url), "utf8");
