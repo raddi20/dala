@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
+import { parsePrice } from "@/lib/price";
 import { createOffering, updateOffering } from "@/lib/actions/storefront";
 import { OFFERING_CURRENCIES } from "@/lib/constants";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
@@ -28,6 +29,10 @@ export function OfferingForm({
 }) {
   const action = mode === "create" ? createOffering : updateOffering;
   const [state, formAction] = useActionState(action, initial);
+  const [price, setPrice] = useState(offering?.price ?? "");
+  const [priceTouched, setPriceTouched] = useState(false);
+  const priceCheck = parsePrice(price);
+  const priceError = priceTouched && !priceCheck.ok ? priceCheck.error : "";
 
   return (
     <form action={formAction} className="grid gap-4">
@@ -53,11 +58,21 @@ export function OfferingForm({
           <input
             name="price"
             data-tour="sell-price"
-            defaultValue={offering?.price ?? ""}
-            inputMode="decimal"
-            placeholder="450"
+            type="text"
+            value={price}
+            onChange={(event) => setPrice(event.target.value)}
+            onBlur={() => setPriceTouched(true)}
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={40}
+            placeholder="100,000 or 80,000 – 120,000"
+            aria-invalid={priceError ? true : undefined}
+            aria-describedby="offering-price-help"
             className={fieldClass}
           />
+          <span id="offering-price-help" className={priceError ? "mt-1 block text-xs text-red-700" : "mt-1 block text-xs text-ink/60"} role={priceError ? "alert" : undefined}>
+            {priceError || "One price, or a range like 80k – 120k."}
+          </span>
         </label>
         <label className="block text-sm">
           Currency

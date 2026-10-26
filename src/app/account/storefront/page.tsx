@@ -326,7 +326,7 @@ export default async function ManageStorefrontPage({
                     <span className="ml-2 text-xs font-semibold uppercase tracking-wide text-clay">Hidden on the public shop</span>
                   ) : null}
                 </p>
-                <p className="text-ink/60">{formatOfferingPrice(offering.priceCents, offering.currency) || "No price"}</p>
+                <p className="text-ink/60">{formatOfferingPrice(offering.priceCents, offering.currency, offering.priceMaxCents) || "No price"}</p>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                   <Link href={`/account/storefront/offerings/${offering.id}`} className="font-semibold text-lake-dark hover:text-lake">
                     Edit
@@ -395,7 +395,7 @@ export default async function ManageStorefrontPage({
             {archived.map((offering) => (
               <li key={offering.id} className={`${cardClass} p-4 text-sm`}>
                 <p className="font-semibold text-navy">{offering.title}</p>
-                <p className="text-ink/60">{formatOfferingPrice(offering.priceCents, offering.currency) || "No price"}</p>
+                <p className="text-ink/60">{formatOfferingPrice(offering.priceCents, offering.currency, offering.priceMaxCents) || "No price"}</p>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
                   <Link href={`/account/storefront/offerings/${offering.id}`} className="font-semibold text-lake-dark hover:text-lake">
                     Edit

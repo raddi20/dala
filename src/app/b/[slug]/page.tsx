@@ -422,7 +422,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {publicOfferings.map((offering) => {
-              const price = formatOfferingPrice(offering.priceCents, offering.currency);
+              const price = formatOfferingPrice(offering.priceCents, offering.currency, offering.priceMaxCents);
               const offeringChat = phone ? whatsappOfferingLink(phone, offering.title, url) : "";
               const stored = photoVariants.get(offering.imageUrl);
               const photo = cardPhoto({
@@ -492,7 +492,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
           slug={shop.slug}
           subaccount={shop.paystackSubaccountCode}
           offerings={publicOfferings
-            .filter((offering) => offering.currency === "KES" && offering.priceCents != null && offering.priceCents > 0)
+            .filter((offering) => offering.currency === "KES" && offering.priceMaxCents == null && offering.priceCents != null && offering.priceCents > 0)
             .map((offering) => ({
               id: offering.id,
               title: offering.title,

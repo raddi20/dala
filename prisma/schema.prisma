@@ -323,6 +323,7 @@ model Offering {
   title        String
   description  String     @default("")
   priceCents   Int?
+  priceMaxCents Int?
   currency     String     @default("")
   imageUrl     String     @default("")
   sortOrder    Int        @default(0)

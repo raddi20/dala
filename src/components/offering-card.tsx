@@ -23,7 +23,7 @@ export async function OfferingCard({
       thumb480={stored?.thumb480}
       thumb960={stored?.thumb960}
       tag={itemKindTag({ kind: "offering" })}
-      price={formatOfferingPrice(offering.priceCents, offering.currency)}
+      price={formatOfferingPrice(offering.priceCents, offering.currency, offering.priceMaxCents)}
       seller={offering.shopName}
       place={cityChipLabel(offering.city)}
       checked={shopIsChecked(offering)}
