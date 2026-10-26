@@ -57,20 +57,35 @@ export function formatWhen(date: Date) {
 
 export { telHref } from "@/lib/phone";
 
-export function centsToInput(cents: number | null | undefined) {
-  if (cents == null) return "";
+function centsText(cents: number) {
   const major = cents / 100;
   return Number.isInteger(major) ? String(major) : major.toFixed(2);
 }
 
-export function formatOfferingPrice(priceCents: number | null | undefined, currency: string) {
+export function centsToInput(cents: number | null | undefined, maxCents?: number | null) {
+  if (cents == null) return "";
+  return maxCents != null ? `${centsText(cents)} – ${centsText(maxCents)}` : centsText(cents);
+}
+
+function majorText(cents: number) {
+  const digits = cents % 100 === 0 ? 0 : 2;
+  return (cents / 100).toLocaleString("en-GB", { minimumFractionDigits: digits, maximumFractionDigits: 2 });
+}
+
+export function formatOfferingPrice(
+  priceCents: number | null | undefined,
+  currency: string,
+  priceMaxCents?: number | null,
+) {
   if (priceCents == null) return "";
-  const major = priceCents / 100;
-  const digits = priceCents % 100 === 0 ? 0 : 2;
-  const text = major.toLocaleString("en-GB", {
-    minimumFractionDigits: digits,
-    maximumFractionDigits: 2,
-  });
+  if (priceMaxCents != null && priceMaxCents > priceCents) {
+    const low = majorText(priceCents);
+    const high = majorText(priceMaxCents);
+    if (currency === "GBP") return `£${low} – £${high}`;
+    if (currency === "KES") return `KSh ${low} – ${high}`;
+    return currency ? `${currency} ${low} – ${high}` : `${low} – ${high}`;
+  }
+  const text = majorText(priceCents);
   if (currency === "GBP") return `£${text}`;
   if (currency === "KES") return `KES ${text}`;
   return currency ? `${currency} ${text}` : text;

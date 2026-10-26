@@ -35,7 +35,7 @@ export default async function EditOfferingPage({ params }: { params: Promise<{ i
             id: offering.id,
             title: offering.title,
             description: offering.description,
-            price: centsToInput(offering.priceCents),
+            price: centsToInput(offering.priceCents, offering.priceMaxCents),
             currency: offering.currency,
             imageUrl: offering.imageUrl,
           }}

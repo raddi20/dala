@@ -104,6 +104,7 @@ const offeringCardSelect = {
   title: true,
   description: true,
   priceCents: true,
+  priceMaxCents: true,
   currency: true,
   imageUrl: true,
   createdAt: true,
@@ -389,6 +390,7 @@ function toOfferingCard(row: OfferingRow): OfferingCardData {
     title: row.title,
     description: row.description,
     priceCents: row.priceCents,
+    priceMaxCents: row.priceMaxCents,
     currency: row.currency,
     imageUrl: row.imageUrl,
     createdAt: row.createdAt,
@@ -499,6 +501,7 @@ export type OfferingCardData = {
   title: string;
   description: string;
   priceCents: number | null;
+  priceMaxCents: number | null;
   currency: string;
   imageUrl: string;
   createdAt: Date;

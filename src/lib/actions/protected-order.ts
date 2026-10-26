@@ -51,7 +51,7 @@ export async function createProtectedOrder(_state: ActionState, formData: FormDa
 
   const items: { title: string; qty: number; unitSubunit: number }[] = [];
   for (const offering of shop.offerings) {
-    if (offering.currency !== "KES" || !offering.priceCents || offering.priceCents <= 0) continue;
+    if (offering.currency !== "KES" || offering.priceMaxCents != null || !offering.priceCents || offering.priceCents <= 0) continue;
     const qty = Number(field(formData, `qty_${offering.id}`));
     if (!Number.isInteger(qty) || qty <= 0) continue;
     if (qty > 20) return { error: "Quantity must be 20 or fewer." };

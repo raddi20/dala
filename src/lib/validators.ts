@@ -1,3 +1,4 @@
+import { parsePrice } from "@/lib/price";
 import { z } from "zod";
 import {
   CATEGORIES,
@@ -168,12 +169,9 @@ export function parseStorefrontForm(formData: FormData) {
 }
 
 export function parsePriceCents(raw: string) {
-  const trimmed = raw.trim();
-  if (!trimmed) return { ok: true as const, cents: null };
-  if (!/^\d{1,8}(\.\d{1,2})?$/.test(trimmed)) {
-    return { ok: false as const, error: "Price must be a number, like 450 or 12.50." };
-  }
-  return { ok: true as const, cents: Math.round(Number(trimmed) * 100) };
+  const parsed = parsePrice(raw);
+  if (!parsed.ok) return { ok: false as const, error: parsed.error };
+  return { ok: true as const, cents: parsed.minCents, maxCents: parsed.maxCents };
 }
 
 export const offeringSchema = z.object({
@@ -200,7 +198,7 @@ export function parseOfferingForm(formData: FormData) {
   }
   const price = parsePriceCents(field(formData, "price"));
   if (!price.ok) return price;
-  return { ok: true as const, data: { ...parsed.data, priceCents: price.cents } };
+  return { ok: true as const, data: { ...parsed.data, priceCents: price.cents, priceMaxCents: price.maxCents } };
 }
 
 export { CATEGORIES, CITIES };
