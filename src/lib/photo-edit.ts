@@ -4,7 +4,17 @@ import type { UploadPurpose } from "@/lib/image-upload";
 /** Longest side of a saved photo. Never upscale past the original. */
 export const MAX_EDGE = 1600;
 /** Preview while editing. Full resolution is used once, on save. */
-export const PREVIEW_EDGE = 800;
+export const PREVIEW_EDGE = 1100;
+/**
+ * Saved photos aim for this size. The upload goes through a serverless
+ * function that refuses bodies over about 4.5 MB, so a photo just under the
+ * 5 MB limit would fail to upload even though it is "small enough".
+ */
+export const UPLOAD_TARGET_BYTES = 4 * 1024 * 1024;
+/** Decoded photos are shrunk to this longest side so huge phone photos do not stall or blank out on mobile. */
+export const DECODE_MAX_EDGE = 4096;
+/** Neutral padding colour, a warm light grey that sits well on the app's paper background. */
+export const NEUTRAL_PADDING = "#ece8e1";
 /** Laplacian is measured on a small grey copy, not the full photo. */
 export const BLUR_SAMPLE_EDGE = 200;
 export const OUTPUT_QUALITY = 0.8;
@@ -26,11 +36,16 @@ export const CLIP_HIGH = 243;
 
 export type Size = { width: number; height: number };
 export type AspectPreset = "square" | "original" | "cover";
+/** contain shows the whole photo and pads the rest. cover fills the frame and crops. */
+export type FitMode = "contain" | "cover";
+export type PaddingStyle = "blur" | "neutral";
 
 export type PhotoEdit = {
   quarterTurns: number;
   straighten: number;
   aspect: AspectPreset;
+  fit: FitMode;
+  padding: PaddingStyle;
   zoom: number;
   panX: number;
   panY: number;
@@ -51,6 +66,13 @@ export type Frame = {
   cropHeight: number;
   panX: number;
   panY: number;
+  /** How far the window can move either way, in source pixels. Zero means that axis is fixed. */
+  spareX: number;
+  spareY: number;
+  fit: FitMode;
+  padding: PaddingStyle;
+  /** True when part of the frame is not photo, so a backdrop must be painted first. */
+  needsBackdrop: boolean;
   outputWidth: number;
   outputHeight: number;
 };
@@ -71,6 +93,9 @@ export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
     quarterTurns: 0,
     straighten: 0,
     aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "original",
+    // Whole photo first. Nothing is cut off until the person zooms in or picks "Fill the frame".
+    fit: "contain",
+    padding: "blur",
     zoom: 1,
     panX: 0,
     panY: 0,
@@ -82,7 +107,7 @@ export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
 
 /** Full frame, no colour changes. Still resized and re-encoded on save. */
 export function identityEdit(): PhotoEdit {
-  return { ...defaultEdit("listing"), aspect: "original" };
+  return { ...defaultEdit("listing"), aspect: "original", fit: "cover" };
 }
 
 export function editForSave(action: "as-is" | "save", edit: PhotoEdit): PhotoEdit {
@@ -151,18 +176,37 @@ export function safeCropSize(width: number, height: number, degrees: number, asp
   };
 }
 
+/**
+ * Smallest window of the given aspect that holds the whole image.
+ * A wide photo in a tall frame gets extra height (padding above and below), and the reverse.
+ */
+export function containWindow(width: number, height: number, aspect: number): Size {
+  const safeWidth = Math.max(1, width);
+  const safeHeight = Math.max(1, height);
+  const ratio = Math.max(0.05, aspect);
+  if (safeWidth / safeHeight >= ratio) return { width: safeWidth, height: safeWidth / ratio };
+  return { width: safeHeight * ratio, height: safeHeight };
+}
+
 export function resolveFrame(source: Size, edit: PhotoEdit, maxEdge = MAX_EDGE): Frame {
   const turns = ((Math.round(edit.quarterTurns) % 4) + 4) % 4;
   const oriented = orientedSize(source.width, source.height, turns);
   const aspect = presetAspect(edit.aspect, oriented);
   const straighten = clamp(edit.straighten, -STRAIGHTEN_MAX, STRAIGHTEN_MAX);
-  const safe = safeCropSize(oriented.width, oriented.height, straighten, aspect);
+  const contain = edit.fit === "contain";
+  const base = contain
+    ? containWindow(oriented.width, oriented.height, aspect)
+    : safeCropSize(oriented.width, oriented.height, straighten, aspect);
   const zoom = clamp(edit.zoom, MIN_ZOOM, MAX_ZOOM);
-  const cropWidth = Math.max(1, safe.width / zoom);
-  const cropHeight = Math.max(1, safe.height / zoom);
-  const spareX = Math.max(0, (safe.width - cropWidth) / 2);
-  const spareY = Math.max(0, (safe.height - cropHeight) / 2);
+  const cropWidth = Math.max(1, base.width / zoom);
+  const cropHeight = Math.max(1, base.height / zoom);
+  // Contain: the window may move only while it is smaller than the photo. Larger than the photo, it stays centred.
+  const spareX = contain ? Math.max(0, (oriented.width - cropWidth) / 2) : Math.max(0, (base.width - cropWidth) / 2);
+  const spareY = contain ? Math.max(0, (oriented.height - cropHeight) / 2) : Math.max(0, (base.height - cropHeight) / 2);
   const output = resizeDimensions(cropWidth, cropHeight, maxEdge);
+  const needsBackdrop =
+    contain &&
+    (cropWidth > oriented.width + 0.5 || cropHeight > oriented.height + 0.5 || Math.abs(straighten) >= 0.01);
   return {
     sourceWidth: source.width,
     sourceHeight: source.height,
@@ -172,8 +216,46 @@ export function resolveFrame(source: Size, edit: PhotoEdit, maxEdge = MAX_EDGE):
     cropHeight,
     panX: clamp(edit.panX, -1, 1) * spareX,
     panY: clamp(edit.panY, -1, 1) * spareY,
+    spareX,
+    spareY,
+    fit: contain ? "contain" : "cover",
+    padding: edit.padding === "neutral" ? "neutral" : "blur",
+    needsBackdrop,
     outputWidth: output.width,
     outputHeight: output.height,
+  };
+}
+
+/** Largest rectangle of the given content shape that fits inside the stage. */
+export function fitRect(stage: Size, content: Size): Size {
+  const stageWidth = Math.max(0, stage.width);
+  const stageHeight = Math.max(0, stage.height);
+  if (stageWidth === 0 || stageHeight === 0 || content.width < 1 || content.height < 1) {
+    return { width: 0, height: 0 };
+  }
+  const scale = Math.min(stageWidth / content.width, stageHeight / content.height);
+  return { width: content.width * scale, height: content.height * scale };
+}
+
+/**
+ * Turn a finger or mouse drag into a new pan. The photo follows the finger,
+ * so dragging right moves the window left. Returns normalised pan, -1 to 1.
+ */
+export function panAfterDrag(
+  start: { panX: number; panY: number },
+  dragPx: { x: number; y: number },
+  frame: Pick<Frame, "cropWidth" | "cropHeight" | "spareX" | "spareY">,
+  display: Size,
+) {
+  if (display.width < 1 || display.height < 1) return { panX: start.panX, panY: start.panY };
+  const axis = (startPan: number, drag: number, crop: number, spare: number, shown: number) => {
+    if (!(spare > 0)) return 0;
+    const units = clamp(startPan, -1, 1) * spare - drag * (crop / shown);
+    return clamp(units / spare, -1, 1);
+  };
+  return {
+    panX: axis(start.panX, dragPx.x, frame.cropWidth, frame.spareX, display.width),
+    panY: axis(start.panY, dragPx.y, frame.cropHeight, frame.spareY, display.height),
   };
 }
 

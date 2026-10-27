@@ -198,7 +198,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           loading={photo.loading}
           decoding={photo.decoding}
           fetchPriority={photo.fetchPriority}
-          className="aspect-[16/10] h-auto w-full rounded-[14px] border border-line/80 bg-sand object-cover shadow-[var(--shadow-card)]"
+          className="aspect-[16/10] h-auto w-full rounded-[14px] border border-line/80 bg-sand object-contain shadow-[var(--shadow-card)]"
         />
       ) : (
         <div className="flex aspect-[16/10] items-end rounded-[1.25rem] bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white shadow-[var(--shadow-card)]">

@@ -5,18 +5,26 @@ import { createPortal } from "react-dom";
 import { btnPrimary } from "@/components/ui";
 import type { UploadPurpose } from "@/lib/image-upload";
 import {
+  MAX_ZOOM,
+  MIN_ZOOM,
   STRAIGHTEN_MAX,
   aspectPresets,
   clamp,
   defaultEdit,
   editForSave,
+  fitRect,
+  panAfterDrag,
   type AspectPreset,
+  type Frame,
   type PhotoEdit,
   type QualityWarning,
+  type Size,
 } from "@/lib/photo-edit";
 import { decodePhoto, finalizePhoto, paintPreview, warningsFromPreview, type DecodedPhoto } from "@/lib/photo-render";
 
 const TIPS = ["Use daylight", "Plain background", "Fill the frame", "Hold steady"];
+const GRID_KEY = "dala.photoGrid";
+const ZOOM_STEP = 1.2;
 
 type Gesture = {
   mode: "pan" | "pinch";
@@ -64,10 +72,53 @@ export function PhotoEditor({
   const [message, setMessage] = useState("");
   const [warnings, setWarnings] = useState<QualityWarning[]>([]);
   const [compare, setCompare] = useState(false);
+  // The 3x3 grid is on by default and remembers the last choice on this phone.
+  const [grid, setGrid] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem(GRID_KEY) !== "off";
+    } catch {
+      return true;
+    }
+  });
+  const [stageSize, setStageSize] = useState<Size>({ width: 0, height: 0 });
+  const [outSize, setOutSize] = useState<Size>({ width: 4, height: 3 });
+  const frameRef = useRef<Frame | null>(null);
+  const zoomId = useId();
 
   useEffect(() => {
     editRef.current = edit;
   }, [edit]);
+
+  function toggleGrid() {
+    setGrid((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(GRID_KEY, next ? "on" : "off");
+      } catch {
+        // Not saved, still toggles for this edit.
+      }
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const measure = () => {
+      const rect = stage.getBoundingClientRect();
+      // The stage has 8px of padding inside its box; the preview fits the inner area.
+      setStageSize({ width: Math.max(0, rect.width - 16), height: Math.max(0, rect.height - 16) });
+    };
+    measure();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }
+    const observer = new ResizeObserver(measure);
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     cancelRef.current = onCancel;
@@ -140,12 +191,18 @@ export function PhotoEditor({
     const decoded = decodedRef.current;
     const canvas = canvasRef.current;
     if (!decoded || !canvas || status !== "ready") return;
-    let frame: { cropWidth: number; cropHeight: number };
+    let frame: Frame;
     try {
       frame = paintPreview(canvas, decoded.bitmap, { width: decoded.width, height: decoded.height }, edit, compare);
     } catch {
       return;
     }
+    frameRef.current = frame;
+    setOutSize((prev) =>
+      prev.width === frame.outputWidth && prev.height === frame.outputHeight
+        ? prev
+        : { width: frame.outputWidth, height: frame.outputHeight },
+    );
     const timer = window.setTimeout(() => {
       const live = canvasRef.current;
       if (!live) return;
@@ -166,6 +223,14 @@ export function PhotoEditor({
       setStatus("ready");
       setMessage(error instanceof Error ? error.message : "Could not prepare that photo.");
     }
+  }
+
+  function displayRect() {
+    return fitRect(stageSize, outSize);
+  }
+
+  function setZoom(next: number) {
+    setEdit((prev) => ({ ...prev, zoom: clamp(next, MIN_ZOOM, MAX_ZOOM) }));
   }
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -204,18 +269,18 @@ export function PhotoEditor({
     if (active.mode === "pinch" && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()];
       const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
-      setEdit((prev) => ({ ...prev, zoom: clamp((active.zoom * dist) / active.dist, 1, 4) }));
+      setEdit((prev) => ({ ...prev, zoom: clamp((active.zoom * dist) / active.dist, MIN_ZOOM, MAX_ZOOM) }));
       return;
     }
-    const stage = stageRef.current?.getBoundingClientRect();
-    if (!stage || stage.width < 1 || stage.height < 1) return;
-    const dx = (event.clientX - active.x) / stage.width;
-    const dy = (event.clientY - active.y) / stage.height;
-    setEdit((prev) => ({
-      ...prev,
-      panX: clamp(active.panX - dx * 2, -1, 1),
-      panY: clamp(active.panY - dy * 2, -1, 1),
-    }));
+    const frame = frameRef.current;
+    if (!frame) return;
+    const next = panAfterDrag(
+      active,
+      { x: event.clientX - active.x, y: event.clientY - active.y },
+      frame,
+      displayRect(),
+    );
+    setEdit((prev) => ({ ...prev, panX: next.panX, panY: next.panY }));
   }
 
   function onPointerEnd(event: React.PointerEvent<HTMLDivElement>) {
@@ -237,6 +302,14 @@ export function PhotoEditor({
     };
   }
 
+  function onWheel(event: React.WheelEvent<HTMLDivElement>) {
+    if (status !== "ready" || event.deltaY === 0) return;
+    setEdit((prev) => ({
+      ...prev,
+      zoom: clamp(event.deltaY < 0 ? prev.zoom * 1.08 : prev.zoom / 1.08, MIN_ZOOM, MAX_ZOOM),
+    }));
+  }
+
   function onStageKey(event: React.KeyboardEvent<HTMLDivElement>) {
     if (status !== "ready") return;
     if (event.key === "ArrowLeft") {
@@ -253,10 +326,10 @@ export function PhotoEditor({
       setEdit((prev) => ({ ...prev, panY: clamp(prev.panY + 0.08, -1, 1) }));
     } else if (event.key === "+" || event.key === "=") {
       event.preventDefault();
-      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom * 1.1, 1, 4) }));
+      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom * 1.1, MIN_ZOOM, MAX_ZOOM) }));
     } else if (event.key === "-" || event.key === "_") {
       event.preventDefault();
-      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom / 1.1, 1, 4) }));
+      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom / 1.1, MIN_ZOOM, MAX_ZOOM) }));
     }
   }
 
@@ -276,7 +349,7 @@ export function PhotoEditor({
         aria-labelledby={titleId}
         aria-describedby={tipsId}
         aria-busy={status === "reading" || status === "saving"}
-        className="flex h-full w-full flex-col bg-navy sm:h-auto sm:max-h-[92vh] sm:max-w-md sm:overflow-hidden sm:rounded-2xl sm:shadow-2xl"
+        className="flex h-full w-full flex-col bg-navy sm:h-auto sm:max-h-[94vh] sm:max-w-2xl sm:overflow-hidden sm:rounded-2xl sm:shadow-2xl"
       >
         <div
           className="grid grid-cols-[auto_1fr_auto] items-center gap-1 px-2 text-white"
@@ -297,20 +370,44 @@ export function PhotoEditor({
             Use as is
           </button>
         </div>
-        <div className="relative min-h-[34vh] flex-1 px-3 py-2 sm:min-h-64">
+        <div className="relative flex min-h-[40vh] flex-1 flex-col px-3 py-2 sm:min-h-[26rem]">
           <div
             ref={stageRef}
             tabIndex={0}
             role="application"
             aria-label="Crop. Drag to move, pinch to zoom. Arrow keys move. Plus and minus zoom."
-            className="flex h-full touch-none items-center justify-center overflow-hidden rounded-xl bg-black/40 outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="flex min-h-0 flex-1 touch-none select-none items-center justify-center overflow-hidden rounded-xl bg-black/40 p-2 outline-none focus-visible:ring-2 focus-visible:ring-white"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerEnd}
             onPointerCancel={onPointerEnd}
+            onWheel={onWheel}
             onKeyDown={onStageKey}
           >
-            <canvas ref={canvasRef} className="max-h-full max-w-full" />
+            <div
+              className="relative shrink-0 overflow-hidden"
+              style={
+                stageSize.width > 0
+                  ? { width: displayRect().width, height: displayRect().height }
+                  : { width: "100%", height: "100%" }
+              }
+              data-testid="photo-frame"
+            >
+              <canvas ref={canvasRef} className="block h-full w-full" />
+              {grid ? (
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  data-testid="photo-grid"
+                  aria-hidden="true"
+                >
+                  <span className="absolute inset-y-0 left-1/3 w-px bg-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                  <span className="absolute inset-y-0 left-2/3 w-px bg-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                  <span className="absolute inset-x-0 top-1/3 h-px bg-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                  <span className="absolute inset-x-0 top-2/3 h-px bg-white/70 shadow-[0_0_0_1px_rgba(0,0,0,0.25)]" />
+                  <span className="absolute inset-0 border border-white/50" />
+                </div>
+              ) : null}
+            </div>
           </div>
           {status === "reading" ? (
             <p className="absolute inset-0 flex items-center justify-center text-sm text-white" role="status">
@@ -319,7 +416,7 @@ export function PhotoEditor({
           ) : null}
         </div>
         <div
-          className="max-h-[58vh] overflow-y-auto rounded-t-2xl bg-card px-4 pt-4 text-ink sm:max-h-[50vh]"
+          className="max-h-[44vh] overflow-y-auto rounded-t-2xl bg-card px-4 pt-4 text-ink sm:max-h-[34vh]"
           style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
         >
           {warnings.length > 0 ? (
@@ -336,7 +433,7 @@ export function PhotoEditor({
               {message}
             </p>
           ) : null}
-          <p className="text-xs text-ink/60">Drag to move. Pinch to zoom.</p>
+          <p className="text-xs text-ink/60">Your whole photo is shown. Drag to move. Pinch or use the zoom bar to zoom in.</p>
           <div role="group" aria-label="Crop shape" className="mt-2 flex flex-wrap gap-2">
             {presets.map((preset) => (
               <button
@@ -357,6 +454,94 @@ export function PhotoEditor({
             ))}
           </div>
           <p className="mt-1 text-xs text-ink/60">{presetNote(purpose)}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={
+                edit.fit === "contain"
+                  ? "min-h-11 rounded-xl bg-navy px-4 text-sm font-semibold text-white disabled:opacity-50"
+                  : "min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              }
+              aria-pressed={edit.fit === "contain"}
+              disabled={busy}
+              onClick={() =>
+                setEdit((prev) => ({ ...prev, fit: prev.fit === "contain" ? "cover" : "contain", zoom: 1, panX: 0, panY: 0 }))
+              }
+            >
+              Show whole photo
+            </button>
+            <button
+              type="button"
+              className={
+                grid
+                  ? "min-h-11 rounded-xl bg-navy px-4 text-sm font-semibold text-white disabled:opacity-50"
+                  : "min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              }
+              aria-pressed={grid}
+              disabled={busy}
+              onClick={toggleGrid}
+            >
+              Grid
+            </button>
+          </div>
+          {edit.fit === "contain" ? (
+            <div role="group" aria-label="Padding style" className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-ink/60">Empty space:</span>
+              {(["blur", "neutral"] as const).map((style) => (
+                <button
+                  key={style}
+                  type="button"
+                  aria-pressed={edit.padding === style}
+                  disabled={busy}
+                  className={
+                    edit.padding === style
+                      ? "min-h-11 rounded-full bg-navy px-4 text-sm font-semibold text-white"
+                      : "min-h-11 rounded-full bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand"
+                  }
+                  onClick={() => setEdit((prev) => ({ ...prev, padding: style }))}
+                >
+                  {style === "blur" ? "Blurred" : "Neutral"}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-2 text-xs text-ink/60">Filling the frame. Parts of the photo outside the frame are cut off.</p>
+          )}
+          <div className="mt-3 flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Zoom out"
+              className="min-h-11 min-w-11 rounded-xl bg-paper text-lg font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              disabled={busy || edit.zoom <= MIN_ZOOM}
+              onClick={() => setZoom(edit.zoom / ZOOM_STEP)}
+            >
+              −
+            </button>
+            <label className="sr-only" htmlFor={zoomId}>
+              Zoom
+            </label>
+            <input
+              id={zoomId}
+              type="range"
+              min={MIN_ZOOM * 100}
+              max={MAX_ZOOM * 100}
+              step={1}
+              value={Math.round(edit.zoom * 100)}
+              disabled={busy}
+              aria-valuetext={`Zoom ${Math.round(edit.zoom * 100)} percent`}
+              className="h-11 min-w-0 flex-1 accent-lake"
+              onChange={(event) => setZoom(Number(event.target.value) / 100)}
+            />
+            <button
+              type="button"
+              aria-label="Zoom in"
+              className="min-h-11 min-w-11 rounded-xl bg-paper text-lg font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              disabled={busy || edit.zoom >= MAX_ZOOM}
+              onClick={() => setZoom(edit.zoom * ZOOM_STEP)}
+            >
+              +
+            </button>
+          </div>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
@@ -382,7 +567,10 @@ export function PhotoEditor({
               Enhance
             </button>
           </div>
-          <label className="mt-3 block text-sm font-medium" htmlFor={straightenId}>
+          <details className="mt-3 rounded-xl ring-1 ring-sand">
+            <summary className="min-h-11 cursor-pointer px-3 py-3 text-sm font-semibold text-ink">Straighten and colour</summary>
+            <div className="px-3 pb-2">
+          <label className="block text-sm font-medium" htmlFor={straightenId}>
             Straighten
             <input
               id={straightenId}
@@ -427,6 +615,8 @@ export function PhotoEditor({
               onChange={(event) => setEdit((prev) => ({ ...prev, warmth: Number(event.target.value) / 100 }))}
             />
           </label>
+            </div>
+          </details>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               type="button"
