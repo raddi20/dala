@@ -30,6 +30,15 @@ test("editor shell shows crop, enhance, compare, tips, and use as is", () => {
   assert.match(html, /Fill the frame/);
   assert.match(html, /Hold steady/);
   assert.match(html, /Use this photo/);
+  assert.match(html, /Show whole photo/);
+  assert.match(html, /aria-pressed="true"[^>]*>Show whole photo/);
+  assert.match(html, /Blurred/);
+  assert.match(html, /Neutral/);
+  assert.match(html, /aria-label="Zoom in"/);
+  assert.match(html, /aria-label="Zoom out"/);
+  assert.match(html, /type="range"[^>]*min="100"[^>]*max="400"/);
+  assert.match(html, />Grid</);
+  assert.match(html, /data-testid="photo-grid"/);
   assert.match(html, /aria-modal="true"/);
 });
 

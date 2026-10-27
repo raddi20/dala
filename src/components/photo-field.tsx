@@ -178,8 +178,8 @@ export function PhotoField({
           }}
           className={
             dragging
-              ? "mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-lake bg-teal-soft/70 px-4 py-5 text-center"
-              : "mt-1 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-sand bg-paper/60 px-4 py-5 text-center hover:border-navy/30"
+              ? "mt-1 flex min-h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-lake bg-teal-soft/70 px-4 py-6 text-center"
+              : "mt-1 flex min-h-56 cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-sand bg-paper/60 px-4 py-6 text-center hover:border-navy/30"
           }
         >
           {showPreview ? (
@@ -188,11 +188,11 @@ export function PhotoField({
             <img
               src={url}
               alt=""
-              className="max-h-48 w-full rounded-xl object-cover"
+              className="max-h-72 min-h-40 w-full rounded-xl bg-sand/60 object-contain sm:max-h-96"
               onError={() => setPreviewFailed(true)}
             />
           ) : (
-            <span className="font-serif text-3xl text-navy/35" aria-hidden>
+            <span className="font-serif text-6xl leading-none text-navy/35" aria-hidden>
               +
             </span>
           )}

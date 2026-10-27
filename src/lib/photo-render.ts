@@ -2,6 +2,7 @@ import { clientImageChoiceError } from "@/lib/image-file";
 import { drawWithOrientation, paintEdit, renderEditedBlob, type Surface } from "@/lib/photo-bitmap";
 import {
   BLUR_SAMPLE_EDGE,
+  DECODE_MAX_EDGE,
   PREVIEW_EDGE,
   brightnessStats,
   jpegOrientation,
@@ -67,8 +68,19 @@ function needsManualOrientation(bitmap: ImageBitmap, orientation: number, sof: S
   return !fromImage;
 }
 
+/** Scale that brings the longest side down to DECODE_MAX_EDGE. Never above 1. */
+export function decodeScale(width: number, height: number) {
+  const longest = Math.max(width, height);
+  if (!(longest > DECODE_MAX_EDGE)) return 1;
+  return DECODE_MAX_EDGE / longest;
+}
+
 async function applyOrientation(bitmap: ImageBitmap, orientation: number) {
-  const size = orientedPixelSize(bitmap.width, bitmap.height, orientation);
+  // Draw at a safe size. A full-size canvas for a 48 MP photo is refused by iPhones and comes out blank or cut off.
+  const scale = decodeScale(bitmap.width, bitmap.height);
+  const drawWidth = Math.max(1, Math.round(bitmap.width * scale));
+  const drawHeight = Math.max(1, Math.round(bitmap.height * scale));
+  const size = orientedPixelSize(drawWidth, drawHeight, orientation);
   const canvas = document.createElement("canvas");
   canvas.width = size.width;
   canvas.height = size.height;
@@ -76,8 +88,31 @@ async function applyOrientation(bitmap: ImageBitmap, orientation: number) {
   if (!ctx) throw new Error("Could not read that photo on this device.");
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, size.width, size.height);
-  drawWithOrientation(ctx, bitmap, orientation, bitmap.width, bitmap.height);
+  ctx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+  drawWithOrientation(ctx, bitmap, orientation, drawWidth, drawHeight);
   return createImageBitmap(canvas);
+}
+
+/** Shrink a very large photo once, so previews stay smooth and nothing is dropped by canvas size limits. */
+async function limitBitmapSize(bitmap: ImageBitmap) {
+  const scale = decodeScale(bitmap.width, bitmap.height);
+  if (scale >= 1 || typeof createImageBitmap !== "function") return bitmap;
+  try {
+    const smaller = await createImageBitmap(bitmap, {
+      resizeWidth: Math.max(1, Math.round(bitmap.width * scale)),
+      resizeHeight: Math.max(1, Math.round(bitmap.height * scale)),
+      resizeQuality: "high",
+    });
+    if (smaller.width >= 1 && smaller.height >= 1) {
+      bitmap.close?.();
+      return smaller;
+    }
+    smaller.close?.();
+  } catch {
+    // Keep the full-size bitmap. It still works, only slower.
+  }
+  return bitmap;
 }
 
 /**
@@ -114,6 +149,7 @@ export async function decodePhoto(file: File): Promise<DecodedPhoto> {
     bitmap.close?.();
     bitmap = fixed;
   }
+  bitmap = await limitBitmapSize(bitmap);
 
   if (bitmap.width < 1 || bitmap.height < 1) {
     bitmap.close?.();

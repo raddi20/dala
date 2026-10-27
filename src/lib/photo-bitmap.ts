@@ -1,8 +1,10 @@
-import { MAX_IMAGE_BYTES } from "./image-file";
 import {
+  NEUTRAL_PADDING,
   OUTPUT_QUALITY,
+  UPLOAD_TARGET_BYTES,
   adjustImageData,
   needsColor,
+  orientedSize,
   resolveFrame,
   type Frame,
   type PhotoEdit,
@@ -19,6 +21,65 @@ export function drawContext(surface: Surface, readOften = false): DrawContext {
   return ctx as DrawContext;
 }
 
+function scratchSurface(width: number, height: number): Surface {
+  if (typeof OffscreenCanvas !== "undefined") return new OffscreenCanvas(width, height);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
+}
+
+let backdropCache: { bitmap: Drawable; key: string; surface: Surface } | null = null;
+
+/**
+ * A soft, blurred copy of the photo that fills the whole frame. Drawn small and
+ * scaled up twice, which blurs on every browser (canvas filters are not on iPhones).
+ * Only depends on the photo, its turn and the frame shape, so it is reused while dragging.
+ */
+function blurredBackdrop(bitmap: Drawable, frame: Frame): Surface {
+  const aspect = frame.outputWidth / Math.max(1, frame.outputHeight);
+  const smallWidth = aspect >= 1 ? 24 : Math.max(8, Math.round(24 * aspect));
+  const smallHeight = aspect >= 1 ? Math.max(8, Math.round(24 / aspect)) : 24;
+  const key = `${frame.quarterTurns}:${smallWidth}x${smallHeight}`;
+  if (backdropCache && backdropCache.bitmap === bitmap && backdropCache.key === key) return backdropCache.surface;
+  const small = scratchSurface(smallWidth, smallHeight);
+  const smallCtx = drawContext(small);
+  const oriented = orientedSize(frame.sourceWidth, frame.sourceHeight, frame.quarterTurns);
+  const cover = Math.max(smallWidth / oriented.width, smallHeight / oriented.height);
+  smallCtx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in smallCtx) smallCtx.imageSmoothingQuality = "high";
+  smallCtx.translate(smallWidth / 2, smallHeight / 2);
+  smallCtx.rotate((frame.quarterTurns * Math.PI) / 2);
+  smallCtx.scale(cover, cover);
+  smallCtx.drawImage(bitmap, -frame.sourceWidth / 2, -frame.sourceHeight / 2);
+  const mid = scratchSurface(smallWidth * 4, smallHeight * 4);
+  const midCtx = drawContext(mid);
+  midCtx.imageSmoothingEnabled = true;
+  if ("imageSmoothingQuality" in midCtx) midCtx.imageSmoothingQuality = "high";
+  midCtx.drawImage(small, 0, 0, mid.width, mid.height);
+  backdropCache = { bitmap, key, surface: mid };
+  return mid;
+}
+
+function paintBackdrop(ctx: DrawContext, bitmap: Drawable, frame: Frame) {
+  const width = frame.outputWidth;
+  const height = frame.outputHeight;
+  ctx.fillStyle = NEUTRAL_PADDING;
+  ctx.fillRect(0, 0, width, height);
+  if (frame.padding !== "blur") return;
+  try {
+    const blurred = blurredBackdrop(bitmap, frame);
+    ctx.imageSmoothingEnabled = true;
+    if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(blurred, 0, 0, width, height);
+    // A light veil keeps the photo itself the brightest thing in the frame.
+    ctx.fillStyle = "rgba(255,255,255,0.18)";
+    ctx.fillRect(0, 0, width, height);
+  } catch {
+    // The neutral colour already painted is a fine fallback.
+  }
+}
+
 /**
  * Draw the edited frame. Quarter-turns, then straighten, then the crop.
  * The bitmap is already upright from EXIF.
@@ -28,8 +89,12 @@ export function paintFrame(ctx: DrawContext, bitmap: Drawable, frame: Frame) {
   const height = frame.outputHeight;
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, width, height);
+  if (frame.needsBackdrop) {
+    paintBackdrop(ctx, bitmap, frame);
+  } else {
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+  }
   ctx.imageSmoothingEnabled = true;
   if ("imageSmoothingQuality" in ctx) ctx.imageSmoothingQuality = "high";
   ctx.save();
@@ -101,10 +166,10 @@ export async function renderEditedBlob(input: {
     }
     for (const quality of qualities) {
       last = await encodeSurface(surface, input.canWebp, quality);
-      if (last.size <= MAX_IMAGE_BYTES) return last;
+      if (last.size <= UPLOAD_TARGET_BYTES) return last;
     }
   }
-  if (last && last.size <= MAX_IMAGE_BYTES) return last;
+  if (last && last.size <= UPLOAD_TARGET_BYTES) return last;
   throw new Error("That photo is still too large after compressing. Try a different one.");
 }
 

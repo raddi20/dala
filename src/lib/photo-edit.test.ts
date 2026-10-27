@@ -7,7 +7,13 @@ import {
   ENHANCE_SATURATION,
   SMALL_SHORT_EDGE,
   applyColor,
+  DECODE_MAX_EDGE,
+  MAX_EDGE,
+  UPLOAD_TARGET_BYTES,
   aspectPresets,
+  containWindow,
+  fitRect,
+  panAfterDrag,
   brightnessStats,
   cropCornersInside,
   defaultEdit,
@@ -30,6 +36,7 @@ import {
   safeCropSize,
   stretchChannel,
 } from "./photo-edit";
+import { decodeScale } from "./photo-render";
 
 function checker(size: number) {
   const grey = new Uint8Array(size * size);
@@ -294,4 +301,110 @@ test("presets follow the upload purpose", () => {
     ["square", "original"],
   );
   assert.equal(aspectPresets("listing").some((item) => item.id === "cover"), false);
+});
+
+test("contain is the default and keeps the whole photo inside every frame shape", () => {
+  for (const purpose of ["listing", "offering", "banner", "avatar"] as const) {
+    assert.equal(defaultEdit(purpose).fit, "contain");
+  }
+  const source = { width: 4000, height: 3000 };
+  const square = resolveFrame(source, { ...defaultEdit("avatar") });
+  // The window is as wide as the whole photo and taller, so nothing is cut off. Padding fills the rest.
+  assert.ok(Math.abs(square.cropWidth - 4000) < 0.01);
+  assert.ok(Math.abs(square.cropHeight - 4000) < 0.01);
+  assert.equal(square.needsBackdrop, true);
+  assert.equal(square.outputWidth, 1600);
+  assert.equal(square.outputHeight, 1600);
+
+  const banner = resolveFrame({ width: 3000, height: 4000 }, { ...defaultEdit("banner") });
+  assert.ok(Math.abs(banner.cropHeight - 4000) < 0.01);
+  assert.ok(Math.abs(banner.cropWidth - 8000) < 0.01);
+  assert.equal(banner.needsBackdrop, true);
+
+  const same = resolveFrame(source, defaultEdit("listing"));
+  assert.ok(Math.abs(same.cropWidth - 4000) < 0.01);
+  assert.ok(Math.abs(same.cropHeight - 3000) < 0.01);
+  assert.equal(same.needsBackdrop, false);
+  assert.equal(same.spareX, 0);
+  assert.equal(same.spareY, 0);
+});
+
+test("fill the frame still crops, as before", () => {
+  const frame = resolveFrame({ width: 4000, height: 3000 }, { ...defaultEdit("avatar"), fit: "cover" });
+  assert.ok(Math.abs(frame.cropWidth - 3000) < 1);
+  assert.equal(frame.needsBackdrop, false);
+});
+
+test("odd shaped photos fit whole at any size", () => {
+  const shapes = [
+    { width: 12000, height: 800 },
+    { width: 800, height: 12000 },
+    { width: 1, height: 1 },
+    { width: 8000, height: 6000 },
+    { width: 6000, height: 8000 },
+  ];
+  for (const source of shapes) {
+    for (const aspect of ["square", "original", "cover"] as const) {
+      const frame = resolveFrame(source, { ...defaultEdit("listing"), aspect });
+      assert.ok(frame.cropWidth >= source.width - 0.01, `${source.width}x${source.height} ${aspect} width`);
+      assert.ok(frame.cropHeight >= source.height - 0.01, `${source.width}x${source.height} ${aspect} height`);
+      assert.ok(frame.outputWidth <= 1600 && frame.outputHeight <= 1600);
+      assert.ok(frame.outputWidth >= 1 && frame.outputHeight >= 1);
+    }
+  }
+});
+
+test("zooming in on a contained photo lets you pan, and the window never leaves the photo", () => {
+  const source = { width: 4000, height: 3000 };
+  const frame = resolveFrame(source, { ...defaultEdit("avatar"), zoom: 4, panX: 1, panY: -1 });
+  // Window is 1000 by 1000 inside a 4000 by 3000 photo.
+  assert.ok(Math.abs(frame.cropWidth - 1000) < 0.01);
+  assert.ok(Math.abs(frame.cropHeight - 1000) < 0.01);
+  assert.ok(Math.abs(frame.panX) + frame.cropWidth / 2 <= 2000 + 0.01);
+  assert.ok(Math.abs(frame.panY) + frame.cropHeight / 2 <= 1500 + 0.01);
+  assert.equal(frame.needsBackdrop, false);
+});
+
+test("a tilted contained photo is padded, not cut", () => {
+  const frame = resolveFrame({ width: 4000, height: 3000 }, { ...defaultEdit("listing"), straighten: 10 });
+  assert.ok(Math.abs(frame.cropWidth - 4000) < 0.01);
+  assert.equal(frame.needsBackdrop, true);
+});
+
+test("containWindow and fitRect", () => {
+  assert.deepEqual(containWindow(4000, 3000, 1), { width: 4000, height: 4000 });
+  assert.deepEqual(containWindow(3000, 4000, 2), { width: 8000, height: 4000 });
+  assert.deepEqual(containWindow(3000, 3000, 1), { width: 3000, height: 3000 });
+  assert.deepEqual(fitRect({ width: 400, height: 600 }, { width: 1600, height: 800 }), { width: 400, height: 200 });
+  assert.deepEqual(fitRect({ width: 400, height: 300 }, { width: 100, height: 200 }), { width: 150, height: 300 });
+  assert.deepEqual(fitRect({ width: 0, height: 300 }, { width: 100, height: 200 }), { width: 0, height: 0 });
+});
+
+test("dragging moves the photo with the finger and stops at the edges", () => {
+  const frame = { cropWidth: 1000, cropHeight: 1000, spareX: 1500, spareY: 500 };
+  const display = { width: 500, height: 500 };
+  // 2 source pixels per screen pixel. Drag right 100px: window moves left 200 source px.
+  const moved = panAfterDrag({ panX: 0, panY: 0 }, { x: 100, y: 0 }, frame, display);
+  assert.ok(Math.abs(moved.panX - -200 / 1500) < 1e-9);
+  assert.equal(moved.panY, 0);
+  const far = panAfterDrag({ panX: 0, panY: 0 }, { x: -5000, y: 5000 }, frame, display);
+  assert.equal(far.panX, 1);
+  assert.equal(far.panY, -1);
+  const fixed = panAfterDrag({ panX: 0.5, panY: 0.5 }, { x: 40, y: 40 }, { ...frame, spareX: 0 }, display);
+  assert.equal(fixed.panX, 0);
+  const none = panAfterDrag({ panX: 0.3, panY: 0.2 }, { x: 40, y: 40 }, frame, { width: 0, height: 0 });
+  assert.deepEqual(none, { panX: 0.3, panY: 0.2 });
+});
+
+test("saved photos aim below the serverless body limit", () => {
+  assert.ok(UPLOAD_TARGET_BYTES < 4.5 * 1024 * 1024);
+  assert.ok(UPLOAD_TARGET_BYTES < MAX_IMAGE_BYTES);
+  assert.ok(DECODE_MAX_EDGE >= MAX_EDGE * 2);
+});
+
+test("very large photos are scaled down once, small ones are left alone", () => {
+  assert.equal(decodeScale(3000, 2000), 1);
+  assert.equal(decodeScale(DECODE_MAX_EDGE, 100), 1);
+  assert.ok(Math.abs(decodeScale(8192, 6144) - 0.5) < 1e-9);
+  assert.ok(decodeScale(12000, 9000) * 12000 <= DECODE_MAX_EDGE + 1e-6);
 });
