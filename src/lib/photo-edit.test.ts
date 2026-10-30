@@ -289,8 +289,8 @@ test("EXIF orientation is read and axis swaps are known", () => {
 test("presets follow the upload purpose", () => {
   assert.equal(defaultEdit("avatar").aspect, "square");
   assert.equal(defaultEdit("banner").aspect, "cover");
-  assert.equal(defaultEdit("offering").aspect, "card");
-  assert.equal(defaultEdit("listing").aspect, "card");
+  assert.equal(defaultEdit("offering").aspect, "original");
+  assert.equal(defaultEdit("listing").aspect, "original");
   assert.deepEqual(
     aspectPresets("banner").map((item) => item.id),
     ["cover", "original", "square"],

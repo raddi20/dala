@@ -72,7 +72,7 @@ export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
   return {
     quarterTurns: 0,
     straighten: 0,
-    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "card",
+    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "original",
     zoom: 1,
     panX: 0,
     panY: 0,
