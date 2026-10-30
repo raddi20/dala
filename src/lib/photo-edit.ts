@@ -11,7 +11,8 @@ export const OUTPUT_QUALITY = 0.8;
 /** One-tap enhance. Gentle, so skin and food are not oversaturated. */
 export const ENHANCE_SATURATION = 1.12;
 export const STRAIGHTEN_MAX = 15;
-export const MIN_ZOOM = 1;
+/** 1 fills the crop. Below 1 letterboxes so a phone portrait can fit Card or Cover. */
+export const MIN_ZOOM = 0.25;
 export const MAX_ZOOM = 4;
 /** Shop banner on a phone is 2:1. Wider screens crop the sides a little. */
 export const COVER_ASPECT = 2;
@@ -66,6 +67,20 @@ export type QualityWarning = {
 export function clamp(value: number, min: number, max: number) {
   if (!Number.isFinite(value)) return min;
   return Math.min(max, Math.max(min, value));
+}
+
+export function clampZoom(zoom: number) {
+  return clamp(zoom, MIN_ZOOM, MAX_ZOOM);
+}
+
+/** Multiply zoom, staying inside the shared limits. Aspect and pan are unchanged. */
+export function zoomEdit(edit: PhotoEdit, factor: number): PhotoEdit {
+  return { ...edit, zoom: clampZoom(edit.zoom * factor) };
+}
+
+/** Recentres the crop. Zoom and aspect stay as they are. */
+export function centreEdit(edit: PhotoEdit): PhotoEdit {
+  return { ...edit, panX: 0, panY: 0 };
 }
 
 export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
@@ -162,7 +177,7 @@ export function resolveFrame(source: Size, edit: PhotoEdit, maxEdge = MAX_EDGE):
   const aspect = presetAspect(edit.aspect, oriented);
   const straighten = clamp(edit.straighten, -STRAIGHTEN_MAX, STRAIGHTEN_MAX);
   const safe = safeCropSize(oriented.width, oriented.height, straighten, aspect);
-  const zoom = clamp(edit.zoom, MIN_ZOOM, MAX_ZOOM);
+  const zoom = clampZoom(edit.zoom);
   const cropWidth = Math.max(1, safe.width / zoom);
   const cropHeight = Math.max(1, safe.height / zoom);
   const spareX = Math.max(0, (safe.width - cropWidth) / 2);

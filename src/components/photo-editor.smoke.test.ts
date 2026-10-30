@@ -15,6 +15,12 @@ test("editor shell shows crop, enhance, compare, tips, and use as is", () => {
   );
   assert.match(html, /Edit photo/);
   assert.match(html, /Use as is/);
+  assert.match(html, /Drag to move\. Pinch to zoom, or use Zoom ± and Centre\./);
+  assert.match(html, /aria-label="Zoom out"/);
+  assert.match(html, />Zoom −</);
+  assert.match(html, /aria-label="Zoom in"/);
+  assert.match(html, />Zoom \+</);
+  assert.match(html, />Centre</);
   assert.match(html, /Card/);
   assert.match(html, /Square/);
   assert.match(html, /Original/);
