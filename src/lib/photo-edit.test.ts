@@ -9,6 +9,9 @@ import {
   applyColor,
   aspectPresets,
   brightnessStats,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  centreEdit,
   cropCornersInside,
   defaultEdit,
   editForSave,
@@ -25,6 +28,7 @@ import {
   orientedSize,
   presetAspect,
   qualityWarnings,
+  zoomEdit,
   resizeDimensions,
   resolveFrame,
   safeCropSize,
@@ -132,6 +136,42 @@ test("pan stays inside the safe crop", () => {
   assert.ok(Math.abs(frame.panX - spareX) < 0.02);
   assert.ok(Math.abs(frame.panY) <= (safe.height - safe.height / 2) / 2 + 0.02);
   assert.equal(cropCornersInside(1000, 800, 0, frame.cropWidth, frame.cropHeight, frame.panX, frame.panY), true);
+});
+
+test("zoom out below 1 fits a phone portrait in the crop", () => {
+  assert.equal(MIN_ZOOM, 0.25);
+  assert.equal(MAX_ZOOM, 4);
+  const phone = { width: 1080, height: 1920 };
+  for (const aspect of ["card", "cover", "square"] as const) {
+    const fitted = resolveFrame(phone, { ...identityEdit(), aspect, zoom: MIN_ZOOM }, 100_000);
+    assert.ok(fitted.cropWidth >= phone.width - 1, aspect);
+    assert.ok(fitted.cropHeight >= phone.height - 1, aspect);
+  }
+  const card = { ...identityEdit(), aspect: "card" as const, zoom: 1 };
+  const tight = resolveFrame(phone, card, 100_000);
+  const fitted = resolveFrame(phone, { ...card, zoom: MIN_ZOOM }, 100_000);
+  assert.ok(fitted.cropWidth > tight.cropWidth);
+  assert.ok(Math.abs(fitted.cropWidth / fitted.cropHeight - 4 / 3) < 0.01);
+  const clampedOut = resolveFrame(phone, { ...card, zoom: 0.01 }, 100_000);
+  assert.ok(Math.abs(clampedOut.cropWidth - fitted.cropWidth) < 0.5);
+  const atMax = resolveFrame(phone, { ...card, zoom: MAX_ZOOM }, 100_000);
+  const clampedIn = resolveFrame(phone, { ...card, zoom: 99 }, 100_000);
+  assert.ok(Math.abs(clampedIn.cropWidth - atMax.cropWidth) < 0.5);
+  assert.ok(atMax.cropWidth < tight.cropWidth);
+
+  const zoomedOut = zoomEdit({ ...card, zoom: 1 }, 1 / 1.1);
+  assert.ok(zoomedOut.zoom < 1);
+  assert.equal(zoomedOut.aspect, "card");
+  assert.equal(zoomEdit({ ...card, zoom: MIN_ZOOM }, 0.5).zoom, MIN_ZOOM);
+  assert.equal(zoomEdit({ ...card, zoom: MAX_ZOOM }, 2).zoom, MAX_ZOOM);
+
+  const shifted = { ...card, zoom: 2.4, panX: 0.6, panY: -0.4, enhance: true };
+  const centred = centreEdit(shifted);
+  assert.equal(centred.panX, 0);
+  assert.equal(centred.panY, 0);
+  assert.equal(centred.zoom, shifted.zoom);
+  assert.equal(centred.aspect, shifted.aspect);
+  assert.equal(centred.enhance, true);
 });
 
 test("use as is keeps the full frame, resizes, and encodes", () => {
@@ -289,8 +329,8 @@ test("EXIF orientation is read and axis swaps are known", () => {
 test("presets follow the upload purpose", () => {
   assert.equal(defaultEdit("avatar").aspect, "square");
   assert.equal(defaultEdit("banner").aspect, "cover");
-  assert.equal(defaultEdit("offering").aspect, "card");
-  assert.equal(defaultEdit("listing").aspect, "card");
+  assert.equal(defaultEdit("offering").aspect, "original");
+  assert.equal(defaultEdit("listing").aspect, "original");
   assert.deepEqual(
     aspectPresets("banner").map((item) => item.id),
     ["cover", "original", "square"],

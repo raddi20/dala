@@ -7,9 +7,12 @@ import type { UploadPurpose } from "@/lib/image-upload";
 import {
   STRAIGHTEN_MAX,
   aspectPresets,
+  centreEdit,
   clamp,
+  clampZoom,
   defaultEdit,
   editForSave,
+  zoomEdit,
   type AspectPreset,
   type PhotoEdit,
   type QualityWarning,
@@ -149,7 +152,10 @@ export function PhotoEditor({
     const timer = window.setTimeout(() => {
       const live = canvasRef.current;
       if (!live) return;
-      setWarnings(warningsFromPreview(live, { width: frame.cropWidth, height: frame.cropHeight }));
+      // Below zoom 1 the preview is letterboxed, so a brightness sample would read the padding.
+      setWarnings(
+        edit.zoom < 1 ? [] : warningsFromPreview(live, { width: frame.cropWidth, height: frame.cropHeight }),
+      );
     }, 160);
     return () => window.clearTimeout(timer);
   }, [edit, compare, status]);
@@ -204,7 +210,7 @@ export function PhotoEditor({
     if (active.mode === "pinch" && pointers.current.size >= 2) {
       const [a, b] = [...pointers.current.values()];
       const dist = Math.max(1, Math.hypot(a.x - b.x, a.y - b.y));
-      setEdit((prev) => ({ ...prev, zoom: clamp((active.zoom * dist) / active.dist, 1, 4) }));
+      setEdit((prev) => ({ ...prev, zoom: clampZoom((active.zoom * dist) / active.dist) }));
       return;
     }
     const stage = stageRef.current?.getBoundingClientRect();
@@ -253,10 +259,10 @@ export function PhotoEditor({
       setEdit((prev) => ({ ...prev, panY: clamp(prev.panY + 0.08, -1, 1) }));
     } else if (event.key === "+" || event.key === "=") {
       event.preventDefault();
-      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom * 1.1, 1, 4) }));
+      nudgeZoom(1.1);
     } else if (event.key === "-" || event.key === "_") {
       event.preventDefault();
-      setEdit((prev) => ({ ...prev, zoom: clamp(prev.zoom / 1.1, 1, 4) }));
+      nudgeZoom(1 / 1.1);
     }
   }
 
@@ -265,6 +271,10 @@ export function PhotoEditor({
 
   function chooseAspect(aspect: AspectPreset) {
     setEdit((prev) => ({ ...prev, aspect, zoom: 1, panX: 0, panY: 0 }));
+  }
+
+  function nudgeZoom(factor: number) {
+    setEdit((prev) => zoomEdit(prev, factor));
   }
 
   const dialog = (
@@ -302,7 +312,7 @@ export function PhotoEditor({
             ref={stageRef}
             tabIndex={0}
             role="application"
-            aria-label="Crop. Drag to move, pinch to zoom. Arrow keys move. Plus and minus zoom."
+            aria-label="Crop. Drag to move. Pinch to zoom, or use Zoom −, Zoom +, and Centre. Arrow keys move. Plus and minus zoom."
             className="flex h-full touch-none items-center justify-center overflow-hidden rounded-xl bg-black/40 outline-none focus-visible:ring-2 focus-visible:ring-white"
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -336,7 +346,35 @@ export function PhotoEditor({
               {message}
             </p>
           ) : null}
-          <p className="text-xs text-ink/60">Drag to move. Pinch to zoom.</p>
+          <p className="text-xs text-ink/60">Drag to move. Pinch to zoom, or use Zoom ± and Centre.</p>
+          <div role="group" aria-label="Zoom" className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              aria-label="Zoom out"
+              disabled={busy}
+              onClick={() => nudgeZoom(1 / 1.1)}
+            >
+              Zoom −
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              aria-label="Zoom in"
+              disabled={busy}
+              onClick={() => nudgeZoom(1.1)}
+            >
+              Zoom +
+            </button>
+            <button
+              type="button"
+              className="min-h-11 rounded-xl bg-paper px-4 text-sm font-semibold text-ink ring-1 ring-sand disabled:opacity-50"
+              disabled={busy}
+              onClick={() => setEdit((prev) => centreEdit(prev))}
+            >
+              Centre
+            </button>
+          </div>
           <div role="group" aria-label="Crop shape" className="mt-2 flex flex-wrap gap-2">
             {presets.map((preset) => (
               <button
