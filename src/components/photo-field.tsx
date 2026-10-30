@@ -2,7 +2,8 @@
 
 import { Component, useEffect, useId, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { IMAGE_ACCEPT, clientImageChoiceError } from "@/lib/image-file";
-import { uploadPhoto } from "@/lib/prepare-photo";
+import { blobHost } from "@/lib/image-variants";
+import { fileFromListingPhoto, uploadPhoto } from "@/lib/prepare-photo";
 import type { UploadPurpose } from "@/lib/image-upload";
 import { fieldClass } from "@/components/ui";
 
@@ -49,6 +50,46 @@ class EditorBoundary extends Component<{ children: ReactNode; onClose: () => voi
   }
 }
 
+export function PhotoEditorHost({
+  file,
+  purpose,
+  onUse,
+  onCancel,
+}: {
+  file: File;
+  purpose: UploadPurpose;
+  onUse: (file: File) => void;
+  onCancel: () => void;
+}) {
+  const [Editor, setEditor] = useState<EditorComponent | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadEditor().then((component) => {
+      if (!cancelled) setEditor(() => component);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <EditorBoundary onClose={onCancel}>
+      {Editor ? (
+        <Editor
+          key={`${file.name}-${file.size}-${file.lastModified}`}
+          file={file}
+          purpose={purpose}
+          onUse={onUse}
+          onCancel={onCancel}
+        />
+      ) : (
+        <EditorOpening />
+      )}
+    </EditorBoundary>
+  );
+}
+
 export function PhotoField({
   name,
   label,
@@ -77,29 +118,24 @@ export function PhotoField({
   const [error, setError] = useState("");
   const [previewFailed, setPreviewFailed] = useState(false);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
-  const [Editor, setEditor] = useState<EditorComponent | null>(null);
+  const [reframing, setReframing] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
     const win = window as Window & {
       requestIdleCallback?: (cb: () => void) => number;
       cancelIdleCallback?: (id: number) => void;
     };
     const load = () => {
-      void loadEditor().then((component) => {
-        if (!cancelled) setEditor(() => component);
-      });
+      void loadEditor();
     };
     if (win.requestIdleCallback) {
       const id = win.requestIdleCallback(load);
       return () => {
-        cancelled = true;
         win.cancelIdleCallback?.(id);
       };
     }
     const id = window.setTimeout(load, 500);
     return () => {
-      cancelled = true;
       window.clearTimeout(id);
     };
   }, []);
@@ -125,8 +161,19 @@ export function PhotoField({
     }
     setError("");
     setPendingFile(file);
-    if (!Editor) {
-      void loadEditor().then((component) => setEditor(() => component));
+  }
+
+  async function reframeCurrent() {
+    if (!url || !resourceId || purpose !== "listing" || uploadingRef.current || pendingFile || reframing) return;
+    setError("");
+    setReframing(true);
+    try {
+      const file = await fileFromListingPhoto(resourceId, url);
+      stageFile(file);
+    } catch (openError) {
+      setError(openError instanceof Error ? openError.message : "Could not open that photo.");
+    } finally {
+      setReframing(false);
     }
   }
 
@@ -150,6 +197,7 @@ export function PhotoField({
   }
 
   const showPreview = Boolean(url) && /^https?:\/\//i.test(url) && !previewFailed;
+  const canReframe = purpose === "listing" && Boolean(resourceId) && blobHost(url);
 
   return (
     <div ref={rootRef} data-tour={dataTour} className="grid gap-2">
@@ -206,7 +254,7 @@ export function PhotoField({
             id={inputId}
             type="file"
             accept={IMAGE_ACCEPT}
-            disabled={uploading || Boolean(pendingFile)}
+            disabled={uploading || Boolean(pendingFile) || reframing}
             aria-describedby={hintId}
             className="sr-only"
             onChange={(event) => {
@@ -218,18 +266,30 @@ export function PhotoField({
         </label>
       </div>
       {url ? (
-        <button
-          type="button"
-          className="justify-self-start text-sm font-semibold text-ink/70 hover:text-ink"
-          onClick={() => {
-            setUrl("");
-            setChosen(true);
-            setError("");
-            setPreviewFailed(false);
-          }}
-        >
-          Remove photo
-        </button>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {canReframe ? (
+            <button
+              type="button"
+              className="justify-self-start text-sm font-semibold text-navy hover:text-lake-dark disabled:opacity-60"
+              disabled={uploading || Boolean(pendingFile) || reframing}
+              onClick={() => void reframeCurrent()}
+            >
+              {reframing ? "Opening photo…" : "Reframe photo"}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="justify-self-start text-sm font-semibold text-ink/70 hover:text-ink"
+            onClick={() => {
+              setUrl("");
+              setChosen(true);
+              setError("");
+              setPreviewFailed(false);
+            }}
+          >
+            Remove photo
+          </button>
+        </div>
       ) : null}
       {chosen ? (
         <p className="text-sm text-ink/70" role="status">
@@ -269,19 +329,12 @@ export function PhotoField({
       ) : null}
       <input type="hidden" name={name} value={url} />
       {pendingFile ? (
-        <EditorBoundary onClose={() => setPendingFile(null)}>
-          {Editor ? (
-            <Editor
-              key={`${pendingFile.name}-${pendingFile.size}-${pendingFile.lastModified}`}
-              file={pendingFile}
-              purpose={purpose}
-              onUse={(prepared) => void uploadPrepared(prepared)}
-              onCancel={() => setPendingFile(null)}
-            />
-          ) : (
-            <EditorOpening />
-          )}
-        </EditorBoundary>
+        <PhotoEditorHost
+          file={pendingFile}
+          purpose={purpose}
+          onUse={(prepared) => void uploadPrepared(prepared)}
+          onCancel={() => setPendingFile(null)}
+        />
       ) : null}
     </div>
   );

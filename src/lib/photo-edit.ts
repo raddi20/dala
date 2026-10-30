@@ -15,6 +15,8 @@ export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 4;
 /** Shop banner on a phone is 2:1. Wider screens crop the sides a little. */
 export const COVER_ASPECT = 2;
+/** Listing cards and the listing page. Width / height. */
+export const CARD_ASPECT = 4 / 3;
 export const SMALL_SHORT_EDGE = 600;
 /** Variance below this, on a ~200px grey copy, counts as blurry. */
 export const BLUR_VARIANCE_LIMIT = 50;
@@ -25,7 +27,7 @@ export const CLIP_LOW = 12;
 export const CLIP_HIGH = 243;
 
 export type Size = { width: number; height: number };
-export type AspectPreset = "square" | "original" | "cover";
+export type AspectPreset = "square" | "original" | "cover" | "card";
 
 export type PhotoEdit = {
   quarterTurns: number;
@@ -70,7 +72,7 @@ export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
   return {
     quarterTurns: 0,
     straighten: 0,
-    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "original",
+    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "card",
     zoom: 1,
     panX: 0,
     panY: 0,
@@ -94,11 +96,13 @@ export function needsColor(edit: PhotoEdit) {
 }
 
 export function aspectPresets(purpose: UploadPurpose): { id: AspectPreset; label: string; hint: string }[] {
-  const square = { id: "square" as const, label: "Square", hint: "Square crop, for cards and the shop logo" };
+  const card = { id: "card" as const, label: "Card", hint: "4 to 3 crop, the same shape as a listing photo" };
+  const square = { id: "square" as const, label: "Square", hint: "Square crop, for the shop logo" };
   const original = { id: "original" as const, label: "Original", hint: "Keep the photo's own shape" };
   const cover = { id: "cover" as const, label: "Cover", hint: "Wide 2 to 1 crop for the shop banner" };
   if (purpose === "banner") return [cover, original, square];
-  return [square, original];
+  if (purpose === "avatar") return [square, original];
+  return [card, square, original];
 }
 
 export function resizeDimensions(width: number, height: number, maxEdge = MAX_EDGE): Size {
@@ -121,6 +125,7 @@ export function orientedSize(width: number, height: number, quarterTurns: number
 export function presetAspect(preset: AspectPreset, oriented: Size) {
   if (preset === "square") return 1;
   if (preset === "cover") return COVER_ASPECT;
+  if (preset === "card") return CARD_ASPECT;
   return oriented.width / Math.max(1, oriented.height);
 }
 

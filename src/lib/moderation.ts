@@ -218,6 +218,7 @@ export const AUDIT_LABELS: Record<string, string> = {
   "listing.unverify": "Removed listing verified",
   "listing.feature": "Featured a listing",
   "listing.unfeature": "Removed featured",
+  "listing.reframe": "Reframed a listing photo",
   "shop.hide": "Took down a shop",
   "shop.restore": "Restored a shop",
   "shop.diaspora_on": "Turned on diaspora orders",
