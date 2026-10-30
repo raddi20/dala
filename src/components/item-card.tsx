@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SaveHeart } from "@/components/save-heart";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { itemPriceText, showScamChip } from "@/lib/item-card";
+import { LISTING_PHOTO_ASPECT_CLASS } from "@/lib/listing-photo-frame";
 
 export function ItemCard({
   href,
@@ -52,7 +53,7 @@ export function ItemCard({
   return (
     <article className="card-lift relative h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
       <Link href={href} className="flex h-full flex-col">
-        <div className="relative aspect-[4/3] bg-line">
+        <div className={`relative ${LISTING_PHOTO_ASPECT_CLASS} bg-line`}>
           {photo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -65,7 +66,7 @@ export function ItemCard({
               loading={photo.loading}
               decoding={photo.decoding}
               fetchPriority={photo.fetchPriority}
-              className="h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           ) : (
             <div className="flex h-full items-end bg-navy p-3 text-white">

@@ -14,7 +14,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
   { href: "/admin/reports", label: "Reports", blurb: "Reports from people about listings, shops and profiles.", count: "openReports", urgent: true },
   { href: "/admin/reviews", label: "Reviews", blurb: "Listing reviews and shop ratings waiting for approval.", count: "pendingReviews", urgent: true },
   { href: "/admin/shop-checks", label: "Shop checks", blurb: "Phone, location and business checks, takedowns and shop videos.", count: "pendingShopChecks", urgent: true },
-  { href: "/admin/listings", label: "Listings", blurb: "Hide, verify or feature listings. Occasion curation.", count: "riskyListings" },
+  { href: "/admin/listings", label: "Listings", blurb: "Hide, verify, feature, or reframe a listing photo. Occasion curation.", count: "riskyListings" },
   { href: "/admin/people", label: "People", blurb: "Suspend accounts and grant the Pro plan." },
   { href: "/admin/field-agents", label: "Field agents", blurb: "Sign-ups per brochure code." },
   { href: "/admin/activity", label: "Activity", blurb: "Recent admin actions from the audit log." },

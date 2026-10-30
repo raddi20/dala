@@ -15,8 +15,10 @@ test("editor shell shows crop, enhance, compare, tips, and use as is", () => {
   );
   assert.match(html, /Edit photo/);
   assert.match(html, /Use as is/);
+  assert.match(html, /Card/);
   assert.match(html, /Square/);
   assert.match(html, /Original/);
+  assert.match(html, /Card matches the listing and shop photos/);
   assert.doesNotMatch(html, />Cover</);
   assert.match(html, /Rotate 90/);
   assert.match(html, /Straighten/);
@@ -44,4 +46,5 @@ test("a shop cover offers the banner crop", () => {
   );
   assert.match(html, />Cover</);
   assert.match(html, /Wide 2 to 1/);
+  assert.doesNotMatch(html, /Card/);
 });

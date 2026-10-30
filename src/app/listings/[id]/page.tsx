@@ -33,6 +33,7 @@ import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata, clipText, listingPreviewImage, privateMetadata } from "@/lib/share-metadata";
 import { whatsappChatLink, whatsappShareLink } from "@/lib/whatsapp";
 import { cardPhoto } from "@/lib/image-variants";
+import { LISTING_DETAIL_PHOTO, LISTING_PHOTO_ASPECT_CLASS } from "@/lib/listing-photo-frame";
 import { variantMap } from "@/lib/image-variant-store";
 import { liteMode } from "@/lib/weak-data";
 
@@ -157,8 +158,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
     src: listing.photoUrl,
     thumb480: storedPhoto?.thumb480,
     thumb960: storedPhoto?.thumb960,
-    width: 960,
-    height: 600,
+    width: LISTING_DETAIL_PHOTO.width,
+    height: LISTING_DETAIL_PHOTO.height,
     sizes: "(min-width: 768px) 720px, 100vw",
     priority: true,
     lite: await liteMode(),
@@ -198,10 +199,10 @@ export default async function ListingPage({ params, searchParams }: Props) {
           loading={photo.loading}
           decoding={photo.decoding}
           fetchPriority={photo.fetchPriority}
-          className="aspect-[16/10] h-auto w-full rounded-[14px] border border-line/80 bg-sand object-cover shadow-[var(--shadow-card)]"
+          className={`${LISTING_PHOTO_ASPECT_CLASS} h-auto w-full rounded-[14px] border border-line/80 bg-sand object-cover shadow-[var(--shadow-card)]`}
         />
       ) : (
-        <div className="flex aspect-[16/10] items-end rounded-[1.25rem] bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white shadow-[var(--shadow-card)]">
+        <div className={`flex ${LISTING_PHOTO_ASPECT_CLASS} items-end rounded-[1.25rem] bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white shadow-[var(--shadow-card)]`}>
           <span className="font-serif text-4xl">{listing.title.charAt(0).toUpperCase()}</span>
           <span className="ml-auto text-sm uppercase tracking-wide text-white/80">{listing.category}</span>
         </div>

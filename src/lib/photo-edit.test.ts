@@ -92,6 +92,7 @@ test("crop presets and quarter turns", () => {
   assert.deepEqual(orientedSize(4000, 3000, 2), { width: 4000, height: 3000 });
   assert.equal(presetAspect("square", { width: 4000, height: 3000 }), 1);
   assert.equal(presetAspect("cover", { width: 4000, height: 3000 }), 2);
+  assert.equal(presetAspect("card", { width: 4000, height: 2000 }), 4 / 3);
   assert.equal(presetAspect("original", { width: 4000, height: 3000 }), 4000 / 3000);
 
   const square = resolveFrame({ width: 4000, height: 3000 }, { ...identityEdit(), aspect: "square" });
@@ -104,6 +105,11 @@ test("crop presets and quarter turns", () => {
   assert.equal(cover.outputWidth, 1600);
   assert.equal(cover.outputHeight, 800);
   assert.ok(Math.abs(cover.cropWidth / cover.cropHeight - 2) < 0.01);
+
+  const card = resolveFrame({ width: 4000, height: 2000 }, { ...identityEdit(), aspect: "card" });
+  assert.equal(card.outputWidth, 1600);
+  assert.equal(card.outputHeight, 1200);
+  assert.ok(Math.abs(card.cropWidth / card.cropHeight - 4 / 3) < 0.01);
 });
 
 test("straighten shrinks the frame so the corners stay inside", () => {
@@ -283,15 +289,23 @@ test("EXIF orientation is read and axis swaps are known", () => {
 test("presets follow the upload purpose", () => {
   assert.equal(defaultEdit("avatar").aspect, "square");
   assert.equal(defaultEdit("banner").aspect, "cover");
-  assert.equal(defaultEdit("offering").aspect, "original");
-  assert.equal(defaultEdit("listing").aspect, "original");
+  assert.equal(defaultEdit("offering").aspect, "card");
+  assert.equal(defaultEdit("listing").aspect, "card");
   assert.deepEqual(
     aspectPresets("banner").map((item) => item.id),
     ["cover", "original", "square"],
   );
   assert.deepEqual(
-    aspectPresets("offering").map((item) => item.id),
+    aspectPresets("avatar").map((item) => item.id),
     ["square", "original"],
+  );
+  assert.deepEqual(
+    aspectPresets("offering").map((item) => item.id),
+    ["card", "square", "original"],
+  );
+  assert.deepEqual(
+    aspectPresets("listing").map((item) => item.id),
+    ["card", "square", "original"],
   );
   assert.equal(aspectPresets("listing").some((item) => item.id === "cover"), false);
 });

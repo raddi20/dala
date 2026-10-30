@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AdminContactDetails } from "@/components/admin-contact-details";
 import { AdminOccasions } from "@/components/admin-occasions";
+import { ListingPhotoReframe } from "@/components/listing-photo-reframe";
 import { ReasonInput } from "@/components/admin-reason";
 import { btnDanger, btnSecondary } from "@/components/ui";
 import { setListingFeatured, setListingHidden, setListingVerified } from "@/lib/actions/admin";
@@ -37,6 +38,7 @@ export default async function AdminListingsPage() {
               {listing.city} · {listing.type} · {listing.owner.name} · risk {listing.scamRisk}
               {listing.verified ? " · verified" : ""}
             </p>
+            <ListingPhotoReframe listingId={listing.id} photoUrl={listing.photoUrl} />
             {listing.scamNotes ? <p className="mt-1">{listing.scamNotes}</p> : null}
             {listing.hiddenReason ? <p className="mt-1 text-ink/70">{listing.hiddenReason}</p> : null}
             <div className="mt-3">

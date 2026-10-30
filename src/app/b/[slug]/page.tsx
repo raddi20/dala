@@ -35,6 +35,7 @@ import { isPrefetchRequest } from "@/lib/sticker";
 import { buildShareMetadata, clipText, privateMetadata, shopPreviewImage } from "@/lib/share-metadata";
 import { whatsappOfferingLink, whatsappShareLink, whatsappShopLink } from "@/lib/whatsapp";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
+import { LISTING_PHOTO_ASPECT_CLASS } from "@/lib/listing-photo-frame";
 import { variantMap } from "@/lib/image-variant-store";
 import { liteMode } from "@/lib/weak-data";
 import { shopPlaceLine, shopTrustLine } from "@/lib/shop-trust";
@@ -450,9 +451,9 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                     decoding={photo?.decoding}
                     fetchPriority={photo?.fetchPriority}
                     alt=""
-                    className="aspect-[4/3] h-auto w-full object-cover"
+                    className={`${LISTING_PHOTO_ASPECT_CLASS} h-auto w-full object-cover`}
                   >
-                    <div className="aspect-[4/3] bg-navy" />
+                    <div className={`${LISTING_PHOTO_ASPECT_CLASS} bg-navy`} />
                   </RemoteImage>
                   <div className="flex flex-1 flex-col gap-1 px-2.5 pb-3 pt-2">
                     <h3 className="line-clamp-2 font-sans text-[14.5px] font-semibold leading-snug tracking-normal text-ink">
