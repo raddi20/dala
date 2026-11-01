@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { HomeRail } from "@/components/home-rail";
+import { JsonLd } from "@/components/json-ld";
 import { ListingCard } from "@/components/listing-card";
 import { RecentlyViewedStrip } from "@/components/recently-viewed";
 import { OfferingCard } from "@/components/offering-card";
@@ -12,7 +13,10 @@ import { requestLang } from "@/lib/i18n/request-lang";
 import { uiText, type StringKey } from "@/lib/i18n/strings";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
+import { appName } from "@/lib/brand";
+import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
+import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
@@ -46,8 +50,12 @@ export default async function HomePage() {
   const tiles = occasionTileOrder(occasions);
   const fresh = rails.fresh;
 
+  const origin = await publicOrigin();
+  const name = appName();
+
   return (
     <div>
+      <JsonLd data={[organizationJsonLd(origin, name), websiteJsonLd(origin, name)]} />
       <section className="bg-navy text-white">
         <div className="mx-auto max-w-5xl px-4 pb-4 pt-5">
           <h1 className="font-serif text-3xl text-white">{uiText(lang, "home_ask_title")}</h1>
