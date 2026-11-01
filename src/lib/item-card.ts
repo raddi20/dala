@@ -14,9 +14,12 @@ export function itemKindTag(input: { kind: "offering" | "listing"; type?: string
   return "For sale";
 }
 
+/** Shown when a seller has not set a price. Never invent one. */
+export const PRICE_ON_REQUEST = "Price on request";
+
 export function itemPriceText(price: string | null | undefined): { text: string; ask: boolean } {
   const text = price?.trim() ?? "";
-  if (!text) return { text: "Ask for price", ask: true };
+  if (!text) return { text: PRICE_ON_REQUEST, ask: true };
   return { text, ask: false };
 }
 
