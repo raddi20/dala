@@ -8,7 +8,7 @@ test("item tags, prices, shop checks, and scam chips stay to one line", () => {
   assert.equal(itemKindTag({ kind: "listing", type: "classified", category: "Real estate / housing" }), "Housing");
   assert.equal(itemKindTag({ kind: "listing", type: "goods", category: "Retail / shops" }), "For sale");
   assert.deepEqual(itemPriceText("KES 400"), { text: "KES 400", ask: false });
-  assert.deepEqual(itemPriceText("  "), { text: "Ask for price", ask: true });
+  assert.deepEqual(itemPriceText("  "), { text: "Price on request", ask: true });
   assert.equal(shopIsChecked({ phoneVerified: true }), true);
   assert.equal(shopIsChecked({}), false);
   assert.equal(showScamChip("low"), false);

@@ -1,3 +1,4 @@
+import { PRICE_ON_REQUEST } from "@/lib/item-card";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -459,7 +460,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
                     <h3 className="line-clamp-2 font-sans text-[14.5px] font-semibold leading-snug tracking-normal text-ink">
                       {offering.title}
                     </h3>
-                    {price ? <p className="text-sm font-semibold text-ink">{price}</p> : null}
+                    {price ? <p className="text-sm font-semibold text-ink">{price}</p> : <p className="text-sm font-medium text-ink/60">{PRICE_ON_REQUEST}</p>}
                     {offering.description ? <p className="line-clamp-2 text-xs leading-relaxed text-muted">{offering.description}</p> : null}
                     {offeringChat ? (
                       <a

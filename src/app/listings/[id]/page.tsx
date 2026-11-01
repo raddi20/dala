@@ -1,3 +1,4 @@
+import { itemPriceText } from "@/lib/item-card";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -224,7 +225,12 @@ export default async function ListingPage({ params, searchParams }: Props) {
           {listing.region === "diaspora" ? uiText(lang, "diaspora") : `${cityChipLabel(listing.city)} · ${uiText(lang, "homeland")}`} · {listing.category}
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
-        {listing.priceLabel ? <p className="text-lg font-semibold text-ink">{listing.priceLabel}</p> : null}
+        {(() => {
+          const shown = itemPriceText(listing.priceLabel);
+          return (
+            <p className={shown.ask ? "text-base font-medium text-ink/60" : "text-lg font-semibold text-ink"}>{shown.text}</p>
+          );
+        })()}
         <SaveHeart variant="page" item={savedItem} />
         <TrackRecent item={savedItem} />
         <p className="text-sm text-ink/55">
