@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
 import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
+import { CITY_PAGES, cityPagePath } from "@/lib/seo";
 
 export function Footer({ replay = null }: { replay?: ReactNode }) {
   return (
@@ -55,6 +56,11 @@ export function Footer({ replay = null }: { replay?: ReactNode }) {
           <Link href="/account/storefront" className="hover:text-navy">
             Open a shop
           </Link>
+          {CITY_PAGES.map((page) => (
+            <Link key={page.slug} href={cityPagePath(page)} className="hover:text-navy">
+              {page.city}
+            </Link>
+          ))}
           {replay}
           <DataSaverToggle />
           {PUBLIC_INFO_PAGES.map((page) => (

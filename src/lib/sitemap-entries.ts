@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
+import { CITY_PAGES, cityPagePath } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
@@ -51,6 +52,8 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/listings?region=homeland" },
     { path: "/listings?region=diaspora" },
     // Town filters are ?city=<slug> from TOWNS in constants.ts. They stay off this list.
+    // Dedicated town landing pages (/places/<slug>) are listed instead.
+    ...CITY_PAGES.map((page) => ({ path: cityPagePath(page) })),
   ];
   for (const category of CATEGORIES) {
     paths.push({ path: categoryHref(category) });
@@ -134,7 +137,6 @@ export function buildRobots(origin: string): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         disallow: [...PRIVATE_PREFIXES],
-        crawlDelay: 10,
       },
       { userAgent: [...BLOCKED_CRAWLERS], disallow: "/" },
     ],
