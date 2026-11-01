@@ -13,6 +13,7 @@ import { PwaRegister } from "@/components/pwa-register";
 import { OfflineNotice } from "@/components/offline-notice";
 import { StatBeacon } from "@/components/stats/stat-beacon";
 import { APP_DESCRIPTION, APP_TAGLINE, appName } from "@/lib/brand";
+import { homeTitle } from "@/lib/seo";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { sulweOn } from "@/lib/sulwe";
 import { sulweVoiceOn } from "@/lib/sulwe-voice-flag";
@@ -36,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     metadataBase: new URL(await publicOrigin()),
     applicationName: name,
-    title: { default: name, template: `%s · ${name}` },
+    title: { default: homeTitle(name), template: `%s · ${name}` },
     description,
     appleWebApp: {
       capable: true,
@@ -50,12 +51,12 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       type: "website",
       siteName: name,
-      title: name,
+      title: homeTitle(name),
       description,
     },
     twitter: {
       card: "summary_large_image",
-      title: name,
+      title: homeTitle(name),
       description,
     },
   };

@@ -39,6 +39,9 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
   assert.ok(urls.includes(`${origin}/listings?region=homeland`));
   assert.ok(urls.includes(`${origin}/listings?region=diaspora`));
   assert.equal(urls.some((url) => url.includes("city=")), false);
+  for (const slug of ["kisumu", "siaya", "homa-bay"]) {
+    assert.ok(urls.includes(`${origin}/places/${slug}`), slug);
+  }
   for (const url of urls) {
     const path = new URL(url).pathname;
     assert.equal(isPrivatePath(path), false, url);
@@ -86,7 +89,7 @@ test("robots allows the public site, blocks private prefixes, and points at the 
     "/reset-password",
     "/orders",
   ]);
-  assert.equal(rules.crawlDelay, 10);
+  assert.equal(rules.crawlDelay, undefined);
   const blocked = Array.isArray(robots.rules) ? robots.rules[1] : undefined;
   assert.ok(blocked);
   assert.ok(Array.isArray(blocked.userAgent) && blocked.userAgent.includes("AhrefsBot") && blocked.userAgent.includes("GPTBot"));
