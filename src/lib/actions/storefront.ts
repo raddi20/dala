@@ -10,6 +10,7 @@ import { scheduleModeration } from "@/lib/ai/moderation";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { uniqueSlug } from "@/lib/storefront";
+import { branchSavePlan, parseBranchesField } from "@/lib/shop-branches";
 import { field, parseOfferingForm, parseStorefrontForm, type ActionState } from "@/lib/validators";
 
 async function revalidateShop(userId: string, slug: string, previousSlug?: string) {
@@ -97,6 +98,15 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
         where: { id: user.id },
         data: { bio: parsed.data.bio, ...(parsed.data.city ? { city: parsed.data.city } : {}) },
       }),
+      // The Town field is the main branch. Keep the first branch in step when one exists.
+      ...(parsed.data.city
+        ? [
+            prisma.shopBranch.updateMany({
+              where: { storefrontId: storefront.id, sortOrder: 0 },
+              data: { town: parsed.data.city },
+            }),
+          ]
+        : []),
     ]);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -113,6 +123,47 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
   if (bannerUrl) scheduleModeration({ targetType: "storefront", targetId: storefront.id });
   await revalidateShop(user.id, parsed.data.slug, storefront.slug);
   redirect("/account/storefront?notice=saved");
+}
+
+/** Replaces the shop's branch list from the settings editor. The first branch is the main town. */
+export async function saveShopBranches(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await getSessionUser();
+  if (!user) return { error: "Sign in to edit your shop." };
+  const storefront = await prisma.storefront.findUnique({
+    where: { userId: user.id },
+    select: { id: true, slug: true, branches: { select: { id: true } } },
+  });
+  if (!storefront) return { error: "Start your shop first." };
+
+  const parsed = parseBranchesField(formData.get("branches"));
+  if (!parsed.ok) return { error: parsed.error };
+
+  const plan = branchSavePlan(
+    storefront.branches.map((branch) => branch.id),
+    parsed.branches,
+  );
+  const fields = (branch: (typeof parsed.branches)[number]) => ({
+    town: branch.town,
+    address: branch.address,
+    phone: branch.phone,
+    hours: branch.hours,
+    sortOrder: branch.sortOrder,
+  });
+  await prisma.$transaction([
+    prisma.shopBranch.deleteMany({ where: { storefrontId: storefront.id, id: { in: plan.remove } } }),
+    ...plan.update.map((branch) =>
+      prisma.shopBranch.update({ where: { id: branch.id as string }, data: fields(branch) }),
+    ),
+    ...plan.create.map((branch) =>
+      prisma.shopBranch.create({ data: { storefrontId: storefront.id, ...fields(branch) } }),
+    ),
+    // Legacy field: the owner's town follows the main branch so older pages still read right.
+    prisma.user.update({ where: { id: user.id }, data: { city: parsed.branches[0].town } }),
+  ]);
+
+  await revalidateShop(user.id, storefront.slug);
+  revalidatePath("/shops");
+  redirect("/account/storefront?notice=saved#branches");
 }
 
 export async function createOffering(_prev: ActionState, formData: FormData): Promise<ActionState> {

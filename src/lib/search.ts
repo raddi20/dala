@@ -19,6 +19,7 @@ import {
   shopCategories,
 } from "@/lib/shop-category";
 import { containsFilter, matchTerms } from "@/lib/search-text";
+import { branchTownWhere, branchTowns, effectiveBranches } from "@/lib/shop-branches";
 import { isFeatured } from "@/lib/utils";
 import { publicReviewWhere } from "@/lib/visibility";
 
@@ -67,6 +68,10 @@ function shopCardSelect(env: Env) {
   bannerUrl: true,
   latitude: true,
   longitude: true,
+  branches: {
+    orderBy: { sortOrder: "asc" as const },
+    select: { id: true, town: true, address: true, phone: true, hours: true, sortOrder: true },
+  },
   user: {
     select: {
       name: true,
@@ -290,7 +295,14 @@ function storefrontWhere(
       ],
     });
   }
-  const user = userWhere(filters, blocked, env);
+  const town = filters.city ? canonicalCity(filters.city) : "";
+  if (town) {
+    // Legacy town on the owner (and bio mention) or any branch town. A shop with branches
+    // in Kisumu and Siaya shows in both filters, once each.
+    const legacy = shopTownWhere(town, env);
+    and.push({ OR: [...(legacy ? [{ user: legacy }] : []), branchTownWhere(containsFilter(town, env))] });
+  }
+  const user = userWhere({ ...filters, city: "" }, blocked, env);
   if (user) and.push({ user });
   if (withText) {
     const terms = matchTerms(filters);
@@ -302,6 +314,8 @@ function storefrontWhere(
             { user: { name: contains } },
             { user: { bio: contains } },
             { user: { city: contains } },
+            { branches: { some: { town: contains } } },
+            { branches: { some: { address: contains } } },
             { offerings: { some: { archived: false, hidden: false, title: contains } } },
             { offerings: { some: { archived: false, hidden: false, description: contains } } },
             { occasions: { some: { occasion: { title: contains } } } },
@@ -352,6 +366,24 @@ function shopContent(row: ShopRow) {
   };
 }
 
+function shopMainTown(row: ShopRow): string {
+  return effectiveBranches(row)[0]?.town ?? row.user.city;
+}
+
+/** Nearest branch town wins. A shop pin still applies to the main branch. */
+function nearestBranchKm(near: LatLng, row: ShopRow): number | null {
+  let best: number | null = null;
+  for (const [index, town] of branchTowns(effectiveBranches(row)).entries()) {
+    const km = distanceToShop(near, {
+      latitude: index === 0 ? row.latitude : null,
+      longitude: index === 0 ? row.longitude : null,
+      city: town,
+    });
+    if (km !== null && (best === null || km < best)) best = km;
+  }
+  return best ?? distanceToShop(near, { latitude: row.latitude, longitude: row.longitude, city: row.user.city });
+}
+
 function toShopCard(row: ShopRow): ShopCardData {
   const content = shopContent(row);
   return {
@@ -359,8 +391,9 @@ function toShopCard(row: ShopRow): ShopCardData {
     slug: row.slug,
     name: row.user.name,
     category: displayShopCategory(content),
-    city: row.user.city,
-    region: regionForCity(row.user.city),
+    city: shopMainTown(row),
+    region: regionForCity(shopMainTown(row)),
+    branchTowns: branchTowns(effectiveBranches(row)),
     verified: row.user.listings.some((listing) => listing.verified),
     phoneVerified: row.phoneVerified,
     locationVerified: row.locationVerified,
@@ -481,6 +514,8 @@ export type ShopCardData = {
   category: string;
   city: string;
   region: string;
+  /** Every branch town, main town first. One entry for a single-town shop. */
+  branchTowns?: string[];
   verified: boolean;
   phoneVerified: boolean;
   locationVerified: boolean;
@@ -662,7 +697,7 @@ export async function searchShops(filters: SearchFilters, env: Env = process.env
       ? sortByDistance(
           filtered.map((row) => ({
             row,
-            distanceKm: distanceToShop(near, { latitude: row.latitude, longitude: row.longitude, city: row.user.city }),
+            distanceKm: nearestBranchKm(near, row),
           })),
         )
       : filtered.map((row) => ({ row, distanceKm: undefined }));
@@ -807,4 +842,9 @@ async function recentOfferings(limit: number, viewerId?: string | null, env: Env
     if (cards.length >= limit) break;
   }
   return cards;
+}
+
+/** Test hook: the shop directory filter for a set of filters. */
+export function searchShopsWhereForTest(filters: SearchFilters, env: Env = process.env) {
+  return storefrontWhere(filters, [], env, "off", true);
 }

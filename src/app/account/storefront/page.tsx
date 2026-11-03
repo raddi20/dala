@@ -4,6 +4,8 @@ import { ShopBadgeStatus } from "@/components/badges";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
+import { ShopBranchesEditor } from "@/components/shop-branches-editor";
+import { effectiveBranches } from "@/lib/shop-branches";
 import { Flash, btnPrimary, btnSecondary, btnWhatsApp, cardClass, sectionTitleClass } from "@/components/ui";
 import { archiveOffering, createStorefront, moveOffering, publishStorefront, restoreOffering } from "@/lib/actions/storefront";
 import { FREE_OFFERING_CAP, PRICES, PRO_DAYS, PRO_OFFERING_CAP, offeringCap } from "@/lib/constants";
@@ -37,6 +39,7 @@ export default async function ManageStorefrontPage({
     where: { userId: user.id },
     include: {
       offerings: { orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] },
+      branches: { orderBy: { sortOrder: "asc" } },
       badgeEvents: { orderBy: { createdAt: "desc" } },
       occasions: { select: { occasion: { select: { slug: true } } } },
       videos: { orderBy: { createdAt: "desc" } },
@@ -301,6 +304,15 @@ export default async function ManageStorefrontPage({
             paymentsOpen={live}
           />
         </div>
+      </section>
+
+      <section id="branches" className={`${cardClass} grid scroll-mt-28 gap-3 p-5`}>
+        <h2 className="font-serif text-xl text-navy">Branches</h2>
+        <p className="text-sm text-ink/70">
+          One shop, every location. Your shop shows in the town filter for each branch. Offerings and listings stay on
+          the shop, so buyers see them once.
+        </p>
+        <ShopBranchesEditor branches={effectiveBranches({ branches: shop.branches, user })} />
       </section>
 
       {active.length > 0 ? (

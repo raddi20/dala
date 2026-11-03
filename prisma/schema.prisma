@@ -182,11 +182,33 @@ model Storefront {
   videoEvents      ShopVideoEvent[]
   deliveryOptions  ShopDeliveryOption[]
   orders           Order[]
+  // Physical branches. Empty on shops created before branches existed: the app then
+  // reads the owner's town (User.city) and phone as one branch, so nothing breaks
+  // before scripts/backfill-shop-branches.ts runs. Listings stay on the shop, never per branch.
+  branches         ShopBranch[]
 
   @@index([published])
   @@index([servesDiaspora])
   @@index([sendHomePilot])
   @@index([published, createdAt])
+}
+
+// One physical location of a shop. Each branch has its own town, address, phone and
+// optional opening hours. The first branch (lowest sortOrder) is the shop's main town.
+model ShopBranch {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  town         String
+  address      String     @default("")
+  phone        String     @default("")
+  hours        String     @default("")
+  sortOrder    Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([storefrontId, sortOrder])
+  @@index([town])
 }
 
 // A public collection such as weddings or Christmas at home.

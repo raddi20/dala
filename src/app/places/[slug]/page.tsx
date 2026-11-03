@@ -64,8 +64,8 @@ export default async function CityPage({ params }: Params) {
         <Link href={browseHref} className={btnPrimary}>
           Browse all in {page.city}
         </Link>
-        <Link href="/shops" className={btnSecondary}>
-          Shops directory
+        <Link href={`/shops?city=${encodeURIComponent(page.city)}`} className={btnSecondary}>
+          Shops in {page.city}
         </Link>
       </div>
 

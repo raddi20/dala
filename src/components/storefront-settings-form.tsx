@@ -54,7 +54,8 @@ export function StorefrontSettingsForm({
         The name on the shop is your profile name. Change that on Account. The address stays put until you edit it here.
       </p>
       <label className="block text-sm">
-        Town
+        Main town
+        <span className="mt-1 block text-ink/70">Your first branch. Add more towns under Branches.</span>
         <select name="city" data-tour="sell-town" defaultValue={canonicalCity(city) || "Nairobi"} className={fieldClass}>
           <TownOptions />
         </select>

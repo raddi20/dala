@@ -149,3 +149,41 @@ export function cityPageJsonLd(origin: string, name: string, page: CityPage, ite
 export function jsonLdString(data: unknown) {
   return JSON.stringify(data).replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
+
+/**
+ * A shop with its branch locations. One LocalBusiness for the shop, one department per branch.
+ * Opening hours are free text, so they are left out rather than guessed into schema.org format.
+ */
+export function shopBranchesJsonLd(
+  origin: string,
+  shop: { name: string; slug: string },
+  branches: { town: string; address: string; phone: string }[],
+): Json {
+  const url = absoluteUrl(origin, `/b/${shop.slug}`);
+  const place = (branch: { town: string; address: string; phone: string }) => ({
+    "@type": "PostalAddress",
+    addressLocality: branch.town,
+    ...(branch.address ? { streetAddress: branch.address } : {}),
+    addressCountry: branch.town === "London" ? "GB" : "KE",
+  });
+  const [main, ...rest] = branches;
+  return {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${url}#shop`,
+    name: shop.name,
+    url,
+    ...(main ? { address: place(main), ...(main.phone ? { telephone: main.phone } : {}) } : {}),
+    ...(rest.length > 0
+      ? {
+          department: rest.map((branch, index) => ({
+            "@type": "LocalBusiness",
+            "@id": `${url}#branch-${index + 2}`,
+            name: `${shop.name} (${branch.town})`,
+            address: place(branch),
+            ...(branch.phone ? { telephone: branch.phone } : {}),
+          })),
+        }
+      : {}),
+  };
+}

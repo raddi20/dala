@@ -4,6 +4,9 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ShopBadgeNotes } from "@/components/badges";
+import { JsonLd } from "@/components/json-ld";
+import { effectiveBranches } from "@/lib/shop-branches";
+import { shopBranchesJsonLd } from "@/lib/seo";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
@@ -155,9 +158,15 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       },
       badgeEvents: { orderBy: { createdAt: "desc" } },
       videos: { orderBy: { createdAt: "desc" } },
+      branches: { orderBy: { sortOrder: "asc" } },
     },
   });
   if (!shop || isPublicDemoHidden(shop.user.email)) notFound();
+  const demoContacts = publicSellerContacts({ email: shop.user.email }).hidden;
+  const branches = effectiveBranches(shop).map((branch) => ({
+    ...branch,
+    phone: demoContacts ? "" : branch.phone,
+  }));
 
   const viewer = await getSessionUser();
   const lang = await requestLang();
@@ -282,6 +291,9 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
 
   return (
     <article className={`mx-auto grid max-w-3xl gap-5 px-4 py-4 ${chatUrl ? "pb-40" : "pb-8"}`}>
+      {shop.published && !shop.hidden ? (
+        <JsonLd data={shopBranchesJsonLd(await publicOrigin(), { name: shop.user.name, slug: shop.slug }, branches)} />
+      ) : null}
       {shop.hidden && (isOwner || viewer?.role === "admin") ? (
         <Flash>
           {`A moderator hid this shop from buyers.${shop.hiddenReason ? ` ${shop.hiddenReason}` : ""} Publishing again does not undo that.`}
@@ -523,6 +535,27 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             {uiText(lang, "view_profile")}
           </Link>
         </p>
+      </section>
+
+      <section id="branches" className="scroll-mt-28 grid gap-3" data-shop-branches>
+        <h2 className="font-serif text-xl text-navy">{branches.length > 1 ? `Branches (${branches.length})` : "Branch"}</h2>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {branches.map((branch, index) => (
+            <li key={branch.id} className={`${cardClass} grid gap-1 p-4`}>
+              <p className="font-semibold text-navy">
+                {branch.town}
+                {index === 0 && branches.length > 1 ? <span className="ml-2 text-xs font-normal text-muted">Main branch</span> : null}
+              </p>
+              {branch.address ? <p className="text-sm text-ink/80">{branch.address}</p> : null}
+              {branch.hours ? <p className="text-sm text-ink/70">{branch.hours}</p> : null}
+              {branch.phone ? (
+                <a href={telHref(branch.phone)} className="text-sm font-semibold text-gold-d">
+                  {branch.phone}
+                </a>
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section id="rate" className="grid scroll-mt-28 gap-3" data-shop-ratings>

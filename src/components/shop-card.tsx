@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cityChipLabel } from "@/lib/constants";
+import { branchPlaceSuffix } from "@/lib/shop-branches";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { shopIsChecked } from "@/lib/item-card";
 import { distanceLabel } from "@/lib/near-me";
@@ -22,7 +23,7 @@ export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: bo
     sizes: "40px",
   });
   const checked = shopIsChecked(shop);
-  const place = cityChipLabel(shop.city);
+  const place = `${cityChipLabel(shop.city)}${branchPlaceSuffix(shop.branchTowns)}`;
   const meta = [shop.category, place].filter(Boolean).join(" · ");
   const initial = shop.name.trim().charAt(0).toUpperCase() || "S";
 
