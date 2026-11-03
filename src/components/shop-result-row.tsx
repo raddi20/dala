@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cityChipLabel } from "@/lib/constants";
+import { branchPlaceSuffix } from "@/lib/shop-branches";
 import { cardPhoto } from "@/lib/image-variants";
 import { shopIsChecked } from "@/lib/item-card";
 import type { ShopCardData } from "@/lib/search";
@@ -13,7 +14,7 @@ export function ShopResultRow({ shop, origin }: { shop: ShopCardData; origin: st
     sizes: "44px",
   });
   const checked = shopIsChecked(shop);
-  const place = cityChipLabel(shop.city);
+  const place = `${cityChipLabel(shop.city)}${branchPlaceSuffix(shop.branchTowns)}`;
   const meta = [shop.category, place].filter(Boolean).join(" · ");
   const initial = shop.name.trim().charAt(0).toUpperCase() || "S";
   const chat = shop.whatsapp ? whatsappShopLink(shop.whatsapp, `${origin}/b/${shop.slug}`, shop.name) : "";
