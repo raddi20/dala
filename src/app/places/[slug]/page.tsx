@@ -6,16 +6,18 @@ import { ListingCard } from "@/components/listing-card";
 import { btnPrimary, btnSecondary, cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { publicOrigin } from "@/lib/payments/origin";
+import { publicListingWhere } from "@/lib/demo-visibility";
+import { prisma } from "@/lib/prisma";
 import { searchListings } from "@/lib/search";
 import {
-  CITY_PAGES,
   cityBrowseHref,
   cityDescription,
-  cityPage,
   cityPageJsonLd,
   cityPagePath,
   cityTitle,
+  townPage,
 } from "@/lib/seo";
+import { shopsInTown, townPagesWithContent } from "@/lib/town-pages";
 import { getSessionUser } from "@/lib/session";
 import { buildShareMetadata } from "@/lib/share-metadata";
 import { continueHref } from "@/lib/utils";
@@ -23,10 +25,14 @@ import { continueHref } from "@/lib/utils";
 type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const page = cityPage((await params).slug);
+  const page = townPage((await params).slug);
   if (!page) return { title: "Not found" };
   const name = appName();
-  return buildShareMetadata({
+  const [listingCount, shops] = await Promise.all([
+    prisma.listing.count({ where: publicListingWhere({ city: page.city }) }),
+    shopsInTown(page.city, 1),
+  ]);
+  const meta = buildShareMetadata({
     origin: await publicOrigin(),
     path: cityPagePath(page),
     title: cityTitle(page),
@@ -34,17 +40,24 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     image: "/listings/opengraph-image",
     imageAlt: `${cityTitle(page)} on ${name}`,
   });
+  // A town with nothing in it is a thin page. Keep it reachable, out of the index.
+  return listingCount || shops.length ? meta : { ...meta, robots: { index: false, follow: true } };
 }
 
 export default async function CityPage({ params }: Params) {
-  const page = cityPage((await params).slug);
+  const page = townPage((await params).slug);
   if (!page) notFound();
   const name = appName();
   const [origin, user] = await Promise.all([publicOrigin(), getSessionUser()]);
-  const listings = (await searchListings({ city: page.city, viewerId: user?.id })).slice(0, 8);
+  const [allListings, shops, towns] = await Promise.all([
+    searchListings({ city: page.city, viewerId: user?.id }),
+    shopsInTown(page.city),
+    townPagesWithContent(),
+  ]);
+  const listings = allListings.slice(0, 8);
   const browseHref = cityBrowseHref(page);
   const listHref = continueHref(Boolean(user), "/listings/new");
-  const others = CITY_PAGES.filter((item) => item.slug !== page.slug);
+  const others = towns.filter((item) => item.slug !== page.slug);
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
@@ -68,6 +81,21 @@ export default async function CityPage({ params }: Params) {
           Shops in {page.city}
         </Link>
       </div>
+
+      {shops.length ? (
+        <section className="mt-8">
+          <h2 className="font-serif text-xl text-navy">Shops in {page.city}</h2>
+          <ul className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            {shops.map((shop) => (
+              <li key={shop.slug}>
+                <Link href={`/b/${encodeURIComponent(shop.slug)}`} className="underline underline-offset-2">
+                  {shop.user.name}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section className="mt-8">
         <h2 className="font-serif text-xl text-navy">Recent listings in {page.city}</h2>

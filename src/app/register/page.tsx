@@ -6,7 +6,7 @@ import { cardClass } from "@/components/ui";
 import { getSessionUser } from "@/lib/session";
 import { authContinueCopy, one, safePath } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = { title: "Create account", robots: { index: false, follow: false } };
 
 export default async function RegisterPage({
   searchParams,

@@ -1,3 +1,6 @@
+import { JsonLd } from "@/components/json-ld";
+import { categoryHref, isCategory } from "@/lib/categories";
+import { breadcrumbJsonLd } from "@/lib/seo";
 import { itemPriceText } from "@/lib/item-card";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -178,6 +181,15 @@ export default async function ListingPage({ params, searchParams }: Props) {
   return (
     <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
       {notice ? <Flash>{notice}</Flash> : null}
+      {!listing.hidden && !listing.owner.suspended ? (
+        <JsonLd
+          data={breadcrumbJsonLd(await publicOrigin(), [
+            { name: appName(), path: "/" },
+            ...(isCategory(listing.category) ? [{ name: listing.category, path: categoryHref(listing.category) }] : []),
+            { name: listing.title, path: `/listings/${listing.id}` },
+          ])}
+        />
+      ) : null}
       {listing.hidden || listing.owner.suspended ? (
         <Flash>
           {`${

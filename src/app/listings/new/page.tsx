@@ -4,7 +4,7 @@ import { ListingForm } from "@/components/listing-form";
 import { canonicalCity } from "@/lib/constants";
 import { requireUser } from "@/lib/session";
 
-export const metadata: Metadata = { title: "New listing" };
+export const metadata: Metadata = { title: "New listing", robots: { index: false, follow: false } };
 
 export default async function NewListingPage() {
   const user = await requireUser("/listings/new");

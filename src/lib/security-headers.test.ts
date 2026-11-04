@@ -71,7 +71,7 @@ test("next.config sends these headers on every path and hides x-powered-by", asy
   assert.equal(nextConfig.poweredByHeader, false);
   const rules = await nextConfig.headers?.();
   assert.ok(rules);
-  const global = rules.find((rule) => rule.source === "/:path*");
+  const global = rules.find((rule) => rule.source === "/:path*" && !rule.has);
   assert.ok(global);
   const headers = headerMap(global.headers);
   assert.equal(headers.get("Content-Security-Policy-Report-Only"), contentSecurityPolicy());
@@ -85,4 +85,16 @@ test("next.config sends these headers on every path and hides x-powered-by", asy
   assert.equal(worker?.headers.some((header) => header.key === "Service-Worker-Allowed"), true);
   const manifest = rules.find((rule) => rule.source === "/manifest.webmanifest");
   assert.ok(manifest);
+});
+
+test("vercel.app deployment hosts send noindex so only the custom domain is indexed", async () => {
+  const rules = (await nextConfig.headers?.()) ?? [];
+  const rule = rules.find((item) => item.has?.some((cond) => cond.type === "host"));
+  assert.ok(rule);
+  assert.equal(rule.source, "/:path*");
+  const hostCond = rule.has?.find((cond) => cond.type === "host");
+  const pattern = new RegExp(`^${String(hostCond?.value).replace(/\(\?<host>/, "(")}$`);
+  assert.ok(pattern.test("dala-sigma.vercel.app"));
+  assert.equal(pattern.test("www.rangach.co.ke"), false);
+  assert.equal(headerMap(rule.headers).get("X-Robots-Tag"), "noindex, nofollow");
 });

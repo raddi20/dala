@@ -3,6 +3,7 @@ import test from "node:test";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { OG_IMAGE, absoluteUrl, buildShareMetadata, clipText, listingPreviewImage, privateMetadata, publicImageUrl, shopPreviewImage } from "@/lib/share-metadata";
 import { listingOgModel, shopOgModel } from "@/lib/og-model";
+import { townPage, townPageForName } from "@/lib/seo";
 import { PRIVATE_PREFIXES, buildRobots, buildSitemap, isPrivatePath, staticPublicPaths } from "@/lib/sitemap-entries";
 
 const origin = "https://www.rangach.co.ke";
@@ -36,8 +37,8 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
   for (const category of CATEGORIES) {
     assert.ok(urls.includes(absoluteUrl(origin, categoryHref(category))), category);
   }
-  assert.ok(urls.includes(`${origin}/listings?region=homeland`));
-  assert.ok(urls.includes(`${origin}/listings?region=diaspora`));
+  // Filter variants are views of /listings, not pages. Only category pages keep a query.
+  assert.equal(urls.some((url) => url.includes("region=") || url.includes("type=")), false);
   assert.equal(urls.some((url) => url.includes("city=")), false);
   for (const slug of ["kisumu", "siaya", "homa-bay"]) {
     assert.ok(urls.includes(`${origin}/places/${slug}`), slug);
@@ -221,4 +222,14 @@ test("shop and listing cards drop private titles and unsafe image URLs", () => {
   assert.equal(publicImageUrl("https://user:pass@cdn.example/a.jpg"), "");
   assert.equal(publicImageUrl("/hero.svg", origin), `${origin}/hero.svg`);
   assert.equal(clipText("a".repeat(200)).endsWith("…"), true);
+});
+
+test("sitemap lists a town page for each town with content, including branch-only towns", () => {
+  const towns = ["kisumu", "oyugis"].map((slug) => townPage(slug)).filter((page) => page !== null);
+  const urls = buildSitemap({ origin: "https://www.rangach.co.ke", shops: [], listings: [], people: [], towns }).map((item) => item.url);
+  assert.ok(urls.includes("https://www.rangach.co.ke/places/kisumu"));
+  assert.ok(urls.includes("https://www.rangach.co.ke/places/oyugis"));
+  assert.equal(urls.includes("https://www.rangach.co.ke/places/siaya"), false);
+  assert.equal(townPage("not-a-town"), null);
+  assert.equal(townPageForName("Homa Bay")?.slug, "homa-bay");
 });
