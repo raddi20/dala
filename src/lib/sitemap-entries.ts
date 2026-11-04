@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
-import { CITY_PAGES, cityPagePath } from "@/lib/seo";
+import { CITY_PAGES, cityPagePath, type CityPage } from "@/lib/seo";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
@@ -47,13 +47,8 @@ export function staticPublicPaths(): DatedPath[] {
     ...PUBLIC_INFO_PAGES.map((page) => ({ path: page.path, updatedAt: publicPagesUpdatedAt() })),
     { path: "/listings" },
     { path: "/shops" },
-    { path: "/listings?type=business" },
-    { path: "/listings?type=classifieds" },
-    { path: "/listings?region=homeland" },
-    { path: "/listings?region=diaspora" },
-    // Town filters are ?city=<slug> from TOWNS in constants.ts. They stay off this list.
-    // Dedicated town landing pages (/places/<slug>) are listed instead.
-    ...CITY_PAGES.map((page) => ({ path: cityPagePath(page) })),
+    // Filter variants (?type=, ?region=, ?city=) stay off this list: they are browse views of /listings,
+    // not pages of their own. Town landing pages (/places/<slug>) are listed instead, from buildSitemap.
   ];
   for (const category of CATEGORIES) {
     paths.push({ path: categoryHref(category) });
@@ -67,6 +62,8 @@ export function buildSitemap(input: {
   listings: { id: string; updatedAt: Date }[];
   people: { id: string; updatedAt: Date }[];
   occasions?: { slug: string; updatedAt?: Date }[];
+  /** Towns with content. Defaults to the written city pages. */
+  towns?: CityPage[];
 }): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = [];
   const push = (item: MetadataRoute.Sitemap[number] | null) => {
@@ -91,6 +88,9 @@ export function buildSitemap(input: {
             ? 0.5
             : 0.7;
     push(entry(input.origin, path.path, path.updatedAt, info ? "monthly" : "weekly", priority));
+  }
+  for (const town of input.towns ?? CITY_PAGES) {
+    push(entry(input.origin, cityPagePath(town), undefined, "weekly", 0.7));
   }
   for (const shop of input.shops) {
     if (!shop.slug) continue;

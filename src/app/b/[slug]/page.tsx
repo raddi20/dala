@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 import { ShopBadgeNotes } from "@/components/badges";
 import { JsonLd } from "@/components/json-ld";
 import { effectiveBranches } from "@/lib/shop-branches";
-import { shopBranchesJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, shopBranchesJsonLd } from "@/lib/seo";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
@@ -292,7 +292,16 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   return (
     <article className={`mx-auto grid max-w-3xl gap-5 px-4 py-4 ${chatUrl ? "pb-40" : "pb-8"}`}>
       {shop.published && !shop.hidden ? (
-        <JsonLd data={shopBranchesJsonLd(await publicOrigin(), { name: shop.user.name, slug: shop.slug }, branches)} />
+        <JsonLd
+          data={[
+            shopBranchesJsonLd(await publicOrigin(), { name: shop.user.name, slug: shop.slug }, branches),
+            breadcrumbJsonLd(await publicOrigin(), [
+              { name: appName(), path: "/" },
+              { name: "Shops", path: "/shops" },
+              { name: shop.user.name, path: `/b/${shop.slug}` },
+            ]),
+          ]}
+        />
       ) : null}
       {shop.hidden && (isOwner || viewer?.role === "admin") ? (
         <Flash>

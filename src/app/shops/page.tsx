@@ -16,10 +16,16 @@ import { one } from "@/lib/utils";
 import { liteMode } from "@/lib/weak-data";
 import { parseNear } from "@/lib/near-me";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<Metadata> {
+  const sp = await searchParams;
   const origin = await publicOrigin();
   const name = appName();
-  return buildShareMetadata({
+  const filtered = Object.values(sp).some((value) => one(value).trim() !== "");
+  const meta = buildShareMetadata({
     origin,
     path: "/shops",
     title: "Shops",
@@ -27,6 +33,8 @@ export async function generateMetadata(): Promise<Metadata> {
     image: "/listings/opengraph-image",
     imageAlt: `Shops on ${name}`,
   });
+  // Filtered or searched shop lists canonicalise to /shops and stay out of the index.
+  return filtered ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
 export default async function ShopsPage({

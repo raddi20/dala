@@ -28,6 +28,22 @@ export async function generateMetadata({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }): Promise<Metadata> {
   const sp = await searchParams;
+  const meta = await browseMetadata(sp);
+  // Searches, pages 2+, sorts and stacked filters are views of the same results. Google may follow
+  // their links but should index only /listings, a category, or a town view.
+  return isIndexableBrowse(sp) ? meta : { ...meta, robots: { index: false, follow: true } };
+}
+
+const INDEXABLE_BROWSE_KEYS = new Set(["category", "city", "region"]);
+
+function isIndexableBrowse(sp: Record<string, string | string[] | undefined>) {
+  const keys = Object.keys(sp).filter((key) => one(sp[key]).trim() !== "");
+  if (keys.some((key) => !INDEXABLE_BROWSE_KEYS.has(key))) return false;
+  // A category combined with a town or region is canonicalised to the category page.
+  return !(keys.includes("category") && keys.length > 1);
+}
+
+async function browseMetadata(sp: Record<string, string | string[] | undefined>): Promise<Metadata> {
   const category = one(sp.category);
   const city = chosenBrowseCity(one(sp.city));
   const origin = await publicOrigin();

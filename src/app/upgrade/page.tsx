@@ -14,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { one } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Promote" };
+export const metadata: Metadata = { title: "Promote", robots: { index: false, follow: false } };
 
 export default async function UpgradePage({
   searchParams,

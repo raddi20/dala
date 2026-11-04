@@ -3,6 +3,7 @@
  * JSON-LD only states facts the site already shows. No ratings, review stars, or prices.
  */
 import { APP_DESCRIPTION, APP_MEANING, APP_TAGLINE } from "@/lib/brand";
+import { CITIES } from "@/lib/constants";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Homepage <title>. Other pages keep the "%s · Rangach" template. */
@@ -18,7 +19,10 @@ export type CityPage = {
   slug: string;
   /** Matches the stored Listing.city value and TOWNS in constants.ts. */
   city: string;
+  /** Empty on generated town pages. */
   county: string;
+  /** Defaults to Kenya. */
+  country?: string;
   intro: string;
   examples: string[];
 };
@@ -50,6 +54,31 @@ export const CITY_PAGES: CityPage[] = [
 
 export function cityPage(slug: string) {
   return CITY_PAGES.find((page) => page.slug === slug) ?? null;
+}
+
+/**
+ * A /places/<slug> page for any town in CITIES. The three hand-written pages above win;
+ * other towns (including towns that only have a shop branch) get generated copy.
+ */
+export function townPage(slug: string): CityPage | null {
+  const written = cityPage(slug);
+  if (written) return written;
+  const city = CITIES.find((item) => item.slug === slug);
+  if (!city) return null;
+  return {
+    slug: city.slug,
+    city: city.name,
+    county: "",
+    country: city.country,
+    intro: `Find Luo-owned shops, services, housing, and classifieds in ${city.name}.`,
+    examples: ["a fundi", "food and catering", "a DJ or photographer", "rooms and houses to let"],
+  };
+}
+
+/** Town page for a stored town name (Listing.city, User.city, ShopBranch.town). Null for unknown towns. */
+export function townPageForName(name: string): CityPage | null {
+  const city = CITIES.find((item) => item.name.toLowerCase() === name.trim().toLowerCase());
+  return city ? townPage(city.slug) : null;
 }
 
 export function cityPagePath(page: CityPage) {
@@ -130,7 +159,9 @@ export function cityPageJsonLd(origin: string, name: string, page: CityPage, ite
       about: {
         "@type": "City",
         name: page.city,
-        containedInPlace: { "@type": "AdministrativeArea", name: page.county, containedInPlace: { "@type": "Country", name: "Kenya" } },
+        containedInPlace: page.county
+          ? { "@type": "AdministrativeArea", name: page.county, containedInPlace: { "@type": "Country", name: page.country ?? "Kenya" } }
+          : { "@type": "Country", name: page.country ?? "Kenya" },
       },
     },
     {
@@ -185,5 +216,19 @@ export function shopBranchesJsonLd(
           })),
         }
       : {}),
+  };
+}
+
+/** BreadcrumbList from (name, path) pairs, home first. */
+export function breadcrumbJsonLd(origin: string, items: { name: string; path: string }[]): Json {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: absoluteUrl(origin, item.path),
+    })),
   };
 }

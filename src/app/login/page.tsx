@@ -7,7 +7,7 @@ import { showDemoCredentials } from "@/lib/admin-access";
 import { getSessionUser } from "@/lib/session";
 import { authContinueCopy, one, safePath } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = { title: "Sign in", robots: { index: false, follow: false } };
 
 export default async function LoginPage({
   searchParams,

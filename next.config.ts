@@ -59,6 +59,13 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders(),
       },
+      {
+        // Vercel deployment hosts (dala-*.vercel.app) serve the same pages as www.rangach.co.ke.
+        // Keep them out of Google so only the custom domain is indexed.
+        source: "/:path*",
+        has: [{ type: "host", value: "(?<host>.*)\\.vercel\\.app" }],
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
     ];
   },
 };

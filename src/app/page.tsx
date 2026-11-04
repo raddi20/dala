@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { HomeRail } from "@/components/home-rail";
 import { JsonLd } from "@/components/json-ld";
@@ -16,7 +17,8 @@ import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { appName } from "@/lib/brand";
 import { publicOrigin } from "@/lib/payments/origin";
 import { prisma } from "@/lib/prisma";
-import { organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { cityPagePath, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
+import { townPagesWithContent } from "@/lib/town-pages";
 import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
@@ -33,6 +35,8 @@ const HOME_CHIP_KEYS = [
   "chip_shops",
 ] as const satisfies readonly StringKey[];
 
+export const metadata: Metadata = { alternates: { canonical: "/" } };
+
 export default async function HomePage() {
   const user = await getSessionUser();
   const lang = await requestLang();
@@ -40,12 +44,13 @@ export default async function HomePage() {
   const paymentsOpen = paymentsLive();
   const listingWriter = await isAiFeatureOn("listing_writer");
   await ensureOccasionDefinitions(prisma);
-  const [rails, occasions] = await Promise.all([
+  const [rails, occasions, towns] = await Promise.all([
     homeRails(user?.id),
     prisma.occasion.findMany({
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
       select: { slug: true, title: true },
     }),
+    townPagesWithContent(),
   ]);
   const tiles = occasionTileOrder(occasions);
   const fresh = rails.fresh;
@@ -205,6 +210,23 @@ export default async function HomePage() {
               <ListingCard key={listing.id} listing={listing} />
             ))}
           </HomeRail>
+        ) : null}
+
+        {towns.length ? (
+          <section className="mt-8" aria-labelledby="home-towns">
+            <h2 id="home-towns" className="font-serif text-xl text-navy">
+              Shops and listings by town
+            </h2>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {towns.map((town) => (
+                <li key={town.slug}>
+                  <Link href={cityPagePath(town)} className={chipClass}>
+                    {town.city}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
         ) : null}
       </div>
     </div>

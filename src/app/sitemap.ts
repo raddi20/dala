@@ -3,13 +3,14 @@ import { hiddenDemoUserFilter, publicListingWhere, publicShopWhere } from "@/lib
 import { prisma } from "@/lib/prisma";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildSitemap } from "@/lib/sitemap-entries";
+import { townPagesWithContent } from "@/lib/town-pages";
 
 export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = await publicOrigin();
   const demoUser = hiddenDemoUserFilter();
-  const [shops, listings, people, occasions] = await Promise.all([
+  const [shops, listings, people, occasions, towns] = await Promise.all([
     prisma.storefront.findMany({
       where: publicShopWhere({ published: true }),
       select: { slug: true, updatedAt: true },
@@ -22,12 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: {
         suspended: false,
         AND: [
-          {
-            OR: [
-              { listings: { some: { hidden: false } } },
-              { storefront: { is: { published: true, hidden: false } } },
-            ],
-          },
+          { listings: { some: { hidden: false } } },
+          // A seller with a public shop is listed once, at /b/<slug>. Their profile page repeats it.
+          { NOT: { storefront: { is: { published: true, hidden: false } } } },
           ...(demoUser ? [demoUser] : []),
         ],
       },
@@ -36,6 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.occasion.findMany({
       select: { slug: true, updatedAt: true },
     }),
+    townPagesWithContent(),
   ]);
-  return buildSitemap({ origin, shops, listings, people, occasions });
+  return buildSitemap({ origin, shops, listings, people, occasions, towns });
 }
