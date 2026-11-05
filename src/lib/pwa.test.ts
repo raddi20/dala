@@ -9,12 +9,29 @@ import {
   PWA_BACKGROUND_COLOR,
   PWA_THEME_COLOR,
   installHintText,
+  isInAppBrowser,
   isInstallHiddenPath,
   isIosSafari,
   nextVisitCount,
   pwaNames,
+  resolveInstallSurface,
   shouldOfferInstall,
 } from "@/lib/pwa";
+
+const IPHONE_SAFARI =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+const CHROME_IOS =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.108 Mobile/15E148 Safari/604.1";
+const ANDROID_CHROME =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
+const FB_IOS =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/450.0;FBDV/iPhone]";
+const IG_ANDROID =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 Instagram 320.0.0.0.0";
+const WA_ANDROID =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36 WhatsApp/2.24.10";
+const ANDROID_WEBVIEW =
+  "Mozilla/5.0 (Linux; Android 14; Pixel 8 Build/UQ1A; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/126.0.0.0 Mobile Safari/537.36";
 
 test("pwa colours match the Tailwind theme", () => {
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
@@ -97,15 +114,10 @@ test("install hint waits for a second visit, remembers dismissal, and hides on a
 });
 
 test("iOS hint is Safari-only and uses the home-screen instructions", () => {
-  const iphone =
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
-  const chromeIos =
-    "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.108 Mobile/15E148 Safari/604.1";
-  const android =
-    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
-  assert.equal(isIosSafari({ userAgent: iphone, platform: "iPhone", maxTouchPoints: 5 }), true);
-  assert.equal(isIosSafari({ userAgent: chromeIos, platform: "iPhone", maxTouchPoints: 5 }), false);
-  assert.equal(isIosSafari({ userAgent: android, platform: "Linux armv8l", maxTouchPoints: 5 }), false);
+  assert.equal(isIosSafari({ userAgent: IPHONE_SAFARI, platform: "iPhone", maxTouchPoints: 5 }), true);
+  assert.equal(isIosSafari({ userAgent: CHROME_IOS, platform: "iPhone", maxTouchPoints: 5 }), false);
+  assert.equal(isIosSafari({ userAgent: ANDROID_CHROME, platform: "Linux armv8l", maxTouchPoints: 5 }), false);
+  assert.equal(isIosSafari({ userAgent: FB_IOS, platform: "iPhone", maxTouchPoints: 5 }), false);
   assert.equal(
     isIosSafari({
       userAgent:
@@ -124,11 +136,67 @@ test("iOS hint is Safari-only and uses the home-screen instructions", () => {
     }),
     true,
   );
-  assert.equal(
-    installHintText("Rangach", "ios"),
-    "Add Rangach to your Home Screen: tap Share, then Add to Home Screen.",
-  );
+  assert.equal(installHintText("Rangach", "ios"), "Add Rangach to your Home Screen");
   assert.equal(installHintText("Rangach", "android"), "Install Rangach");
+  assert.equal(installHintText("Rangach", "inapp"), "Open Rangach in your browser to install it");
+});
+
+test("in-app browsers are detected across Facebook Instagram WhatsApp and WebView", () => {
+  assert.equal(isInAppBrowser(FB_IOS), true);
+  assert.equal(isInAppBrowser(IG_ANDROID), true);
+  assert.equal(isInAppBrowser(WA_ANDROID), true);
+  assert.equal(isInAppBrowser(ANDROID_WEBVIEW), true);
+  assert.equal(isInAppBrowser(IPHONE_SAFARI), false);
+  assert.equal(isInAppBrowser(ANDROID_CHROME), false);
+  assert.equal(isInAppBrowser(CHROME_IOS), false);
+});
+
+test("resolveInstallSurface picks in-app, iOS Safari, or Android BIP", () => {
+  assert.equal(
+    resolveInstallSurface({
+      userAgent: FB_IOS,
+      platform: "iPhone",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: true,
+    }),
+    "inapp",
+  );
+  assert.equal(
+    resolveInstallSurface({
+      userAgent: IPHONE_SAFARI,
+      platform: "iPhone",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    "ios",
+  );
+  assert.equal(
+    resolveInstallSurface({
+      userAgent: ANDROID_CHROME,
+      platform: "Linux armv8l",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: true,
+    }),
+    "android",
+  );
+  assert.equal(
+    resolveInstallSurface({
+      userAgent: ANDROID_CHROME,
+      platform: "Linux armv8l",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    null,
+  );
+  assert.equal(
+    resolveInstallSurface({
+      userAgent: CHROME_IOS,
+      platform: "iPhone",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    null,
+  );
 });
 
 test("sw.js is not cached for long and is allowed at the origin scope", async () => {
