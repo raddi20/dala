@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
+import { InstallAppLink } from "@/components/install-prompt";
 import { LanguageSwitchControl } from "@/components/language-switch";
 import { Wordmark } from "@/components/wordmark";
 import { dholuoUiOn } from "@/lib/i18n/lang";
@@ -9,6 +10,8 @@ import { paymentsLive } from "@/lib/payments/live";
 import { signOutAction } from "@/lib/actions/auth";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
+import { pwaNames } from "@/lib/pwa";
+import { appName } from "@/lib/brand";
 import { continueHref } from "@/lib/utils";
 
 const deskLink = "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-white/80 hover:text-white";
@@ -21,6 +24,7 @@ export async function Header() {
   const paymentsOpen = paymentsLive();
   const lang = await requestLang();
   const showLang = dholuoUiOn();
+  const installName = pwaNames(appName()).shortName;
 
   return (
     <>
@@ -70,6 +74,7 @@ export async function Header() {
             <Link href="/saved" className={deskLink}>
               Saved
             </Link>
+            <InstallAppLink appName={installName} className={deskLink} />
             {user ? (
               <>
                 <Link href="/account" className={deskLink}>

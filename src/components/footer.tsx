@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
 import { DataSaverToggle } from "@/components/data-saver-toggle";
+import { InstallAppLink } from "@/components/install-prompt";
 import Link from "next/link";
 import { Wordmark } from "@/components/wordmark";
 import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
 import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
+import { pwaNames } from "@/lib/pwa";
 import { CITY_PAGES, cityPagePath } from "@/lib/seo";
 
 export function Footer({ replay = null }: { replay?: ReactNode }) {
+  const installName = pwaNames(appName()).shortName;
   return (
     <footer className="mt-auto border-t border-sand/80 bg-card/60 print:hidden">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-ink/65 sm:flex-row sm:items-start sm:justify-between">
@@ -20,6 +23,7 @@ export function Footer({ replay = null }: { replay?: ReactNode }) {
           <Link href="/welcome" className="hover:text-navy">
             Learn about Rangach
           </Link>
+          <InstallAppLink appName={installName} className="hover:text-navy" />
           <Link href="/list" className="hover:text-navy">
             List your business
           </Link>
