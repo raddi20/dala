@@ -9,10 +9,13 @@ import {
   PWA_BACKGROUND_COLOR,
   PWA_THEME_COLOR,
   installHintText,
+  iosSupportsBrowserHomeScreen,
+  isAndroid,
   isInAppBrowser,
   isInstallHiddenPath,
+  isIosOtherBrowser,
   isIosSafari,
-  nextVisitCount,
+  parseIosVersion,
   pwaNames,
   resolveInstallSurface,
   shouldOfferInstall,
@@ -22,8 +25,14 @@ const IPHONE_SAFARI =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
 const CHROME_IOS =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.108 Mobile/15E148 Safari/604.1";
+const CHROME_IOS_OLD =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 15_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/110.0.5481.114 Mobile/15E148 Safari/604.1";
+const FIREFOX_IOS =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/125.0 Mobile/15E148 Safari/605.1.15";
 const ANDROID_CHROME =
   "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36";
+const SAMSUNG_INTERNET =
+  "Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/25.0 Chrome/121.0.0.0 Mobile Safari/537.36";
 const FB_IOS =
   "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/450.0;FBDV/iPhone]";
 const IG_ANDROID =
@@ -81,27 +90,23 @@ test("committed icons are pngs at the manifest sizes", () => {
   }
 });
 
-test("install hint waits for a second visit, remembers dismissal, and hides on admin and auth", () => {
+test("install hint shows on the first visit, remembers dismissal, and hides on admin and auth", () => {
   const now = 1_800_000_000_000;
   const base = {
-    visits: 2,
     dismissedAt: null,
     now,
     installed: false,
     standalone: false,
     hiddenPath: false,
   };
-  assert.equal(shouldOfferInstall({ ...base, visits: 1 }), false);
   assert.equal(shouldOfferInstall(base), true);
   assert.equal(shouldOfferInstall({ ...base, hiddenPath: true }), false);
   assert.equal(shouldOfferInstall({ ...base, installed: true }), false);
   assert.equal(shouldOfferInstall({ ...base, standalone: true }), false);
   assert.equal(shouldOfferInstall({ ...base, dismissedAt: now - 1_000 }), false);
+  assert.equal(shouldOfferInstall({ ...base, dismissedAt: now - 1_000, force: true }), true);
   assert.equal(shouldOfferInstall({ ...base, dismissedAt: now - INSTALL_DISMISS_MS }), true);
   assert.equal(INSTALL_DISMISS_MS, 30 * 24 * 60 * 60 * 1000);
-  assert.equal(nextVisitCount(0, false), 1);
-  assert.equal(nextVisitCount(1, true), 1);
-  assert.equal(nextVisitCount(1, false), 2);
 
   assert.equal(isInstallHiddenPath("/admin"), true);
   assert.equal(isInstallHiddenPath("/admin/reports"), true);
@@ -113,9 +118,22 @@ test("install hint waits for a second visit, remembers dismissal, and hides on a
   assert.equal(isInstallHiddenPath("/account"), false);
 });
 
-test("iOS hint is Safari-only and uses the home-screen instructions", () => {
+test("iOS version parsing and 16.4 home-screen support", () => {
+  assert.deepEqual(parseIosVersion(IPHONE_SAFARI), { major: 17, minor: 5 });
+  assert.deepEqual(parseIosVersion(CHROME_IOS_OLD), { major: 15, minor: 7 });
+  assert.equal(parseIosVersion(ANDROID_CHROME), null);
+  assert.equal(iosSupportsBrowserHomeScreen({ major: 16, minor: 4 }), true);
+  assert.equal(iosSupportsBrowserHomeScreen({ major: 16, minor: 3 }), false);
+  assert.equal(iosSupportsBrowserHomeScreen({ major: 17, minor: 0 }), true);
+  assert.equal(iosSupportsBrowserHomeScreen(null), false);
+});
+
+test("iOS Safari and other browsers are detected separately", () => {
   assert.equal(isIosSafari({ userAgent: IPHONE_SAFARI, platform: "iPhone", maxTouchPoints: 5 }), true);
   assert.equal(isIosSafari({ userAgent: CHROME_IOS, platform: "iPhone", maxTouchPoints: 5 }), false);
+  assert.equal(isIosOtherBrowser({ userAgent: CHROME_IOS, platform: "iPhone", maxTouchPoints: 5 }), true);
+  assert.equal(isIosOtherBrowser({ userAgent: FIREFOX_IOS, platform: "iPhone", maxTouchPoints: 5 }), true);
+  assert.equal(isIosOtherBrowser({ userAgent: IPHONE_SAFARI, platform: "iPhone", maxTouchPoints: 5 }), false);
   assert.equal(isIosSafari({ userAgent: ANDROID_CHROME, platform: "Linux armv8l", maxTouchPoints: 5 }), false);
   assert.equal(isIosSafari({ userAgent: FB_IOS, platform: "iPhone", maxTouchPoints: 5 }), false);
   assert.equal(
@@ -138,7 +156,9 @@ test("iOS hint is Safari-only and uses the home-screen instructions", () => {
   );
   assert.equal(installHintText("Rangach", "ios"), "Add Rangach to your Home Screen");
   assert.equal(installHintText("Rangach", "android"), "Install Rangach");
+  assert.equal(installHintText("Rangach", "android-manual"), "Add Rangach to your Home Screen");
   assert.equal(installHintText("Rangach", "inapp"), "Open Rangach in your browser to install it");
+  assert.equal(installHintText("Rangach", "ios-open-safari"), "Add Rangach to your Home Screen");
 });
 
 test("in-app browsers are detected across Facebook Instagram WhatsApp and WebView", () => {
@@ -149,54 +169,101 @@ test("in-app browsers are detected across Facebook Instagram WhatsApp and WebVie
   assert.equal(isInAppBrowser(IPHONE_SAFARI), false);
   assert.equal(isInAppBrowser(ANDROID_CHROME), false);
   assert.equal(isInAppBrowser(CHROME_IOS), false);
+  assert.equal(isAndroid(ANDROID_CHROME), true);
+  assert.equal(isAndroid(SAMSUNG_INTERNET), true);
+  assert.equal(isAndroid(IPHONE_SAFARI), false);
 });
 
-test("resolveInstallSurface picks in-app, iOS Safari, or Android BIP", () => {
-  assert.equal(
+test("resolveInstallSurface covers Android manual, iOS Chrome, and in-app", () => {
+  assert.deepEqual(
     resolveInstallSurface({
       userAgent: FB_IOS,
       platform: "iPhone",
       maxTouchPoints: 5,
       hasDeferredPrompt: true,
     }),
-    "inapp",
+    { surface: "inapp" },
   );
-  assert.equal(
+  assert.deepEqual(
     resolveInstallSurface({
       userAgent: IPHONE_SAFARI,
       platform: "iPhone",
       maxTouchPoints: 5,
       hasDeferredPrompt: false,
     }),
-    "ios",
+    { surface: "ios", iosShareTarget: "safari" },
   );
-  assert.equal(
-    resolveInstallSurface({
-      userAgent: ANDROID_CHROME,
-      platform: "Linux armv8l",
-      maxTouchPoints: 5,
-      hasDeferredPrompt: true,
-    }),
-    "android",
-  );
-  assert.equal(
-    resolveInstallSurface({
-      userAgent: ANDROID_CHROME,
-      platform: "Linux armv8l",
-      maxTouchPoints: 5,
-      hasDeferredPrompt: false,
-    }),
-    null,
-  );
-  assert.equal(
+  assert.deepEqual(
     resolveInstallSurface({
       userAgent: CHROME_IOS,
       platform: "iPhone",
       maxTouchPoints: 5,
       hasDeferredPrompt: false,
     }),
+    { surface: "ios", iosShareTarget: "address-bar" },
+  );
+  assert.deepEqual(
+    resolveInstallSurface({
+      userAgent: FIREFOX_IOS,
+      platform: "iPhone",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    { surface: "ios", iosShareTarget: "address-bar" },
+  );
+  assert.deepEqual(
+    resolveInstallSurface({
+      userAgent: CHROME_IOS_OLD,
+      platform: "iPhone",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    { surface: "ios-open-safari" },
+  );
+  assert.deepEqual(
+    resolveInstallSurface({
+      userAgent: ANDROID_CHROME,
+      platform: "Linux armv8l",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: true,
+    }),
+    { surface: "android" },
+  );
+  assert.deepEqual(
+    resolveInstallSurface({
+      userAgent: ANDROID_CHROME,
+      platform: "Linux armv8l",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    { surface: "android-manual" },
+  );
+  assert.deepEqual(
+    resolveInstallSurface({
+      userAgent: SAMSUNG_INTERNET,
+      platform: "Linux armv8l",
+      maxTouchPoints: 5,
+      hasDeferredPrompt: false,
+    }),
+    { surface: "android-manual" },
+  );
+  assert.equal(
+    resolveInstallSurface({
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+      platform: "MacIntel",
+      maxTouchPoints: 0,
+      hasDeferredPrompt: false,
+    }),
     null,
   );
+});
+
+test("footer and header keep an Install Rangach control", () => {
+  const footer = readFileSync(new URL("../components/footer.tsx", import.meta.url), "utf8");
+  const header = readFileSync(new URL("../components/header.tsx", import.meta.url), "utf8");
+  assert.match(footer, /InstallAppLink/);
+  assert.match(header, /InstallAppLink/);
 });
 
 test("sw.js is not cached for long and is allowed at the origin scope", async () => {
