@@ -35,6 +35,8 @@ export const INSTALL_INSTALLED_KEY = "rangach.pwa.installed";
 /** How long a dismissed install hint stays hidden. */
 export const INSTALL_DISMISS_MS = 30 * 24 * 60 * 60 * 1000;
 
+export type InstallSurface = "android" | "ios" | "inapp";
+
 export function normalizeAppPath(pathname: string): string {
   let path = pathname || "/";
   const hash = path.indexOf("#");
@@ -92,12 +94,32 @@ export function nextVisitCount(current: number, alreadyCountedThisSession: boole
 }
 
 /**
- * iPhone and iPad Safari only. Other iOS browsers do not offer Add to Home Screen
- * from the same Share sheet, and desktop Safari is not a phone home screen.
+ * Facebook, Instagram, WhatsApp, TikTok, and similar in-app browsers.
+ * They do not expose Add to Home Screen or beforeinstallprompt, so the install
+ * hint must tell people to open the site in Chrome or Safari instead.
+ */
+export function isInAppBrowser(userAgent: string): boolean {
+  const ua = userAgent || "";
+  if (
+    /FBAN|FBAV|FB_IAB|FBAN\/|FBIOS|Instagram|Line\/|MicroMessenger|WhatsApp|Snapchat|Pinterest|LinkedInApp|TikTok|Bytedance|musical_ly|Twitter|X\/|GSA\//i.test(
+      ua,
+    )
+  ) {
+    return true;
+  }
+  // Android WebView used by many host apps.
+  if (/Android/i.test(ua) && /; wv\)/i.test(ua)) return true;
+  return false;
+}
+
+/**
+ * iPhone and iPad Safari only. Other iOS browsers and in-app WebViews do not
+ * offer Add to Home Screen from the same Share sheet.
  */
 export function isIosSafari(input: { userAgent: string; platform: string; maxTouchPoints: number }): boolean {
   const ua = input.userAgent;
-  if (/CriOS|FxiOS|EdgiOS|OPiOS|Android|DuckDuckGo|GSA\/|OPT\//.test(ua)) return false;
+  if (isInAppBrowser(ua)) return false;
+  if (/CriOS|FxiOS|EdgiOS|OPiOS|Android|DuckDuckGo|OPT\//.test(ua)) return false;
   const iPhone = /iPhone|iPod/.test(ua);
   const iPad = /iPad/.test(ua) || (/Macintosh/.test(ua) && input.platform === "MacIntel" && input.maxTouchPoints > 1);
   if (!iPhone && !iPad) return false;
@@ -106,9 +128,37 @@ export function isIosSafari(input: { userAgent: string; platform: string; maxTou
   return true;
 }
 
-export function installHintText(appName: string, mode: "android" | "ios"): string {
+/**
+ * Pick which install surface to show. In-app browsers win over iOS Safari
+ * detection because their UAs often still contain "Safari". Android only
+ * returns when a deferred beforeinstallprompt event is available.
+ */
+export function resolveInstallSurface(input: {
+  userAgent: string;
+  platform: string;
+  maxTouchPoints: number;
+  hasDeferredPrompt: boolean;
+}): InstallSurface | null {
+  if (isInAppBrowser(input.userAgent)) return "inapp";
+  if (
+    isIosSafari({
+      userAgent: input.userAgent,
+      platform: input.platform,
+      maxTouchPoints: input.maxTouchPoints,
+    })
+  ) {
+    return "ios";
+  }
+  if (input.hasDeferredPrompt) return "android";
+  return null;
+}
+
+export function installHintText(appName: string, mode: InstallSurface): string {
   if (mode === "ios") {
-    return `Add ${appName} to your Home Screen: tap Share, then Add to Home Screen.`;
+    return `Add ${appName} to your Home Screen`;
+  }
+  if (mode === "inapp") {
+    return `Open ${appName} in your browser to install it`;
   }
   return `Install ${appName}`;
 }
