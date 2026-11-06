@@ -10,6 +10,7 @@ import {
   REPORT_REASONS,
 } from "@/lib/constants";
 import { normalizeContactPair } from "@/lib/phone";
+import { normalizeSocialHandle } from "@/lib/seller-share/handles";
 
 export type ActionState = { error: string; ok?: boolean; message?: string; field?: string };
 
@@ -147,6 +148,10 @@ export const storefrontSchema = z.object({
     .default("")
     .refine(httpUrl, "Banner URL must start with http:// or https://."),
   bio: z.string().trim().max(500, "About must be 500 characters or fewer.").default(""),
+  instagramHandle: z.string().trim().max(80).default(""),
+  facebookHandle: z.string().trim().max(80).default(""),
+  xHandle: z.string().trim().max(80).default(""),
+  tiktokHandle: z.string().trim().max(80).default(""),
 });
 
 export function parseStorefrontForm(formData: FormData) {
@@ -154,6 +159,10 @@ export function parseStorefrontForm(formData: FormData) {
     slug: field(formData, "slug"),
     bannerUrl: field(formData, "bannerUrl"),
     bio: field(formData, "bio"),
+    instagramHandle: field(formData, "instagramHandle"),
+    facebookHandle: field(formData, "facebookHandle"),
+    xHandle: field(formData, "xHandle"),
+    tiktokHandle: field(formData, "tiktokHandle"),
   });
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Check the form." };
@@ -165,7 +174,21 @@ export function parseStorefrontForm(formData: FormData) {
   const rawCity = field(formData, "city").trim();
   const city = rawCity ? canonicalCity(rawCity) : "";
   if (rawCity && !city) return { ok: false as const, error: "Choose a town." };
-  return { ok: true as const, data: { ...parsed.data, published, servesDiaspora, occasionsPresent, occasionSlugs, city } };
+  return {
+    ok: true as const,
+    data: {
+      ...parsed.data,
+      instagramHandle: normalizeSocialHandle(parsed.data.instagramHandle, "instagram"),
+      facebookHandle: normalizeSocialHandle(parsed.data.facebookHandle, "facebook"),
+      xHandle: normalizeSocialHandle(parsed.data.xHandle, "x"),
+      tiktokHandle: normalizeSocialHandle(parsed.data.tiktokHandle, "tiktok"),
+      published,
+      servesDiaspora,
+      occasionsPresent,
+      occasionSlugs,
+      city,
+    },
+  };
 }
 
 export function parsePriceCents(raw: string) {

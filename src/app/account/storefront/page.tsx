@@ -152,6 +152,9 @@ export default async function ManageStorefrontPage({
           <Link href={`/b/${shop.slug}/sticker`} className="text-lake-dark hover:text-lake">
             Print sticker
           </Link>
+          <Link href="/account/share" className="text-lake-dark hover:text-lake">
+            Share &amp; promote
+          </Link>
         </p>
         <p className="mt-1 text-sm text-ink/65">{stickerScanLabel(shop.stickerScans)}</p>
       </div>
@@ -298,6 +301,10 @@ export default async function ManageStorefrontPage({
             published={shop.published}
             verifiedPro={proActive}
             servesDiaspora={shop.servesDiaspora}
+            instagramHandle={shop.instagramHandle}
+            facebookHandle={shop.facebookHandle}
+            xHandle={shop.xHandle}
+            tiktokHandle={shop.tiktokHandle}
             occasions={occasionChoices}
             selectedOccasions={shop.occasions.map((row) => row.occasion.slug)}
             emphasizePublish={readyToPublish}

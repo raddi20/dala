@@ -21,6 +21,10 @@ export function StorefrontSettingsForm({
   published,
   verifiedPro,
   servesDiaspora,
+  instagramHandle = "",
+  facebookHandle = "",
+  xHandle = "",
+  tiktokHandle = "",
   occasions,
   selectedOccasions,
   emphasizePublish = false,
@@ -33,6 +37,10 @@ export function StorefrontSettingsForm({
   published: boolean;
   verifiedPro: boolean;
   servesDiaspora: boolean;
+  instagramHandle?: string;
+  facebookHandle?: string;
+  xHandle?: string;
+  tiktokHandle?: string;
   occasions: { slug: string; title: string }[];
   selectedOccasions: string[];
   emphasizePublish?: boolean;
@@ -89,6 +97,29 @@ export function StorefrontSettingsForm({
           )}
         </p>
       )}
+
+      <fieldset className="grid gap-3 rounded-xl border border-line/70 p-3">
+        <legend className="px-1 text-sm font-semibold text-navy">Social handles (optional)</legend>
+        <p className="text-sm text-ink/70">
+          Used in Account → Share captions. Paste a handle or profile URL. Leave blank if you do not use that network.
+        </p>
+        <label className="block text-sm">
+          Instagram
+          <input name="instagramHandle" defaultValue={instagramHandle} maxLength={80} placeholder="@yourshop" className={fieldClass} />
+        </label>
+        <label className="block text-sm">
+          Facebook page
+          <input name="facebookHandle" defaultValue={facebookHandle} maxLength={80} placeholder="yourshop" className={fieldClass} />
+        </label>
+        <label className="block text-sm">
+          X
+          <input name="xHandle" defaultValue={xHandle} maxLength={80} placeholder="@yourshop" className={fieldClass} />
+        </label>
+        <label className="block text-sm">
+          TikTok
+          <input name="tiktokHandle" defaultValue={tiktokHandle} maxLength={80} placeholder="@yourshop" className={fieldClass} />
+        </label>
+      </fieldset>
       <label className="flex items-start gap-2 text-sm">
         <input type="hidden" name="servesDiaspora" value="0" />
         <input type="checkbox" name="servesDiaspora" value="1" defaultChecked={servesDiaspora} className="mt-1" />

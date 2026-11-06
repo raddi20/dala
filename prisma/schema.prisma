@@ -170,6 +170,19 @@ model Storefront {
   stickerScans     Int      @default(0)
   // Admin-chosen send-home pilot. Existing shops stay off. Not a payment flag.
   sendHomePilot    Boolean  @default(false)
+  // Seller social handles for the in-account share tool. Empty until the seller saves them.
+  // Stored as @handles or page paths without the site prefix. Never invent values.
+  instagramHandle  String   @default("")
+  facebookHandle   String   @default("")
+  xHandle          String   @default("")
+  tiktokHandle     String   @default("")
+  // Set the first time we send the "shop is live" thank-you. Null means not sent.
+  // Already-live shops keep null and are never back-sent: only a fresh publish triggers it.
+  thankYouEmailSentAt DateTime?
+  // Opt out of periodic visibility tip emails. Default false = may receive them.
+  visibilityEmailOptOut Boolean @default(false)
+  // Last visibility tip email. Used for weekly-vs-monthly cadence.
+  lastVisibilityEmailAt DateTime?
   // Paystack subaccount for a protected order. Null until an admin enters it.
   // The shop is paid on this code. Rangach does not hold the money.
   paystackSubaccountCode String?
