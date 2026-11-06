@@ -8,13 +8,15 @@ export const maxDuration = 60;
 
 /**
  * One-shot thank-you backfill for shops that were already live when the feature shipped.
- * Not registered in vercel.json. Run once after deploy, then leave unused.
+ * Temporary hourly Vercel cron (vercel.json) so CRON_SECRET is attached automatically.
+ * Idempotent: after the first successful hour, later runs send zero (thankYouEmailSentAt).
+ * Remove the cron entry from vercel.json once the backfill has completed.
  *
+ * Manual:
  *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
  *     "https://www.rangach.co.ke/api/seller/cron/thank-you-backfill?once=1"
  *
- * Requires CRON_SECRET and once=1 (query or JSON body). A second call is a no-op
- * because thankYouEmailSentAt is set after each successful send.
+ * Requires CRON_SECRET. once=1 via query/body for manual calls, or x-vercel-cron: 1 from Vercel.
  */
 export async function handleThankYouBackfill(
   request: Request,
@@ -44,7 +46,7 @@ export async function handleThankYouBackfill(
     return NextResponse.json(
       {
         error: "Refusing to run without once=1",
-        hint: "This is a one-shot. Call with ?once=1 (or JSON {\"once\":1}) after deploy, then leave unused.",
+        hint: "This is a one-shot. Call with ?once=1 (or JSON {\"once\":1}), or wait for the hourly Vercel cron.",
       },
       { status: 400 },
     );
