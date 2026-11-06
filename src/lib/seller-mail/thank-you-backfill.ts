@@ -31,7 +31,14 @@ export function backfillThankYouEmailText(input: {
   const marketing = [
     "",
     "New in your account: Share & promote.",
-    `Open ${shareUrl} (also from ${accountUrl}) for ready captions and a branded card for WhatsApp, Instagram, Facebook, X, and TikTok. Each post can carry your Rangach shop link, your own social handles, and Rangach on Instagram, X, and TikTok (@rangachke) plus the Rangach Facebook Page. You post yourself — we do not connect to or post on your social accounts.`,
+    `Open ${shareUrl} (also from ${accountUrl}) for ready captions and a branded card for WhatsApp, Instagram, Facebook, X, and TikTok. Each post can carry your Rangach shop link, your own social handles, and Rangach on Instagram, X, and TikTok (@rangachke) plus the Rangach Facebook Page.`,
+    "",
+    "How to use it:",
+    "1. Open Share & promote.",
+    "2. Pick WhatsApp, Instagram, Facebook, X, or TikTok.",
+    "3. Copy the ready caption (it already has your Rangach shop link, your handles when saved, and Rangach’s socials).",
+    "4. Download or save the branded card, then post from your own account.",
+    "You post yourself — we do not connect to or post on your social accounts.",
     "",
     `On ${accountUrl} you will also find a short visibility checklist (photos, listings, hours, handles, and sharing your link). From time to time we may send a weekly tip email about gaps on your shop; every tip note includes an unsubscribe link.`,
     "",
@@ -178,8 +185,15 @@ export async function runThankYouBackfill(
   return { emailed, skipped, already, failed, eligible: candidates.length };
 }
 
-/** True when the request explicitly opts into the one-shot (query or JSON body). */
+/**
+ * True when the request explicitly opts into the one-shot.
+ * Manual calls need ?once=1 or JSON {"once":1}.
+ * Vercel Cron paths cannot reliably carry query strings, so a request with the
+ * x-vercel-cron header (Vercel sets this on scheduled invocations) counts as once=1.
+ * CRON_SECRET auth is still required separately via cronAuthorized.
+ */
 export function thankYouBackfillOnceFlag(request: Request, body: unknown): boolean {
+  if (request.headers.get("x-vercel-cron") === "1") return true;
   const url = new URL(request.url);
   if (url.searchParams.get("once") === "1") return true;
   if (body && typeof body === "object" && !Array.isArray(body)) {

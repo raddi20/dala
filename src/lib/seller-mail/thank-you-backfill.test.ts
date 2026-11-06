@@ -45,6 +45,11 @@ test("backfill keeps the go-live thank-you and adds the marketing note", () => {
   assert.match(message!.text, /visibility checklist/);
   assert.match(message!.text, /unsubscribe/);
   assert.match(message!.text, /You post yourself/);
+  assert.match(message!.text, /How to use it:/);
+  assert.match(message!.text, /Pick WhatsApp, Instagram, Facebook, X, or TikTok/);
+  assert.match(message!.text, /Copy the ready caption/);
+  assert.match(message!.text, /branded card/);
+  assert.match(message!.text, /post from your own account/);
   assert.equal(
     message!.text,
     backfillThankYouEmailText({
@@ -187,6 +192,40 @@ test("route requires CRON_SECRET and once=1", async () => {
     thankYouBackfillOnceFlag(
       new Request("https://example.com/x", { method: "POST" }),
       { once: 1 },
+    ),
+    true,
+  );
+});
+
+test("Vercel cron header counts as once=1 without weakening CRON_SECRET", async () => {
+  const env = { CRON_SECRET: "secret" } as unknown as NodeJS.ProcessEnv;
+  let runs = 0;
+  const run = async () => {
+    runs += 1;
+    return { emailed: 0, skipped: 0, already: 0, failed: 0, eligible: 0 };
+  };
+
+  const noAuth = await handleThankYouBackfill(
+    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill", {
+      headers: { "x-vercel-cron": "1" },
+    }),
+    { env, run },
+  );
+  assert.equal(noAuth.status, 401);
+  assert.equal(runs, 0);
+
+  const ok = await handleThankYouBackfill(
+    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill", {
+      headers: { authorization: "Bearer secret", "x-vercel-cron": "1" },
+    }),
+    { env, run },
+  );
+  assert.equal(ok.status, 200);
+  assert.equal(runs, 1);
+  assert.equal(
+    thankYouBackfillOnceFlag(
+      new Request("https://example.com/x", { headers: { "x-vercel-cron": "1" } }),
+      null,
     ),
     true,
   );
