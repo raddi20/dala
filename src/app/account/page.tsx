@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ShopBadgeStatus } from "@/components/badges";
 import { PaymentSetup } from "@/components/payment-setup";
 import { ProfileForm } from "@/components/profile-form";
+import { SellerVisibilityChecklist } from "@/components/seller-visibility-checklist";
 import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { signOutAction } from "@/lib/actions/auth";
@@ -16,6 +17,9 @@ import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
 import { protectedOrdersOn } from "@/lib/protected-order";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
+import { buildVisibilityChecklist } from "@/lib/seller-share/checklist";
+import { handlesFromShop } from "@/lib/seller-share/handles";
+import { whatsappShareLink } from "@/lib/whatsapp";
 import { formatWhen, one } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Account", robots: { index: false, follow: false } };
@@ -33,13 +37,20 @@ export default async function AccountPage({
       slug: true,
       published: true,
       hidden: true,
+      bannerUrl: true,
       phoneVerified: true,
       locationVerified: true,
       businessVerified: true,
+      instagramHandle: true,
+      facebookHandle: true,
+      xHandle: true,
+      tiktokHandle: true,
       badgeEvents: {
         select: { badge: true, action: true, method: true, createdAt: true },
         orderBy: { createdAt: "desc" },
       },
+      offerings: { where: { archived: false }, select: { imageUrl: true } },
+      branches: { select: { hours: true, phone: true } },
       _count: { select: { offerings: { where: { archived: false } } } },
     },
   });
@@ -101,6 +112,9 @@ export default async function AccountPage({
         <Link href="/account/insights" className="mt-1 block text-sm font-semibold text-lake-dark underline">
           Your week
         </Link>
+        <Link href="/account/share" className="mt-1 block text-sm font-semibold text-lake-dark underline">
+          Share &amp; promote
+        </Link>
         {protectedOrdersOn() ? (
           <Link href="/account/orders" className="mt-1 block text-sm font-semibold text-lake-dark underline">
             Protected orders
@@ -117,6 +131,33 @@ export default async function AccountPage({
         ) : null}
       </div>
       {flash ? <Flash>{flash}</Flash> : null}
+      {storefront?.published && !storefront.hidden ? (
+        <SellerVisibilityChecklist
+          items={buildVisibilityChecklist({
+            published: true,
+            bannerUrl: storefront.bannerUrl,
+            bio: user.bio,
+            phone: user.phone,
+            whatsapp: user.whatsapp,
+            offerings: storefront.offerings,
+            listings: listings.map((row) => ({ photoUrl: row.photoUrl })),
+            branches: storefront.branches,
+            handles: handlesFromShop({
+              instagramHandle: storefront.instagramHandle,
+              facebookHandle: storefront.facebookHandle,
+              xHandle: storefront.xHandle,
+              tiktokHandle: storefront.tiktokHandle,
+              whatsapp: user.whatsapp,
+              phone: user.phone,
+            }),
+            featured: listings.some((row) => row.featured),
+            verifiedPro: user.verifiedPro,
+          })}
+          shopUrl={`${defaultSiteUrl().replace(/\/$/, "")}/b/${storefront.slug}`}
+          shopName={user.name}
+          whatsappShareHref={whatsappShareLink(user.name, `${defaultSiteUrl().replace(/\/$/, "")}/b/${storefront.slug}`)}
+        />
+      ) : null}
       <ProfileForm
         user={{
           name: user.name,

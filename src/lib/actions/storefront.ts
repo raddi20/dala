@@ -12,6 +12,7 @@ import { getSessionUser } from "@/lib/session";
 import { uniqueSlug } from "@/lib/storefront";
 import { branchSavePlan, parseBranchesField } from "@/lib/shop-branches";
 import { field, parseOfferingForm, parseStorefrontForm, type ActionState } from "@/lib/validators";
+import { maybeSendShopThankYou } from "@/lib/seller-mail/thank-you";
 
 async function revalidateShop(userId: string, slug: string, previousSlug?: string) {
   revalidatePath("/account");
@@ -92,6 +93,10 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
           bannerUrl,
           published: parsed.data.published,
           servesDiaspora: parsed.data.servesDiaspora,
+          instagramHandle: parsed.data.instagramHandle,
+          facebookHandle: parsed.data.facebookHandle,
+          xHandle: parsed.data.xHandle,
+          tiktokHandle: parsed.data.tiktokHandle,
         },
       }),
       prisma.user.update({
@@ -113,6 +118,15 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
       return { error: "That shop address is already taken." };
     }
     throw error;
+  }
+
+  const newlyPublished = parsed.data.published && !storefront.published;
+  if (newlyPublished) {
+    try {
+      await maybeSendShopThankYou(storefront.id);
+    } catch {
+      // Publish already saved; mail failure must not block the seller.
+    }
   }
 
   if (parsed.data.occasionsPresent) {
@@ -200,8 +214,14 @@ export async function createOffering(_prev: ActionState, formData: FormData): Pr
 
 export async function publishStorefront() {
   const { user, storefront } = await requireUserShop();
-  if (!storefront.published) {
+  const firstPublish = !storefront.published;
+  if (firstPublish) {
     await prisma.storefront.update({ where: { id: storefront.id }, data: { published: true } });
+    try {
+      await maybeSendShopThankYou(storefront.id);
+    } catch {
+      // Publish already saved; mail failure must not block the seller.
+    }
   }
   await revalidateShop(user.id, storefront.slug);
   redirect("/account/storefront?notice=published");
