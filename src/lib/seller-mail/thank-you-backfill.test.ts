@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { handleThankYouBackfill } from "@/app/api/seller/cron/thank-you-backfill/route";
 import {
+  backfillThankYouEmailText,
   buildBackfillThankYouMessage,
   isEligibleForThankYouBackfill,
   runThankYouBackfill,
@@ -24,16 +25,33 @@ function shop(overrides: Partial<BackfillCandidate> = {}): BackfillCandidate {
   };
 }
 
-test("backfill uses the same thank-you template as go-live", () => {
+test("backfill keeps the go-live thank-you and adds the marketing note", () => {
   const message = buildBackfillThankYouMessage(shop(), "https://www.rangach.co.ke");
   assert.ok(message);
   assert.equal(message!.subject, "Your Rangach shop is live");
+  const goLive = thankYouEmailText({
+    ownerName: "Amina",
+    shopName: "Amina Kitchen",
+    shopUrl: "https://www.rangach.co.ke/b/amina-kitchen",
+  });
+  // Go-live template for brand-new shops stays unchanged (no Share & promote pitch).
+  assert.equal(/account\/share|visibility checklist|weekly tip/i.test(goLive), false);
+  assert.match(message!.text, /Your shop Amina Kitchen is live on Rangach/);
+  assert.match(message!.text, /https:\/\/www\.rangach\.co\.ke\/b\/amina-kitchen/);
+  assert.match(message!.text, /https:\/\/www\.rangach\.co\.ke\/account\/share/);
+  assert.match(message!.text, /https:\/\/www\.rangach\.co\.ke\/account/);
+  assert.match(message!.text, /Share & promote/);
+  assert.match(message!.text, /@rangachke/);
+  assert.match(message!.text, /visibility checklist/);
+  assert.match(message!.text, /unsubscribe/);
+  assert.match(message!.text, /You post yourself/);
   assert.equal(
     message!.text,
-    thankYouEmailText({
+    backfillThankYouEmailText({
       ownerName: "Amina",
       shopName: "Amina Kitchen",
       shopUrl: "https://www.rangach.co.ke/b/amina-kitchen",
+      origin: "https://www.rangach.co.ke",
     }),
   );
 });
@@ -83,7 +101,8 @@ test("sends to eligible live shops and a second run sends zero", async () => {
       mailed.push(message.to);
       assert.match(message.text, /Your Rangach shop is live|Your shop .+ is live on Rangach/);
       assert.match(message.text, /https:\/\/www\.rangach\.co\.ke\/b\//);
-      assert.equal(/visibility|weekly tip|Account → Share for ready captions/i.test(message.text), false);
+      assert.match(message.text, /Share & promote/);
+      assert.match(message.text, /visibility checklist/);
       return "sent";
     },
   });
