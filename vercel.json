@@ -13,10 +13,6 @@
     {
       "path": "/api/seller/cron/visibility-tips",
       "schedule": "0 6 * * 1"
-    },
-    {
-      "path": "/api/seller/cron/thank-you-backfill",
-      "schedule": "0 * * * *"
     }
   ]
 }
