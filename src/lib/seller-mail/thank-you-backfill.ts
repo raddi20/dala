@@ -1,3 +1,4 @@
+import { cronAuthorized } from "@/lib/ai/cron-auth";
 import { defaultSiteUrl } from "@/lib/brand";
 import { sendMail, type TipEmail } from "@/lib/email/zeptomail";
 import { prisma } from "@/lib/prisma";
@@ -186,14 +187,19 @@ export async function runThankYouBackfill(
 }
 
 /**
- * True when the request explicitly opts into the one-shot.
- * Manual calls need ?once=1 or JSON {"once":1}.
- * Vercel Cron paths cannot reliably carry query strings, so a request with the
- * x-vercel-cron header (Vercel sets this on scheduled invocations) counts as once=1.
- * CRON_SECRET auth is still required separately via cronAuthorized.
+ * Explicit manual once markers: ?once=1 or JSON {"once":1}.
+ * A valid CRON_SECRET bearer also counts, because Vercel Cron GETs the route
+ * with that bearer and does not send `x-vercel-cron` or a once query param.
+ *
+ * `x-vercel-cron` and `User-Agent` are not markers and are not authentication.
+ * Callers still have to pass cronAuthorized before running the backfill.
  */
-export function thankYouBackfillOnceFlag(request: Request, body: unknown): boolean {
-  if (request.headers.get("x-vercel-cron") === "1") return true;
+export function thankYouBackfillOnceFlag(
+  request: Request,
+  body: unknown,
+  env?: NodeJS.ProcessEnv,
+): boolean {
+  if (env && cronAuthorized(request, env)) return true;
   const url = new URL(request.url);
   if (url.searchParams.get("once") === "1") return true;
   if (body && typeof body === "object" && !Array.isArray(body)) {

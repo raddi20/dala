@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cronAuthorized } from "@/lib/ai/cron-auth";
-import { runThankYouBackfill, thankYouBackfillOnceFlag } from "@/lib/seller-mail/thank-you-backfill";
+import { runThankYouBackfill } from "@/lib/seller-mail/thank-you-backfill";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -8,48 +8,30 @@ export const maxDuration = 60;
 
 /**
  * One-shot thank-you backfill for shops that were already live when the feature shipped.
- * Temporary hourly Vercel cron (vercel.json) so CRON_SECRET is attached automatically.
- * Idempotent: after the first successful hour, later runs send zero (thankYouEmailSentAt).
+ * Temporary hourly Vercel cron (vercel.json). Idempotent via thankYouEmailSentAt:
+ * a shop that already has that timestamp is skipped, so later hours send nothing for it.
  * Remove the cron entry from vercel.json once the backfill has completed.
  *
- * Manual:
- *   curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
- *     "https://www.rangach.co.ke/api/seller/cron/thank-you-backfill?once=1"
+ * Vercel Cron GETs this path with `Authorization: Bearer $CRON_SECRET` and
+ * `User-Agent: vercel-cron/1.0`. It does not send `x-vercel-cron` or `?once=1`.
+ * A valid bearer is the opt-in and is enough to run. A missing, wrong, or unset
+ * CRON_SECRET is rejected. User-Agent, `x-vercel-cron`, and `x-vercel-cron-schedule`
+ * are ignored for authorization.
  *
- * Requires CRON_SECRET. once=1 via query/body for manual calls, or x-vercel-cron: 1 from Vercel.
+ * Manual:
+ *   curl -H "Authorization: Bearer $CRON_SECRET" \
+ *     "https://www.rangach.co.ke/api/seller/cron/thank-you-backfill"
  */
 export async function handleThankYouBackfill(
   request: Request,
   deps: {
     env?: NodeJS.ProcessEnv;
     run?: typeof runThankYouBackfill;
-    readBody?: () => Promise<unknown>;
   } = {},
 ): Promise<Response> {
   const env = deps.env ?? process.env;
   if (!cronAuthorized(request, env)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  let body: unknown = null;
-  if (deps.readBody) {
-    body = await deps.readBody();
-  } else if (request.method === "POST") {
-    try {
-      body = await request.json();
-    } catch {
-      body = null;
-    }
-  }
-
-  if (!thankYouBackfillOnceFlag(request, body)) {
-    return NextResponse.json(
-      {
-        error: "Refusing to run without once=1",
-        hint: "This is a one-shot. Call with ?once=1 (or JSON {\"once\":1}), or wait for the hourly Vercel cron.",
-      },
-      { status: 400 },
-    );
   }
 
   try {
