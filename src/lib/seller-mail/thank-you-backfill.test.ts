@@ -151,82 +151,187 @@ test("backfill never fires visibility tip emails", async () => {
   assert.equal(tipCalls, 0);
 });
 
-test("route requires CRON_SECRET and once=1", async () => {
-  const env = { CRON_SECRET: "secret" } as unknown as NodeJS.ProcessEnv;
+function cronEnv(secret: string | undefined): NodeJS.ProcessEnv {
+  const env: Record<string, string> = {};
+  if (secret !== undefined) env.CRON_SECRET = secret;
+  return env as unknown as NodeJS.ProcessEnv;
+}
+
+test("valid bearer runs without x-vercel-cron or once=1", async () => {
+  const env = cronEnv("secret");
   let runs = 0;
   const run = async () => {
     runs += 1;
     return { emailed: 0, skipped: 0, already: 0, failed: 0, eligible: 0 };
   };
 
-  const unauthorized = await handleThankYouBackfill(
-    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill?once=1", {
-      headers: { authorization: "Bearer wrong" },
-    }),
-    { env, run },
-  );
-  assert.equal(unauthorized.status, 401);
-  assert.equal(runs, 0);
-
-  const missingOnce = await handleThankYouBackfill(
+  const response = await handleThankYouBackfill(
     new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill", {
+      method: "GET",
       headers: { authorization: "Bearer secret" },
     }),
     { env, run },
   );
-  assert.equal(missingOnce.status, 400);
-  assert.equal(runs, 0);
-
-  const ok = await handleThankYouBackfill(
-    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill?once=1", {
-      headers: { authorization: "Bearer secret" },
-    }),
-    { env, run },
-  );
-  assert.equal(ok.status, 200);
-  const json = (await ok.json()) as { tipEmails?: number };
+  assert.equal(response.status, 200);
+  const json = (await response.json()) as { tipEmails?: number; error?: string };
   assert.equal(json.tipEmails, 0);
+  assert.equal(json.error, undefined);
   assert.equal(runs, 1);
+
+  const manual = await handleThankYouBackfill(
+    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill?once=1", {
+      method: "POST",
+      headers: { authorization: "Bearer secret" },
+    }),
+    { env, run },
+  );
+  assert.equal(manual.status, 200);
+  assert.equal(runs, 2);
 
   assert.equal(
     thankYouBackfillOnceFlag(
-      new Request("https://example.com/x", { method: "POST" }),
-      { once: 1 },
+      new Request("https://example.com/x", {
+        headers: { authorization: "Bearer secret" },
+      }),
+      null,
+      env,
     ),
+    true,
+  );
+  assert.equal(
+    thankYouBackfillOnceFlag(new Request("https://example.com/x", { method: "POST" }), { once: 1 }),
+    true,
+  );
+  assert.equal(
+    thankYouBackfillOnceFlag(new Request("https://example.com/x?once=1"), null),
     true,
   );
 });
 
-test("Vercel cron header counts as once=1 without weakening CRON_SECRET", async () => {
-  const env = { CRON_SECRET: "secret" } as unknown as NodeJS.ProcessEnv;
+test("real Vercel cron GET with bearer proceeds without x-vercel-cron", async () => {
+  const env = cronEnv("secret");
   let runs = 0;
   const run = async () => {
     runs += 1;
     return { emailed: 0, skipped: 0, already: 0, failed: 0, eligible: 0 };
   };
 
-  const noAuth = await handleThankYouBackfill(
+  const response = await handleThankYouBackfill(
     new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill", {
-      headers: { "x-vercel-cron": "1" },
+      method: "GET",
+      headers: {
+        authorization: "Bearer secret",
+        "user-agent": "vercel-cron/1.0",
+        "x-vercel-cron-schedule": "0 * * * *",
+      },
     }),
     { env, run },
   );
-  assert.equal(noAuth.status, 401);
+  assert.equal(response.status, 200);
+  assert.equal(runs, 1);
+  const json = (await response.json()) as { tipEmails?: number };
+  assert.equal(json.tipEmails, 0);
+});
+
+test("cron header or user-agent never authorizes, and a bad bearer is rejected", async () => {
+  const env = cronEnv("secret");
+  let runs = 0;
+  const run = async () => {
+    runs += 1;
+    return { emailed: 0, skipped: 0, already: 0, failed: 0, eligible: 0 };
+  };
+  const url = "https://www.rangach.co.ke/api/seller/cron/thank-you-backfill";
+  const spoof = {
+    "user-agent": "vercel-cron/1.0",
+    "x-vercel-cron": "1",
+    "x-vercel-cron-schedule": "0 * * * *",
+  };
+
+  const cases: Array<{ headers: Record<string, string>; env: NodeJS.ProcessEnv; method?: string; query?: string; body?: string }> = [
+    { headers: { "x-vercel-cron": "1" }, env },
+    { headers: { "user-agent": "vercel-cron/1.0" }, env },
+    { headers: spoof, env },
+    { headers: { ...spoof, authorization: "Bearer wrong" }, env },
+    { headers: { ...spoof, authorization: "Bearer secret" }, env: cronEnv(undefined) },
+    { headers: { ...spoof, authorization: "Bearer secret" }, env: cronEnv("") },
+    { headers: { ...spoof, authorization: "Bearer " }, env: cronEnv("   ") },
+    { headers: { authorization: "Bearer secret", "x-vercel-cron": "1" }, env: cronEnv(undefined) },
+    { headers: { ...spoof }, env, query: "?once=1" },
+    { headers: { ...spoof, authorization: "Bearer wrong" }, env, query: "?once=1" },
+    {
+      headers: { ...spoof, "content-type": "application/json" },
+      env,
+      method: "POST",
+      body: JSON.stringify({ once: 1 }),
+    },
+  ];
+
+  for (const entry of cases) {
+    const response = await handleThankYouBackfill(
+      new Request(`${url}${entry.query ?? ""}`, {
+        method: entry.method ?? "GET",
+        headers: entry.headers,
+        body: entry.body,
+      }),
+      { env: entry.env, run },
+    );
+    assert.equal(response.status, 401);
+    assert.deepEqual(await response.json(), { error: "Unauthorized" });
+  }
   assert.equal(runs, 0);
 
-  const ok = await handleThankYouBackfill(
-    new Request("https://www.rangach.co.ke/api/seller/cron/thank-you-backfill", {
-      headers: { authorization: "Bearer secret", "x-vercel-cron": "1" },
-    }),
-    { env, run },
-  );
-  assert.equal(ok.status, 200);
-  assert.equal(runs, 1);
   assert.equal(
     thankYouBackfillOnceFlag(
-      new Request("https://example.com/x", { headers: { "x-vercel-cron": "1" } }),
+      new Request("https://example.com/x", {
+        headers: { "x-vercel-cron": "1", "user-agent": "vercel-cron/1.0" },
+      }),
       null,
     ),
-    true,
+    false,
   );
+  assert.equal(
+    thankYouBackfillOnceFlag(
+      new Request("https://example.com/x", {
+        headers: { authorization: "Bearer wrong", "x-vercel-cron": "1", "user-agent": "vercel-cron/1.0" },
+      }),
+      null,
+      env,
+    ),
+    false,
+  );
+});
+
+test("already-thanked shop is skipped and the mailer is not called", async () => {
+  const mailed: string[] = [];
+  let marks = 0;
+  const result = await runThankYouBackfill({
+    now: new Date("2026-11-12T13:00:00Z"),
+    origin: "https://www.rangach.co.ke",
+    candidates: [
+      shop({
+        storefrontId: "done",
+        email: "done@example.com",
+        slug: "done",
+        thankYouEmailSentAt: new Date("2026-11-01T00:00:00Z"),
+      }),
+    ],
+    markSent: async () => {
+      marks += 1;
+      return true;
+    },
+    clearSent: async () => {
+      throw new Error("clearSent should not run");
+    },
+    send: async (message) => {
+      mailed.push(message.to);
+      return "sent";
+    },
+  });
+
+  assert.equal(result.emailed, 0);
+  assert.equal(result.skipped, 1);
+  assert.equal(result.already, 0);
+  assert.equal(result.failed, 0);
+  assert.equal(marks, 0);
+  assert.deepEqual(mailed, []);
 });
