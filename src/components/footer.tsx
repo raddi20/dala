@@ -27,6 +27,9 @@ export function Footer({ replay = null }: { replay?: ReactNode }) {
           <Link href="/list" className="hover:text-navy">
             List your business
           </Link>
+          <Link href="/list-your-shop" className="hover:text-navy">
+            List your shop
+          </Link>
           <Link href="/occasions" className="hover:text-navy">
             Occasions
           </Link>

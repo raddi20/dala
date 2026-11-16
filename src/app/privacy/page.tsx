@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { EntityContact } from "@/components/entity-contact";
 import { InfoPage, InfoSection } from "@/components/info-page";
 import { AGENT_COOKIE, AGENT_COOKIE_DAYS } from "@/lib/agent-code";
+import { LIST_YOUR_SHOP_PATH, RECRUITER_COOKIE, RECRUITER_COOKIE_DAYS } from "@/lib/recruiter";
 import { appName } from "@/lib/brand";
 import { SEARCH_CACHE_MS } from "@/lib/ai/search-parse";
 import { CONTACT_EMAIL, LEGAL_DRAFT_NOTE, LICENSED_PAYMENT_PROVIDER, legalEntityLabel, publicInfoPage, verifiedProDurationCopy } from "@/lib/public-info";
@@ -242,6 +243,15 @@ export default function PrivacyPage() {
           value is ignored. When you create an account, we copy the code onto that new account. We do not overwrite a
           code already saved on an account. We do not store your IP address or a device id for this. You can clear the
           cookie in your browser. The site still works.
+        </p>
+        <p>
+          If you open a shop recruiter link ({LIST_YOUR_SHOP_PATH}?ref=…), we store that short code in a first-party
+          cookie named {RECRUITER_COOKIE} for about {RECRUITER_COOKIE_DAYS} days, on this site only, with SameSite=Lax,
+          and a copy in local storage on this device. A later visit with a different valid code replaces it. A junk
+          value is ignored. When you start a shop, and the code belongs to an active recruiter, we copy it onto that
+          shop. We do not store an unknown or inactive code. We do not change a code already saved on a shop. We do
+          not store your IP address or a device id for this. You can clear the cookie in your browser. The site still
+          works, and the shop still opens.
         </p>
         <p>
           The install hint remembers, on your device, if you have dismissed it. That uses local storage, not a cookie,

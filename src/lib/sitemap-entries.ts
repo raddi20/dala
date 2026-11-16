@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
 import { CITY_PAGES, cityPagePath, type CityPage } from "@/lib/seo";
+import { LIST_YOUR_SHOP_PATH } from "@/lib/recruiter";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
@@ -38,6 +39,7 @@ export function staticPublicPaths(): DatedPath[] {
     { path: "/" },
     { path: "/welcome" },
     { path: "/list" },
+    { path: LIST_YOUR_SHOP_PATH },
     { path: "/categories" },
     { path: "/occasions" },
     { path: "/pricing" },
@@ -82,7 +84,8 @@ export function buildSitemap(input: {
             path.path === "/send-home" ||
             path.path === "/business" ||
             path.path === "/welcome" ||
-            path.path === "/list"
+            path.path === "/list" ||
+            path.path === LIST_YOUR_SHOP_PATH
           ? 0.8
           : info
             ? 0.5

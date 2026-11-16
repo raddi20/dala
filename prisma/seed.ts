@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { roleForSeedUser, seedShouldSkip } from "../src/lib/admin-access";
+import { ensureSeedRecruiter } from "../src/lib/recruiter";
 import { ensureOccasionDefinitions } from "../src/lib/occasions";
 import { CATEGORIES, PRO_DAYS, regionForCity, type Category } from "../src/lib/constants";
 import { assessScam } from "../src/lib/scam";
@@ -769,10 +770,13 @@ async function main() {
     throw new Error("Seed shops need at least 3 offerings.");
   }
 
+  const { created: recruiterCreated } = await ensureSeedRecruiter(prisma);
+  if (recruiterCreated) console.log("Created recruiter irene (Irene), active.");
+
   const existingUsers = await prisma.user.count();
   if (seedShouldSkip(existingUsers)) {
     console.log(
-      `Refusing to seed: database already has ${existingUsers} users. Passwords, roles, shops, and listings were not changed. Demo rows are not re-created and their public visibility is left to HIDE_DEMO_SHOPS.`,
+      `Refusing to seed: database already has ${existingUsers} users. Passwords, roles, shops, and listings were not changed. Demo rows are not re-created and their public visibility is left to HIDE_DEMO_SHOPS. Recruiter irene is left as stored when that code already exists.`,
     );
     return;
   }

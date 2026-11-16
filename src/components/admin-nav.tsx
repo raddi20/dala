@@ -11,7 +11,7 @@ export function AdminNav({ ordersOn }: { ordersOn: boolean }) {
   const active = activeAdminHref(usePathname() ?? "");
   const items = [{ href: "/admin", label: "Dashboard" }, ...ADMIN_SECTIONS.filter((s) => ordersOn || s.href !== "/admin/orders")];
   return (
-    <nav aria-label="Admin sections" className="border-b border-sand bg-card" data-admin-nav>
+    <nav aria-label="Admin sections" className="border-b border-sand bg-card print:hidden" data-admin-nav>
       <ul className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2">
         {items.map((item) => {
           const on = item.href === active;

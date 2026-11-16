@@ -1,5 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { AGENT_COOKIE, agentCodeToStore, agentCookieOptions } from "@/lib/agent-code";
+import {
+  LIST_YOUR_SHOP_PATH,
+  RECRUITER_COOKIE,
+  recruiterCodeToStore,
+  recruiterCookieOptions,
+} from "@/lib/recruiter";
 import { PRIVATE_HEADER } from "@/lib/sw-policy";
 
 /** Auth.js session cookie, plain or __Secure-, possibly chunked (.0, .1). */
@@ -17,9 +23,17 @@ export function proxy(request: NextRequest) {
   if (hasSessionCookie(request.cookies.getAll().map((cookie) => cookie.name))) {
     response.headers.set(PRIVATE_HEADER, "1");
   }
+  const secure = request.nextUrl.protocol === "https:";
   const code = agentCodeToStore(request.cookies.get(AGENT_COOKIE)?.value, request.nextUrl.searchParams.get("agent"));
-  if (!code) return response;
-  response.cookies.set(AGENT_COOKIE, code, agentCookieOptions(request.nextUrl.protocol === "https:"));
+  if (code) response.cookies.set(AGENT_COOKIE, code, agentCookieOptions(secure));
+  const path = request.nextUrl.pathname.replace(/\/$/, "") || "/";
+  if (path === LIST_YOUR_SHOP_PATH) {
+    const recruiter = recruiterCodeToStore(
+      request.cookies.get(RECRUITER_COOKIE)?.value,
+      request.nextUrl.searchParams.get("ref"),
+    );
+    if (recruiter) response.cookies.set(RECRUITER_COOKIE, recruiter, recruiterCookieOptions(secure));
+  }
   return response;
 }
 
