@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
 import { CITY_PAGES, cityPagePath, type CityPage } from "@/lib/seo";
-import { LIST_YOUR_SHOP_PATH } from "@/lib/recruiter";
+import { LIST_YOUR_SHOP_PATH, isRecruiterShortPath } from "@/lib/recruiter";
 import { absoluteUrl } from "@/lib/share-metadata";
 
 /** Not listed in the sitemap. Robots also disallows these prefixes. */
@@ -22,10 +22,15 @@ export function isPrivatePath(path: string) {
   return PRIVATE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
+/** Recruiter short links stay out of the sitemap. The redirect itself sends noindex. */
+export function omitFromSitemap(path: string) {
+  return isPrivatePath(path) || isRecruiterShortPath(path);
+}
+
 export type DatedPath = { path: string; updatedAt?: Date };
 
 function entry(origin: string, path: string, updatedAt?: Date, changeFrequency?: MetadataRoute.Sitemap[number]["changeFrequency"], priority?: number): MetadataRoute.Sitemap[number] | null {
-  if (isPrivatePath(path)) return null;
+  if (omitFromSitemap(path)) return null;
   return {
     url: absoluteUrl(origin, path),
     ...(updatedAt ? { lastModified: updatedAt } : {}),

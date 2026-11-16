@@ -6,7 +6,7 @@ import { btnSecondary } from "@/components/ui";
 import { RECRUITER_QR_PRINT_PX } from "@/lib/recruiter-qr";
 import { prisma } from "@/lib/prisma";
 import { publicOrigin } from "@/lib/payments/origin";
-import { normalizeRecruiterCode, recruiterSignupUrl } from "@/lib/recruiter";
+import { normalizeRecruiterCode, recruiterShortUrl, recruiterSignupUrl } from "@/lib/recruiter";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata: Metadata = {
@@ -21,7 +21,9 @@ export default async function RecruiterPrintPage({ params }: { params: Promise<{
   if (!code) notFound();
   const recruiter = await prisma.recruiter.findUnique({ where: { code } });
   if (!recruiter) notFound();
-  const link = recruiterSignupUrl(await publicOrigin(), recruiter.code);
+  const origin = await publicOrigin();
+  const link = recruiterShortUrl(origin, recruiter.code);
+  const longLink = recruiterSignupUrl(origin, recruiter.code);
   const png = `/admin/recruiters/${recruiter.code}/qr?px=${RECRUITER_QR_PRINT_PX}`;
 
   return (
@@ -42,6 +44,7 @@ export default async function RecruiterPrintPage({ params }: { params: Promise<{
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={png} alt={`QR code for ${link}`} width={RECRUITER_QR_PRINT_PX} height={RECRUITER_QR_PRINT_PX} className="h-auto w-full max-w-[40rem] bg-white" />
         <p className="break-all text-sm font-semibold text-navy">{link}</p>
+        <p className="break-all text-xs text-ink/60">{longLink}</p>
         {recruiter.active ? null : <p className="text-sm text-ink/60">This recruiter is inactive. New shops are not counted on this code.</p>}
       </article>
     </div>

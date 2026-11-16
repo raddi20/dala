@@ -4,7 +4,8 @@ import { CATEGORIES, categoryHref } from "@/lib/categories";
 import { OG_IMAGE, absoluteUrl, buildShareMetadata, clipText, listingPreviewImage, privateMetadata, publicImageUrl, shopPreviewImage } from "@/lib/share-metadata";
 import { listingOgModel, shopOgModel } from "@/lib/og-model";
 import { townPage, townPageForName } from "@/lib/seo";
-import { PRIVATE_PREFIXES, buildRobots, buildSitemap, isPrivatePath, staticPublicPaths } from "@/lib/sitemap-entries";
+import { PRIVATE_PREFIXES, buildRobots, buildSitemap, isPrivatePath, omitFromSitemap, staticPublicPaths } from "@/lib/sitemap-entries";
+import { isRecruiterShortPath } from "@/lib/recruiter";
 
 const origin = "https://www.rangach.co.ke";
 
@@ -52,6 +53,18 @@ test("sitemap lists public pages and skips admin, account, auth, and api", () =>
   assert.equal(urls.some((url) => url.includes("/account")), false);
   assert.equal(urls.some((url) => url.includes("/api")), false);
   assert.equal(urls.some((url) => url.includes("/login")), false);
+  assert.equal(
+    urls.some((url) => {
+      const path = new URL(url).pathname;
+      return path === "/r" || path.startsWith("/r/");
+    }),
+    false,
+  );
+  assert.equal(omitFromSitemap("/r/irene"), true);
+  assert.equal(omitFromSitemap("/r"), true);
+  assert.equal(isRecruiterShortPath("/register"), false);
+  assert.equal(isRecruiterShortPath("/ratings"), false);
+  assert.equal(omitFromSitemap("/list-your-shop"), false);
   assert.equal(urls.filter((url) => url.endsWith("/b/mama-atieno")).length, 1);
 });
 

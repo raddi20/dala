@@ -245,7 +245,7 @@ export default function PrivacyPage() {
           cookie in your browser. The site still works.
         </p>
         <p>
-          If you open a shop recruiter link ({LIST_YOUR_SHOP_PATH}?ref=…), we store that short code in a first-party
+          If you open a shop recruiter link ({LIST_YOUR_SHOP_PATH}?ref=…, or the short form /r/…), we store that short code in a first-party
           cookie named {RECRUITER_COOKIE} for about {RECRUITER_COOKIE_DAYS} days, on this site only, with SameSite=Lax,
           and a copy in local storage on this device. A later visit with a different valid code replaces it. A junk
           value is ignored. When you start a shop, and the code belongs to an active recruiter, we copy it onto that
