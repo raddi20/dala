@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
@@ -12,6 +13,7 @@ import { getSessionUser } from "@/lib/session";
 import { uniqueSlug } from "@/lib/storefront";
 import { branchSavePlan, parseBranchesField } from "@/lib/shop-branches";
 import { field, parseOfferingForm, parseStorefrontForm, type ActionState } from "@/lib/validators";
+import { RECRUITER_COOKIE, recruiterCodeForNewShop } from "@/lib/recruiter";
 import { maybeSendShopThankYou } from "@/lib/seller-mail/thank-you";
 
 async function revalidateShop(userId: string, slug: string, previousSlug?: string) {
@@ -56,15 +58,22 @@ function capMessage(user: { verifiedPro: boolean; verifiedProUntil: Date | null 
   return `Free shops can list ${cap} offerings. Verified Pro raises that to ${PRO_OFFERING_CAP} for ${PRO_DAYS} days.`;
 }
 
-export async function createStorefront() {
+export async function createStorefront(formData?: FormData) {
   const user = await getSessionUser();
   if (!user) redirect("/login?next=/account/storefront");
   const existing = await prisma.storefront.findUnique({ where: { userId: user.id } });
   if (existing) redirect("/account/storefront");
 
+  const jar = await cookies();
+  const formCode = formData ? field(formData, "recruiterCode") : "";
+  const recruiterCode = await recruiterCodeForNewShop(
+    { form: formCode, cookie: jar.get(RECRUITER_COOKIE)?.value ?? null },
+    (code) => prisma.recruiter.findUnique({ where: { code }, select: { code: true, active: true } }),
+  );
+
   const slug = await uniqueSlug(user.name);
   await prisma.storefront.create({
-    data: { userId: user.id, slug, published: false },
+    data: { userId: user.id, slug, published: false, recruiterCode },
   });
   await revalidateShop(user.id, slug);
   redirect("/account/storefront?notice=created");

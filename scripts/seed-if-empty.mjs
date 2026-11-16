@@ -39,6 +39,8 @@ try {
 
   // Occasion pages are created when missing. Titles and intros already saved are left alone.
   execFileSync(process.execPath, [tsx, "scripts/ensure-occasions.ts"], { stdio: "inherit" });
+  // Irene, when that recruiter code is missing. Does not rename her or turn her back on.
+  execFileSync(process.execPath, [tsx, "scripts/backfill-recruiters.ts"], { stdio: "inherit" });
 } finally {
   await prisma.$disconnect();
 }

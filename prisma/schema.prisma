@@ -186,6 +186,10 @@ model Storefront {
   // Paystack subaccount for a protected order. Null until an admin enters it.
   // The shop is paid on this code. Rangach does not hold the money.
   paystackSubaccountCode String?
+  // Recruiter code from /list-your-shop?ref=, copied once when the shop is created.
+  // Null when there was no code, or the code was unknown or inactive.
+  // Existing shops stay null. Never rewritten.
+  recruiterCode    String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   offerings        Offering[]
@@ -204,6 +208,7 @@ model Storefront {
   @@index([servesDiaspora])
   @@index([sendHomePilot])
   @@index([published, createdAt])
+  @@index([recruiterCode])
 }
 
 // One physical location of a shop. Each branch has its own town, address, phone and
@@ -687,6 +692,20 @@ model DiasporaWaitlist {
   @@index([country])
   @@index([homeArea])
   @@index([createdAt])
+}
+
+// A person who invites shops with /list-your-shop?ref=<code>.
+// code is lowercase and unique, and it stays put so a printed QR keeps working.
+// active false stops new shops from being attributed. Shops already saved stay counted.
+model Recruiter {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([active])
 }
 
 // A shop asking about Rangach Business. Billing is manual. No payment and no IP are stored.

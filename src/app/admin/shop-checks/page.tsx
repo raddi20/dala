@@ -65,7 +65,7 @@ export default async function AdminShopChecksPage({
         </p>
         {shops.length === 0 ? <p className="text-sm text-ink/70">No shops yet.</p> : null}
         {shops.map((shop) => (
-          <article key={shop.id} className="grid gap-4 rounded-2xl border border-sand bg-card p-4 text-sm">
+          <article id={`shop-${shop.id}`} key={shop.id} className="grid gap-4 rounded-2xl border border-sand bg-card p-4 text-sm">
             <div>
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <Link href={`/b/${shop.slug}`} className="font-semibold">

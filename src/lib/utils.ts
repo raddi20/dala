@@ -26,7 +26,7 @@ export function continueHref(signedIn: boolean, path: string) {
 
 export function authContinueCopy(next: string, mode: "login" | "register" = "login") {
   const start = mode === "register" ? "Create an account" : "Sign in";
-  if (next.startsWith("/account/storefront")) {
+  if (next.startsWith("/list-your-shop") || next.startsWith("/account/storefront")) {
     return `${start} to open your shop. We continue to shop setup after that.`;
   }
   if (next.startsWith("/listings/new")) {

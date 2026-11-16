@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { ShopBadgeStatus } from "@/components/badges";
+import { RecruiterRefField } from "@/components/recruiter-ref-field";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
@@ -14,6 +16,7 @@ import { ensureOccasionDefinitions } from "@/lib/occasions";
 import { prisma } from "@/lib/prisma";
 import { requireUser } from "@/lib/session";
 import { publishShopButtonVisible } from "@/lib/shop-publish";
+import { RECRUITER_COOKIE, recruiterCodeFromVisit } from "@/lib/recruiter";
 import { stickerScanLabel } from "@/lib/sticker";
 import { formatOfferingPrice, one } from "@/lib/utils";
 import { PAID_UPGRADES_COMING_SOON, paymentsLive } from "@/lib/payments/live";
@@ -31,6 +34,8 @@ export default async function ManageStorefrontPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const user = await requireUser("/account/storefront");
+  const jar = await cookies();
+  const recruiterCode = recruiterCodeFromVisit("", jar.get(RECRUITER_COOKIE)?.value);
   const live = paymentsLive();
   const sp = await searchParams;
   await ensureOccasionDefinitions(prisma);
@@ -116,6 +121,7 @@ export default async function ManageStorefrontPage({
               </p>
             )}
             <form action={createStorefront} className="mt-4">
+              <RecruiterRefField serverValue={recruiterCode} />
               <button data-tour="sell-publish" className={btnPrimary}>Start your shop</button>
             </form>
           </div>

@@ -6,7 +6,7 @@ import { deletedListingNote } from "@/lib/report-keep";
 
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 
-const NEW_PAGES = ["reports", "reviews", "shop-checks", "listings", "people", "field-agents", "mail", "activity"];
+const NEW_PAGES = ["reports", "reviews", "shop-checks", "listings", "people", "field-agents", "recruiters", "mail", "activity"];
 
 test("every admin section links to a page that exists", () => {
   for (const section of ADMIN_SECTIONS) {
