@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { RegisterForm } from "@/components/auth-forms";
+import { BusinessNameHint } from "@/components/business-name-hint";
 import { RecruiterRefField, RecruiterRefPersist } from "@/components/recruiter-ref-field";
 import { btnPrimary, cardClass } from "@/components/ui";
 import { createStorefront } from "@/lib/actions/storefront";
@@ -75,6 +76,7 @@ export default async function ListYourShopPage({
           <p className="text-sm text-ink/70">
             Shop name will be <span className="font-semibold text-navy">{user.name}</span>. The shop stays a draft until
             you publish it.
+            <BusinessNameHint name={user.name} />
           </p>
           <form action={createStorefront}>
             <RecruiterRefField serverValue={code} />

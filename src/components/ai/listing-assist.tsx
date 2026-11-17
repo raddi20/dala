@@ -5,6 +5,7 @@ import { btnSecondary, fieldClass } from "@/components/ui";
 
 export type ListingAssistDraft = {
   title: string;
+  businessName?: string;
   description: string;
   category: string;
   type: string;
@@ -62,6 +63,7 @@ export function ListingAssist({ onApply }: { onApply: (draft: ListingAssistDraft
       if (!status?.consented) setStatus({ enabled: true, consented: true });
       onApply({
         title: body.title,
+        businessName: body.businessName,
         description: body.description,
         category: body.category,
         type: body.type,

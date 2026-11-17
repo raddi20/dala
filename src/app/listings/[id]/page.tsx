@@ -2,6 +2,7 @@ import { JsonLd } from "@/components/json-ld";
 import { categoryHref, isCategory } from "@/lib/categories";
 import { breadcrumbJsonLd } from "@/lib/seo";
 import { itemPriceText } from "@/lib/item-card";
+import { shownPrice } from "@/lib/starting-price";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -172,7 +173,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
     id: listing.id,
     title: listing.title,
     photo: photo?.src ?? "",
-    price: listing.priceLabel,
+    price: shownPrice(listing),
     place: cityChipLabel(listing.city),
   };
   const notice =
@@ -238,7 +239,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
         {(() => {
-          const shown = itemPriceText(listing.priceLabel);
+          const shown = itemPriceText(shownPrice(listing));
           return (
             <p className={shown.ask ? "text-base font-medium text-ink/60" : "text-lg font-semibold text-ink"}>{shown.text}</p>
           );

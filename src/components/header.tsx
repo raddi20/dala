@@ -14,7 +14,10 @@ import { pwaNames } from "@/lib/pwa";
 import { appName } from "@/lib/brand";
 import { continueHref } from "@/lib/utils";
 
-const deskLink = "inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm font-medium text-white/80 hover:text-white";
+const deskLink =
+  "inline-flex min-h-11 items-center whitespace-nowrap rounded-lg px-2.5 text-sm font-medium text-white/80 hover:text-white";
+const menuLink =
+  "flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-white/90 hover:bg-white/10 hover:text-white";
 
 export async function Header() {
   const user = await getSessionUser();
@@ -30,66 +33,80 @@ export async function Header() {
     <>
       <header className="sticky top-0 z-30 bg-navy/95 text-white backdrop-blur print:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
-          <Link href="/" className="group flex min-w-0 items-center">
-            <Wordmark tone="onDark" />
+          <Link href="/" className="group flex shrink-0 items-center">
+            <Wordmark tone="onDark" truncate={false} />
           </Link>
 
-          <nav className="ml-auto hidden items-center gap-0.5 md:flex" aria-label="Directory">
+          <nav className="ml-auto hidden min-w-0 items-center gap-0.5 md:flex" aria-label="Directory">
             {showLang ? <LanguageSwitchControl lang={lang} /> : null}
-            <Link href="/listings" className={deskLink}>
+            <Link href="/listings" className={`${deskLink} hidden xl:inline-flex`}>
               Explore
             </Link>
-            <Link href="/shops" className={deskLink}>
+            <Link href="/shops" className={`${deskLink} hidden xl:inline-flex`}>
               Shops
             </Link>
-            <Link href="/occasions" className={deskLink}>
+            <Link href="/occasions" className={`${deskLink} hidden xl:inline-flex`}>
               Occasions
             </Link>
-            <Link href="/listings?region=diaspora" className={deskLink}>
-              For the diaspora
-            </Link>
-            <Link href="/send-home" className={deskLink}>
-              Send home
-            </Link>
-            <Link href="/business" className={deskLink}>
-              For shops
-            </Link>
-            {paymentsOpen ? (
-              <Link href="/pricing" className={deskLink}>
-                Pricing
-              </Link>
-            ) : null}
-            {user?.role === "admin" ? (
-              <Link href="/admin" className={deskLink}>
-                Admin{openReports > 0 ? ` (${openReports})` : ""}
-              </Link>
-            ) : null}
+            <details className="relative">
+              <summary className={`${deskLink} cursor-pointer list-none marker:content-none [&::-webkit-details-marker]:hidden`}>
+                More
+              </summary>
+              <div className="absolute right-0 top-full z-40 mt-1 w-56 rounded-xl border border-white/15 bg-navy p-1 shadow-xl">
+                <Link href="/listings" className={`${menuLink} xl:hidden`}>
+                  Explore
+                </Link>
+                <Link href="/shops" className={`${menuLink} xl:hidden`}>
+                  Shops
+                </Link>
+                <Link href="/occasions" className={`${menuLink} xl:hidden`}>
+                  Occasions
+                </Link>
+                <Link href="/listings?region=diaspora" className={menuLink}>
+                  For the diaspora
+                </Link>
+                <Link href="/send-home" className={menuLink}>
+                  Send home
+                </Link>
+                <Link href="/business" className={menuLink}>
+                  For shops
+                </Link>
+                {paymentsOpen ? (
+                  <Link href="/pricing" className={menuLink}>
+                    Pricing
+                  </Link>
+                ) : null}
+                {user?.role === "admin" ? (
+                  <Link href="/admin" className={menuLink}>
+                    Admin{openReports > 0 ? ` (${openReports})` : ""}
+                  </Link>
+                ) : null}
+                <Link href="/saved" className={menuLink}>
+                  Saved
+                </Link>
+                <InstallAppLink appName={installName} className={`${menuLink} w-full text-left`} />
+                {user ? (
+                  <form action={signOutAction}>
+                    <button className={`${menuLink} w-full text-left text-white/70`}>Sign out</button>
+                  </form>
+                ) : null}
+              </div>
+            </details>
             <Link
               href={listHref}
               data-tour="sell"
-              className="ml-1 inline-flex min-h-11 items-center rounded-full border border-gold-l px-3.5 text-sm font-semibold text-gold-l"
+              className="ml-1 inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border border-gold-l px-3.5 text-sm font-semibold text-gold-l"
             >
               List your business free
             </Link>
-            <Link href="/saved" className={deskLink}>
-              Saved
-            </Link>
-            <InstallAppLink appName={installName} className={deskLink} />
             {user ? (
-              <>
-                <Link href="/account" className={deskLink}>
-                  Account
-                </Link>
-                <form action={signOutAction}>
-                  <button className="inline-flex min-h-11 items-center rounded-lg px-2.5 text-sm text-white/70 hover:text-white">
-                    Sign out
-                  </button>
-                </form>
-              </>
+              <Link href="/account" className={deskLink}>
+                Account
+              </Link>
             ) : (
               <Link
                 href="/login"
-                className="ml-1 inline-flex min-h-11 items-center rounded-full border border-white/30 px-3.5 text-sm font-semibold text-white"
+                className="ml-1 inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border border-white/30 px-3.5 text-sm font-semibold text-white"
               >
                 Sign in
               </Link>

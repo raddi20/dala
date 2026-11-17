@@ -7,6 +7,7 @@ export function mockFixture(feature: AiFeature): unknown {
     case "listing_writer":
       return {
         title: "Three-seat sofa",
+        businessName: "Three Seat Sofa",
         description: "A used three-seat sofa.",
         category: "Home & furniture",
         type: "for_sale",

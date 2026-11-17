@@ -106,11 +106,12 @@ export async function updateStorefront(_prev: ActionState, formData: FormData): 
           facebookHandle: parsed.data.facebookHandle,
           xHandle: parsed.data.xHandle,
           tiktokHandle: parsed.data.tiktokHandle,
+          startingPriceKes: parsed.data.startingPriceKes,
         },
       }),
       prisma.user.update({
         where: { id: user.id },
-        data: { bio: parsed.data.bio, ...(parsed.data.city ? { city: parsed.data.city } : {}) },
+        data: { name: parsed.data.name, bio: parsed.data.bio, ...(parsed.data.city ? { city: parsed.data.city } : {}) },
       }),
       // The Town field is the main branch. Keep the first branch in step when one exists.
       ...(parsed.data.city

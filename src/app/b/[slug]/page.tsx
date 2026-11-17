@@ -1,4 +1,5 @@
 import { PRICE_ON_REQUEST } from "@/lib/item-card";
+import { fromKsh } from "@/lib/starting-price";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
@@ -359,6 +360,9 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
           </RemoteImage>
         </div>
         <h1 className="mt-3 font-serif text-[25px] leading-tight text-navy">{shop.user.name}</h1>
+        {fromKsh(shop.startingPriceKes) ? (
+          <p className="mt-1 text-base font-semibold text-ink">{fromKsh(shop.startingPriceKes)}</p>
+        ) : null}
         {place ? <p className="mt-1 text-sm text-muted">{place}</p> : null}
         {trust ? (
           shopBadges.phoneVerified || shopBadges.locationVerified || shopBadges.businessVerified ? (

@@ -1,4 +1,5 @@
 import { parsePrice } from "@/lib/price";
+import { readStartingPriceField, startingPriceFromInput } from "@/lib/starting-price";
 import { z } from "zod";
 import {
   CATEGORIES,
@@ -72,9 +73,10 @@ export function parseListingForm(formData: FormData) {
       field: phones.field === "phone" ? "contactPhone" : "contactWhatsapp",
     };
   }
+  const priced = startingPriceFromInput(parsed.data.priceLabel);
   return {
     ok: true as const,
-    data: { ...parsed.data, contactPhone: phones.phone, contactWhatsapp: phones.whatsapp },
+    data: { ...parsed.data, ...priced, contactPhone: phones.phone, contactWhatsapp: phones.whatsapp },
   };
 }
 
@@ -174,10 +176,16 @@ export function parseStorefrontForm(formData: FormData) {
   const rawCity = field(formData, "city").trim();
   const city = rawCity ? canonicalCity(rawCity) : "";
   if (rawCity && !city) return { ok: false as const, error: "Choose a town." };
+  const name = field(formData, "name").trim();
+  if (name.length < 2 || name.length > 80) return { ok: false as const, error: "Business name must be 2 to 80 characters." };
+  const starting = readStartingPriceField(field(formData, "startingPrice"));
+  if (!starting.ok) return { ok: false as const, error: starting.error };
   return {
     ok: true as const,
     data: {
       ...parsed.data,
+      name,
+      startingPriceKes: starting.amount,
       instagramHandle: normalizeSocialHandle(parsed.data.instagramHandle, "instagram"),
       facebookHandle: normalizeSocialHandle(parsed.data.facebookHandle, "facebook"),
       xHandle: normalizeSocialHandle(parsed.data.xHandle, "x"),

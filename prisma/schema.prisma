@@ -68,6 +68,9 @@ model Listing {
   region          String
   address         String    @default("")
   priceLabel      String    @default("")
+  // Optional starting price in Kenyan shillings. Null when the seller left it blank
+  // or wrote a free-text price. Shown as "from Ksh X" when set.
+  startingPriceKes Int?
   contactName     String    @default("")
   contactPhone    String    @default("")
   contactWhatsapp String    @default("")
@@ -186,6 +189,9 @@ model Storefront {
   // Paystack subaccount for a protected order. Null until an admin enters it.
   // The shop is paid on this code. Rangach does not hold the money.
   paystackSubaccountCode String?
+  // Optional starting price in Kenyan shillings. Null until the seller sets one.
+  // Shown on the shop card and the shop page as "from Ksh X".
+  startingPriceKes Int?
   // Recruiter code from /list-your-shop?ref=, copied once when the shop is created.
   // Null when there was no code, or the code was unknown or inactive.
   // Existing shops stay null. Never rewritten.

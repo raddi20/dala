@@ -2,6 +2,7 @@ import { cityChipLabel } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { cleanIds, type SavedItem } from "@/lib/saved";
 import { getSessionUser } from "@/lib/session";
+import { shownPrice } from "@/lib/starting-price";
 import { liveOwner } from "@/lib/visibility";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,7 @@ export async function GET() {
   });
   const listings = await prisma.listing.findMany({
     where: { id: { in: rows.map((row) => row.listingId) }, hidden: false, owner: liveOwner },
-    select: { id: true, title: true, photoUrl: true, priceLabel: true, city: true },
+    select: { id: true, title: true, photoUrl: true, priceLabel: true, startingPriceKes: true, city: true },
   });
   const byId = new Map(listings.map((listing) => [listing.id, listing]));
   const items: SavedItem[] = [];
@@ -38,7 +39,7 @@ export async function GET() {
       id: listing.id,
       title: listing.title,
       photo: listing.photoUrl,
-      price: listing.priceLabel,
+      price: shownPrice(listing),
       place: cityChipLabel(listing.city),
       at: row.createdAt.getTime(),
     });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import { updateStorefront } from "@/lib/actions/storefront";
 import { TownOptions } from "@/components/town-options";
@@ -8,6 +8,8 @@ import { FREE_OFFERING_CAP, PRO_DAYS, PRO_OFFERING_CAP, canonicalCity } from "@/
 import { PAID_UPGRADES_COMING_SOON } from "@/lib/payments/live";
 import { btnPrimary, ErrorNote, fieldClass } from "@/components/ui";
 import { PhotoField } from "@/components/photo-field";
+import { BusinessNameHint } from "@/components/business-name-hint";
+import { fromKsh } from "@/lib/starting-price";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
 
@@ -15,6 +17,8 @@ const initial: ActionState = { error: "" };
 
 export function StorefrontSettingsForm({
   slug,
+  businessName,
+  startingPriceKes = null,
   city,
   bannerUrl,
   bio,
@@ -31,6 +35,8 @@ export function StorefrontSettingsForm({
   paymentsOpen,
 }: {
   slug: string;
+  businessName: string;
+  startingPriceKes?: number | null;
   city: string;
   bannerUrl: string;
   bio: string;
@@ -47,10 +53,38 @@ export function StorefrontSettingsForm({
   paymentsOpen: boolean;
 }) {
   const [state, action] = useActionState(updateStorefront, initial);
+  const [name, setName] = useState(businessName);
 
   return (
     <form action={action} className="grid gap-4">
       <ErrorNote>{state.error}</ErrorNote>
+      <label className="block text-sm">
+        Business name
+        <input
+          name="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          required
+          minLength={2}
+          maxLength={80}
+          className={fieldClass}
+        />
+        <BusinessNameHint name={name} />
+      </label>
+      <label className="block text-sm">
+        Starting price <span className="text-ink/60">(optional)</span>
+        <input
+          name="startingPrice"
+          defaultValue={fromKsh(startingPriceKes)}
+          maxLength={40}
+          inputMode="numeric"
+          placeholder="from Ksh 500"
+          className={fieldClass}
+        />
+        <span className="mt-1 block text-xs text-ink/60">
+          Optional, and it helps. When you set one, the shop shows it as from Ksh 500.
+        </span>
+      </label>
       <label className="block text-sm">
         Shop address
         <div className="mt-1 flex items-center gap-2">
@@ -58,9 +92,7 @@ export function StorefrontSettingsForm({
           <input name="slug" defaultValue={slug} required maxLength={40} className={`${fieldClass} mt-0`} />
         </div>
       </label>
-      <p className="text-sm text-ink/70">
-        The name on the shop is your profile name. Change that on Account. The address stays put until you edit it here.
-      </p>
+      <p className="text-sm text-ink/70">The shop address stays put until you edit it here.</p>
       <label className="block text-sm">
         Main town
         <span className="mt-1 block text-ink/70">Your first branch. Add more towns under Branches.</span>

@@ -9,6 +9,9 @@ import { btnPrimary, btnSecondary, ErrorNote, FieldError, fieldClass } from "@/c
 import { PHONE_HINT } from "@/lib/phone";
 import { CategoryOptions } from "@/components/category-options";
 import { ListingAssist, type ListingAssistDraft } from "@/components/ai/listing-assist";
+import { BusinessNameHint } from "@/components/business-name-hint";
+import { looksLikeUsername } from "@/lib/business-name";
+import { fromKsh, kesAmountInText } from "@/lib/starting-price";
 import { PhotoField } from "@/components/photo-field";
 import { SubmitButton } from "@/components/submit-button";
 import type { ActionState } from "@/lib/validators";
@@ -41,6 +44,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
   const [city, setCity] = useState<string>(canonicalCity(initial.city) || "Nairobi");
   const [type, setType] = useState(initial.type);
   const [priceLabel, setPriceLabel] = useState(initial.priceLabel);
+  const [contactName, setContactName] = useState(initial.contactName);
   const [aiReview, setAiReview] = useState("");
 
   function markEdited() {
@@ -53,7 +57,16 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
     setCategory(draft.category);
     setType(draft.type);
     if (draft.priceLabel) setPriceLabel(draft.priceLabel);
-    const extra = draft.warnings.filter(Boolean).slice(0, 2).join(" ");
+    const nextTitle = draft.businessName && looksLikeUsername(draft.title) ? draft.businessName : draft.title;
+    setTitle(nextTitle);
+    if (draft.businessName) setContactName(draft.businessName);
+    const extra = [
+      draft.businessName ? `Suggested business name: ${draft.businessName}.` : "",
+      draft.priceLabel ? `Suggested starting price: ${draft.priceLabel}.` : "",
+      ...draft.warnings.filter(Boolean).slice(0, 2),
+    ]
+      .filter(Boolean)
+      .join(" ");
     setAiReview(extra ? `AI draft, please check. ${extra}` : "AI draft, please check.");
   }
 
@@ -68,6 +81,9 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
     setCategory(draft.category);
     setCity(draft.city);
     setType(draft.type);
+    const amount = kesAmountInText(prompt);
+    if (amount) setPriceLabel(fromKsh(amount));
+    if (draft.businessName) setContactName(draft.businessName);
     setNote(draft.note);
   }
 
@@ -132,6 +148,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
             maxLength={80}
             className={fieldClass}
           />
+          <BusinessNameHint name={title} />
         </label>
         <label className="block text-sm">
           Description
@@ -184,7 +201,7 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
           <input name="address" defaultValue={initial.address} maxLength={160} className={fieldClass} />
         </label>
         <label className="block text-sm">
-          Price <span className="text-ink/60">(optional, shown as you type it)</span>
+          Starting price <span className="text-ink/60">(optional)</span>
           <input
             name="priceLabel"
             data-tour="sell-price"
@@ -194,14 +211,27 @@ export function ListingForm({ mode, initial }: { mode: "create" | "edit"; initia
               markEdited();
             }}
             maxLength={40}
-            placeholder="KES 1,500 or £40"
+            placeholder="from Ksh 500"
             className={fieldClass}
           />
+          <span className="mt-1 block text-xs text-ink/60">
+            Adding a starting price helps buyers. It shows on the card as from Ksh 500. Leave it blank if you would rather agree the price in the chat.
+          </span>
         </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm">
             Contact name
-            <input name="contactName" defaultValue={initial.contactName} maxLength={80} className={fieldClass} />
+            <input
+              name="contactName"
+              value={contactName}
+              onChange={(event) => {
+                setContactName(event.target.value);
+                markEdited();
+              }}
+              maxLength={80}
+              className={fieldClass}
+            />
+            <BusinessNameHint name={contactName} />
           </label>
           <label className="block text-sm">
             Phone

@@ -9,7 +9,9 @@ import { ShopCard } from "@/components/shop-card";
 import { btnPrimary, chipClass, EmptyState } from "@/components/ui";
 import { isAiFeatureOn } from "@/lib/ai/flags";
 import { occasionTileOrder } from "@/lib/home-fresh";
-import { HOME_ASK_PLACEHOLDER, HOME_CATEGORY_CHIPS, HOME_PROMPTS, homePromptHref } from "@/lib/home-prompts";
+import { publicListingWhere } from "@/lib/demo-visibility";
+import { HOME_ASK_PLACEHOLDER, HOME_CATEGORY_CHIPS, homePromptHref, promptsFromListings } from "@/lib/home-prompts";
+import type { Lang } from "@/lib/i18n/lang";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { uiText, type StringKey } from "@/lib/i18n/strings";
 import { ensureOccasionDefinitions } from "@/lib/occasions";
@@ -23,7 +25,21 @@ import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
 import { continueHref } from "@/lib/utils";
 
-const HOME_PROMPT_KEYS = ["prompt_ayie", "prompt_tilapia", "prompt_dj", "prompt_fundi", "prompt_dowry"] as const satisfies readonly StringKey[];
+const DHOLUO_PROMPTS: Record<string, StringKey> = {
+  "catering for an ayie in Nairobi": "prompt_ayie",
+  "DJ for an ayie": "prompt_dj",
+  "fundi in Nairobi": "prompt_fundi",
+  "dowry ceremony catering": "prompt_dowry",
+  "beauty in Nairobi": "prompt_beauty",
+};
+
+function promptLabel(lang: Lang, prompt: { label: string; query: string }) {
+  if (lang === "dholuo") {
+    const key = DHOLUO_PROMPTS[prompt.query];
+    if (key) return uiText(lang, key);
+  }
+  return prompt.label;
+}
 const HOME_CHIP_KEYS = [
   "chip_all",
   "chip_food",
@@ -44,14 +60,20 @@ export default async function HomePage() {
   const paymentsOpen = paymentsLive();
   const listingWriter = await isAiFeatureOn("listing_writer");
   await ensureOccasionDefinitions(prisma);
-  const [rails, occasions, towns] = await Promise.all([
+  const [rails, occasions, towns, exampleRows] = await Promise.all([
     homeRails(user?.id),
     prisma.occasion.findMany({
       orderBy: [{ sortOrder: "asc" }, { title: "asc" }],
       select: { slug: true, title: true },
     }),
     townPagesWithContent(),
+    prisma.listing.findMany({
+      where: publicListingWhere(),
+      select: { category: true, city: true, type: true },
+      take: 500,
+    }),
   ]);
+  const prompts = promptsFromListings(exampleRows);
   const tiles = occasionTileOrder(occasions);
   const fresh = rails.fresh;
 
@@ -79,9 +101,9 @@ export default async function HomePage() {
             <button className={`${btnPrimary} shrink-0 px-5`}>{uiText(lang, "home_ask_button")}</button>
           </form>
           <div className="chip-scroll -mx-4 mt-3 px-4 pb-1">
-            {HOME_PROMPTS.map((prompt, index) => (
+            {prompts.map((prompt) => (
               <Link key={prompt.query} href={homePromptHref(prompt.query)} className={`${chipClass} bg-white`}>
-                {uiText(lang, HOME_PROMPT_KEYS[index] ?? "prompt_ayie")}
+                {promptLabel(lang, prompt)}
               </Link>
             ))}
           </div>
