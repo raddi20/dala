@@ -44,6 +44,9 @@ const sensitive = [
   "/upgrade/return",
   "/checkout",
   "/auth/signin",
+  "/r",
+  "/r/irene",
+  "/r/IRENE",
 ];
 
 test("sensitive, auth, payment, and non-GET requests are never stored", () => {

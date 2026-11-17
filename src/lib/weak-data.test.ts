@@ -34,6 +34,8 @@ test("public pages already viewed may be kept offline; private, form and paid pa
     "/orders/1",
     "/send-home",
     "/offline",
+    "/r/irene",
+    "/r",
     "/%61dmin",
     "/Account/",
   ]) {

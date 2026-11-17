@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { addShopRecruiter, updateShopRecruiter } from "@/app/admin/recruiters/actions";
+import { CopyTextButton } from "@/components/copy-text-button";
 import { StickerQr } from "@/components/sticker-sheet";
 import { btnPrimary, btnSecondary, fieldClass, labelClass } from "@/components/ui";
 import { RECRUITER_QR_PNG_PX } from "@/lib/recruiter-qr";
 import { prisma } from "@/lib/prisma";
 import { publicOrigin } from "@/lib/payments/origin";
-import { countReferredShops, recruiterSignupUrl, referredShopStatus } from "@/lib/recruiter";
+import { countReferredShops, recruiterShortUrl, recruiterSignupUrl, referredShopStatus } from "@/lib/recruiter";
 import { requireAdmin } from "@/lib/session";
 import { one } from "@/lib/utils";
 
@@ -92,7 +93,8 @@ export default async function AdminRecruitersPage({
 
       <ul className="grid gap-4">
         {recruiters.map((recruiter) => {
-          const link = recruiterSignupUrl(origin, recruiter.code);
+          const link = recruiterShortUrl(origin, recruiter.code);
+          const longLink = recruiterSignupUrl(origin, recruiter.code);
           const rows = shops.filter((shop) => shop.recruiterCode === recruiter.code);
           const counts = countReferredShops(rows.map((shop) => shop.createdAt));
           const png = `/admin/recruiters/${recruiter.code}/qr?px=${RECRUITER_QR_PNG_PX}&download=1`;
@@ -114,11 +116,15 @@ export default async function AdminRecruitersPage({
                 </span>
               </p>
 
-              <p>
-                <a href={link} className="break-all font-semibold text-lake-dark">
-                  {link}
-                </a>
-              </p>
+              <div className="grid gap-2">
+                <p className="flex flex-wrap items-center gap-2">
+                  <a href={link} className="break-all font-semibold text-lake-dark">
+                    {link}
+                  </a>
+                  <CopyTextButton text={link} />
+                </p>
+                <p className="break-all text-ink/55">Longer link: {longLink}</p>
+              </div>
 
               <div className="grid gap-3 sm:grid-cols-[auto_1fr] sm:items-center">
                 <StickerQr url={link} className="h-40 w-40 max-w-full bg-white" />
@@ -169,7 +175,7 @@ export default async function AdminRecruitersPage({
                   Save
                 </button>
               </form>
-              <p className="text-ink/50">Code {recruiter.code} stays on the link and the QR.</p>
+              <p className="text-ink/50">Code {recruiter.code} stays on the short link and the QR.</p>
             </li>
           );
         })}

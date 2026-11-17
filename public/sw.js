@@ -29,7 +29,8 @@
     "/register",
     "/upgrade",
     "/checkout",
-    "/auth"
+    "/auth",
+    "/r"
   ];
   function normalizePathname(pathname) {
     let path = pathname || "/";

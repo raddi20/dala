@@ -1,14 +1,22 @@
 /**
- * Shop recruiter links. /list-your-shop?ref=irene
+ * Shop recruiter links.
+ * Long form: /list-your-shop?ref=irene
+ * Short form: /r/irene (easier to tap in chat). It redirects to the long form.
  *
  * The code is trimmed and lowercased. It must match [a-z0-9-]{2,32}.
  * Irene and irene are the same code. Anything else is ignored.
  *
  * Persistence through sign-up:
  * - The proxy stores a valid code in the rangach_recruiter cookie (30 days,
- *   HttpOnly, SameSite=Lax, this site only) when the visit is /list-your-shop.
- *   A later valid code replaces it. Junk does not clear a code already stored.
- *   A ?ref= on any other page, including Rangach Business, does not set this cookie.
+ *   HttpOnly, SameSite=Lax, this site only) when the visit is /list-your-shop
+ *   or the short link /r/<code>. A later valid code replaces it. Junk does not
+ *   clear a code already stored. A ?ref= on any other page, including Rangach
+ *   Business, does not set this cookie.
+ * - /r/<code> is public. It answers with a temporary redirect to
+ *   /list-your-shop?ref=<code> and sets that same cookie. An invalid code still
+ *   redirects to /list-your-shop, with no ref. A well-formed code is not looked
+ *   up here: an unknown code is kept on the visit, and the shop is still created
+ *   without it, the same as opening the long link directly.
  * - The browser also keeps the same code in localStorage under rangach_recruiter,
  *   so a hidden field can still be filled if the cookie is missing.
  * - Starting the shop sends that code in a hidden field. The server action reads
@@ -91,6 +99,49 @@ export function recruiterRefToRemember(
 export function recruiterSignupUrl(origin: string, code: string) {
   const base = origin.replace(/\/$/, "");
   return `${base}${LIST_YOUR_SHOP_PATH}?ref=${encodeURIComponent(code)}`;
+}
+
+/** Short share link. /r/irene is the form people copy into chat. */
+export const RECRUITER_SHORT_PREFIX = "/r";
+
+export function recruiterShortUrl(origin: string, code: string) {
+  const base = origin.replace(/\/$/, "");
+  return `${base}${RECRUITER_SHORT_PREFIX}/${encodeURIComponent(code)}`;
+}
+
+/** True for /r and /r/<code>. Does not match /register or /reset-password. */
+export function isRecruiterShortPath(pathname: string) {
+  const path = (pathname.split("?")[0] ?? pathname).replace(/\/+$/, "") || "/";
+  return path === RECRUITER_SHORT_PREFIX || path.startsWith(`${RECRUITER_SHORT_PREFIX}/`);
+}
+
+function decodePathSegment(raw: string) {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
+/** Code from /r/<code>, or null when that path is not a single valid code. */
+export function recruiterCodeFromShortPath(pathname: string): string | null {
+  const path = (pathname.split("?")[0] ?? pathname).replace(/\/+$/, "") || "/";
+  const prefix = `${RECRUITER_SHORT_PREFIX}/`;
+  if (!path.startsWith(prefix)) return null;
+  const segment = path.slice(prefix.length);
+  if (!segment || segment.includes("/")) return null;
+  return normalizeRecruiterCode(decodePathSegment(segment));
+}
+
+/**
+ * Where /r/<code> sends the visitor.
+ * A valid code keeps ?ref=, including when no recruiter row exists yet.
+ * An invalid code opens the form with no ref.
+ */
+export function recruiterShortHop(raw: string): { code: string | null; path: string } {
+  const code = normalizeRecruiterCode(decodePathSegment(raw));
+  if (!code) return { code: null, path: LIST_YOUR_SHOP_PATH };
+  return { code, path: `${LIST_YOUR_SHOP_PATH}?ref=${encodeURIComponent(code)}` };
 }
 
 type RecruiterRow = { code: string; active: boolean };

@@ -22,8 +22,11 @@ export const OFFLINE_PATH = "/offline";
 
 /**
  * Never intercept these. Covers admin, account, auth (login, register, /api/auth,
- * and a custom /auth base), payment APIs, and the upgrade / checkout flow.
- * Matching is on the decoded path prefix, not a substring, so /listings/admin is public.
+ * and a custom /auth base), payment APIs, the upgrade / checkout flow, and
+ * recruiter short links (/r/…). Those links are public. The browser must see the
+ * temporary redirect and the cookie, so the worker does not handle them.
+ * Matching is on the decoded path prefix, not a substring, so /listings/admin
+ * and /register stay distinct from /r.
  */
 export const NEVER_STORE_PREFIXES = [
   "/admin",
@@ -34,6 +37,7 @@ export const NEVER_STORE_PREFIXES = [
   "/upgrade",
   "/checkout",
   "/auth",
+  "/r",
 ] as const;
 
 export type RequestPlan =

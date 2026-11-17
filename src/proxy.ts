@@ -3,6 +3,7 @@ import { AGENT_COOKIE, agentCodeToStore, agentCookieOptions } from "@/lib/agent-
 import {
   LIST_YOUR_SHOP_PATH,
   RECRUITER_COOKIE,
+  recruiterCodeFromShortPath,
   recruiterCodeToStore,
   recruiterCookieOptions,
 } from "@/lib/recruiter";
@@ -16,6 +17,10 @@ export function hasSessionCookie(names: readonly string[]): boolean {
 /**
  * Stores a valid ?agent= code on any matched page.
  * First-touch unless a new valid code arrives. Junk does not clear a code already stored.
+ *
+ * /r/<code> is public. This does not sign anyone in. A valid code on that path
+ * is stored in the same recruiter cookie as /list-your-shop?ref=. The route
+ * handler sends the temporary redirect. An invalid code is left alone.
  */
 export function proxy(request: NextRequest) {
   const response = NextResponse.next();
@@ -32,6 +37,11 @@ export function proxy(request: NextRequest) {
       request.cookies.get(RECRUITER_COOKIE)?.value,
       request.nextUrl.searchParams.get("ref"),
     );
+    if (recruiter) response.cookies.set(RECRUITER_COOKIE, recruiter, recruiterCookieOptions(secure));
+  }
+  const fromShort = recruiterCodeFromShortPath(path);
+  if (fromShort) {
+    const recruiter = recruiterCodeToStore(request.cookies.get(RECRUITER_COOKIE)?.value, fromShort);
     if (recruiter) response.cookies.set(RECRUITER_COOKIE, recruiter, recruiterCookieOptions(secure));
   }
   return response;

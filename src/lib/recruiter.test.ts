@@ -7,28 +7,37 @@ import sharp from "sharp";
 import { agentPresetRange } from "@/lib/agent-code";
 import { proxy } from "@/proxy";
 import { recruiterQrPng, RECRUITER_QR_PNG_PX, RECRUITER_QR_PRINT_PX } from "@/lib/recruiter-qr";
+import { RECRUITER_REDIRECT_STATUS, recruiterShortRedirect } from "@/lib/recruiter-redirect";
+import { GET as shortLink } from "@/app/r/[code]/route";
+import { GET as bareShortLink } from "@/app/r/route";
 import {
   LIST_YOUR_SHOP_PATH,
   RECRUITER_COOKIE,
   RECRUITER_COOKIE_MAX_AGE,
+  RECRUITER_SHORT_PREFIX,
   SEEDED_RECRUITER,
   addRecruiter,
   cleanRecruiterName,
   countReferredShops,
   editRecruiter,
   ensureSeedRecruiter,
+  isRecruiterShortPath,
   normalizeRecruiterCode,
   openShopWithReferral,
   recruiterCodeForNewShop,
+  recruiterCodeFromShortPath,
   recruiterCodeFromVisit,
   recruiterCodeToStore,
   recruiterCookieOptions,
   recruiterRefToRemember,
+  recruiterShortHop,
+  recruiterShortUrl,
   recruiterSignupUrl,
   referredShopStatus,
 } from "@/lib/recruiter";
 
 const IRENE_URL = "https://www.rangach.co.ke/list-your-shop?ref=irene";
+const IRENE_SHORT = "https://www.rangach.co.ke/r/irene";
 
 function active(code: string) {
   return async (wanted: string) => (wanted === code ? { code, active: true } : null);
@@ -92,6 +101,36 @@ test("a list-your-shop visit stores the ref, and other pages do not", () => {
   const elsewhere = proxy(new NextRequest("https://www.rangach.co.ke/list?ref=irene"));
   assert.equal(elsewhere.cookies.get(RECRUITER_COOKIE), undefined);
 
+  const short = proxy(new NextRequest("https://www.rangach.co.ke/r/Irene"));
+  const shortCookie = short.cookies.get(RECRUITER_COOKIE);
+  assert.equal(shortCookie?.value, "irene");
+  assert.equal(shortCookie?.httpOnly, true);
+  assert.equal(shortCookie?.sameSite, "lax");
+  assert.equal(shortCookie?.path, "/");
+  assert.equal(shortCookie?.maxAge, RECRUITER_COOKIE_MAX_AGE);
+  assert.equal(short.headers.get("location"), null);
+  assert.notEqual(short.status, 401);
+  assert.notEqual(short.status, 403);
+
+  const shortAgain = proxy(
+    new NextRequest("https://www.rangach.co.ke/r/irene", {
+      headers: { cookie: `${RECRUITER_COOKIE}=irene` },
+    }),
+  );
+  assert.equal(shortAgain.cookies.get(RECRUITER_COOKIE), undefined);
+
+  const shortJunk = proxy(
+    new NextRequest("https://www.rangach.co.ke/r/no!", {
+      headers: { cookie: `${RECRUITER_COOKIE}=irene` },
+    }),
+  );
+  assert.equal(shortJunk.cookies.get(RECRUITER_COOKIE), undefined);
+  assert.equal(recruiterCodeFromShortPath("/r/Irene"), "irene");
+  assert.equal(recruiterCodeFromShortPath("/r/no!"), null);
+  assert.equal(recruiterCodeFromShortPath("/register"), null);
+  assert.equal(isRecruiterShortPath("/r/irene"), true);
+  assert.equal(isRecruiterShortPath("/register"), false);
+
   assert.equal(recruiterCodeToStore("irene", "irene"), null);
   assert.equal(recruiterCodeToStore("irene", "bad code"), null);
   assert.equal(recruiterCodeFromVisit("Irene", "amina"), "irene");
@@ -118,6 +157,10 @@ test("an active recruiter code is saved on the new shop", async () => {
   const fromCookie = await recruiterCodeForNewShop({ form: "", cookie: "Irene" }, active("irene"));
   assert.equal(fromCookie, "irene");
   assert.equal(recruiterSignupUrl("https://www.rangach.co.ke/", "irene"), IRENE_URL);
+  assert.equal(recruiterShortUrl("https://www.rangach.co.ke/", "irene"), IRENE_SHORT);
+  assert.deepEqual(recruiterShortHop("Irene"), { code: "irene", path: "/list-your-shop?ref=irene" });
+  assert.deepEqual(recruiterShortHop("no!"), { code: null, path: "/list-your-shop" });
+  assert.equal(RECRUITER_SHORT_PREFIX, "/r");
 });
 
 test("an unknown or inactive code still opens the shop and stores nothing", async () => {
@@ -175,7 +218,19 @@ test("starting a shop writes the resolved code onto the shop record", () => {
   assert.match(admin, /requireAdmin\("\/admin\/recruiters"\)/);
   assert.match(admin, /This week/);
   assert.match(admin, /Download PNG/);
+  assert.match(admin, /recruiterShortUrl/);
+  assert.match(admin, /CopyTextButton/);
   assert.doesNotMatch(admin, /funeral|escrow/i);
+  const qrRoute = readFileSync(new URL("../app/admin/recruiters/[code]/qr/route.ts", import.meta.url), "utf8");
+  assert.match(qrRoute, /recruiterShortUrl/);
+  assert.doesNotMatch(qrRoute, /recruiterSignupUrl/);
+  const hop = readFileSync(new URL("../app/r/[code]/route.ts", import.meta.url), "utf8");
+  assert.match(hop, /recruiterShortRedirect/);
+  assert.doesNotMatch(hop, /requireAdmin|requireUser/);
+  assert.doesNotMatch(hop, /funeral|escrow/i);
+  const print = readFileSync(new URL("../app/admin/recruiters/[code]/print/page.tsx", import.meta.url), "utf8");
+  assert.match(print, /recruiterShortUrl/);
+  assert.doesNotMatch(print, /funeral|escrow/i);
 });
 
 test("this week counts Nairobi Monday to Monday, and all time counts every shop", () => {
@@ -272,19 +327,100 @@ test("admins can add, edit, and deactivate a recruiter, and Irene is only insert
   assert.equal(inserted, 1);
 });
 
+function redirectTarget(response: Response) {
+  const location = response.headers.get("location");
+  assert.ok(location);
+  return new URL(location);
+}
+
+test("/r/irene redirects to the shop form, sets the cookie, and normalises case", async () => {
+  const response = await shortLink(new NextRequest("https://www.rangach.co.ke/r/Irene"), {
+    params: Promise.resolve({ code: "Irene" }),
+  });
+  assert.equal(response.status, RECRUITER_REDIRECT_STATUS);
+  assert.equal(response.status, 307);
+  const target = redirectTarget(response);
+  assert.equal(target.origin, "https://www.rangach.co.ke");
+  assert.equal(target.pathname, LIST_YOUR_SHOP_PATH);
+  assert.equal(target.searchParams.get("ref"), "irene");
+  const cookie = response.cookies.get(RECRUITER_COOKIE);
+  assert.equal(cookie?.value, "irene");
+  assert.equal(cookie?.httpOnly, true);
+  assert.equal(cookie?.sameSite, "lax");
+  assert.equal(cookie?.path, "/");
+  assert.equal(cookie?.maxAge, RECRUITER_COOKIE_MAX_AGE);
+  assert.equal(cookie?.secure, true);
+  const cache = response.headers.get("cache-control") ?? "";
+  assert.match(cache, /no-store/);
+  assert.equal(/immutable|s-maxage|max-age=31536000/.test(cache), false);
+  assert.match(response.headers.get("x-robots-tag") ?? "", /noindex/);
+
+  const upper = recruiterShortRedirect(new NextRequest("http://localhost:3000/r/IRENE"), "IRENE");
+  assert.equal(redirectTarget(upper).searchParams.get("ref"), "irene");
+  assert.equal(upper.cookies.get(RECRUITER_COOKIE)?.value, "irene");
+  assert.equal(upper.cookies.get(RECRUITER_COOKIE)?.secure, false);
+
+  const same = await shortLink(
+    new NextRequest("https://www.rangach.co.ke/r/irene", { headers: { cookie: `${RECRUITER_COOKIE}=irene` } }),
+    { params: Promise.resolve({ code: "irene" }) },
+  );
+  assert.equal(redirectTarget(same).searchParams.get("ref"), "irene");
+  assert.equal(same.cookies.get(RECRUITER_COOKIE), undefined);
+
+  const unknown = await shortLink(new NextRequest("https://www.rangach.co.ke/r/nobody"), {
+    params: Promise.resolve({ code: "nobody" }),
+  });
+  assert.equal(unknown.status, 307);
+  assert.equal(redirectTarget(unknown).pathname, LIST_YOUR_SHOP_PATH);
+  assert.equal(redirectTarget(unknown).searchParams.get("ref"), "nobody");
+  assert.equal(unknown.cookies.get(RECRUITER_COOKIE)?.value, "nobody");
+});
+
+test("an invalid short code still opens the shop form and leaves a stored code alone", async () => {
+  for (const code of ["no!", "a", "irene<script>", "ir ene"]) {
+    const response = await shortLink(new NextRequest(`https://www.rangach.co.ke/r/${encodeURIComponent(code)}`), {
+      params: Promise.resolve({ code }),
+    });
+    assert.equal(response.status, 307, code);
+    const target = redirectTarget(response);
+    assert.equal(target.pathname, LIST_YOUR_SHOP_PATH, code);
+    assert.equal(target.search, "", code);
+    assert.equal(response.cookies.get(RECRUITER_COOKIE), undefined, code);
+    assert.notEqual(response.status, 404, code);
+  }
+
+  const kept = recruiterShortRedirect(
+    new NextRequest("https://www.rangach.co.ke/r/no!", { headers: { cookie: `${RECRUITER_COOKIE}=irene` } }),
+    "no!",
+  );
+  assert.equal(kept.status, 307);
+  assert.equal(redirectTarget(kept).search, "");
+  assert.equal(kept.cookies.get(RECRUITER_COOKIE), undefined);
+
+  const bare = bareShortLink(new NextRequest("https://www.rangach.co.ke/r"));
+  assert.equal(bare.status, 307);
+  assert.equal(redirectTarget(bare).pathname, LIST_YOUR_SHOP_PATH);
+  assert.equal(redirectTarget(bare).search, "");
+  assert.match(bare.headers.get("x-robots-tag") ?? "", /noindex/);
+});
+
 test("the recruiter QR png is large enough and opens the irene link", async () => {
-  const png = await recruiterQrPng(IRENE_URL, RECRUITER_QR_PNG_PX);
+  const png = await recruiterQrPng(IRENE_SHORT, RECRUITER_QR_PNG_PX);
   const raw = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   assert.ok(raw.info.width >= RECRUITER_QR_PNG_PX);
   assert.ok(raw.info.height >= RECRUITER_QR_PNG_PX);
-  assert.equal(jsQR(new Uint8ClampedArray(raw.data), raw.info.width, raw.info.height)?.data, IRENE_URL);
+  assert.equal(jsQR(new Uint8ClampedArray(raw.data), raw.info.width, raw.info.height)?.data, IRENE_SHORT);
 
-  const printed = await recruiterQrPng(IRENE_URL, RECRUITER_QR_PRINT_PX);
+  const printed = await recruiterQrPng(IRENE_SHORT, RECRUITER_QR_PRINT_PX);
   const printMeta = await sharp(printed).metadata();
   assert.ok((printMeta.width ?? 0) >= RECRUITER_QR_PRINT_PX);
 
-  const committed = readFileSync(new URL("../../docs/pr-recruiters/irene-qr.png", import.meta.url));
+  const previous = readFileSync(new URL("../../docs/pr-recruiters/irene-qr.png", import.meta.url));
+  const previousRaw = await sharp(previous).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.equal(jsQR(new Uint8ClampedArray(previousRaw.data), previousRaw.info.width, previousRaw.info.height)?.data, IRENE_URL);
+
+  const committed = readFileSync(new URL("../../docs/pr-recruiter-short-links/irene-qr.png", import.meta.url));
   const committedRaw = await sharp(committed).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  assert.equal(jsQR(new Uint8ClampedArray(committedRaw.data), committedRaw.info.width, committedRaw.info.height)?.data, IRENE_URL);
+  assert.equal(jsQR(new Uint8ClampedArray(committedRaw.data), committedRaw.info.width, committedRaw.info.height)?.data, IRENE_SHORT);
   assert.equal(LIST_YOUR_SHOP_PATH, "/list-your-shop");
 });
