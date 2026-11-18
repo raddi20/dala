@@ -6,6 +6,7 @@ import type { RunResult } from "@/lib/ai/types";
 
 const suggestion: ListingSuggestion = {
   title: "Three-seat sofa",
+  businessName: "Three Seat Sofa",
   description: "A used three-seat sofa.",
   category: "Retail / shops",
   type: "for_sale",
@@ -80,7 +81,8 @@ test("agreement is stored once, the draft is saved, and no listing is published"
   assert.equal(created.ok, true);
   if (created.ok) {
     assert.equal(created.suggestion.title, "Three-seat sofa");
-    assert.equal(created.suggestion.priceLabel, "KES 25,000");
+    assert.equal(created.suggestion.businessName, "Three Seat Sofa");
+    assert.equal(created.suggestion.priceLabel, "from Ksh 25,000");
   }
   assert.deepEqual(memory.consents, ["seller"]);
   assert.equal(memory.drafts.length, 1);
@@ -134,4 +136,12 @@ test("a long note, a foreign photo, a bad model result, and the rate cap are ref
   assert.equal(stripped?.title.includes("0712"), false);
   assert.equal(stripped?.price.amount, null);
   assert.equal(stripped?.price.fromInput, false);
+
+  const named = checkListingSuggestion(
+    { ...suggestion, businessName: "kevo_254", title: "Fish restaurant" },
+    { text: "Fish restaurant, 25k", language: "en" },
+  );
+  assert.equal(named?.businessName.toLowerCase().includes("kevo"), false);
+  assert.match(named?.businessName ?? "", /Fish/);
+  assert.equal(named?.price.label, "from Ksh 25,000");
 });

@@ -65,6 +65,7 @@ function shopCardSelect(env: Env) {
   locationVerified: true,
   businessVerified: true,
   servesDiaspora: true,
+  startingPriceKes: true,
   bannerUrl: true,
   latitude: true,
   longitude: true,
@@ -399,6 +400,7 @@ function toShopCard(row: ShopRow): ShopCardData {
     locationVerified: row.locationVerified,
     businessVerified: row.businessVerified,
     servesDiaspora: row.servesDiaspora,
+    startingPriceKes: row.startingPriceKes,
     coverUrl: firstPhoto([...content.offerings.map((offering) => offering.imageUrl), row.bannerUrl]),
     avatarUrl: row.user.avatarUrl,
     whatsapp: publicSellerContacts({
@@ -521,6 +523,8 @@ export type ShopCardData = {
   locationVerified: boolean;
   businessVerified: boolean;
   servesDiaspora: boolean;
+  /** Kenyan shillings. Null when the shop has not set a starting price. */
+  startingPriceKes?: number | null;
   coverUrl: string;
   avatarUrl: string;
   /** Public WhatsApp only. Blank for a demo account. The login email is never copied onto the card. */

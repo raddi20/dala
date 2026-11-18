@@ -4,6 +4,7 @@ import { branchPlaceSuffix } from "@/lib/shop-branches";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { shopIsChecked } from "@/lib/item-card";
 import { distanceLabel } from "@/lib/near-me";
+import { fromKsh } from "@/lib/starting-price";
 import type { ShopCardData } from "@/lib/search";
 
 export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: boolean }) {
@@ -70,6 +71,9 @@ export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: bo
         </div>
         <div className="flex flex-1 flex-col px-2.5 pb-3 pt-2">
           <h2 className="line-clamp-2 font-sans text-[14.5px] font-semibold leading-snug tracking-normal text-ink">{shop.name}</h2>
+          {fromKsh(shop.startingPriceKes) ? (
+            <p className="mt-0.5 text-[12.5px] font-semibold text-ink">{fromKsh(shop.startingPriceKes)}</p>
+          ) : null}
           {meta ? (
             <p className="mt-0.5 flex items-center gap-1 truncate text-[12.5px] text-muted">
               {checked ? (

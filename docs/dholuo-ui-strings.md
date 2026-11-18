@@ -16,13 +16,13 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | home_ask_title | Home | Ask Rangach | Penj Rangach | reviewed | Review penj. |
 | home_ask_sub | Home | Shops and classifieds in Kenya, East Africa and the Diaspora. Chat stays on WhatsApp. | Duka kod gik ma iuso e Kenya, East Africa kod Diaspora. Twak bedo e WhatsApp. | reviewed | Review. English keeps the audience line. |
 | home_search_label | Home | Search in a sentence | Many gi wach achiel | reviewed | Review. |
-| ask_placeholder | Ask Rangach | catering for an ayie in Kisumu for 200 | chiemo mar ayie Kisumu ne ji 200 | reviewed | chiemo is attested as food. Review the rest. ayie and Kisumu stay. |
+| ask_placeholder | Ask Rangach | catering for an ayie in Nairobi | chiemo mar ayie Nairobi | reviewed | chiemo is attested as food. Review the rest. ayie stays. The English sentence matches listings in Nairobi. |
 | home_ask_button | Home | Ask | Penj | reviewed | Review penj. |
-| prompt_ayie | Home | Catering for an ayie in Kisumu for 200 | chiemo mar ayie Kisumu ne ji 200 | reviewed | Visible label only. The search still sends the English sentence. |
-| prompt_tilapia | Home | Fresh tilapia in Nairobi | Rech Ngege | reviewed | Review rech = fish. Search query stays English. |
+| prompt_ayie | Home | Catering for an ayie in Nairobi | chiemo mar ayie Nairobi | reviewed | Visible label for the static fallback. The search still sends the English sentence. Nairobi is where that fallback has catering. |
 | prompt_dj | Home | DJ for an ayie | DJ mar ayie | reviewed | DJ and ayie stay. Search query stays English. |
-| prompt_fundi | Home | Find a fundi in Kisumu | many fundi Kisumu | reviewed | fundi and Kisumu stay. Search query stays English. |
+| prompt_fundi | Home | Fundi in Nairobi | fundi Nairobi | reviewed | fundi stays. The static fallback uses Nairobi, where a fundi listing exists. |
 | prompt_dowry | Home | Dowry ceremony catering | chiemo mar ayie | reviewed | ayie is the dowry ceremony. Search query stays English. |
+| prompt_beauty | Home | Beauty in Nairobi | Ber Nairobi | reviewed | Static fallback. ber = beauty. Search query stays English. |
 | chip_all | Home | All | Te | reviewed | Review. te = all. |
 | chip_food | Home | Food | Chiemo | reviewed | chiemo is attested as food. |
 | chip_events | Home | Events | Nyasi | reviewed | Review. |
@@ -84,6 +84,8 @@ Seller titles, descriptions, bios, offerings, and reviews are not in this list.
 | pill_checked | Browse | Checked | Ong'ere | reviewed | Review. |
 | browse_title | Browse | Browse | Manyo | reviewed | Review. |
 | search_shops_label | Shops | Search shops | Many duka | reviewed | Review. |
+| close_matches | Browse | No exact matches in {place}, here's what's close | Onge gik ma chal e {place}. Magi machiegni. | reviewed | Shown when a search is widened. {place} is the town name. |
+| close_matches_any | Browse | No exact matches, here's what's close | Onge gik ma chal. Magi machiegni. | reviewed | Shown when a search is widened and no town was set. |
 | nothing_matches | Browse | Nothing matches | Onge dwoko | reviewed | Review. |
 | nothing_matches_body | Browse | Try clearing a filter or searching with different words. | Tem golo yiero kata many gi weche mamoko. | reviewed | Review. |
 | clear_filters | Browse | Clear filters | Clear filter | reviewed | Review. |

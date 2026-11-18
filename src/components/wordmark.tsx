@@ -23,16 +23,20 @@ export function GateMark({
 export function Wordmark({
   size = "md",
   tone = "default",
+  truncate = true,
 }: {
   size?: "md" | "lg";
   tone?: "default" | "onDark";
+  /** Header keeps the full word. Other places may still ellipsize a long name. */
+  truncate?: boolean;
 }) {
   const name = appName();
   const markClass = size === "lg" ? "h-11 w-11 shrink-0" : "h-9 w-9 shrink-0";
+  const clip = truncate ? "truncate" : "whitespace-nowrap";
   const wordClass =
     size === "lg"
-      ? "truncate font-serif text-3xl font-semibold tracking-tight"
-      : "truncate font-serif text-xl font-semibold tracking-tight";
+      ? `${clip} font-serif text-3xl font-semibold tracking-tight`
+      : `${clip} font-serif text-xl font-semibold tracking-tight`;
   const color = tone === "onDark" ? "text-white" : "text-navy";
   return (
     <span className="inline-flex min-w-0 items-center gap-2.5">

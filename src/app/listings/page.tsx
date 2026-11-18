@@ -16,6 +16,7 @@ import { parseShopBadgeFilter } from "@/lib/shop-badges";
 import { visitorActorHash } from "@/lib/ai/actor";
 import { interpretSearch } from "@/lib/ai/search-parse";
 import { browsePage, searchCatalogue } from "@/lib/search";
+import { searchWithFallback } from "@/lib/search-fallback";
 import { getSessionUser } from "@/lib/session";
 import { browseHref, chipBag, matchCountLabel, toggleFilterHref, understoodChips } from "@/lib/understood-chips";
 import { requestLang } from "@/lib/i18n/request-lang";
@@ -106,20 +107,19 @@ export default async function ListingsPage({
   const chipBase = chipBag({ ...filters, nl: nlRaw });
   const user = await getSessionUser();
   const page = browsePage(one(sp.page));
-  let result = await searchCatalogue({
-    ...filters,
-    words: optionalWords,
-    hints: structured ? hints : [],
-    viewerId: user?.id,
-    page,
-  });
-  let droppedWords = false;
-  if (result.total === 0 && optionalWords.length > 0) {
-    result = await searchCatalogue({ ...filters, viewerId: user?.id, page });
-    droppedWords = true;
-  }
+  const outcome = await searchWithFallback(
+    { ...filters, words: optionalWords, hints: structured ? hints : [], page },
+    (next) => searchCatalogue({ ...next, viewerId: user?.id }),
+  );
+  const result = outcome.result;
+  const droppedWords = outcome.droppedWords;
   const origin = await publicOrigin();
   const lang = await requestLang();
+  const closeNote = outcome.widened
+    ? filters.city
+      ? uiFill(lang, "close_matches", { place: filters.city })
+      : uiText(lang, "close_matches_any")
+    : "";
   const closeHref = browseHref("/listings", chipBase);
   const sheetActive = Boolean(
     filters.city || filters.category || filters.badge || filters.diaspora || filters.occasion || (filters.type && filters.type !== "business"),
@@ -193,6 +193,11 @@ export default async function ListingsPage({
         />
       ) : null}
 
+      {closeNote ? (
+        <p role="status" className="rounded-xl bg-amber-soft px-3.5 py-2.5 text-sm text-ink">
+          {closeNote}
+        </p>
+      ) : null}
       <p className="text-sm text-ink/60">
         {filters.q ? <>{uiFill(lang, "matches_for", { q: filters.q })} </> : null}
         {matchCountLabel(result.total, result.page, result.pageSize)}
@@ -210,7 +215,9 @@ export default async function ListingsPage({
       ) : (
         <BrowseHits hits={result.hits} origin={origin} occasionSlug={filters.occasion} />
       )}
-      <Pager page={result.page} pageCount={result.pageCount} hrefFor={(next) => browseHref("/listings", chipBase, next)} />
+      {closeNote ? null : (
+        <Pager page={result.page} pageCount={result.pageCount} hrefFor={(next) => browseHref("/listings", chipBase, next)} />
+      )}
     </div>
   );
 }

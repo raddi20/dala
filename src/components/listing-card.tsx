@@ -3,6 +3,7 @@ import { liteMode } from "@/lib/weak-data";
 import { cityChipLabel } from "@/lib/constants";
 import { variantMap } from "@/lib/image-variant-store";
 import { itemKindTag, shopIsChecked } from "@/lib/item-card";
+import { shownPrice } from "@/lib/starting-price";
 import type { ListingCardData } from "@/lib/search";
 
 export async function ListingCard({
@@ -26,7 +27,7 @@ export async function ListingCard({
       thumb480={stored?.thumb480}
       thumb960={stored?.thumb960}
       tag={itemKindTag({ kind: "listing", type: listing.type, category: listing.category })}
-      price={listing.priceLabel}
+      price={shownPrice(listing)}
       seller={listing.owner.name}
       place={cityChipLabel(listing.city)}
       checked={checked}

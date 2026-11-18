@@ -31,6 +31,7 @@ test("a literal is sent as a one-value enum", () => {
 test("an invented category is rejected by the listing schema", () => {
   const sample = {
     title: "Sofa",
+    businessName: "Sofa shop",
     description: "A sofa.",
     category: "Not a category",
     type: "for_sale",

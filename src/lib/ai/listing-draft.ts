@@ -4,6 +4,7 @@ import { runAi } from "@/lib/ai/run";
 import { listingWriterPrompt, type ListingSuggestion, type ListingWriterInput } from "@/lib/ai/prompts/listing-writer";
 import type { AiActor, RunResult } from "@/lib/ai/types";
 import { downloadListingPhoto, isAllowedListingPhotoUrl, resizeListingPhoto } from "@/lib/ai/resize-photo";
+import { fromKsh } from "@/lib/starting-price";
 
 export const listingDraftBody = z.object({
   text: z.string().trim().min(1).max(200),
@@ -16,6 +17,7 @@ export type ListingDraftBody = z.infer<typeof listingDraftBody>;
 
 export type ListingDraftResponse = {
   title: string;
+  businessName: string;
   description: string;
   category: string;
   type: string;
@@ -51,13 +53,16 @@ export type DraftRunner = (
 const UNAVAILABLE = "Not available right now. You can still fill the form yourself.";
 
 export function priceLabelFromSuggestion(price: ListingSuggestion["price"]): string {
-  if (!price.fromInput || price.amount === null || !price.label) return "";
+  if (!price.fromInput || price.amount === null) return "";
+  if (price.currency === "KES") return fromKsh(price.amount).slice(0, 40);
+  if (price.currency === "GBP") return `from £${price.amount.toLocaleString("en-GB")}`.slice(0, 40);
   return price.label.slice(0, 40);
 }
 
 export function toDraftResponse(suggestion: ListingSuggestion): ListingDraftResponse {
   return {
     title: suggestion.title,
+    businessName: suggestion.businessName,
     description: suggestion.description,
     category: suggestion.category,
     type: suggestion.type,

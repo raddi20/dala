@@ -6,6 +6,7 @@ import { RecruiterRefField } from "@/components/recruiter-ref-field";
 import { OfferingForm } from "@/components/offering-form";
 import { SellerSteps } from "@/components/seller-steps";
 import { StorefrontSettingsForm } from "@/components/storefront-settings-form";
+import { BusinessNameHint } from "@/components/business-name-hint";
 import { ShopBranchesEditor } from "@/components/shop-branches-editor";
 import { effectiveBranches } from "@/lib/shop-branches";
 import { Flash, btnPrimary, btnSecondary, btnWhatsApp, cardClass, sectionTitleClass } from "@/components/ui";
@@ -101,6 +102,7 @@ export default async function ManageStorefrontPage({
           <div className="border-t border-sand/80 pt-5">
             <p data-tour="sell-title" className="text-sm text-ink/70">
               Shop name will be <span className="font-semibold text-navy">{user.name}</span>.
+              <BusinessNameHint name={user.name} />
               {hasWhatsapp
                 ? ` Buyers reach you on ${user.whatsapp || user.phone}.`
                 : " Your profile has no WhatsApp number yet."}
@@ -301,6 +303,8 @@ export default async function ManageStorefrontPage({
         <div className="mt-4">
           <StorefrontSettingsForm
             slug={shop.slug}
+            businessName={user.name}
+            startingPriceKes={shop.startingPriceKes}
             city={user.city}
             bannerUrl={shop.bannerUrl}
             bio={user.bio}
