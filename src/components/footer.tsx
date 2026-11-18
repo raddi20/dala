@@ -6,10 +6,19 @@ import { Wordmark } from "@/components/wordmark";
 import { APP_MEANING, APP_TAGLINE, appName } from "@/lib/brand";
 import { PUBLIC_INFO_PAGES } from "@/lib/public-info";
 import { pwaNames } from "@/lib/pwa";
+import type { HubLink } from "@/lib/crawl-index";
 import { CITY_PAGES, cityPagePath } from "@/lib/seo";
 
-export function Footer({ replay = null }: { replay?: ReactNode }) {
+export function Footer({
+  replay = null,
+  hubs = null,
+}: {
+  replay?: ReactNode;
+  hubs?: { towns: HubLink[]; categories: HubLink[] } | null;
+}) {
   const installName = pwaNames(appName()).shortName;
+  const townLinks = hubs ? hubs.towns : CITY_PAGES.map((page) => ({ href: cityPagePath(page), label: page.city }));
+  const categoryLinks = hubs?.categories ?? [];
   return (
     <footer className="mt-auto border-t border-sand/80 bg-card/60 print:hidden">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-8 text-sm text-ink/65 sm:flex-row sm:items-start sm:justify-between">
@@ -63,9 +72,14 @@ export function Footer({ replay = null }: { replay?: ReactNode }) {
           <Link href="/account/storefront" className="hover:text-navy">
             Open a shop
           </Link>
-          {CITY_PAGES.map((page) => (
-            <Link key={page.slug} href={cityPagePath(page)} className="hover:text-navy">
-              {page.city}
+          {townLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-navy">
+              {link.label}
+            </Link>
+          ))}
+          {categoryLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-navy">
+              {link.label}
             </Link>
           ))}
           {replay}

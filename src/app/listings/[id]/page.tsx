@@ -1,6 +1,6 @@
 import { JsonLd } from "@/components/json-ld";
 import { categoryHref, isCategory } from "@/lib/categories";
-import { breadcrumbJsonLd } from "@/lib/seo";
+import { breadcrumbJsonLd, cityPagePath, townPageForName } from "@/lib/seo";
 import { itemPriceText } from "@/lib/item-card";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -18,7 +18,7 @@ import { blockUser } from "@/lib/actions/social";
 import { setListingFeatured, setListingHidden, setListingVerified } from "@/lib/actions/admin";
 import { listingOpenTo, publicReviewWhere } from "@/lib/visibility";
 import { appName } from "@/lib/brand";
-import { cityChipLabel, cityInPhrase } from "@/lib/constants";
+import { cityChipLabel } from "@/lib/constants";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { uiText } from "@/lib/i18n/strings";
 import {
@@ -40,6 +40,9 @@ import { cardPhoto } from "@/lib/image-variants";
 import { LISTING_DETAIL_PHOTO, LISTING_PHOTO_ASPECT_CLASS } from "@/lib/listing-photo-frame";
 import { variantMap } from "@/lib/image-variant-store";
 import { liteMode } from "@/lib/weak-data";
+import { ListingLinkList } from "@/components/listing-link-list";
+import { listingDetailsSentence, listingPageTitle, shownPriceLabel } from "@/lib/crawl-copy";
+import { relatedPublicListings } from "@/lib/crawl-data";
 
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
@@ -54,10 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       photoUrl: true,
       city: true,
       category: true,
+      priceLabel: true,
       contactPhone: true,
       contactWhatsapp: true,
       ownerId: true,
-      owner: { select: { email: true, suspended: true } },
+      owner: { select: { name: true, email: true, suspended: true } },
     },
   });
   if (!listing || isPublicDemoHidden(listing.owner.email)) return privateMetadata("Listing");
@@ -74,13 +78,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!preview) return privateMetadata("Listing");
   const description = publicTextWithoutDemoNumbers(
     listing.owner.email,
-    clipText(listing.description) || `${listing.title} ${cityInPhrase(listing.city)}. ${listing.category} on ${appName()}.`,
+    clipText(listing.description) ||
+      listingDetailsSentence({
+        title: listing.title,
+        category: listing.category,
+        city: listing.city,
+        siteName: appName(),
+        sellerName: listing.owner.name,
+        priceLabel: listing.priceLabel,
+      }),
     [listing.contactPhone, listing.contactWhatsapp],
   );
   return buildShareMetadata({
     origin,
     path: `/listings/${id}`,
-    title: listing.title,
+    title: listingPageTitle({ title: listing.title, category: listing.category, city: listing.city }),
     description,
     image: preview.url,
     imageAlt: listing.title,
@@ -177,6 +189,20 @@ export default async function ListingPage({ params, searchParams }: Props) {
   };
   const notice =
     one(sp.posted) === "1" ? "Listing published." : one(sp.updated) === "1" ? "Changes saved." : "";
+  const related =
+    listing.hidden || listing.owner.suspended
+      ? []
+      : await relatedPublicListings({ id: listing.id, category: listing.category, city: listing.city });
+  const town = townPageForName(listing.city);
+  const price = shownPriceLabel(listing.priceLabel);
+  const details = listingDetailsSentence({
+    title: listing.title,
+    category: listing.category,
+    city: listing.city,
+    siteName: appName(),
+    sellerName: listing.owner.name,
+    priceLabel: listing.priceLabel,
+  });
 
   return (
     <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
@@ -310,6 +336,52 @@ export default async function ListingPage({ params, searchParams }: Props) {
       </div>
 
       <div className="whitespace-pre-wrap text-base leading-relaxed text-ink/90">{listing.description}</div>
+
+      <section id="listing-details" className="grid gap-2">
+        <h2 className="font-serif text-xl text-navy">Details</h2>
+        <p className="leading-relaxed text-ink/85">{details}</p>
+        <ul className="grid gap-1 text-sm">
+          {isCategory(listing.category) ? (
+            <li>
+              Category:{" "}
+              <Link href={categoryHref(listing.category)} className="font-semibold text-gold-d">
+                {listing.category}
+              </Link>
+            </li>
+          ) : listing.category.trim() ? (
+            <li>Category: {listing.category}</li>
+          ) : null}
+          {town ? (
+            <li>
+              Town:{" "}
+              <Link href={cityPagePath(town)} className="font-semibold text-gold-d">
+                {town.city}
+              </Link>
+            </li>
+          ) : listing.city.trim() ? (
+            <li>Town: {listing.city}</li>
+          ) : null}
+          {shop ? (
+            <li>
+              Shop:{" "}
+              <Link href={`/b/${shop.slug}`} className="font-semibold text-gold-d">
+                {listing.owner.name}
+              </Link>
+            </li>
+          ) : (
+            <li>Listed by {listing.owner.name}</li>
+          )}
+          {price ? <li>Price: {price}</li> : null}
+        </ul>
+      </section>
+
+      {related.length ? (
+        <section className="grid gap-2" aria-label="Related listings">
+          <h2 className="font-serif text-xl text-navy">Related listings</h2>
+          <p className="text-sm text-ink/70">Other public listings in the same category or the same town.</p>
+          <ListingLinkList listings={related} />
+        </section>
+      ) : null}
 
       <section className={`${cardClass} p-5`}>
         <h2 className="font-serif text-xl text-navy">{uiText(lang, "contact")}</h2>

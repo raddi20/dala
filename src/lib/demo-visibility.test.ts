@@ -191,7 +191,8 @@ test("the home page has an empty state when featured listings and classifieds ar
 test("public surfaces that can leak demo rows apply the visibility filter", () => {
   const files = [
     "../lib/search.ts",
-    "../app/sitemap.ts",
+    "../lib/sitemap-data.ts",
+    "../lib/crawl-data.ts",
     "../app/categories/page.tsx",
     "../app/occasions/page.tsx",
     "../app/occasions/[slug]/page.tsx",

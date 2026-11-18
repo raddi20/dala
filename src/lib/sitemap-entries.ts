@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { CATEGORIES, categoryHref } from "@/lib/categories";
+import { CATEGORIES, categoryHref, isCategory } from "@/lib/categories";
 import { isPublicInfoPath, PUBLIC_INFO_PAGES, publicPagesUpdatedAt } from "@/lib/public-info";
 import { CITY_PAGES, cityPagePath, type CityPage } from "@/lib/seo";
 import { LIST_YOUR_SHOP_PATH, isRecruiterShortPath } from "@/lib/recruiter";
@@ -69,15 +69,24 @@ export function buildSitemap(input: {
   listings: { id: string; updatedAt: Date }[];
   people: { id: string; updatedAt: Date }[];
   occasions?: { slug: string; updatedAt?: Date }[];
-  /** Towns with content. Defaults to the written city pages. */
-  towns?: CityPage[];
+  /** Towns with content. Defaults to the written city pages when omitted. An empty list lists none. */
+  towns?: (CityPage & { updatedAt?: Date })[];
+  /**
+   * Category hubs that have public shops or listings.
+   * Omitted means every category, which is what the static path list already did.
+   * An empty list lists none, so an empty hub is not sent to Google.
+   */
+  categories?: { name: string; updatedAt?: Date }[];
 }): MetadataRoute.Sitemap {
   const pages: MetadataRoute.Sitemap = [];
   const push = (item: MetadataRoute.Sitemap[number] | null) => {
     if (item) pages.push(item);
   };
+  const suppliedCategories = input.categories;
+  const categoryPaths = new Set(CATEGORIES.map((category) => categoryHref(category)));
 
   for (const path of staticPublicPaths()) {
+    if (suppliedCategories && categoryPaths.has(path.path)) continue;
     const info = isPublicInfoPath(path.path);
     const priority =
       path.path === "/"
@@ -97,8 +106,15 @@ export function buildSitemap(input: {
             : 0.7;
     push(entry(input.origin, path.path, path.updatedAt, info ? "monthly" : "weekly", priority));
   }
+  if (suppliedCategories) {
+    for (const category of suppliedCategories) {
+      if (!isCategory(category.name)) continue;
+      push(entry(input.origin, categoryHref(category.name), category.updatedAt, "weekly", 0.7));
+    }
+  }
   for (const town of input.towns ?? CITY_PAGES) {
-    push(entry(input.origin, cityPagePath(town), undefined, "weekly", 0.7));
+    const updatedAt = "updatedAt" in town && town.updatedAt instanceof Date ? town.updatedAt : undefined;
+    push(entry(input.origin, cityPagePath(town), updatedAt, "weekly", 0.7));
   }
   for (const shop of input.shops) {
     if (!shop.slug) continue;
