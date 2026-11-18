@@ -16,7 +16,6 @@ import { ShopReviewForm } from "@/components/shop-review-form";
 import { averageStars, starText } from "@/lib/shop-review";
 import { EmptyState, Flash, btnWhatsApp, cardClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
-import { cityInPhrase } from "@/lib/constants";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { uiFill, uiText } from "@/lib/i18n/strings";
 import {
@@ -43,6 +42,11 @@ import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
 import { LISTING_PHOTO_ASPECT_CLASS } from "@/lib/listing-photo-frame";
 import { variantMap } from "@/lib/image-variant-store";
 import { liteMode } from "@/lib/weak-data";
+import { ListingLinkList } from "@/components/listing-link-list";
+import { Pager } from "@/components/pager";
+import { shopAboutFallback, shopPageTitle } from "@/lib/crawl-copy";
+import { shopCrawlFacts, shopListingPage } from "@/lib/crawl-data";
+import { crawlPage } from "@/lib/crawl-index";
 import { shopPlaceLine, shopTrustLine } from "@/lib/shop-trust";
 import { ShopVideoPoster } from "@/components/shop-video-poster";
 import { videoMode } from "@/lib/video/config";
@@ -53,8 +57,9 @@ type Props = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { slug } = await params;
+  const listingsQuery = one((await searchParams).listings).trim();
   const shop = await prisma.storefront.findUnique({
     where: { slug },
     select: {
@@ -95,6 +100,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!open) return privateMetadata("Shop");
   if (!shop.published || shop.hidden || shop.user.suspended) return { title: shop.user.name, robots: { index: false, follow: false } };
   const origin = await publicOrigin();
+  const facts = await shopCrawlFacts(shop.userId);
   const proActive = isProActive(shop.user);
   const clip = shop.videos[0];
   const hasPublicVideo = clip
@@ -117,19 +123,29 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!preview) return privateMetadata("Shop");
   const description = publicTextWithoutDemoNumbers(
     shop.user.email,
-    clipText(shop.user.bio) || `${shop.user.name} ${cityInPhrase(shop.user.city)}. A shop on ${appName()}. Chat stays on WhatsApp.`,
+    clipText(shop.user.bio) ||
+      shopAboutFallback({
+        name: shop.user.name,
+        category: facts.category,
+        town: shop.user.city,
+        listingCount: facts.total,
+        siteName: appName(),
+      }),
     [shop.user.phone, shop.user.whatsapp],
   );
-  return buildShareMetadata({
+  const listingPageNumber = crawlPage(listingsQuery);
+  const meta = buildShareMetadata({
     origin,
     // Shop path only. Share metadata drops ?ref so a sticker visit is not canonical.
-    path: `/b/${slug}`,
-    title: shop.user.name,
+    path: listingsQuery && listingPageNumber > 1 ? `/b/${slug}?listings=${listingPageNumber}` : `/b/${slug}`,
+    title: shopPageTitle({ name: shop.user.name, category: facts.category, town: shop.user.city }),
     description,
     image: preview.url,
     imageAlt: shop.user.name,
     imageType: preview.contentType,
   });
+  if (listingsQuery) return { ...meta, robots: { index: false, follow: true } };
+  return meta;
 }
 
 export default async function StorefrontPage({ params, searchParams }: Props) {
@@ -202,7 +218,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     prefetch: isPrefetchRequest((name) => headerList.get(name)),
   });
 
-  const [signals, reviews, shopRatings, myShopReview] = await Promise.all([
+  const [signals, reviews, shopRatings, myShopReview, listingWindow] = await Promise.all([
     shopSignals(shop.userId),
     shopReviews(shop.userId),
     prisma.shopReview.findMany({
@@ -213,6 +229,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     viewer && !isOwner
       ? prisma.shopReview.findUnique({ where: { storefrontId_authorId: { storefrontId: shop.id, authorId: viewer.id } } })
       : Promise.resolve(null),
+    shopListingPage(shop.userId, crawlPage(one(query.listings))),
   ]);
   const raterNames = new Map(
     (
@@ -528,12 +545,32 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         />
       ) : null}
 
+      {listingWindow.total > 0 ? (
+        <section id="shop-listings" className="grid scroll-mt-28 gap-3">
+          <h2 className="font-serif text-xl text-navy">Listings ({listingWindow.total})</h2>
+          <ListingLinkList listings={listingWindow.listings} />
+          <Pager
+            page={listingWindow.page}
+            pageCount={listingWindow.pageCount}
+            hrefFor={(next) => `/b/${shop.slug}${next > 1 ? `?listings=${next}` : ""}`}
+          />
+        </section>
+      ) : null}
+
       <section id="about" className="scroll-mt-28 grid gap-2">
         <h2 className="font-serif text-xl text-navy">{uiText(lang, "about")}</h2>
         {bio ? (
           <p className="whitespace-pre-wrap leading-relaxed text-ink/85">{bio}</p>
         ) : (
-          <p className="text-sm text-muted">{uiText(lang, "shop_no_about")}</p>
+          <p className="leading-relaxed text-ink/85">
+            {shopAboutFallback({
+              name: shop.user.name,
+              category: signals.category,
+              town: shop.user.city,
+              listingCount: listingWindow.total,
+              siteName: appName(),
+            })}
+          </p>
         )}
         {signals.address ? <p className="text-sm text-muted">{signals.address}</p> : null}
         {shop.servesDiaspora ? <p className="text-sm text-ink/80">{uiText(lang, "family_orders_note")}</p> : null}

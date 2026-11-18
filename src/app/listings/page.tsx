@@ -6,7 +6,11 @@ import { Pager } from "@/components/pager";
 import { FilterSheet, ListingFilterForm, ResultsSearchBar, UnderstoodRow } from "@/components/results-chrome";
 import { EmptyState, btnSecondary, chipActiveClass, chipClass } from "@/components/ui";
 import { AUDIENCE_LINE, appName } from "@/lib/brand";
+import { CategoryCrawlHub } from "@/components/category-crawl-hub";
 import { categoryHref, isCategory } from "@/lib/categories";
+import { hubDescription } from "@/lib/crawl-copy";
+import { categoryHubCounts } from "@/lib/crawl-data";
+import { crawlPage, hubIndexable, hubRobots } from "@/lib/crawl-index";
 import { activeBrowseRegion, browseRegionChipHref, chosenBrowseCity } from "@/lib/browse-filters";
 import { cityChipLabel, cityInPhrase, isCityName } from "@/lib/constants";
 import { wantsDiasporaOrders } from "@/lib/diaspora";
@@ -50,14 +54,22 @@ async function browseMetadata(sp: Record<string, string | string[] | undefined>)
   const origin = await publicOrigin();
   const name = appName();
   if (isCategory(category)) {
-    return buildShareMetadata({
+    const counts = await categoryHubCounts(category);
+    const meta = buildShareMetadata({
       origin,
       path: categoryHref(category),
       title: category,
-      description: `${category} from Luo shops and classifieds in ${AUDIENCE_LINE} on ${name}.`,
+      description: hubDescription({
+        placeName: category,
+        siteName: name,
+        shopCount: counts.shops,
+        listingCount: counts.listings,
+        sampleTitles: counts.sampleTitles,
+      }),
       image: `/og/category/${encodeURIComponent(category)}`,
       imageAlt: `${category} on ${name}`,
     });
+    return hubIndexable(counts.shops, counts.listings) ? meta : { ...meta, robots: hubRobots(counts.shops, counts.listings) };
   }
   const title = isCityName(city) ? cityChipLabel(city) : "Browse";
   const description = isCityName(city)
@@ -126,9 +138,13 @@ export default async function ListingsPage({
   );
   const chips = parsed ? understoodChips("/listings", chipBase, hints) : [];
 
+  const categoryHub =
+    isCategory(filters.category) && !nlRaw && !filters.q && !filters.city && !filters.region && !filters.type;
+
   return (
     <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
       <h1 className="sr-only">{uiText(lang, "browse_title")}</h1>
+      {categoryHub ? <CategoryCrawlHub category={filters.category} shopPage={crawlPage(one(sp.shops))} /> : null}
       <ResultsSearchBar
         action="/listings"
         inputId="nl"

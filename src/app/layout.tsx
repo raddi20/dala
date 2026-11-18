@@ -18,6 +18,7 @@ import { requestLang } from "@/lib/i18n/request-lang";
 import { sulweOn } from "@/lib/sulwe";
 import { sulweVoiceOn } from "@/lib/sulwe-voice-flag";
 import { guidedTourOn } from "@/lib/tour";
+import { footerHubLinks } from "@/lib/crawl-data";
 import { publicOrigin } from "@/lib/payments/origin";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
 import "./globals.css";
@@ -64,7 +65,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const installName = pwaNames(appName()).shortName;
-  const lang = await requestLang();
+  const [lang, hubs] = await Promise.all([requestLang(), footerHubLinks()]);
   const tourOn = guidedTourOn();
   const sulweFlag = sulweOn();
   return (
@@ -87,7 +88,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <InstallPrompt appName={installName} />
           {children}
         </main>
-        <Footer replay={tourOn ? <TourReplay lang={lang} /> : null} />
+        <Footer replay={tourOn ? <TourReplay lang={lang} /> : null} hubs={hubs} />
         <Suspense fallback={null}>
           <GuidedTour enabled={tourOn} lang={lang} sulwe={sulweFlag} />
           <TourPrompt enabled={tourOn} lang={lang} sulwe={sulweFlag} />

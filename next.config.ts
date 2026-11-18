@@ -52,6 +52,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" }],
       },
       {
+        source: "/sitemaps/:id",
+        headers: [{ key: "Cache-Control", value: "public, s-maxage=3600, stale-while-revalidate=86400" }],
+      },
+      {
         source: "/robots.txt",
         headers: [{ key: "Cache-Control", value: "public, s-maxage=86400, stale-while-revalidate=86400" }],
       },

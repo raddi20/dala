@@ -6,55 +6,75 @@ import { ListingCard } from "@/components/listing-card";
 import { btnPrimary, btnSecondary, cardClass, sectionTitleClass } from "@/components/ui";
 import { appName } from "@/lib/brand";
 import { publicOrigin } from "@/lib/payments/origin";
-import { publicListingWhere } from "@/lib/demo-visibility";
-import { prisma } from "@/lib/prisma";
+import { ListingLinkList } from "@/components/listing-link-list";
+import { Pager } from "@/components/pager";
+import { hubDescription, hubIntro } from "@/lib/crawl-copy";
+import { townHubFacts, townListingPage, townShopPage } from "@/lib/crawl-data";
+import { crawlPage, crawlPageHref, hubIndexable, hubRobots } from "@/lib/crawl-index";
 import { searchListings } from "@/lib/search";
 import {
   cityBrowseHref,
-  cityDescription,
   cityPageJsonLd,
   cityPagePath,
   cityTitle,
   townPage,
 } from "@/lib/seo";
-import { shopsInTown, townPagesWithContent } from "@/lib/town-pages";
+import { townPagesWithContent } from "@/lib/town-pages";
 import { getSessionUser } from "@/lib/session";
 import { buildShareMetadata } from "@/lib/share-metadata";
-import { continueHref } from "@/lib/utils";
+import { continueHref, one } from "@/lib/utils";
 
 type Params = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Params): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Params & { searchParams: Promise<Record<string, string | string[] | undefined>> }): Promise<Metadata> {
   const page = townPage((await params).slug);
   if (!page) return { title: "Not found" };
+  const query = await searchParams;
   const name = appName();
-  const [listingCount, shops] = await Promise.all([
-    prisma.listing.count({ where: publicListingWhere({ city: page.city }) }),
-    shopsInTown(page.city, 1),
-  ]);
+  const facts = await townHubFacts(page.city);
   const meta = buildShareMetadata({
     origin: await publicOrigin(),
     path: cityPagePath(page),
     title: cityTitle(page),
-    description: cityDescription(page, name),
+    description: hubDescription({
+      placeName: page.city,
+      siteName: name,
+      shopCount: facts.shops,
+      listingCount: facts.listings,
+      sampleTitles: facts.samples.map((item) => item.title),
+    }),
     image: "/listings/opengraph-image",
     imageAlt: `${cityTitle(page)} on ${name}`,
   });
   // A town with nothing in it is a thin page. Keep it reachable, out of the index.
-  return listingCount || shops.length ? meta : { ...meta, robots: { index: false, follow: true } };
+  if (!hubIndexable(facts.shops, facts.listings)) {
+    return { ...meta, robots: hubRobots(facts.shops, facts.listings) };
+  }
+  // Later pages of the same town are followable duplicates of this URL.
+  const paged = one(query.shops).trim() !== "" || one(query.listings).trim() !== "";
+  return paged ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
-export default async function CityPage({ params }: Params) {
-  const page = townPage((await params).slug);
+export default async function CityPage({
+  params,
+  searchParams,
+}: Params & { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const [{ slug }, query] = await Promise.all([params, searchParams]);
+  const page = townPage(slug);
   if (!page) notFound();
   const name = appName();
-  const [origin, user] = await Promise.all([publicOrigin(), getSessionUser()]);
-  const [allListings, shops, towns] = await Promise.all([
-    searchListings({ city: page.city, viewerId: user?.id }),
-    shopsInTown(page.city),
+  const [origin, user, facts, listingWindow, shopWindow, towns] = await Promise.all([
+    publicOrigin(),
+    getSessionUser(),
+    townHubFacts(page.city),
+    townListingPage(page.city, crawlPage(one(query.listings))),
+    townShopPage(page.city, crawlPage(one(query.shops))),
     townPagesWithContent(),
   ]);
-  const listings = allListings.slice(0, 8);
+  const listings = (await searchListings({ city: page.city, viewerId: user?.id })).slice(0, 8);
   const browseHref = cityBrowseHref(page);
   const listHref = continueHref(Boolean(user), "/listings/new");
   const others = towns.filter((item) => item.slug !== page.slug);
@@ -70,9 +90,23 @@ export default async function CityPage({ params }: Params) {
       </nav>
       <h1 className={`${sectionTitleClass} mt-2`}>{cityTitle(page)}</h1>
       <p className="mt-2 max-w-2xl text-ink/80">{page.intro}</p>
-      <p className="mt-2 max-w-2xl text-sm text-ink/70">
-        People come here looking for {page.examples.join(", ")}. Discovery happens on {name}; you chat with the seller on WhatsApp.
+      <p className="mt-2 max-w-2xl text-ink/80">
+        {hubIntro({ placeName: page.city, siteName: name, shopCount: facts.shops, listingCount: facts.listings })}
       </p>
+      {facts.samples.length ? (
+        <p className="mt-2 max-w-2xl text-sm text-ink/70">
+          Listings include{" "}
+          {facts.samples.map((item, index) => (
+            <span key={item.id}>
+              {index > 0 ? ", " : null}
+              <Link href={`/listings/${encodeURIComponent(item.id)}`} className="font-semibold text-gold-d">
+                {item.title}
+              </Link>
+            </span>
+          ))}
+          .
+        </p>
+      ) : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <Link href={browseHref} className={btnPrimary}>
           Browse all in {page.city}
@@ -82,11 +116,11 @@ export default async function CityPage({ params }: Params) {
         </Link>
       </div>
 
-      {shops.length ? (
+      {shopWindow.total ? (
         <section className="mt-8">
           <h2 className="font-serif text-xl text-navy">Shops in {page.city}</h2>
           <ul className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
-            {shops.map((shop) => (
+            {shopWindow.shops.map((shop) => (
               <li key={shop.slug}>
                 <Link href={`/b/${encodeURIComponent(shop.slug)}`} className="underline underline-offset-2">
                   {shop.user.name}
@@ -94,6 +128,25 @@ export default async function CityPage({ params }: Params) {
               </li>
             ))}
           </ul>
+          <div className="mt-3">
+            <Pager page={shopWindow.page} pageCount={shopWindow.pageCount} hrefFor={(next) => crawlPageHref(cityPagePath(page), "shops", next)} />
+          </div>
+        </section>
+      ) : null}
+
+      {listingWindow.total ? (
+        <section className="mt-8">
+          <h2 className="font-serif text-xl text-navy">All listings in {page.city}</h2>
+          <div className="mt-3">
+            <ListingLinkList listings={listingWindow.listings} />
+          </div>
+          <div className="mt-3">
+            <Pager
+              page={listingWindow.page}
+              pageCount={listingWindow.pageCount}
+              hrefFor={(next) => crawlPageHref(cityPagePath(page), "listings", next)}
+            />
+          </div>
         </section>
       ) : null}
 
