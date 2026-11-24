@@ -12,7 +12,7 @@ export function AdminNav({ ordersOn }: { ordersOn: boolean }) {
   const items = [{ href: "/admin", label: "Dashboard" }, ...ADMIN_SECTIONS.filter((s) => ordersOn || s.href !== "/admin/orders")];
   return (
     <nav aria-label="Admin sections" className="border-b border-sand bg-card print:hidden" data-admin-nav>
-      <ul className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2">
+      <ul className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 py-2 pr-8 [scrollbar-width:none] [mask-image:linear-gradient(to_right,#000_calc(100%-1.75rem),transparent)] [&::-webkit-scrollbar]:hidden">
         {items.map((item) => {
           const on = item.href === active;
           return (
