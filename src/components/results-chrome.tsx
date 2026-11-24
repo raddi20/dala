@@ -297,7 +297,7 @@ export function UnderstoodRow({
       </p>
       {assist === "fallback" ? <p className="text-sm text-muted">{uiText(lang, "understood_fallback")}</p> : null}
       {chips.length > 0 ? (
-        <ul className="chip-scroll">
+        <ul className="flex w-full min-w-0 max-w-full list-none flex-wrap gap-2 p-0" data-understood-chips="">
           {chips.map((chip) => (
             <li key={chip.key}>
               <Link href={chip.href} className={`${chipClass} gap-1.5 bg-cream`}>
