@@ -83,8 +83,8 @@ export default async function HomePage() {
   return (
     <div>
       <JsonLd data={[organizationJsonLd(origin, name), websiteJsonLd(origin, name)]} />
-      <section className="bg-navy text-white">
-        <div className="mx-auto max-w-5xl px-4 pb-4 pt-5">
+      <section className="min-w-0 bg-navy text-white">
+        <div className="mx-auto min-w-0 max-w-5xl px-4 pb-4 pt-5">
           <h1 className="font-serif text-3xl text-white">{uiText(lang, "home_ask_title")}</h1>
           <p className="mt-1 text-sm text-white/75">{uiText(lang, "home_ask_sub")}</p>
           <form action="/listings" method="get" className="mt-3 flex gap-2">
@@ -100,7 +100,7 @@ export default async function HomePage() {
             />
             <button className={`${btnPrimary} shrink-0 px-5`}>{uiText(lang, "home_ask_button")}</button>
           </form>
-          <div className="chip-scroll -mx-4 mt-3 px-4 pb-1">
+          <div className="chip-scroll mt-3 pb-1">
             {prompts.map((prompt) => (
               <Link key={prompt.query} href={homePromptHref(prompt.query)} className={`${chipClass} bg-white`}>
                 {promptLabel(lang, prompt)}
@@ -110,8 +110,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <div className="mx-auto max-w-5xl px-4">
-        <div className="chip-scroll -mx-4 px-4 py-3">
+      <div className="mx-auto min-w-0 max-w-5xl px-4">
+        <div className="chip-scroll py-3">
           {HOME_CATEGORY_CHIPS.map((chip, index) => (
             <Link key={chip.label} href={chip.href} className={chipClass}>
               {uiText(lang, HOME_CHIP_KEYS[index] ?? "chip_all")}
@@ -153,7 +153,7 @@ export default async function HomePage() {
         <RecentlyViewedStrip />
       </div>
 
-      <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 [contain-intrinsic-size:auto_720px] [content-visibility:auto]">
+      <div className="mx-auto grid min-w-0 max-w-5xl gap-8 px-4 py-8">
         <section>
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-serif text-xl text-navy">{uiText(lang, "home_shops")}</h2>
@@ -166,7 +166,7 @@ export default async function HomePage() {
               <EmptyState title={uiText(lang, "home_no_shops")} body={uiText(lang, "home_no_shops_body")} />
             </div>
           ) : (
-            <div className="chip-scroll -mx-4 mt-3 items-stretch px-4 pb-1">
+            <div className="chip-scroll mt-3 items-stretch pb-1">
               {rails.shops.map((shop) => (
                 <div key={shop.id} className="w-[46vw] max-w-[220px] shrink-0">
                   <ShopCard shop={shop} />
@@ -183,7 +183,7 @@ export default async function HomePage() {
               {uiText(lang, "home_all_occasions")}
             </Link>
           </div>
-          <p className="mt-1 text-sm text-muted">{uiText(lang, "home_occasions_note")}</p>
+          <p className="mt-1 min-w-0 break-words text-sm text-muted">{uiText(lang, "home_occasions_note")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {tiles.map((occasion) => (
               <Link key={occasion.slug} href={`/occasions/${occasion.slug}`} className={chipClass}>
@@ -193,9 +193,9 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="rounded-[20px] bg-navy px-4 py-5 text-white">
+        <section className="min-w-0 break-words rounded-[20px] bg-navy px-4 py-5 text-white">
           <h2 className="font-serif text-2xl text-white">{uiText(lang, "home_family")}</h2>
-          <p className="mt-2 max-w-xl text-sm text-white/80">{uiText(lang, "home_family_body")}</p>
+          <p className="mt-2 max-w-full text-sm text-white/80">{uiText(lang, "home_family_body")}</p>
           <Link href="/listings?diaspora=1" className={`${btnPrimary} mt-4`}>
             {uiText(lang, "home_see_shops")}
           </Link>

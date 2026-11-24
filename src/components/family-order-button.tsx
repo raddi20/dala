@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useMemo, useState } from "react";
 import { FamilyAssist, type FamilyAssistFields } from "@/components/ai/family-assist";
+import { BodyPortal } from "@/components/body-portal";
 import { FAMILY_PAYERS, familyOrderMessage, familyOrderWhatsappLink } from "@/lib/family-order";
 import { btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
 import type { Lang } from "@/lib/i18n/lang";
@@ -81,7 +82,7 @@ export function FamilyOrderButton({
         type="button"
         className={
           variant === "bar"
-            ? `${btnSecondary} w-full`
+            ? `${btnSecondary} w-full min-w-0 whitespace-normal text-center`
             : variant === "link"
               ? "font-semibold text-gold-d underline-offset-2 hover:underline"
               : btnSecondary
@@ -91,8 +92,9 @@ export function FamilyOrderButton({
         {variant === "link" ? uiText(lang, "send_family_order") : uiText(lang, "buying_for_family")}
       </button>
       {open ? (
+        <BodyPortal>
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-navy/45 sm:items-center sm:p-4"
+          className="fixed inset-0 z-[80] flex items-end justify-center bg-navy/45 sm:items-center sm:p-4"
           onClick={() => setOpen(false)}
         >
           <div
@@ -184,6 +186,7 @@ export function FamilyOrderButton({
             </div>
           </div>
         </div>
+        </BodyPortal>
       ) : null}
     </>
   );

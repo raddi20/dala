@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore, type PointerEvent, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { BodyPortal } from "@/components/body-portal";
 import { SulweArt, SulweStar } from "@/components/sulwe-art";
 import { btnPrimary, chipClass } from "@/components/ui";
 import type { Lang } from "@/lib/i18n/lang";
@@ -25,7 +26,6 @@ import {
   readSulweMinimised,
   shouldShowAskLabel,
   shouldShowSulwe,
-  sulweDockBottom,
   sulweHaptic,
   sulweQueryOn,
   writeSulweMinimised,
@@ -93,7 +93,7 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
 
   const [chat, setChat] = useState(false);
   const [invite, setInvite] = useState(false);
-  const [askPos, setAskPos] = useState<{ top: number; left: number; side: "left" | "above" } | null>(null);
+  const [askPos, setAskPos] = useState<{ side: "left" | "above" } | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const askRef = useRef<HTMLButtonElement>(null);
   const howRef = useRef<HTMLDivElement>(null);
@@ -101,7 +101,6 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
   const [busy, setBusy] = useState(false);
   const [draft, setDraft] = useState("");
   const [result, setResult] = useState<SulweAskResult | null>(null);
-  const [dock, setDock] = useState<number | null>(null);
   const bag = useRef<readonly SulweReaction[]>([]);
   const downAt = useRef(0);
   const lastTap = useRef<number | null>(null);
@@ -212,30 +211,14 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
 
   useEffect(() => {
     if (!show || touring || chat) return;
-    let frame = 0;
-    const measureDock = () => {
-      frame = 0;
-      const tops: number[] = [];
-      for (const bar of document.querySelectorAll<HTMLElement>(".bottom-nav, .sticky-cta-bar")) {
-        const box = bar.getBoundingClientRect();
-        if (box.width > 0 && box.height > 0 && getComputedStyle(bar).display !== "none") tops.push(box.top);
-      }
-      setDock(sulweDockBottom({ viewportHeight: window.innerHeight, obstacleTops: tops }));
-      // The tour invite is its own speech bubble beside Sulwe. Never show two.
-      setInvite(Boolean(document.querySelector("[data-tour-prompt]")));
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(measureDock);
-    };
-    measureDock();
-    const late = window.setTimeout(schedule, 600);
-    window.addEventListener("resize", schedule);
-    const observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(schedule);
+    // The tour invite is its own speech bubble beside Sulwe. Never show two.
+    const check = () => setInvite(Boolean(document.querySelector("[data-tour-prompt]")));
+    check();
+    const late = window.setTimeout(check, 600);
+    const observer = typeof MutationObserver === "undefined" ? null : new MutationObserver(check);
     observer?.observe(document.body, { childList: true, subtree: true });
     return () => {
-      if (frame) window.cancelAnimationFrame(frame);
       window.clearTimeout(late);
-      window.removeEventListener("resize", schedule);
       observer?.disconnect();
     };
   }, [show, touring, chat, path, minimised]);
@@ -255,27 +238,25 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
         const rect = bar.getBoundingClientRect();
         obstacles.push({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
       }
-      setAskPos(
-        placeAskLabel({
-          sulwe: { top: box.top, left: box.left, width: box.width, height: box.height },
-          label: { width: pill.offsetWidth, height: pill.offsetHeight },
-          viewport: { width: window.innerWidth, height: window.innerHeight },
-          obstacles,
-        }),
-      );
+      const pos = placeAskLabel({
+        sulwe: { top: box.top, left: box.left, width: box.width, height: box.height },
+        label: { width: pill.offsetWidth, height: pill.offsetHeight },
+        viewport: { width: window.innerWidth, height: window.innerHeight },
+        obstacles,
+      });
+      // Side only. The pill is positioned inside the dock, so a scroll cannot pull it off Sulwe.
+      setAskPos(pos ? { side: pos.side } : null);
     };
     const schedule = () => {
       if (!frame) frame = window.requestAnimationFrame(place);
     };
     schedule();
     window.addEventListener("resize", schedule);
-    window.addEventListener("scroll", schedule, { passive: true });
     return () => {
       if (frame) window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", schedule);
-      window.removeEventListener("scroll", schedule);
     };
-  }, [askVisible, howVisible, dock, lang, path]);
+  }, [askVisible, howVisible, lang, path]);
 
   if (!show || touring) return null;
   if (keyboard && !chat) return null;
@@ -350,7 +331,11 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
     router.push(`${path}?${params.toString()}`);
   }
 
+  const askClass = `sulwe-ask relative whitespace-nowrap rounded-full border-2 border-gold bg-white text-sm font-semibold text-navy shadow-[0_6px_18px_rgb(20_26_36/0.2)]${askPos && !reduced ? " sulwe-ask-pop" : ""}`;
+  const tailClass = `sulwe-ask-tail absolute h-3 w-3 rotate-45 border-gold bg-white ${askPos?.side === "above" ? "-bottom-[7px] right-9 border-b-2 border-r-2" : "-right-[7px] top-1/2 -mt-1.5 border-r-2 border-t-2"}`;
+
   return (
+    <BodyPortal>
     <div className="print:hidden">
       {chat ? (
         <SulweChat
@@ -372,67 +357,40 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
           }
         />
       ) : (
-        <>
-        {askVisible && howVisible && howWas ? (
-          <div
-            ref={howRef}
-            className={`sulwe-ask fixed z-[45] flex items-center whitespace-nowrap rounded-full border-2 border-gold bg-card text-sm font-semibold text-navy shadow-[0_6px_18px_rgb(20_26_36/0.2)]${askPos && !reduced ? " sulwe-ask-pop" : ""}`}
-            style={askPos ? { top: askPos.top, left: askPos.left } : { top: 0, left: 0, visibility: "hidden" }}
-            data-sulwe-how-was={howWas.slug}
-            data-sulwe-ask-side={askPos?.side ?? ""}
-          >
-            <button
-              type="button"
-              className="py-2 pl-3.5 pr-1"
-              onClick={() => {
-                doneHowWas(howWas.slug);
-                router.push(`/b/${howWas.slug}#rate`);
-              }}
-            >
-              {howWasItText(howWas.name)}
-            </button>
-            <button
-              type="button"
-              aria-label="Not now"
-              className="flex h-9 w-8 items-center justify-center text-base text-ink/50"
-              onClick={() => doneHowWas(howWas.slug)}
-            >
-              ×
-            </button>
-            <span
-              aria-hidden="true"
-              className={`sulwe-ask-tail absolute h-3 w-3 rotate-45 border-gold bg-card ${askPos?.side === "above" ? "-bottom-[7px] right-9 border-b-2 border-r-2" : "-right-[7px] top-1/2 -mt-1.5 border-r-2 border-t-2"}`}
-            />
-          </div>
-        ) : askVisible ? (
-          <button
-            ref={askRef}
-            type="button"
-            className={`sulwe-ask fixed z-[45] whitespace-nowrap rounded-full border-2 border-gold bg-card px-3.5 py-2 text-sm font-semibold text-navy shadow-[0_6px_18px_rgb(20_26_36/0.2)]${askPos && !reduced ? " sulwe-ask-pop" : ""}`}
-            style={askPos ? { top: askPos.top, left: askPos.left } : { top: 0, left: 0, visibility: "hidden" }}
-            aria-label={uiText(lang, "sulwe_ask_label")}
-            data-sulwe-ask=""
-            data-sulwe-ask-side={askPos?.side ?? ""}
-            onClick={openChat}
-          >
-            {uiText(lang, "sulwe_ask_label")}
-            <span
-              aria-hidden="true"
-              className={`sulwe-ask-tail absolute h-3 w-3 rotate-45 border-gold bg-card ${askPos?.side === "above" ? "-bottom-[7px] right-9 border-b-2 border-r-2" : "-right-[7px] top-1/2 -mt-1.5 border-r-2 border-t-2"}`}
-            />
-          </button>
-        ) : null}
         <div
           ref={rootRef}
-          className="sulwe-dock fixed z-[45]"
-          style={{
-            right: 12,
-            bottom: dock ?? "calc(4rem + env(safe-area-inset-bottom) + 10px)",
-            width: minimised ? SULWE_MIN_SIZE : SULWE_SIZE,
-          }}
+          className="sulwe-dock"
+          style={{ width: minimised ? SULWE_MIN_SIZE : SULWE_SIZE }}
           data-sulwe-root=""
           data-sulwe-pose={pose}
         >
+          {askVisible ? (
+            <div className="sulwe-ask-anchor" data-side={askPos?.side || "left"} style={askPos ? undefined : { visibility: "hidden" }}>
+              {howVisible && howWas ? (
+                <div ref={howRef} className={`${askClass} flex items-center`} data-sulwe-how-was={howWas.slug} data-sulwe-ask-side={askPos?.side ?? ""}>
+                  <button
+                    type="button"
+                    className="py-2 pl-3.5 pr-1"
+                    onClick={() => {
+                      doneHowWas(howWas.slug);
+                      router.push(`/b/${howWas.slug}#rate`);
+                    }}
+                  >
+                    {howWasItText(howWas.name)}
+                  </button>
+                  <button type="button" aria-label="Not now" className="flex h-9 w-8 items-center justify-center text-base text-ink/50" onClick={() => doneHowWas(howWas.slug)}>
+                    ×
+                  </button>
+                  <span aria-hidden="true" className={tailClass} />
+                </div>
+              ) : (
+                <button ref={askRef} type="button" className={`${askClass} px-3.5 py-2`} aria-label={uiText(lang, "sulwe_ask_label")} data-sulwe-ask="" data-sulwe-ask-side={askPos?.side ?? ""} onClick={openChat}>
+                  {uiText(lang, "sulwe_ask_label")}
+                  <span aria-hidden="true" className={tailClass} />
+                </button>
+              )}
+            </div>
+          ) : null}
           <button type="button" className="sr-only focus:not-sr-only focus:absolute focus:bottom-full focus:right-0 focus:mb-1 focus:rounded-full focus:bg-navy focus:px-3 focus:py-2 focus:text-sm focus:text-white" onClick={openChat}>
             {uiText(lang, "sulwe_talk")}
           </button>
@@ -485,9 +443,9 @@ export function Sulwe({ enabled, lang, voice = false }: { enabled: boolean; lang
             </div>
           )}
         </div>
-        </>
       )}
     </div>
+    </BodyPortal>
   );
 }
 

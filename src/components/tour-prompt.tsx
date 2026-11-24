@@ -2,7 +2,7 @@
 
 import { useId, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { btnPrimary, btnSecondary } from "@/components/ui";
+import { BodyPortal } from "@/components/body-portal";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiText } from "@/lib/i18n/strings";
 import { SULWE_PREVIEW_KEY, SULWE_SIZE, shouldShowSulwe, sulweHiddenPath, sulweQueryOn } from "@/lib/sulwe";
@@ -33,7 +33,13 @@ function useStore(events: string[], read: () => boolean, server: boolean) {
   );
 }
 
-/** The invite itself. Sulwe asks in a speech bubble; without him it is a small card. Never blocks the page. */
+/** One short line beside Sulwe. The signed-off sentence stays on the dialog for screen readers. */
+function compactInvite(lang: Lang) {
+  if (lang === "dholuo") return { line: "Tour machiek?", yes: "Ee" };
+  return { line: "Quick tour?", yes: "Yes" };
+}
+
+/** The invite itself. A single 44px line beside Sulwe, not a card over the page. */
 export function TourPromptCard({
   lang,
   withSulwe,
@@ -47,37 +53,48 @@ export function TourPromptCard({
   onNo: () => void;
   titleId?: string;
 }) {
-  const style = withSulwe
-    ? { right: 12 + SULWE_SIZE + 10, width: `min(260px, calc(100vw - ${SULWE_SIZE + 44}px))` }
-    : { right: 12, left: 12, maxWidth: 360, marginLeft: "auto" };
+  const short = compactInvite(lang);
+  const style = withSulwe ? { right: 12 + SULWE_SIZE + 8 } : { right: 12 };
   return (
+    <BodyPortal>
     <div
       role="dialog"
       aria-modal="false"
-      aria-labelledby={titleId}
+      aria-label={uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
       data-tour-prompt={withSulwe ? "sulwe" : "card"}
-      className="tour-prompt fixed z-[46] rounded-2xl border-2 border-gold bg-card p-3 shadow-[0_10px_30px_rgb(20_26_36/0.22)] print:hidden"
-      style={{ ...style, bottom: "calc(4rem + env(safe-area-inset-bottom) + 12px)" }}
+      className="tour-prompt fixed z-[46] flex h-11 items-center gap-1 rounded-full border-2 border-gold bg-white pl-3 pr-1 shadow-[0_6px_16px_rgb(20_26_36/0.16)] print:hidden"
+      style={style}
     >
       {withSulwe ? (
         <span
           aria-hidden="true"
-          className="absolute -right-[9px] bottom-5 h-4 w-4 rotate-45 border-r-2 border-t-2 border-gold bg-card"
+          className="absolute -right-[7px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 border-r-2 border-t-2 border-gold bg-white"
           data-tour-prompt-tail=""
         />
       ) : null}
-      <p id={titleId} className="text-base font-semibold leading-snug text-navy">
-        {uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
+      <p id={titleId} className="whitespace-nowrap text-sm font-semibold leading-none text-navy">
+        {short.line}
       </p>
-      <div className="mt-2.5 flex flex-wrap gap-2">
-        <button type="button" className={`${btnPrimary} flex-1 whitespace-nowrap`} data-tour-prompt-yes="" onClick={onYes}>
-          {uiText(lang, "invite_tour_yes")}
-        </button>
-        <button type="button" className={`${btnSecondary} flex-1 whitespace-nowrap`} data-tour-prompt-no="" onClick={onNo}>
-          {uiText(lang, "invite_tour_no")}
-        </button>
-      </div>
+      <button
+        type="button"
+        className="inline-flex h-8 items-center rounded-full bg-gold px-2.5 text-sm font-semibold leading-none text-navy"
+        data-tour-prompt-yes=""
+        aria-label={uiText(lang, "invite_tour_yes")}
+        onClick={onYes}
+      >
+        {short.yes}
+      </button>
+      <button
+        type="button"
+        className="inline-flex h-8 w-8 items-center justify-center text-lg leading-none text-navy/70"
+        data-tour-prompt-no=""
+        aria-label={uiText(lang, "invite_tour_no")}
+        onClick={onNo}
+      >
+        ×
+      </button>
     </div>
+    </BodyPortal>
   );
 }
 

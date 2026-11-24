@@ -31,7 +31,7 @@ export async function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-navy/95 text-white backdrop-blur print:hidden">
+      <header className="sticky top-0 z-30 bg-navy text-white print:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-3 px-4">
           <Link href="/" className="group flex shrink-0 items-center">
             <Wordmark tone="onDark" truncate={false} />
