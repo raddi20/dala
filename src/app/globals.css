@@ -248,7 +248,7 @@ h3,
   max-width: 100%;
   min-height: 100dvh;
   flex-direction: column;
-  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10rem);
+  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 7.5rem);
 }
 
 .page-shell > * {
@@ -307,7 +307,8 @@ main .grid > * {
 }
 
 .tour-prompt {
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 12px + var(--rangach-vv));
+  height: 44px;
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 34px + var(--rangach-vv));
   background-color: #fff;
   opacity: 1;
   transform: none;
@@ -332,7 +333,7 @@ main .grid > * {
   }
 
   .tour-prompt {
-    bottom: calc(4rem + env(safe-area-inset-bottom) + 12px + var(--rangach-cta));
+    bottom: calc(44px + var(--rangach-cta));
   }
 }
 
