@@ -84,6 +84,8 @@ test("actions that return to a section land on its new page", () => {
 
 test("the admin nav is shared by every admin page and marks the current section", () => {
   assert.match(read("src/app/admin/layout.tsx"), /<AdminNav/);
+  assert.match(read("src/components/admin-nav.tsx"), /overflow-x-auto/);
+  assert.match(read("src/components/admin-nav.tsx"), /\[mask-image:/);
   assert.equal(activeAdminHref("/admin"), "/admin");
   assert.equal(activeAdminHref("/admin/reports"), "/admin/reports");
   assert.equal(activeAdminHref("/admin/ai/flags"), "/admin/ai");
