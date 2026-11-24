@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { BackBar } from "@/components/back-bar";
 import { Footer } from "@/components/footer";
 import { GuidedTour } from "@/components/guided-tour";
+import { ChromeMetrics } from "@/components/chrome-metrics";
 import { Sulwe } from "@/components/sulwe";
 import { TourPrompt } from "@/components/tour-prompt";
 import { Header } from "@/components/header";
@@ -28,6 +29,7 @@ export const dynamic = "force-dynamic";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
   themeColor: PWA_THEME_COLOR,
 };
 
@@ -69,8 +71,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const tourOn = guidedTourOn();
   const sulweFlag = sulweOn();
   return (
-    <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-full flex-col pb-[calc(4.5rem+env(safe-area-inset-bottom))] font-sans print:pb-0 md:pb-0">
+    <html lang="en" className="min-h-full antialiased">
+      <body className="min-w-0 font-sans">
+        <div className="page-shell">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-30 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:shadow-md"
@@ -95,6 +98,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <Sulwe enabled={sulweFlag} lang={lang} voice={sulweVoiceOn()} />
         </Suspense>
         <Analytics />
+        </div>
+        <ChromeMetrics />
       </body>
     </html>
   );

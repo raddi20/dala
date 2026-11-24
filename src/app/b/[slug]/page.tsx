@@ -8,6 +8,7 @@ import { ShopBadgeNotes } from "@/components/badges";
 import { JsonLd } from "@/components/json-ld";
 import { effectiveBranches } from "@/lib/shop-branches";
 import { breadcrumbJsonLd, shopBranchesJsonLd } from "@/lib/seo";
+import { BodyPortal } from "@/components/body-portal";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { RemoteImage } from "@/components/remote-image";
 import { ReportForm } from "@/components/report-form";
@@ -308,7 +309,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   const shopHref = shopParams.size ? `/b/${shop.slug}?${shopParams}` : `/b/${shop.slug}`;
 
   return (
-    <article className={`mx-auto grid max-w-3xl gap-5 px-4 py-4 ${chatUrl ? "pb-40" : "pb-8"}`}>
+    <article className="mx-auto grid min-w-0 max-w-3xl gap-5 px-4 py-4">
       {shop.published && !shop.hidden ? (
         <JsonLd
           data={[
@@ -709,8 +710,9 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
 
       <ContactTracker />
       {chatUrl ? (
-        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-line/80 bg-card px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)]">
-          <a href={chatUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+        <BodyPortal>
+        <div className="sticky-cta-bar border-t border-line/80 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)]">
+          <a href={chatUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} className={`${btnWhatsApp} w-full min-w-0 whitespace-normal text-center`} target="_blank" rel="noreferrer">
             {lang === "dholuo" ? uiFill(lang, "whatsapp_name", { name: shop.user.name }) : <>WhatsApp {shop.user.name}</>}
           </a>
           <p className="mt-2 text-center text-sm text-muted">
@@ -724,6 +726,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             />
           </p>
         </div>
+        </BodyPortal>
       ) : null}
     </article>
   );

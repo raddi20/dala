@@ -2,6 +2,7 @@
 
 import { useId, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { BodyPortal } from "@/components/body-portal";
 import { btnPrimary, btnSecondary } from "@/components/ui";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiText } from "@/lib/i18n/strings";
@@ -48,16 +49,17 @@ export function TourPromptCard({
   titleId?: string;
 }) {
   const style = withSulwe
-    ? { right: 12 + SULWE_SIZE + 10, width: `min(260px, calc(100vw - ${SULWE_SIZE + 44}px))` }
+    ? { right: 12 + SULWE_SIZE + 10, width: `min(260px, calc(100% - ${SULWE_SIZE + 44}px))` }
     : { right: 12, left: 12, maxWidth: 360, marginLeft: "auto" };
   return (
+    <BodyPortal>
     <div
       role="dialog"
       aria-modal="false"
       aria-labelledby={titleId}
       data-tour-prompt={withSulwe ? "sulwe" : "card"}
-      className="tour-prompt fixed z-[46] rounded-2xl border-2 border-gold bg-card p-3 shadow-[0_10px_30px_rgb(20_26_36/0.22)] print:hidden"
-      style={{ ...style, bottom: "calc(4rem + env(safe-area-inset-bottom) + 12px)" }}
+      className="tour-prompt fixed z-[46] rounded-2xl border-2 border-gold bg-white p-3 shadow-[0_10px_30px_rgb(20_26_36/0.22)] print:hidden"
+      style={style}
     >
       {withSulwe ? (
         <span
@@ -70,14 +72,15 @@ export function TourPromptCard({
         {uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
       </p>
       <div className="mt-2.5 flex flex-wrap gap-2">
-        <button type="button" className={`${btnPrimary} flex-1 whitespace-nowrap`} data-tour-prompt-yes="" onClick={onYes}>
+        <button type="button" className={`${btnPrimary} whitespace-nowrap`} data-tour-prompt-yes="" onClick={onYes}>
           {uiText(lang, "invite_tour_yes")}
         </button>
-        <button type="button" className={`${btnSecondary} flex-1 whitespace-nowrap`} data-tour-prompt-no="" onClick={onNo}>
+        <button type="button" className={`${btnSecondary} whitespace-nowrap`} data-tour-prompt-no="" onClick={onNo}>
           {uiText(lang, "invite_tour_no")}
         </button>
       </div>
     </div>
+    </BodyPortal>
   );
 }
 

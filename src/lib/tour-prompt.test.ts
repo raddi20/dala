@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -65,7 +66,10 @@ test("the invite card renders both buttons, in English and Dholuo, beside Sulwe 
   assert.match(en, /aria-modal="false"/);
   assert.match(en, /data-tour-prompt-tail/);
   assert.match(en, new RegExp(`right:${12 + SULWE_SIZE + 10}px`));
-  assert.match(en, /bottom:calc\(4rem \+ env\(safe-area-inset-bottom\) \+ 12px\)/);
+  assert.match(en, /bg-white/);
+  const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
+  assert.match(css, /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 12px \+ var\(--rangach-vv\)\)/);
+  assert.match(css, /bottom: calc\(4rem \+ env\(safe-area-inset-bottom\) \+ 12px \+ var\(--rangach-cta\)\)/);
   const card = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: false, onYes: noop, onNo: noop }));
   assert.match(card, /data-tour-prompt="card"/);
   assert.match(card, /New here\? Want a quick tour of Rangach\?/);

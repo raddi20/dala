@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badges } from "@/components/badges";
+import { BodyPortal } from "@/components/body-portal";
 import { FamilyOrderButton } from "@/components/family-order-button";
 import { ReportForm } from "@/components/report-form";
 import { ContactTracker } from "@/components/contact-tracker";
@@ -206,7 +207,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
   });
 
   return (
-    <article className={`mx-auto grid max-w-3xl gap-6 px-4 py-8 sm:pb-10 ${chatUrl ? "pb-40" : "pb-28"}`}>
+    <article className="mx-auto grid min-w-0 max-w-3xl gap-6 px-4 py-8 sm:pb-10">
       {notice ? <Flash>{notice}</Flash> : null}
       {!listing.hidden && !listing.owner.suspended ? (
         <JsonLd
@@ -507,7 +508,8 @@ export default async function ListingPage({ params, searchParams }: Props) {
 
       {shop ? <ContactTracker /> : null}
       {chatUrl ? (
-        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
+        <BodyPortal>
+        <div className="sticky-cta-bar border-t border-sand/80 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] sm:hidden">
           <div className="grid gap-2">
             <FamilyOrderButton
               variant="bar"
@@ -517,18 +519,21 @@ export default async function ListingPage({ params, searchParams }: Props) {
               siteName={appName()}
               lang={lang}
             />
-            <a href={chatUrl} data-contact-shop={shop?.slug} data-contact-name={shop ? listing.owner.name : undefined} data-tour="whatsapp" className={`${btnWhatsApp} w-full`} target="_blank" rel="noreferrer">
+            <a href={chatUrl} data-contact-shop={shop?.slug} data-contact-name={shop ? listing.owner.name : undefined} data-tour="whatsapp" className={`${btnWhatsApp} w-full min-w-0 whitespace-normal text-center`} target="_blank" rel="noreferrer">
               {uiText(lang, "whatsapp_seller")}
             </a>
             <PaymentSafetyNote />
           </div>
         </div>
+        </BodyPortal>
       ) : (
-        <div className="sticky-cta-bar fixed inset-x-0 z-30 border-t border-sand/80 bg-card/95 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] backdrop-blur sm:hidden">
-          <a href={shareUrl} className={`${btnPrimary} w-full`} target="_blank" rel="noreferrer">
+        <BodyPortal>
+        <div className="sticky-cta-bar border-t border-sand/80 px-4 py-3 shadow-[0_-8px_24px_rgb(20_26_36/0.08)] sm:hidden">
+          <a href={shareUrl} className={`${btnPrimary} w-full min-w-0 whitespace-normal text-center`} target="_blank" rel="noreferrer">
             {uiText(lang, "share_whatsapp")}
           </a>
         </div>
+        </BodyPortal>
       )}
     </article>
   );

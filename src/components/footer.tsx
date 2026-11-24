@@ -28,7 +28,7 @@ export function Footer({
             {APP_TAGLINE} {appName()} is {APP_MEANING}. Discovery here — chat stays on WhatsApp.
           </p>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 font-medium text-ink/80">
+        <div className="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2 font-medium text-ink/80">
           <Link href="/welcome" className="hover:text-navy">
             Learn about Rangach
           </Link>

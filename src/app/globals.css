@@ -49,6 +49,12 @@
   color-scheme: light;
   --page-fade: 220ms;
   --press: 160ms;
+  /* One stack, all anchored to the screen bottom. Nav, then WhatsApp bar, then Sulwe and the tour invite. */
+  --rangach-nav: 4rem;
+  --rangach-cta: 0px;
+  --rangach-vv: 0px;
+  --rangach-safe: env(safe-area-inset-bottom, 0px);
+  --rangach-above-nav: calc(var(--rangach-nav) + var(--rangach-safe) + 0.75rem);
 }
 
 body {
@@ -86,10 +92,16 @@ h3,
 .chip-scroll {
   display: flex;
   gap: 0.5rem;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding-bottom: 0.25rem;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  /* The next chip peeks through a soft edge so a sideways row is obvious, without widening the page. */
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
 }
 
 .chip-scroll::-webkit-scrollbar {
@@ -185,11 +197,9 @@ h3,
 @keyframes tour-prompt-in {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.96);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
@@ -232,14 +242,104 @@ h3,
   box-shadow: 0 -12px 40px rgb(20 26 36 / 0.18);
 }
 
+.page-shell {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100dvh;
+  flex-direction: column;
+  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10rem);
+}
+
+.page-shell > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* A grid item sizes to its content unless told otherwise, which pulls the page sideways on a phone. */
+main .grid > * {
+  min-width: 0;
+}
+
+.bottom-nav {
+  position: fixed;
+  right: 0;
+  bottom: var(--rangach-vv);
+  left: 0;
+  z-index: 40;
+  transform: none;
+  padding-bottom: var(--rangach-safe);
+}
+
 .sticky-cta-bar {
-  bottom: calc(4rem + env(safe-area-inset-bottom));
-  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  position: fixed;
+  right: 0;
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-vv));
+  left: 0;
+  z-index: 41;
+  transform: none;
+  background: var(--color-card);
+  padding-bottom: 0.75rem;
+}
+
+.sulwe-dock {
+  position: fixed;
+  right: 12px;
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv));
+  z-index: 45;
+  transform: none;
+  overflow: visible;
+}
+
+.sulwe-ask-anchor {
+  position: absolute;
+  right: calc(100% + 6px);
+  top: 32%;
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.sulwe-ask-anchor[data-side="above"] {
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 6px);
+  transform: none;
+}
+
+.tour-prompt {
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 12px + var(--rangach-vv));
+  background-color: #fff;
+  opacity: 1;
+  transform: none;
+}
+
+.tour-prompt [data-tour-prompt-tail] {
+  background-color: #fff;
 }
 
 @media (min-width: 768px) {
+  .page-shell {
+    min-height: 100%;
+    padding-bottom: var(--rangach-cta);
+  }
+
   .sticky-cta-bar {
     bottom: 0;
+  }
+
+  .sulwe-dock {
+    bottom: calc(20px + var(--rangach-cta));
+  }
+
+  .tour-prompt {
+    bottom: calc(4rem + env(safe-area-inset-bottom) + 12px + var(--rangach-cta));
+  }
+}
+
+@media print {
+  .page-shell {
+    min-height: 0;
+    padding-bottom: 0;
   }
 }
 
@@ -326,11 +426,9 @@ h3,
 @keyframes page-fade {
   from {
     opacity: 0;
-    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 

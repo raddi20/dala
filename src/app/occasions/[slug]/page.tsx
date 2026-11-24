@@ -87,7 +87,7 @@ export default async function OccasionPage({ params }: Props) {
   const empty = occasion.shops.length === 0 && listings.length === 0;
 
   return (
-    <article className="mx-auto grid max-w-5xl gap-8 px-4 py-8 pb-24 sm:pb-10">
+    <article className="mx-auto grid min-w-0 max-w-5xl gap-8 px-4 py-8">
       <div>
         <p className="text-sm font-semibold text-lake-dark">
           <Link href="/occasions" className="hover:text-lake">

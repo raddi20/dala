@@ -36,7 +36,7 @@ export default async function OccasionsPage() {
   });
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8 pb-24 sm:pb-10">
+    <div className="mx-auto grid min-w-0 max-w-5xl gap-8 px-4 py-8">
       <div>
         <h1 className={sectionTitleClass}>Occasions</h1>
         <p className="mt-2 max-w-2xl text-ink/70">

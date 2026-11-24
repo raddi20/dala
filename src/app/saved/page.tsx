@@ -11,7 +11,7 @@ export default async function SavedPage({ searchParams }: Props) {
   const user = await getSessionUser();
   const tab = sp.tab === "recent" ? "recent" : "saved";
   return (
-    <div className="mx-auto grid max-w-3xl gap-4 px-4 py-6 pb-28">
+    <div className="mx-auto grid min-w-0 max-w-3xl gap-4 px-4 py-6">
       <h1 className="font-serif text-3xl text-navy">Saved</h1>
       <SavedView initialTab={tab} signedIn={Boolean(user)} />
     </div>

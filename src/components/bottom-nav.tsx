@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { BodyPortal } from "@/components/body-portal";
 import { ASK_HREF, activeBottomTab, type BottomTab } from "@/lib/bottom-nav";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiText, type StringKey } from "@/lib/i18n/strings";
@@ -74,10 +75,11 @@ export function BottomNav({ sellHref, lang = "en" }: { sellHref: string; lang?: 
   };
 
   return (
+    <BodyPortal>
     <nav
       aria-label="Primary"
       data-tour="nav"
-      className="bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] print:hidden md:hidden"
+      className="bottom-nav border-t border-line bg-white print:hidden md:hidden"
     >
       <div className="grid h-16 grid-cols-5">
         {TABS.map((tab) => {
@@ -106,5 +108,6 @@ export function BottomNav({ sellHref, lang = "en" }: { sellHref: string; lang?: 
         })}
       </div>
     </nav>
+    </BodyPortal>
   );
 }
