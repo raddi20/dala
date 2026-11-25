@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { distanceToShop, sortByDistance, type LatLng } from "@/lib/near-me";
 import { hiddenDemoUserFilter, publicListingWhere, publicSellerContacts, publicShopWhere } from "@/lib/demo-visibility";
+import { isDemoEmail } from "@/lib/admin-access";
 import { diasporaOrdersWhere } from "@/lib/diaspora";
 import { variantMap } from "@/lib/image-variant-store";
 import { mergeFreshItems } from "@/lib/home-fresh";
@@ -408,6 +409,7 @@ function toShopCard(row: ShopRow): ShopCardData {
       phone: row.user.phone,
       whatsapp: row.user.whatsapp,
     }).whatsapp,
+    followable: !isDemoEmail(row.user.email),
   };
 }
 
@@ -533,6 +535,8 @@ export type ShopCardData = {
   coverThumb960?: string | null;
   /** Set only when Near me is on. Null when the shop's place is unknown. */
   distanceKm?: number | null;
+  /** False for sample shops. The follow control stays off those. */
+  followable?: boolean;
 };
 
 export type OfferingCardData = {

@@ -23,6 +23,8 @@ import { cityPagePath, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { townPagesWithContent } from "@/lib/town-pages";
 import { homeRails } from "@/lib/search";
 import { getSessionUser } from "@/lib/session";
+import { followedIdSet } from "@/lib/community/follow-db";
+import { FollowShop } from "@/components/follow-shop";
 import { continueHref } from "@/lib/utils";
 
 const DHOLUO_PROMPTS: Record<string, StringKey> = {
@@ -76,6 +78,7 @@ export default async function HomePage() {
   const prompts = promptsFromListings(exampleRows);
   const tiles = occasionTileOrder(occasions);
   const fresh = rails.fresh;
+  const homeFollows = user ? await followedIdSet(user.id, rails.shops.map((shop) => shop.id)) : new Set<string>();
 
   const origin = await publicOrigin();
   const name = appName();
@@ -169,7 +172,23 @@ export default async function HomePage() {
             <div className="chip-scroll mt-3 items-stretch pb-1">
               {rails.shops.map((shop) => (
                 <div key={shop.id} className="w-[46vw] max-w-[220px] shrink-0">
-                  <ShopCard shop={shop} />
+                  <ShopCard
+                    shop={shop}
+                    follow={
+                      shop.followable === false ? null : (
+                        <FollowShop
+                          shopId={shop.id}
+                          slug={shop.slug}
+                          name={shop.name}
+                          following={homeFollows.has(shop.id)}
+                          signedIn={Boolean(user)}
+                          followable
+                          returnTo="/"
+                          variant="card"
+                        />
+                      )
+                    }
+                  />
                 </div>
               ))}
             </div>

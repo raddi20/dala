@@ -10,6 +10,7 @@ import { publicOrigin } from "@/lib/payments/origin";
 import { browsePage, searchShops } from "@/lib/search";
 import { buildShareMetadata } from "@/lib/share-metadata";
 import { getSessionUser } from "@/lib/session";
+import { followedIdSet } from "@/lib/community/follow-db";
 import { chipBag, understoodChips } from "@/lib/understood-chips";
 import { requestLang } from "@/lib/i18n/request-lang";
 import { one } from "@/lib/utils";
@@ -80,6 +81,8 @@ export default async function ShopsPage({
       lang={lang}
       lite={await liteMode()}
       near={near ? one(sp.near) : ""}
+      signedIn={Boolean(user)}
+      followedIds={user ? [...(await followedIdSet(user.id, result.shops.map((shop) => shop.id)))] : []}
       understood={
         parsed
           ? {

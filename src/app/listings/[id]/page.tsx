@@ -14,6 +14,8 @@ import { ContactTracker } from "@/components/contact-tracker";
 import { ReviewForm } from "@/components/review-form";
 import { RecentlyViewedStrip, TrackRecent } from "@/components/recently-viewed";
 import { SaveHeart } from "@/components/save-heart";
+import { FollowShop } from "@/components/follow-shop";
+import { isDemoEmail } from "@/lib/admin-access";
 import { UpgradeAction } from "@/components/upgrade-action";
 import { Flash, cardClass, btnPrimary, btnSecondary, btnWhatsApp, fieldClass } from "@/components/ui";
 import { blockUser } from "@/lib/actions/social";
@@ -119,6 +121,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
           suspended: true,
           storefront: {
             select: {
+              id: true,
               slug: true,
               published: true,
               hidden: true,
@@ -170,6 +173,13 @@ export default async function ListingPage({ params, searchParams }: Props) {
   const chatUrl = contacts.whatsapp ? whatsappChatLink(contacts.whatsapp, listing.title, listingUrl, lang) : "";
   const shopRecord = listing.owner.storefront;
   const shop = shopRecord?.published && !shopRecord.hidden && !listing.owner.suspended ? shopRecord : null;
+  const shopFollow =
+    user && shop
+      ? await prisma.shopFollow.findUnique({
+          where: { userId_shopId: { userId: user.id, shopId: shop.id } },
+          select: { id: true },
+        })
+      : null;
   const callUrl = telHref(contacts.phone);
   const storedPhoto = listing.photoUrl ? (await variantMap([listing.photoUrl])).get(listing.photoUrl) : undefined;
   const photo = cardPhoto({
@@ -271,7 +281,20 @@ export default async function ListingPage({ params, searchParams }: Props) {
             <p className={shown.ask ? "text-base font-medium text-ink/60" : "text-lg font-semibold text-ink"}>{shown.text}</p>
           );
         })()}
-        <SaveHeart variant="page" item={savedItem} />
+        <div className="flex flex-wrap items-center gap-2">
+          <SaveHeart variant="page" item={savedItem} />
+          {shop ? (
+            <FollowShop
+              shopId={shop.id}
+              slug={shop.slug}
+              name={listing.owner.name}
+              following={Boolean(shopFollow)}
+              signedIn={Boolean(user)}
+              followable={!isOwner && !isDemoEmail(listing.owner.email)}
+              returnTo={`/listings/${listing.id}`}
+            />
+          ) : null}
+        </div>
         <TrackRecent item={savedItem} />
         <p className="text-sm text-ink/55">
           {rating === null

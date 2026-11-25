@@ -4,6 +4,8 @@ import { ShopBadgeStatus } from "@/components/badges";
 import { PaymentSetup } from "@/components/payment-setup";
 import { ProfileForm } from "@/components/profile-form";
 import { SellerVisibilityChecklist } from "@/components/seller-visibility-checklist";
+import { FollowedShops } from "@/components/followed-shops";
+import { UpdateComposer } from "@/components/update-composer";
 import { SellerSteps } from "@/components/seller-steps";
 import { Flash, btnPrimary, btnSecondary, cardClass } from "@/components/ui";
 import { signOutAction } from "@/lib/actions/auth";
@@ -21,6 +23,9 @@ import { buildVisibilityChecklist } from "@/lib/seller-share/checklist";
 import { handlesFromShop } from "@/lib/seller-share/handles";
 import { whatsappShareLink } from "@/lib/whatsapp";
 import { formatWhen, one } from "@/lib/utils";
+import { isDemoEmail } from "@/lib/admin-access";
+import { countFollowers, shopsFollowedBy } from "@/lib/community/follow-db";
+import { readUpdatePause } from "@/lib/actions/community";
 
 export const metadata: Metadata = { title: "Account", robots: { index: false, follow: false } };
 
@@ -35,6 +40,7 @@ export default async function AccountPage({
     where: { userId: user.id },
     select: {
       slug: true,
+      id: true,
       published: true,
       hidden: true,
       bannerUrl: true,
@@ -67,6 +73,19 @@ export default async function AccountPage({
     where: { blockerId: user.id },
     include: { blocked: { select: { id: true, name: true } } },
   });
+  const [followed, followers, pause, ownUpdates] = await Promise.all([
+    shopsFollowedBy(user.id),
+    storefront ? countFollowers(storefront.id) : Promise.resolve(0),
+    storefront ? readUpdatePause() : Promise.resolve({ paused: false, note: "" }),
+    storefront
+      ? prisma.shopUpdate.findMany({
+          where: { storefrontId: storefront.id, expiresAt: { gt: new Date() } },
+          orderBy: { createdAt: "desc" },
+          take: 5,
+          select: { id: true, body: true, status: true, createdAt: true },
+        })
+      : Promise.resolve([]),
+  ]);
 
   const paid = one(sp.paid);
   const flash =
@@ -131,6 +150,15 @@ export default async function AccountPage({
         ) : null}
       </div>
       {flash ? <Flash>{flash}</Flash> : null}
+      <FollowedShops
+        returnTo="/account"
+        shops={followed.map((row) => ({
+          id: row.shop.id,
+          slug: row.shop.slug,
+          name: row.shop.user.name,
+          city: row.shop.user.city,
+        }))}
+      />
       {storefront?.published && !storefront.hidden ? (
         <SellerVisibilityChecklist
           items={buildVisibilityChecklist({
@@ -218,6 +246,13 @@ export default async function AccountPage({
           <>
             <p className="text-sm text-ink/70">
               Published at /b/{storefront.slug}. Buyers message you on WhatsApp.
+              {isDemoEmail(user.email)
+                ? ""
+                : followers === 0
+                  ? " No one follows this shop yet."
+                  : followers === 1
+                    ? " 1 person follows this shop."
+                    : ` ${followers} people follow this shop.`}
             </p>
             <div className="flex flex-wrap gap-2">
               <Link href={`/b/${storefront.slug}`} className={btnPrimary}>
@@ -243,6 +278,29 @@ export default async function AccountPage({
             Shop checks (phone, location, and business) show here after you open a shop. An admin grants them.
           </p>
         )}
+        {storefront?.published && !storefront.hidden && !isDemoEmail(user.email) ? (
+          <div className="grid gap-3 border-t border-line pt-4">
+            <UpdateComposer paused={pause.paused} note={pause.note} />
+            {ownUpdates.length > 0 ? (
+              <ul className="grid gap-2">
+                {ownUpdates.map((update) => (
+                  <li key={update.id} className="rounded-xl border border-line bg-paper/70 px-3 py-2 text-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gold-d">
+                      {update.status === "approved"
+                        ? "On your shop"
+                        : update.status === "pending"
+                          ? "Waiting for a moderator"
+                          : "Not shown"}
+                      {" · "}
+                      {formatWhen(update.createdAt)}
+                    </p>
+                    <p className="mt-1 text-ink">{update.body}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="grid gap-3">

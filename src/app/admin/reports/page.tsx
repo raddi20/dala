@@ -15,6 +15,7 @@ export default async function AdminReportsPage() {
       reporter: { select: { name: true, email: true } },
       listing: { select: { id: true, title: true } },
       targetUser: { select: { id: true, name: true } },
+      shopUpdate: { select: { id: true, body: true, storefront: { select: { slug: true, user: { select: { name: true } } } } } },
     },
     orderBy: { createdAt: "desc" },
   });
@@ -46,6 +47,15 @@ export default async function AdminReportsPage() {
                 <Link href={`/people/${report.targetUser.id}`} className="font-semibold text-lake-dark">
                   {report.targetUser.name}
                 </Link>
+              </p>
+            ) : null}
+            {report.shopUpdate ? (
+              <p>
+                Shop update on{" "}
+                <Link href={`/b/${report.shopUpdate.storefront.slug}`} className="font-semibold text-lake-dark">
+                  {report.shopUpdate.storefront.user.name}
+                </Link>
+                : {report.shopUpdate.body}
               </p>
             ) : null}
             {report.details ? <p className="mt-2 whitespace-pre-wrap">{report.details}</p> : null}

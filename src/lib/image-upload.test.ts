@@ -69,6 +69,16 @@ test("decideUpload keeps new photos on the signed-in user", () => {
     ownStorefront: { id: "shop1" },
   });
   assert.equal(banner.ok && banner.pathname, "users/seller1/banner");
+
+  const update = decideUpload({
+    user: seller,
+    purpose: "update",
+    resourceId: "",
+    ownStorefront: { id: "shop1" },
+  });
+  assert.equal(update.ok && update.pathname, "users/seller1/update");
+  const noShop = decideUpload({ user: seller, purpose: "update", resourceId: "" });
+  assert.equal(noShop.ok, false);
 });
 
 test("decideUpload refuses another seller and allows the owner or an admin", () => {
