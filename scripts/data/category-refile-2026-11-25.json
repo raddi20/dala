@@ -1,0 +1,1029 @@
+{
+  "date": "2026-11-25",
+  "source": "Rangach category audit, 25 Nov 2026, approved by Kevin",
+  "notes": "Listing.category only. Shops have no category column: a shop shows the categories of its listings. Demo (@dala.local) listings are excluded and the script refuses to touch them.",
+  "rows": [
+    {
+      "entity": "listing",
+      "id": "cmvqdixwx0007k108acg5kq1p",
+      "title": "Professional Landscaping and Garden Services",
+      "shop": "Okumu Landscaper",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Construction, landscaping, fabrication or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmuo8t1770002jp04rx5mt33c",
+      "title": "Airbnb",
+      "shop": "Rachel Anyango Lihanda",
+      "from": "Real estate / housing",
+      "to": "Short stays",
+      "reason": "The listing is an Airbnb stay, not a long-term house"
+    },
+    {
+      "entity": "listing",
+      "id": "cmuo8ydq90001lb04sn6lpsks",
+      "title": "Airbnb",
+      "shop": "Rachel Anyango Lihanda",
+      "from": "Real estate / housing",
+      "to": "Short stays",
+      "reason": "The listing is an Airbnb stay, not a long-term house"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvqggvfd0007l908j1cwdd8h",
+      "title": "Professional Landscaping and Garden Maintenance Services",
+      "shop": "Okumu Landscaper",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Construction, landscaping, fabrication or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvqnmy7k0001jq08g3ru9buo",
+      "title": "Faith's Kitchenware and Household Utensils",
+      "shop": "Faith's General Utensils Shop",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvqqb1ac0004lc08evw9fuu7",
+      "title": "Professional Welding, Fabrication and Custom Furniture",
+      "shop": "Silmild Fabricators",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Welding and fabrication listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvqq6zww0001lc08gzgaagqs",
+      "title": "Professional Welding, Fabrication and Custom Furniture",
+      "shop": "Silmild Fabricators",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Welding and fabrication listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvqspgso0006l608apq94u3h",
+      "title": "Beauty Spa, Hair and Nail Care Services",
+      "shop": "Hidden city spa",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvrtlzyo0001kw08cxjejzd7",
+      "title": "Quality Golf Bags and Affordable Prices",
+      "shop": "JACK'S FASHION & LAND AGENCY",
+      "from": "Food & restaurants",
+      "to": "Sports & fitness",
+      "reason": "Golf bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvs1h4ua0001jm08r26un19l",
+      "title": "Neatly done dreadlocks for a Stylish, Confident look",
+      "shop": "Herines Beauty Parlor",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvs1rur10003l508jogu8jrg",
+      "title": "Neatly Braided Hairstyles for a Beautiful, Stylish Look",
+      "shop": "Herines Beauty Parlor",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvtosmq80003jn08kkf4d4oj",
+      "title": "Stylish Trouser for Every Occasion",
+      "shop": "Onungas  Fashion and Appliance Services",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvtojefr0008l008il2ri42k",
+      "title": "Stylish Air Jordan 4 (J4) Sneakers",
+      "shop": "Onungas  Fashion and Appliance Services",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvuvvi2y0005js071m98kv2g",
+      "title": "Elegant and Space-Saving Nesting Table",
+      "shop": "KORANDO HOME FURNITURE",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "A nesting table from a furniture shop. The audit said Beauty & personal care, which is wrong; Home & furniture fits"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv73sik000fjn08yyqqdpbs",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv78zv5000eky07sb5nkx76",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv777i8000ijn08ww7x1yag",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv7aijz000mjn08k6uqv519",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv7c6r9000hky071yzzpa58",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv7do77000njy07kz7j180i",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvv7fbx10005l308w3f4ekgp",
+      "title": "AMOR LAKEBREEZE APARTMENTS",
+      "shop": "AMOR LAKEBREEZE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw27dsnh000rjr07468w7jau",
+      "title": "Gate valves",
+      "shop": "UHOLO HARDWARE",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvxzg9gf0001l4083sv45z95",
+      "title": "LANVAL CONSTRUCTION LTD",
+      "shop": "LANVAL CONSTRUCTION LTD",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Construction, landscaping, fabrication or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvz42cfq0008jr07rojwp9ux",
+      "title": "Matching Ankara Dresses in Beautiful Colours",
+      "shop": "SERG DESIGNS AND FASHION",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvz77s0o0007l208uzof04vu",
+      "title": "Ailyons Electric Dry Iron Box",
+      "shop": "Kisumu Electronics Hub",
+      "from": "Food & restaurants",
+      "to": "Electronics & phones",
+      "reason": "A household iron listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvzhhps20002k108knvslw8h",
+      "title": "Air Jordan 9 Retro High-Top Sneakers – Premium Quality",
+      "shop": "Carlos Collection",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvzhovl30005l507qkgah15m",
+      "title": "CHOKMERESA SALON AND SPA",
+      "shop": "CHOKMERESA SALON AND SPA",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvzhs21r000dlb08dm77lg33",
+      "title": "CHOKMERESA SALON AND SPA",
+      "shop": "CHOKMERESA SALON AND SPA",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw0go9wk0009la08f4ktrced",
+      "title": "Premium Black Nike Air Sneakers with Bold Red Accents",
+      "shop": "RICHARDS COLLECTION",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw4t6om50007jp07fkwc4w7h",
+      "title": "Synthetic hair",
+      "shop": "FAVOURED HOME STORE",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "Hair pieces listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw27a6b2000cl808uhjhzzi6",
+      "title": "One Piece Toilet",
+      "shop": "UHOLO HARDWARE",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw2fhw8c0001ie08p7xi52yp",
+      "title": "SIMWATA HOTEL NDORI",
+      "shop": "SIMWATA HOTEL NDORI",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "A hotel stay listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw32rvnr0001js071qlhre7x",
+      "title": "LED Street Light with CCTV Camera",
+      "shop": "MOTHERLAND ELECRICALS",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Electrical lighting listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw32vxuz0004l508to410a4r",
+      "title": "Solar LED Floodlight",
+      "shop": "MOTHERLAND ELECRICALS",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Electrical lighting listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw2flfso000hif08nkh667a1",
+      "title": "SIMWATA HOTEL NDORI",
+      "shop": "SIMWATA HOTEL NDORI",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "A hotel stay listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw2fjkhz000eif08a1gwfjbn",
+      "title": "SIMWATA HOTEL NDORI",
+      "shop": "SIMWATA HOTEL NDORI",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "A hotel stay listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3ai4oi0004l808x9oklggf",
+      "title": "Elegant Wedding Suit",
+      "shop": "Jackie Bridals",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3e1fob0008l808sg46jz76",
+      "title": "Beauty, Skincare and Personal Care Products",
+      "shop": "BEULA SHOE ENTERPRISES NYAMASARIA",
+      "from": "Fashion & clothing",
+      "to": "Beauty & personal care",
+      "reason": "Skincare and personal care products listed under fashion"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3e46ha0004la08pc41if8d",
+      "title": "Elegant fashion wear",
+      "shop": "BEULA SHOE ENTERPRISES NYAMASARIA",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3kvot1001ll008xach2abp",
+      "title": "BENIEL BEAUTY TRAINING COLLEGE",
+      "shop": "BENIEL BEAUTY TRAINING COLLEGE",
+      "from": "Beauty & personal care",
+      "to": "Education & tutoring",
+      "reason": "A beauty college is a school, not a salon listing"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3kw42w005ljm08veu5xkw5",
+      "title": "Wall Cabinet",
+      "shop": "Grado India furniture Services Kisumu 🧰",
+      "from": "Tailoring & alterations",
+      "to": "Home & furniture",
+      "reason": "The only listing here is a wall cabinet, not tailoring"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3ktdto001il008i3ed9xmc",
+      "title": "BENIEL BEAUTY TRAINING COLLEGE",
+      "shop": "BENIEL BEAUTY TRAINING COLLEGE",
+      "from": "Beauty & personal care",
+      "to": "Education & tutoring",
+      "reason": "A beauty college is a school, not a salon listing"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3l1vnl004qkw08gp9po9zq",
+      "title": "L seat",
+      "shop": "Grado India furniture Services Kisumu 🧰",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3pa83c0006jv08ysi7x5uz",
+      "title": "Skater Dresses",
+      "shop": "Cathy's Collection",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3q8n09000njp089zek11rh",
+      "title": "BROWN STONE APARTMENTS",
+      "shop": "BROWNSTONE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3qard0000bjv08w3dwtarh",
+      "title": "BROWNSTONE APARTMENTS",
+      "shop": "BROWNSTONE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3q6mqh000jjp088mryiyx2",
+      "title": "BROWN STONE APARTMENTS",
+      "shop": "BROWNSTONE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3q9qk1000cjv08up6tsnmu",
+      "title": "BROWN STONE APARTMENTS",
+      "shop": "BROWNSTONE APARTMENTS",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3qpve9000mjv08i6q5atvn",
+      "title": "BIKERS AND BEYOND",
+      "shop": "BIKERS AND BEYOND",
+      "from": "Food & restaurants",
+      "to": "Sports & fitness",
+      "reason": "A bicycle shop listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw3qc66h000fjv08h3cvs7mi",
+      "title": "BROWNSTONE APARTMENTS",
+      "shop": "BROWNSTONE APARTMENTS",
+      "from": "Home & furniture",
+      "to": "Short stays",
+      "reason": "Furnished apartments for a stay, listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw4t2bi70001jt07d3624szs",
+      "title": "Stylish Lady's Top",
+      "shop": "FAVOURED HOME STORE",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw4wiecz0007jv0823kevdcl",
+      "title": "Baby Walker- Safe First Steps",
+      "shop": "Thrift Paradise K-City Block A24",
+      "from": "Fashion & clothing",
+      "to": "Retail / shops",
+      "reason": "A baby walker is not clothing"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw4y84e30001jq07aknt6hti",
+      "title": "Quality School Sweaters",
+      "shop": "Genuine Glam Design's (GG)",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw4ywm1s000ala08pnsi81v1",
+      "title": "Kitchen wall sink tap",
+      "shop": "JAKENYA HARDWARE",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw54imj40008l208o7fsqw3k",
+      "title": "Scenic Boat Tours",
+      "shop": "Dunga Eco Tours and craft",
+      "from": "Home & furniture",
+      "to": "Travel & tickets",
+      "reason": "Boat tours listed under furniture"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw934hn80006kz07vborznrk",
+      "title": "Huma Black Stainless Steel Floor Drain Description",
+      "shop": "PEGLA ENTERPRISES",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9faggi0003k408q80pj9vh",
+      "title": "HOLLYWOOD FURNITURE",
+      "shop": "HOLLYWOOD FURNITURE",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9fbtl80001jn07fjl6gagx",
+      "title": "HOLLYWOOD FURNITURE",
+      "shop": "HOLLYWOOD FURNITURE",
+      "from": "Tents, chairs & décor",
+      "to": "Home & furniture",
+      "reason": "All three listings here are a furniture shop, not event hire"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9fdmhf0008jp08ops6tjpa",
+      "title": "HOLLYWOOD FURNITURE",
+      "shop": "HOLLYWOOD FURNITURE",
+      "from": "Tents, chairs & décor",
+      "to": "Home & furniture",
+      "reason": "All three listings here are a furniture shop, not event hire"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9f8y2s0005jp08cp04msdv",
+      "title": "HOLLYWOOD FURNITURE",
+      "shop": "HOLLYWOOD FURNITURE",
+      "from": "Tents, chairs & décor",
+      "to": "Home & furniture",
+      "reason": "All three listings here are a furniture shop, not event hire"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9hbm7o000bjq08tf5lt4zp",
+      "title": "GEFEMA MEMORIAL SERVICES",
+      "shop": "GEFEMA MEMORIAL SERVICES",
+      "from": "Retail / shops",
+      "to": "Funerals & memorials",
+      "reason": "A coffin maker listed under retail; Funerals & memorials is the existing category that fits"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9hhi8l0001le07wz8dccun",
+      "title": "GEFEMA MEMORIAL SERVICES",
+      "shop": "GEFEMA MEMORIAL SERVICES",
+      "from": "Retail / shops",
+      "to": "Funerals & memorials",
+      "reason": "A coffin maker listed under retail; Funerals & memorials is the existing category that fits"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9hna0k0002l208bwnvg84d",
+      "title": "GEFEMA MEMORIAL SERVICES",
+      "shop": "GEFEMA MEMORIAL SERVICES",
+      "from": "Retail / shops",
+      "to": "Funerals & memorials",
+      "reason": "A coffin maker listed under retail; Funerals & memorials is the existing category that fits"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw9hk64m0004le07q7hww3w7",
+      "title": "GEFEMA MEMORIAL SERVICES",
+      "shop": "GEFEMA MEMORIAL SERVICES",
+      "from": "Retail / shops",
+      "to": "Funerals & memorials",
+      "reason": "A coffin maker listed under retail; Funerals & memorials is the existing category that fits"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwactfwf0005kt084wwxznlm",
+      "title": "Gypsum Corner Tape – Drywall Joint Finishing Tape",
+      "shop": "The Great Paints & Glass Mart",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwagleon000cjn084a74lkzb",
+      "title": "Double Bowl Deep Drain Sink",
+      "shop": "ASUZ HARDWARE",
+      "from": "Food & restaurants",
+      "to": "Plumbing & electrical",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwalals50009la08d8bkpzb3",
+      "title": "Puma Suede Classic Brown Sneakers",
+      "shop": "Innocent Collection",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwbq4sbu0001ld08yrbaz4xs",
+      "title": "Luxury TV Wall Design",
+      "shop": "Shadow interior designing",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Construction, landscaping, fabrication or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwj0r99x0006kw08d5u13uxg",
+      "title": "Cooking Set",
+      "shop": "MMBONES KITCHENWARE Riat Airport",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwcfa5qz0005jp08mvj5d2df",
+      "title": "Strong & Durable Heavy Wooden Door",
+      "shop": "CONRITE HARDWARE",
+      "from": "Food & restaurants",
+      "to": "Construction & trades",
+      "reason": "Hardware, taps, toilets or building supplies listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwc2a03e0004lb08xjrc40b4",
+      "title": "Reliable Transportation Trucks",
+      "shop": "Abanga Building & Construction Supplies",
+      "from": "Food & restaurants",
+      "to": "Transport & logistics",
+      "reason": "Trucks for hire listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdxi3up0001l408wqgh9s4a",
+      "title": "BY PAVILION INVESTMENT",
+      "shop": "BY PAVINE INVESTMENTS",
+      "from": "Retail / shops",
+      "to": "Home & furniture",
+      "reason": "Institutional furniture listed under retail"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdxj8lt0004l408i51f6pse",
+      "title": "BY PAVILION INVESTMENT",
+      "shop": "BY PAVINE INVESTMENTS",
+      "from": "Retail / shops",
+      "to": "Home & furniture",
+      "reason": "Institutional furniture listed under retail"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdxket70002lc08z6mshh33",
+      "title": "BY PAVILION INVESTMENT",
+      "shop": "BY PAVINE INVESTMENTS",
+      "from": "Retail / shops",
+      "to": "Home & furniture",
+      "reason": "Institutional furniture listed under retail"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf0ufxh000jl7089miyyhck",
+      "title": "Comfortable and elegant hotel rooms",
+      "shop": "MELVIC HOTEL",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf0y7uo000ml7086zpya1yn",
+      "title": "Comfortable and Elegnat Tooms",
+      "shop": "MELVIC HOTEL",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf6s73a0002jh08iq587b9z",
+      "title": "ENIGMA RESORT",
+      "shop": "ENIGMA RESORT",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf6tsqp0005jh08t7zunnoh",
+      "title": "ENIGMA RESORT",
+      "shop": "ENIGMA RESORT",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf6v2sj0004jt08dc38eftg",
+      "title": "ENIGMA RESORT",
+      "shop": "ENIGMA RESORT",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf6w5ma0009js08s6m34igk",
+      "title": "ENIGMA RESORT",
+      "shop": "ENIGMA RESORT",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwf6xib70008jh083gl7zarh",
+      "title": "ENIGMA RESORT",
+      "shop": "ENIGMA RESORT",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwfa1g14000akw07c7h2jsaw",
+      "title": "SAIDA ANIMAL FEEDS",
+      "shop": "SAIDA ANIMAL FEEDS",
+      "from": "Retail / shops",
+      "to": "Agriculture & farming",
+      "reason": "Animal feeds listed under retail"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwfa2dlm0003lc07x6mwel28",
+      "title": "SAIDA ANIMAL FEEDS",
+      "shop": "SAIDA ANIMAL FEEDS",
+      "from": "Retail / shops",
+      "to": "Agriculture & farming",
+      "reason": "Animal feeds listed under retail"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwivjp470001jp07rgy12gq3",
+      "title": "Stylish & Comfortable Living Room",
+      "shop": "Debanjo properties",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwivrree0001l908mjfjz2oo",
+      "title": "Elegant & Comfortable Dining Area",
+      "shop": "Debanjo properties",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwivpmmc0001lf078bz6vvjb",
+      "title": "Modern & Fully Equipped Kitchen",
+      "shop": "Debanjo properties",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwj12kcr000bl807ceflkvjv",
+      "title": "Electric Pressure Cooker and Air Fryer",
+      "shop": "MMBONES KITCHENWARE Riat Airport",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwj0u4180008l807s4h0uejh",
+      "title": "Unique Catbelle Juice Glass",
+      "shop": "MMBONES KITCHENWARE Riat Airport",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwivlt870004jp07dngku4s1",
+      "title": "Comfortable & Elegant Bedroom",
+      "shop": "Debanjo properties",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwkd8llf0006jv07qlckyila",
+      "title": "MTUMBA maxi dresses",
+      "shop": "ADATIA'S FASHION HOUSE PATELS",
+      "from": "Food & restaurants",
+      "to": "Mitumba & second-hand",
+      "reason": "Second-hand dresses listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwkpjlmj0006kz081djbkkwf",
+      "title": "Stylish Caps Collection",
+      "shop": "THE OPTIMISTIC HUB",
+      "from": "Food & restaurants",
+      "to": "Fashion & clothing",
+      "reason": "Clothes, shoes or bags listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwm82c22000al407rj6goytp",
+      "title": "Glow & Beauty Essentials",
+      "shop": "QUEEN G COSMETICS",
+      "from": "Food & restaurants",
+      "to": "Beauty & personal care",
+      "reason": "A salon, spa or beauty product listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwn4v7s70001jp08nrr36acp",
+      "title": "Elegant Hotel Conference Hall",
+      "shop": "Melvic inn (Opposite Jalaram Academy",
+      "from": "Food & restaurants",
+      "to": "Events & entertainment",
+      "reason": "A conference hall listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdl8bhf0006l207l9fdwlta",
+      "title": "Title: Elegant Marble-Top Table",
+      "shop": "OWINOS FURNITURE MASENO",
+      "from": "Food & restaurants",
+      "to": "Home & furniture",
+      "reason": "Furniture or kitchenware listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwn53rw50001jw08uj59u64q",
+      "title": "Comfortable and Elegant Hotel Rooms",
+      "shop": "Melvic inn (Opposite Jalaram Academy",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwo0pi2q0003lb08gzwewpz2",
+      "title": "Marcos Automative Services",
+      "shop": "Marcos Automative Services",
+      "from": "Food & restaurants",
+      "to": "Auto & mechanics",
+      "reason": "A garage listing under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwum8jmx0005lc088hznzxof",
+      "title": "Comfortable Guest Rooms",
+      "shop": "Capitol Hill Resort",
+      "from": "Food & restaurants",
+      "to": "Short stays",
+      "reason": "Rooms, apartments or a resort stay listed under food"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdssqd70001l507doc2zw6h",
+      "title": "IMANI MINI MART",
+      "shop": "IMANI MINI MART",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdswzc70004l507nwgy9puq",
+      "title": "IMANI MINI MART",
+      "shop": "IMANI MINI MART",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdsy7xi0002l108c7nnqw3v",
+      "title": "IMANI MINI MART",
+      "shop": "IMANI MINI MART",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwdsu5x00004l008ensi46jj",
+      "title": "IMANI MINI MART",
+      "shop": "IMANI MINI MART",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwfapbjx0008lc07svmlyk2o",
+      "title": "SIRARI SAFI RICE",
+      "shop": "SIRARI SAFI RICE",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwfaqgg60001l6078t1un7d8",
+      "title": "SIRARI SAFI RICE",
+      "shop": "SIRARI SAFI RICE",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    },
+    {
+      "entity": "listing",
+      "id": "cmwfbz18i000hkw072z7p5shb",
+      "title": "SIRARI SAFI RICE",
+      "shop": "SIRARI SAFI RICE",
+      "from": "Retail / shops",
+      "to": "Groceries & produce",
+      "reason": "Groceries sold by a mini mart or rice seller; fills the empty Groceries & produce"
+    }
+  ],
+  "notChanged": [
+    {
+      "entity": "shop",
+      "slug": "lifestar-pharmacy",
+      "name": "LIFESTAR PHARMACY",
+      "wanted": "Pharmacies",
+      "reason": "No listings. Shops have no category field; a shop's category comes from its listings, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "ogada-car-hire-services",
+      "name": "Ogada Car Hire Services",
+      "wanted": "Taxis & car hire",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "de-lisu-family-for-natural-peanu",
+      "name": "DE'LISU FAMILY - For Natural peanut butter and pure honey",
+      "wanted": "Groceries & produce",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "ladiva-beauty-college",
+      "name": "LADIVA BEAUTY COLLEGE",
+      "wanted": "Education & tutoring",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "zoezi-fitness",
+      "name": "Zoezi fitness",
+      "wanted": "Sports & fitness",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "yusuf-ravy",
+      "name": "Yusuf Ravy",
+      "wanted": "Photography & video",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "dons-photography",
+      "name": "Dons Photography",
+      "wanted": "Photography & video",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "daddiso-photography",
+      "name": "Daddiso Photography",
+      "wanted": "Photography & video",
+      "reason": "No listings. Shops have no category field, so there is nothing to refile"
+    },
+    {
+      "entity": "shop",
+      "slug": "terrazzo-builders-shop",
+      "name": "TERRAZZO BUILDERS SHOP",
+      "wanted": "Funerals & memorials",
+      "reason": "Its only listing (cmwlp41yl0001jo08q7d8krk7) is already in Funerals & memorials; no change needed"
+    },
+    {
+      "entity": "listing",
+      "id": "cmvzhqxiy0006ju08do20mzx0",
+      "name": "CHOKMERESA SALON AND SPA",
+      "wanted": "Beauty & personal care",
+      "reason": "Already in Beauty & personal care; the shop's other two listings are refiled"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw543x1x0009l5085pwhjran",
+      "name": "Dunga Eco Tours and craft: Hyacinth Woven Chair & Table Set",
+      "wanted": "Travel & tickets",
+      "reason": "Furniture, so Home & furniture is right; only the boat-tour listing moves"
+    },
+    {
+      "entity": "listing",
+      "id": "cmw54725d000cl508hjwte7wu",
+      "name": "Dunga Eco Tours and craft: Handwoven Water Hyacinth Baskets",
+      "wanted": "Travel & tickets",
+      "reason": "Baskets for the home, so Home & furniture is right; only the boat-tour listing moves"
+    }
+  ]
+}
