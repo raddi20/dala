@@ -160,7 +160,13 @@ async function moreMenu(browserType, label, width) {
   await page.goBack();
   await page.waitForURL((url) => !url.pathname.startsWith("/saved"), { timeout: 20000 });
   if (await page.locator("[data-more-menu]").isVisible().catch(() => false)) fail(errors, `${label} menu reopened after back`);
-  console.log(label, "More menu closed on click, outside, Escape, item, and back");
+  await page.goto(`${BASE}/?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+  await more.click();
+  if ((await expanded()) !== "true") fail(errors, `${label} More did not reopen before scroll`);
+  await page.evaluate(() => window.scrollTo(0, 300));
+  await page.waitForTimeout(150);
+  if ((await expanded()) !== "false" || (await menu.isHidden()) === false) fail(errors, `${label} scroll did not close More`);
+  console.log(label, "More menu closed on click, outside, Escape, item, back, and scroll");
   await browser.close();
 }
 

@@ -41,6 +41,10 @@ export function HeaderMore({ children }: { children: ReactNode }) {
     const header = buttonRef.current?.closest("header");
     if (header) header.style.zIndex = "60";
 
+    const startY = window.scrollY;
+    const onScroll = () => {
+      if (Math.abs(window.scrollY - startY) > 8) setOpen(false);
+    };
     const onPointer = (event: PointerEvent) => {
       const node = event.target;
       if (node instanceof Node && rootRef.current?.contains(node)) return;
@@ -54,10 +58,12 @@ export function HeaderMore({ children }: { children: ReactNode }) {
     };
     document.addEventListener("pointerdown", onPointer);
     document.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       if (header) header.style.zIndex = "";
       document.removeEventListener("pointerdown", onPointer);
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", onScroll);
     };
   }, [open]);
 
