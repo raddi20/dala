@@ -10,6 +10,9 @@ import type { AiActor, RunResult } from "@/lib/ai/types";
 import { hideDemoShops } from "@/lib/demo-visibility";
 import { DEMO_EMAIL_DOMAIN } from "@/lib/admin-access";
 import { prisma } from "@/lib/prisma";
+import { isProActive } from "@/lib/pro";
+import { videoMode } from "@/lib/video/config";
+import { videoTipKind, videoTipLines, type VideoTipKind } from "@/lib/seller-mail/video-tip";
 
 export type WeekCounts = {
   listingViews: number;
@@ -35,6 +38,8 @@ export type TipSeller = {
   tipsEmailOptIn: boolean;
   alreadySent: boolean;
   statsJson: string;
+  /** Fixed shop-video tip for this shop, or null. Never AI-written. */
+  videoTip?: VideoTipKind | null;
 };
 
 export type TipRow = {
@@ -140,10 +145,17 @@ function tipsPromptFor(env: NodeJS.ProcessEnv) {
   };
 }
 
-export function tipEmailText(name: string, result: SellerTipsResult, unsubscribe: string): string {
+export function tipEmailText(
+  name: string,
+  result: SellerTipsResult,
+  unsubscribe: string,
+  video: { kind: VideoTipKind | null; origin: string } = { kind: null, origin: "" },
+): string {
   const hello = name.trim() ? `Hello ${name.trim()},` : "Hello,";
   const lines = [hello, "", result.summary.trim()];
   for (const tip of result.tips) lines.push("", `${tip.title}: ${tip.body}`);
+  const videoLines = videoTipLines(video.kind, video.origin);
+  if (videoLines.length > 0) lines.push("", ...videoLines);
   lines.push("", "This note is about your own Rangach page. It does not contact buyers for you.");
   lines.push("", `Unsubscribe: ${unsubscribe}`);
   return lines.join("\n");
@@ -163,7 +175,15 @@ export async function loadTipSellers(now: Date): Promise<TipSeller[]> {
         id: true,
         email: true,
         name: true,
-        storefront: { select: { id: true, offerings: { where: { archived: false }, select: { id: true } } } },
+        verifiedPro: true,
+        verifiedProUntil: true,
+        storefront: {
+          select: {
+            id: true,
+            offerings: { where: { archived: false }, select: { id: true } },
+            videos: { select: { status: true } },
+          },
+        },
         listings: {
           select: {
             id: true,
@@ -184,6 +204,8 @@ export async function loadTipSellers(now: Date): Promise<TipSeller[]> {
     }),
   ]);
   const sentIds = new Set(sent.map((row) => row.userId));
+  const mode = videoMode();
+  const checkoutLive = paymentsLive();
   const sellers: TipSeller[] = [];
   for (const user of users) {
     if (!user.email.includes("@") || !user.storefront) continue;
@@ -211,6 +233,12 @@ export async function loadTipSellers(now: Date): Promise<TipSeller[]> {
       tipsEmailOptIn: prefs?.tipsEmailOptIn ?? false,
       alreadySent: sentIds.has(user.id),
       statsJson: sellerStatsJson(current, previous, hygieneFor(visible, user.storefront.offerings.length)),
+      videoTip: videoTipKind({
+        videoMode: mode,
+        proActive: isProActive(user, now),
+        paymentsLive: checkoutLive,
+        videos: user.storefront.videos,
+      }),
     });
   }
   return sellers;
@@ -313,7 +341,10 @@ export async function runWeeklySellerTips(
       to: seller.email,
       name: seller.name,
       subject: "Your week on Rangach",
-      text: tipEmailText(seller.name, data, unsubscribeUrl(origin, seller.userId, secret)),
+      text: tipEmailText(seller.name, data, unsubscribeUrl(origin, seller.userId, secret), {
+        kind: seller.videoTip ?? null,
+        origin,
+      }),
     });
     if (delivery !== "sent") continue;
     try {

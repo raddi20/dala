@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { shouldSkipSellerEmail } from "@/lib/seller-mail/demo";
 import { computeShopGaps, gapTips, shopLooksComplete, visibilityDue, type ShopGaps } from "@/lib/seller-mail/gaps";
 import { visibilityUnsubscribeUrl } from "@/lib/seller-mail/unsubscribe";
+import { videoTipKind, videoTipLines, type VideoTipKind } from "@/lib/seller-mail/video-tip";
+import { paymentsLive } from "@/lib/payments/live";
+import { isProActive } from "@/lib/pro";
+import { videoMode } from "@/lib/video/config";
 
 export const VISIBILITY_SELLER_CAP = 40;
 
@@ -16,6 +20,8 @@ export type VisibilitySeller = {
   optOut: boolean;
   lastSentAt: Date | null;
   gaps: ShopGaps;
+  /** Fixed shop-video tip for this shop, or null. */
+  videoTip?: VideoTipKind | null;
 };
 
 export function canSendVisibilityEmail(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -27,6 +33,8 @@ export function visibilityEmailText(input: {
   shopUrl: string;
   tips: { title: string; body: string }[];
   unsubscribe: string;
+  videoTip?: VideoTipKind | null;
+  origin?: string;
 }): string {
   const who = input.name.trim() || "there";
   const lines = [
@@ -39,6 +47,8 @@ export function visibilityEmailText(input: {
   for (const tip of input.tips) {
     lines.push("", `${tip.title}: ${tip.body}`);
   }
+  const videoLines = videoTipLines(input.videoTip ?? null, input.origin ?? "");
+  if (videoLines.length > 0) lines.push("", ...videoLines);
   lines.push(
     "",
     "Open Account → Share for ready captions, a branded card, and short tips on posting to WhatsApp, Instagram, Facebook, X, and TikTok. You post yourself — we do not connect to your accounts.",
@@ -72,14 +82,19 @@ export async function loadVisibilitySellers(now: Date): Promise<VisibilitySeller
           phone: true,
           whatsapp: true,
           suspended: true,
+          verifiedPro: true,
+          verifiedProUntil: true,
           listings: { where: { hidden: false }, select: { photoUrl: true } },
         },
       },
       offerings: { where: { archived: false }, select: { imageUrl: true } },
       branches: { select: { hours: true, phone: true } },
+      videos: { select: { status: true } },
     },
     take: 200,
   });
+  const mode = videoMode();
+  const checkoutLive = paymentsLive();
 
   const sellers: VisibilitySeller[] = [];
   for (const shop of shops) {
@@ -109,6 +124,12 @@ export async function loadVisibilitySellers(now: Date): Promise<VisibilitySeller
       optOut: shop.visibilityEmailOptOut,
       lastSentAt: shop.lastVisibilityEmailAt,
       gaps,
+      videoTip: videoTipKind({
+        videoMode: mode,
+        proActive: isProActive(shop.user, now),
+        paymentsLive: checkoutLive,
+        videos: shop.videos,
+      }),
     });
   }
   return sellers;
@@ -161,6 +182,8 @@ export async function runVisibilityTips(
         shopUrl,
         tips,
         unsubscribe: visibilityUnsubscribeUrl(origin, seller.userId, secret),
+        videoTip: seller.videoTip ?? null,
+        origin,
       }),
     });
     if (delivery !== "sent") {
