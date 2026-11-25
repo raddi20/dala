@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { BottomNav } from "@/components/bottom-nav";
+import { HeaderMore } from "@/components/header-more";
 import { InstallAppLink } from "@/components/install-prompt";
 import { LanguageSwitchControl } from "@/components/language-switch";
 import { Wordmark } from "@/components/wordmark";
@@ -48,50 +49,49 @@ export async function Header() {
             <Link href="/occasions" className={`${deskLink} hidden xl:inline-flex`}>
               Occasions
             </Link>
-            <details className="relative">
-              <summary className={`${deskLink} cursor-pointer list-none marker:content-none [&::-webkit-details-marker]:hidden`}>
-                More
-              </summary>
-              <div className="absolute right-0 top-full z-40 mt-1 w-56 rounded-xl border border-white/15 bg-navy p-1 shadow-xl">
-                <Link href="/listings" className={`${menuLink} xl:hidden`}>
+            <Suspense fallback={<span className={deskLink}>More</span>}>
+              <HeaderMore>
+                <Link href="/listings" role="menuitem" className={`${menuLink} xl:hidden`}>
                   Explore
                 </Link>
-                <Link href="/shops" className={`${menuLink} xl:hidden`}>
+                <Link href="/shops" role="menuitem" className={`${menuLink} xl:hidden`}>
                   Shops
                 </Link>
-                <Link href="/occasions" className={`${menuLink} xl:hidden`}>
+                <Link href="/occasions" role="menuitem" className={`${menuLink} xl:hidden`}>
                   Occasions
                 </Link>
-                <Link href="/listings?region=diaspora" className={menuLink}>
+                <Link href="/listings?region=diaspora" role="menuitem" className={menuLink}>
                   For the diaspora
                 </Link>
-                <Link href="/send-home" className={menuLink}>
+                <Link href="/send-home" role="menuitem" className={menuLink}>
                   Send home
                 </Link>
-                <Link href="/business" className={menuLink}>
+                <Link href="/business" role="menuitem" className={menuLink}>
                   For shops
                 </Link>
                 {paymentsOpen ? (
-                  <Link href="/pricing" className={menuLink}>
+                  <Link href="/pricing" role="menuitem" className={menuLink}>
                     Pricing
                   </Link>
                 ) : null}
                 {user?.role === "admin" ? (
-                  <Link href="/admin" className={menuLink}>
+                  <Link href="/admin" role="menuitem" className={menuLink}>
                     Admin{openReports > 0 ? ` (${openReports})` : ""}
                   </Link>
                 ) : null}
-                <Link href="/saved" className={menuLink}>
+                <Link href="/saved" role="menuitem" className={menuLink}>
                   Saved
                 </Link>
-                <InstallAppLink appName={installName} className={`${menuLink} w-full text-left`} />
+                <InstallAppLink appName={installName} role="menuitem" className={`${menuLink} w-full text-left`} />
                 {user ? (
                   <form action={signOutAction}>
-                    <button className={`${menuLink} w-full text-left text-white/70`}>Sign out</button>
+                    <button type="submit" role="menuitem" className={`${menuLink} w-full text-left text-white/70`}>
+                      Sign out
+                    </button>
                   </form>
                 ) : null}
-              </div>
-            </details>
+              </HeaderMore>
+            </Suspense>
             <Link
               href={listHref}
               data-tour="sell"

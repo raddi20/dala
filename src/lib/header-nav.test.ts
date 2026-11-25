@@ -11,9 +11,13 @@ test("the laptop nav keeps the full logo and moves secondary links into More", (
   assert.match(header, /href="\/saved"/);
   assert.match(header, /InstallAppLink/);
   assert.match(header, /md:hidden/);
-  const details = header.slice(header.indexOf("<details"), header.indexOf("</details>"));
-  assert.match(details, /For the diaspora/);
-  assert.match(details, /Send home/);
-  assert.match(details, /href="\/saved"/);
+  const menu = header.slice(header.indexOf("<HeaderMore"), header.indexOf("</HeaderMore>"));
+  assert.match(menu, /For the diaspora/);
+  assert.match(menu, /Send home/);
+  assert.match(menu, /href="\/saved"/);
   assert.match(header, /hidden xl:inline-flex/);
+  const more = readFileSync(new URL("../components/header-more.tsx", import.meta.url), "utf8");
+  assert.match(more, /aria-expanded=\{open\}/);
+  assert.match(more, /aria-controls=\{menuId\}/);
+  assert.match(more, /event\.key !== "Escape"/);
 });
