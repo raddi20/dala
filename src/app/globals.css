@@ -248,7 +248,7 @@ h3,
   max-width: 100%;
   min-height: 100dvh;
   flex-direction: column;
-  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 7.5rem);
+  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 8.5rem);
 }
 
 .page-shell > * {
@@ -321,7 +321,8 @@ main .grid > * {
 @media (min-width: 768px) {
   .page-shell {
     min-height: 100%;
-    padding-bottom: var(--rangach-cta);
+    /* Sulwe is 92px tall and sits 20px above the bottom bar. Keep the last footer row above him. */
+    padding-bottom: calc(var(--rangach-cta) + 20px + 92px + 16px);
   }
 
   .sticky-cta-bar {

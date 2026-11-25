@@ -25,6 +25,11 @@ test("the results search bar can shrink to a phone screen, so /listings does not
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
   const chips = css.slice(css.indexOf(".chip-scroll {"), css.indexOf("}", css.indexOf(".chip-scroll {")));
   assert.match(chips, /overflow-x:\s*auto/);
-  // The fix is at the source, not by clipping the page.
+  // Do not clip the document itself. That breaks sticky and fixed on iOS.
   assert.doesNotMatch(css, /(html|body)\s*\{[^}]*overflow-x:\s*hidden/);
+  const layout = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.match(layout, /<main[^>]*overflow-x-clip/);
+  const understood = readFileSync(new URL("../components/results-chrome.tsx", import.meta.url), "utf8");
+  assert.match(understood, /data-understood-chips/);
+  assert.match(understood, /flex-wrap/);
 });

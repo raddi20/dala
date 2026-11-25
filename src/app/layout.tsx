@@ -84,7 +84,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <OfflineNotice />
         <PwaRegister />
         <StatBeacon />
-        <main id="main" className="page-enter flex-1">
+        <main id="main" className="page-enter min-w-0 flex-1 overflow-x-clip">
           <Suspense fallback={null}>
             <BackBar brand={appName()} />
           </Suspense>
