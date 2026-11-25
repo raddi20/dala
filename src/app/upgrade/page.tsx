@@ -73,7 +73,7 @@ export default async function UpgradePage({
       <div>
         <h1 className="font-serif text-3xl">Promote</h1>
         <p className="mt-2 text-sm text-ink/70">
-          Featured listings stay raised for {FEATURED_DAYS} days ({featuredLabel}). That is a directory boost, separate from a shop. Verified Pro is {proLabel} per {PRO_DAYS} days: a shop banner, a shop video, and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date. It is shown as Pro plan and does not grant Phone, Location, or Business verified. An admin grants those shop checks. The green listing Verified badge stays an admin action too. Card numbers stay with {LICENSED_PAYMENT_PROVIDER}.{" "}
+          Featured listings stay raised for {FEATURED_DAYS} days ({featuredLabel}). That is a directory boost, separate from a shop. Verified Pro is {proLabel} per {PRO_DAYS} days: a shop banner and {PRO_OFFERING_CAP} offerings instead of {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date. It is shown as Pro plan and does not grant Phone, Location, or Business verified. An admin grants those shop checks. The green listing Verified badge stays an admin action too. Card numbers stay with {LICENSED_PAYMENT_PROVIDER}.{" "}
           {featuredPrice.kind === "approx" ? "Figures marked ≈ are approximate and are not the amount checkout charges. " : ""}
           <Link href="/pricing" className="font-semibold text-lake-dark hover:text-lake">
             Public prices

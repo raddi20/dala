@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { shouldSkipSellerEmail } from "@/lib/seller-mail/demo";
 import { computeShopGaps, gapTips, shopLooksComplete, visibilityDue, type ShopGaps } from "@/lib/seller-mail/gaps";
 import { visibilityUnsubscribeUrl } from "@/lib/seller-mail/unsubscribe";
+import { videoTipLines, wantsVideoTip } from "@/lib/seller-mail/video-tip";
+import { videoMode } from "@/lib/video/config";
 
 export const VISIBILITY_SELLER_CAP = 40;
 
@@ -16,6 +18,8 @@ export type VisibilitySeller = {
   optOut: boolean;
   lastSentAt: Date | null;
   gaps: ShopGaps;
+  /** Add the fixed shop-video tip. */
+  videoTip?: boolean;
 };
 
 export function canSendVisibilityEmail(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -27,6 +31,8 @@ export function visibilityEmailText(input: {
   shopUrl: string;
   tips: { title: string; body: string }[];
   unsubscribe: string;
+  videoTip?: boolean;
+  origin?: string;
 }): string {
   const who = input.name.trim() || "there";
   const lines = [
@@ -39,6 +45,8 @@ export function visibilityEmailText(input: {
   for (const tip of input.tips) {
     lines.push("", `${tip.title}: ${tip.body}`);
   }
+  const videoLines = videoTipLines(input.videoTip ?? false, input.origin ?? "");
+  if (videoLines.length > 0) lines.push("", ...videoLines);
   lines.push(
     "",
     "Open Account → Share for ready captions, a branded card, and short tips on posting to WhatsApp, Instagram, Facebook, X, and TikTok. You post yourself — we do not connect to your accounts.",
@@ -77,9 +85,11 @@ export async function loadVisibilitySellers(now: Date): Promise<VisibilitySeller
       },
       offerings: { where: { archived: false }, select: { imageUrl: true } },
       branches: { select: { hours: true, phone: true } },
+      videos: { select: { status: true } },
     },
     take: 200,
   });
+  const mode = videoMode();
 
   const sellers: VisibilitySeller[] = [];
   for (const shop of shops) {
@@ -109,6 +119,7 @@ export async function loadVisibilitySellers(now: Date): Promise<VisibilitySeller
       optOut: shop.visibilityEmailOptOut,
       lastSentAt: shop.lastVisibilityEmailAt,
       gaps,
+      videoTip: wantsVideoTip({ videoMode: mode, email: shop.user.email, shopName: shop.user.name, videos: shop.videos }),
     });
   }
   return sellers;
@@ -161,6 +172,8 @@ export async function runVisibilityTips(
         shopUrl,
         tips,
         unsubscribe: visibilityUnsubscribeUrl(origin, seller.userId, secret),
+        videoTip: seller.videoTip ?? false,
+        origin,
       }),
     });
     if (delivery !== "sent") {

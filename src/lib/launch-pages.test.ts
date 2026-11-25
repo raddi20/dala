@@ -50,7 +50,8 @@ function assertNoPaidPitch(html: string, label: string) {
   }
   assert.equal(html.toLowerCase().includes("buy now"), false, label);
   assert.equal(html.toLowerCase().includes("get verified pro"), false, label);
-  assert.ok(html.includes("Paid upgrades coming soon"), label);
+  // Shop video is free, so these pages no longer mention a paid plan at all.
+  assert.equal(html.includes("Paid upgrades coming soon"), false, label);
 }
 
 test("welcome and list render, link from the footer, and sit in the sitemap", () => {
@@ -86,7 +87,8 @@ test("welcome and list render, link from the footer, and sit in the sitemap", ()
   assert.equal(list.includes("Write it for me"), false);
   assert.equal(list.includes("Add a listing"), false);
   assert.ok(list.includes(String(MAX_DURATION_SECONDS)));
-  assert.ok(list.includes("Verified Pro"));
+  assert.ok(list.includes("free for every shop"));
+  assert.equal(list.includes("Verified Pro"), false);
   assert.equal(list.includes('aria-current="step"'), false);
 
   assert.ok(footer.includes('href="/welcome"'));
@@ -132,17 +134,16 @@ test("welcome and list render, link from the footer, and sit in the sitemap", ()
   assert.equal(twitter?.card, "summary_large_image");
 });
 
-test("welcome and list stay free of pay buttons when upgrades are live", () => {
-  const welcome = renderToStaticMarkup(createElement(WelcomeGuide, { paymentsOpen: true }));
-  const list = renderToStaticMarkup(
-    createElement(ListGuide, { progress: SIGNED_OUT_PROGRESS, listingWriter: false, paymentsOpen: true }),
-  );
+test("welcome and list stay free of pay buttons, and say shop video is free", () => {
+  const welcome = renderToStaticMarkup(createElement(WelcomeGuide));
+  const list = renderToStaticMarkup(createElement(ListGuide, { progress: SIGNED_OUT_PROGRESS, listingWriter: false }));
   for (const html of [welcome, list]) {
     assert.equal(html.includes("Paid upgrades coming soon"), false);
     assert.equal(html.includes("/upgrade"), false);
     assert.equal(html.toLowerCase().includes("buy now"), false);
     assert.equal(html.toLowerCase().includes("m-pesa"), false);
-    assert.ok(html.includes("Verified Pro"));
+    assert.equal(html.includes("Verified Pro"), false);
+    assert.match(html, /free/);
   }
 });
 

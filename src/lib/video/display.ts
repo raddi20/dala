@@ -1,11 +1,10 @@
 import { PLAY_DATA_LABEL } from "@/lib/video/constants";
-import { shopVideoHiddenByPro, shopVideoIsPublic } from "@/lib/video/machine";
+import { shopVideoIsPublic } from "@/lib/video/machine";
 
-export { shopVideoHiddenByPro, shopVideoIsPublic, PLAY_DATA_LABEL };
+export { shopVideoIsPublic, PLAY_DATA_LABEL };
 
 export type SellerVideoState = {
   mode: "off" | "mock" | "live";
-  verifiedPro: boolean;
   live: { caption: string } | null;
   review: { status: string; rejectReason: string; caption: string } | null;
 };
@@ -13,9 +12,6 @@ export type SellerVideoState = {
 export function sellerVideoNotices(state: SellerVideoState): string[] {
   if (state.mode === "off") return ["Shop video is coming soon."];
   const notices: string[] = [];
-  if (!state.verifiedPro && state.live) {
-    notices.push("Your video is saved, but it is hidden while the Pro plan is off. It goes back on the shop when Pro is on again. It is not deleted.");
-  }
   if (state.review?.status === "pending") {
     notices.push(
       state.live
@@ -29,10 +25,10 @@ export function sellerVideoNotices(state: SellerVideoState): string[] {
   } else if (state.review?.status === "errored") {
     notices.push(state.review.rejectReason || "The upload did not finish. You can try again.");
   }
-  if (state.verifiedPro && state.live && !state.review) {
+  if (state.live && !state.review) {
     notices.push("Your video is on the shop.");
   }
-  if (state.verifiedPro && state.live && state.review?.status === "rejected") {
+  if (state.live && state.review?.status === "rejected") {
     notices.push("The video already on your shop was not changed.");
   }
   return notices;

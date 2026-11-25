@@ -113,7 +113,7 @@ export default async function PricingPage() {
       <section className={`${cardClass} border-lake/30 bg-teal-soft/60 p-5`}>
         <h2 className="font-serif text-xl text-navy">Verified Pro is not “verified”</h2>
         <p className="mt-2 text-sm leading-relaxed text-ink/80">
-          Paying for Verified Pro turns on the Pro plan for {PRO_DAYS} days: the cover banner, the shop video, and the higher offering limit. Renewing before it ends adds {PRO_DAYS} days to the current end date. It does not check a phone, a place, or a business, and it does not add the green Verified badge on a listing. An admin grants those. The price above is the plan, not a promise that someone inspected the shop.
+          Paying for Verified Pro turns on the Pro plan for {PRO_DAYS} days: the cover banner and the higher offering limit. Shop video is free for every shop. Renewing before it ends adds {PRO_DAYS} days to the current end date. It does not check a phone, a place, or a business, and it does not add the green Verified badge on a listing. An admin grants those. The price above is the plan, not a promise that someone inspected the shop.
         </p>
       </section>
 

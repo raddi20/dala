@@ -1,10 +1,8 @@
 /**
  * Shop video rules.
  *
- * Pro lapse: an approved video is hidden from the shop, from cards, and from link
- * previews as soon as Verified Pro is off. The Mux asset and this row are kept.
- * Turning Pro back on shows the same video again, with no new upload and no new review.
- * Pro in this app is a flag, not a dated subscription, so nothing is deleted on lapse.
+ * Plan: shop video is free for every shop. It does not depend on Verified Pro, and
+ * a Pro lapse does not hide it.
  *
  * Rejection: a video that never went live is deleted from Mux 14 days after rejection.
  * The row, the reason, and the poster stay. A clip longer than 45 seconds is deleted

@@ -12,7 +12,7 @@ import {
   setUserPro,
   visibleOfferings,
 } from "@/lib/pro";
-import { shopVideoHiddenByPro, shopVideoIsPublic } from "@/lib/video/machine";
+import { shopVideoIsPublic } from "@/lib/video/machine";
 
 const DAY_MS = 86_400_000;
 const now = new Date("2026-10-06T12:00:00.000Z");
@@ -71,21 +71,10 @@ test("the first five offerings in shop order stay public when Pro ends, and rene
   assert.equal(saved.length, 7);
 });
 
-test("an expired Pro plan hides the shop video and shows it again on renewal, without deleting it", () => {
-  const playback = "publicPlayback";
+test("shop video is free: an expired Pro plan does not hide an approved video", () => {
   const expired = { verifiedPro: true, verifiedProUntil: new Date("2020-01-01T00:00:00.000Z") };
-  const renewed = { verifiedPro: true, verifiedProUntil: new Date(Date.now() + PRO_DAYS * DAY_MS) };
-  const hidden = {
-    verifiedPro: isProActive(expired),
-    published: true,
-    status: "approved",
-    publicPlaybackId: playback,
-  };
-  assert.equal(shopVideoIsPublic(hidden), false);
-  assert.equal(shopVideoHiddenByPro(hidden), true);
-  assert.equal(shopVideoIsPublic({ ...hidden, verifiedPro: isProActive(renewed) }), true);
-  assert.equal(shopVideoHiddenByPro({ ...hidden, verifiedPro: isProActive(renewed) }), false);
-  assert.equal(playback, "publicPlayback");
+  assert.equal(isProActive(expired), false);
+  assert.equal(shopVideoIsPublic({ published: true, status: "approved", publicPlaybackId: "publicPlayback" }), true);
 });
 
 async function shopFixture() {
@@ -106,7 +95,7 @@ async function shopFixture() {
   return { user, shop, stamp };
 }
 
-test("expiry hides extra offerings and the video without deleting them, and renewal brings them back", async () => {
+test("expiry hides extra offerings without deleting them, keeps the video public, and renewal brings them back", async () => {
   const { user, shop } = await shopFixture();
   try {
     const past = new Date(Date.now() - DAY_MS);
@@ -138,12 +127,11 @@ test("expiry hides extra offerings and the video without deleting them, and rene
     assert.equal(hiddenOfferings(saved, false).length, 2);
     assert.equal(
       shopVideoIsPublic({
-        verifiedPro: isProActive(lapsedUser),
         published: true,
         status: video.status,
         publicPlaybackId: video.publicPlaybackId,
       }),
-      false,
+      true,
     );
 
     const renewedUntil = extendProUntil(lapsedUser.verifiedProUntil, new Date());
@@ -164,7 +152,6 @@ test("expiry hides extra offerings and the video without deleting them, and rene
     assert.equal(videoAfter.status, "approved");
     assert.equal(
       shopVideoIsPublic({
-        verifiedPro: isProActive(renewed),
         published: true,
         status: videoAfter.status,
         publicPlaybackId: videoAfter.publicPlaybackId,

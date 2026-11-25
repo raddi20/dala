@@ -8,7 +8,6 @@ export type PublicVideoThumbInput = {
   status: string;
   publicPlaybackId: string;
   published: boolean;
-  verifiedPro: boolean;
   ownerUser: string;
 };
 
@@ -46,13 +45,13 @@ export function isPublicMuxThumbnailUrl(value: string): boolean {
 }
 
 /**
- * Approved public shop videos only. A lapsed Pro plan, an unpublished shop,
- * or a still-private playback id is left for a later run.
+ * Approved public shop videos only. An unpublished shop or a still-private
+ * playback id is left for a later run.
  */
 export function publicVideoThumbTargets(rows: PublicVideoThumbInput[]): PublicVideoThumbTarget[] {
   const out: PublicVideoThumbTarget[] = [];
   for (const row of rows) {
-    if (!row.verifiedPro || !row.published || row.status !== "approved") continue;
+    if (!row.published || row.status !== "approved") continue;
     if (!row.ownerUser.trim()) continue;
     const url = publicMuxThumbnailUrl(row.publicPlaybackId);
     if (!url) continue;

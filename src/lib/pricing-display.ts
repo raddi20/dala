@@ -133,7 +133,6 @@ export function pricingPlans(env?: RateEnv): PricingPlan[] {
       includes: [
         `Up to ${PRO_OFFERING_CAP} active offerings, instead of ${FREE_OFFERING_CAP} on a free shop`,
         "A cover banner on the shop",
-        "One shop video, up to 45 seconds, after an admin reviews it",
         `Labelled ${PRO_PLAN_LABEL} on the shop and on listings`,
         `Lasts ${PRO_DAYS} days. Renewing before the end date adds another ${PRO_DAYS} days to that date`,
       ],

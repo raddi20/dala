@@ -94,13 +94,11 @@ const uploadBase = {
   recentUploads: 0,
   inFlight: false,
   adminExempt: false,
-  verifiedPro: true,
 };
 
-test("only a Pro shop can plan an upload, and consent, size, length, and the daily limit apply", () => {
-  const blocked = planUpload({ ...uploadBase, verifiedPro: false });
-  assert.equal(blocked.ok, false);
-  if (!blocked.ok) assert.equal(blocked.code, "pro");
+test("any shop can plan an upload, and consent, size, length, and the daily limit apply", () => {
+  const free = planUpload(uploadBase);
+  assert.equal(free.ok, true);
 
   const consent = planUpload({ ...uploadBase, consent: false });
   assert.equal(consent.ok, false);
@@ -140,15 +138,14 @@ test("a non-admin cannot approve, reject, or remove a video", () => {
   if (!missing.ok) assert.equal(missing.code, "invalid");
 });
 
-test("a lapsed Pro plan hides an approved video and does not delete the idea of it", () => {
+test("an approved video on a published shop is public, whatever the plan", () => {
   const live = {
-    verifiedPro: true,
     published: true,
     status: "approved",
     publicPlaybackId: "pub_1",
   };
   assert.equal(shopVideoIsPublic(live), true);
-  assert.equal(shopVideoIsPublic({ ...live, verifiedPro: false }), false);
+  assert.equal(shopVideoIsPublic({ ...live, published: false }), false);
   assert.equal(shopVideoIsPublic({ ...live, status: "pending", publicPlaybackId: "" }), false);
 });
 
@@ -227,12 +224,12 @@ test("the share image stays under 600 KB", async () => {
   assert.equal(jpeg[1], 0xd8);
 });
 
-test("Pro gating blocks the upload before a row is written", async () => {
+test("a free shop can start an upload, with the same review and audit", async () => {
   const { owner, admin, shop } = await makeShop(false);
   const { backend } = fakeBackend();
   try {
-    const denied = await createShopVideoUpload(prisma, backend, {
-      actor: { id: owner.id, role: owner.role, verifiedPro: false },
+    const started = await createShopVideoUpload(prisma, backend, {
+      actor: { id: owner.id, role: owner.role },
       storefrontId: shop.id,
       corsOrigin: "http://localhost:3000",
       consent: true,
@@ -242,10 +239,11 @@ test("Pro gating blocks the upload before a row is written", async () => {
       durationSeconds: 10,
       caption: "Kitchen",
     });
-    assert.equal(denied.ok, false);
-    if (!denied.ok) assert.equal(denied.code, "pro");
-    assert.equal(await prisma.shopVideo.count({ where: { storefrontId: shop.id } }), 0);
-    assert.equal(await prisma.shopVideoEvent.count({ where: { storefrontId: shop.id } }), 0);
+    assert.equal(started.ok, true);
+    const rows = await prisma.shopVideo.findMany({ where: { storefrontId: shop.id } });
+    assert.equal(rows.length, 1);
+    assert.equal(rows[0]?.publicPlaybackId, "");
+    assert.equal(await prisma.shopVideoEvent.count({ where: { storefrontId: shop.id, action: "upload" } }), 1);
   } finally {
     await removeShop(owner.id, admin.id);
   }
@@ -258,7 +256,7 @@ test("upload, review, approval, webhook idempotency, and a replacement that keep
   const receipts = ["evt_created_a", "evt_ready_a", "evt_ready_a_again", "evt_ready_b", "evt_created_b"];
   try {
     const created = await createShopVideoUpload(prisma, backend, {
-      actor: { id: owner.id, role: "user", verifiedPro: true },
+      actor: { id: owner.id, role: "user" },
       storefrontId: shop.id,
       corsOrigin: "http://localhost:3000",
       consent: true,
@@ -298,7 +296,7 @@ test("upload, review, approval, webhook idempotency, and a replacement that keep
     assert.equal(pending.status, "pending");
     assert.equal(pending.playbackId, "signed_a");
     assert.equal(pending.publicPlaybackId, "");
-    assert.equal(shopVideoIsPublic({ verifiedPro: true, published: true, status: pending.status, publicPlaybackId: pending.publicPlaybackId }), false);
+    assert.equal(shopVideoIsPublic({ published: true, status: pending.status, publicPlaybackId: pending.publicPlaybackId }), false);
 
     const forbidden = await approveShopVideo(prisma, backend, {
       role: "user",
@@ -314,10 +312,10 @@ test("upload, review, approval, webhook idempotency, and a replacement that keep
     const live = await prisma.shopVideo.findUniqueOrThrow({ where: { id: first.id } });
     assert.equal(live.status, "approved");
     assert.equal(live.publicPlaybackId, "pub_asset_a");
-    assert.equal(shopVideoIsPublic({ verifiedPro: true, published: true, status: live.status, publicPlaybackId: live.publicPlaybackId }), true);
+    assert.equal(shopVideoIsPublic({ published: true, status: live.status, publicPlaybackId: live.publicPlaybackId }), true);
 
     const tooSoon = await createShopVideoUpload(prisma, backend, {
-      actor: { id: owner.id, role: "user", verifiedPro: true },
+      actor: { id: owner.id, role: "user" },
       storefrontId: shop.id,
       corsOrigin: "http://localhost:3000",
       consent: true,
@@ -332,7 +330,7 @@ test("upload, review, approval, webhook idempotency, and a replacement that keep
 
     await prisma.shopVideo.update({ where: { id: first.id }, data: { createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000) } });
     const replacement = await createShopVideoUpload(prisma, backend, {
-      actor: { id: owner.id, role: "user", verifiedPro: true },
+      actor: { id: owner.id, role: "user" },
       storefrontId: shop.id,
       corsOrigin: "http://localhost:3000",
       consent: true,
@@ -386,7 +384,7 @@ test("an over-length Mux asset is deleted, and a non-admin rejection writes noth
   const { backend, deleted } = fakeBackend();
   try {
     const created = await createShopVideoUpload(prisma, backend, {
-      actor: { id: owner.id, role: "admin", verifiedPro: true },
+      actor: { id: owner.id, role: "admin" },
       storefrontId: shop.id,
       corsOrigin: "http://localhost:3000",
       consent: true,
@@ -485,7 +483,7 @@ test("reject and remove are admin-only and keep an audit note", async () => {
     assert.equal(gone.status, "rejected");
     assert.equal(gone.publicPlaybackId, "");
     assert.ok(deleted.includes(`live_${shop.id}`));
-    assert.equal(shopVideoIsPublic({ verifiedPro: true, published: true, status: gone.status, publicPlaybackId: gone.publicPlaybackId }), false);
+    assert.equal(shopVideoIsPublic({ published: true, status: gone.status, publicPlaybackId: gone.publicPlaybackId }), false);
   } finally {
     await removeShop(owner.id, admin.id);
   }

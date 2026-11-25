@@ -6,7 +6,6 @@ import { getVideoBackend } from "@/lib/video/backend";
 import { videoMode } from "@/lib/video/config";
 import { signedPosterUrl } from "@/lib/video/machine";
 import { purgeExpiredVideos } from "@/lib/video/service";
-import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 
 function when(date: Date) {
@@ -31,7 +30,7 @@ export async function AdminVideoQueue({ notice }: { notice: string }) {
       orderBy: { createdAt: "asc" },
       include: {
         storefront: {
-          select: { slug: true, user: { select: { name: true, email: true, verifiedPro: true, verifiedProUntil: true } } },
+          select: { slug: true, user: { select: { name: true, email: true } } },
         },
       },
     }),
@@ -40,7 +39,7 @@ export async function AdminVideoQueue({ notice }: { notice: string }) {
       orderBy: { createdAt: "desc" },
       take: 12,
       include: {
-        storefront: { select: { slug: true, user: { select: { name: true, verifiedPro: true, verifiedProUntil: true } } } },
+        storefront: { select: { slug: true, user: { select: { name: true } } } },
       },
     }),
     prisma.shopVideoEvent.findMany({
@@ -86,7 +85,6 @@ export async function AdminVideoQueue({ notice }: { notice: string }) {
               </Link>
               <p className="text-ink/70">
                 /b/{video.storefront.slug} · {video.storefront.user.email}
-                {isProActive(video.storefront.user) ? "" : " · Pro plan is off, so a public video would stay hidden"}
               </p>
               {video.caption ? <p className="mt-1">{video.caption}</p> : null}
               <p className="text-ink/60">
@@ -142,7 +140,6 @@ export async function AdminVideoQueue({ notice }: { notice: string }) {
               <input type="hidden" name="videoId" value={video.id} />
               <label className="text-ink/80" htmlFor={`remove-${video.id}`}>
                 {video.storefront.user.name} · /b/{video.storefront.slug}
-                {isProActive(video.storefront.user) ? "" : " · hidden, Pro is off"}
                 <input id={`remove-${video.id}`} name="reason" required minLength={3} maxLength={500} className={fieldClass} placeholder="Reason for taking this video down" />
               </label>
               <button className={btnDanger} type="submit">
