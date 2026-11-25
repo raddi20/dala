@@ -3,7 +3,7 @@
  * Does not send mail or touch a hosted database.
  */
 import { chromium } from "playwright";
-import { mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 
 const BASE = process.env.LAYOUT_BASE_URL || "http://127.0.0.1:3000";
 const OUT = "/opt/cursor/artifacts/community";
@@ -32,6 +32,10 @@ async function shot(page, name) {
 
 const browser = await chromium.launch();
 await mkdir(OUT, { recursive: true });
+const photoFile = "/tmp/rangach-omena.jpg";
+const downloaded = await fetch(PHOTO);
+if (!downloaded.ok) throw new Error("Could not fetch the sample photo");
+await writeFile(photoFile, Buffer.from(await downloaded.arrayBuffer()));
 
 for (const [label, width, height] of [
   ["390", 390, 844],
@@ -59,10 +63,16 @@ for (const [label, width, height] of [
   await shot(page, `composer-empty-${label}`);
 
   await page.locator("#shop-update-body").fill("Omena is in. Come by before noon.");
-  await composer.getByText("Paste a photo URL instead").click();
-  await composer.getByLabel("Photo URL").fill(PHOTO);
-  await composer.locator("img").waitFor({ timeout: 15000 });
-  await composer.getByText("Paste a photo URL instead").click();
+  await page.route("**/api/uploads", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ url: PHOTO }),
+    }),
+  );
+  await composer.locator('input[type="file"]').setInputFiles(photoFile);
+  await page.getByRole("button", { name: "Use as is" }).click();
+  await composer.getByText("Photo ready. It goes up when you post.").waitFor({ timeout: 20000 });
   await park(page.locator("#shop-update-body"));
   await shot(page, `composer-filled-${label}`);
 

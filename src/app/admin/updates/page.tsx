@@ -70,9 +70,9 @@ export default async function AdminUpdatesPage({
           </label>
           <label className="block text-sm">
             Reason
-            <input name="reason" required minLength={3} maxLength={500} className={fieldClass} placeholder="Why you are changing this" />
+            <input name="reason" maxLength={500} className={fieldClass} placeholder="Why you are changing this" />
           </label>
-          <button className={paused ? btnNavy : btnSecondary}>{paused ? "Allow posting" : "Pause posting"}</button>
+          <button type="submit" className={paused ? btnNavy : btnSecondary}>{paused ? "Allow posting" : "Pause posting"}</button>
         </form>
       </section>
 
@@ -99,16 +99,16 @@ export default async function AdminUpdatesPage({
               <input type="hidden" name="id" value={update.id} />
               <label className="block text-sm">
                 Reason
-                <input name="reason" required minLength={3} maxLength={500} className={fieldClass} placeholder="What you decided" />
+                <input name="reason" maxLength={500} className={fieldClass} placeholder="What you decided" />
               </label>
               <div className="flex flex-wrap gap-2">
-                <button name="decision" value="approve" className={btnNavy}>
+                <button type="submit" name="decision" value="approve" className={btnNavy}>
                   Approve
                 </button>
-                <button name="decision" value="reject" className={btnSecondary}>
+                <button type="submit" name="decision" value="reject" className={btnSecondary}>
                   Reject
                 </button>
-                <button name="decision" value="remove" className={btnDanger}>
+                <button type="submit" name="decision" value="remove" className={btnDanger}>
                   Remove
                 </button>
               </div>

@@ -13,7 +13,10 @@ const initial: ActionState = { error: "" };
 export function UpdateComposer({ paused, note }: { paused: boolean; note: string }) {
   const [state, action] = useActionState(postShopUpdate, initial);
   const [text, setText] = useState("");
-  const over = text.trim().length > UPDATE_MAX;
+  const count = text.trim().length;
+  const over = count > UPDATE_MAX;
+  const near = count >= UPDATE_MAX - 40;
+  const counterTone = over ? "text-danger" : near ? "text-gold-d" : "text-muted";
   return (
     <form action={action} data-update-composer="" className="grid min-w-0 gap-3">
       <div>
@@ -46,12 +49,12 @@ export function UpdateComposer({ paused, note }: { paused: boolean; note: string
           disabled={paused}
           onChange={(event) => setText(event.target.value)}
           placeholder="Omena is in this morning. Come by before noon."
-          className={fieldClass}
+          className={`${fieldClass} h-32 resize-none`}
         />
+        <p className={`mt-1 text-right text-xs font-semibold tabular-nums ${counterTone}`} aria-live="polite">
+          {count} / {UPDATE_MAX}
+        </p>
       </label>
-      <p className={`text-xs font-semibold ${over ? "text-danger" : "text-muted"}`} aria-live="polite">
-        {text.trim().length} / {UPDATE_MAX}
-      </p>
       <PhotoField
         name="photoUrl"
         label="Photo, if you have one"
