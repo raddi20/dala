@@ -11,7 +11,7 @@ export type ProFields = {
  * Pro perks are on when the plan flag is set and the end date is still ahead.
  * A row with the flag on and no end date is a shop that paid before expiry
  * existed. Treat it as on until the deploy backfill writes the grace date.
- * After that date passes, perks turn off. Offerings, the banner, and the video stay stored.
+ * After that date passes, perks turn off. Offerings and the banner stay stored. Shop video is not a Pro perk.
  */
 export function isProActive(user: ProFields, now: Date = new Date()): boolean {
   if (!user.verifiedPro) return false;

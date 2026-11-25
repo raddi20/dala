@@ -15,7 +15,6 @@ import {
   planUpload,
   publicPosterUrl,
   purgeDeadline,
-  shopVideoHiddenByPro,
   shopVideoIsPublic,
   type VideoFailure,
 } from "@/lib/video/machine";
@@ -27,7 +26,6 @@ type Db = PrismaClient;
 export type UploadActor = {
   id: string;
   role: string;
-  verifiedPro: boolean;
 };
 
 function uniqueConflict(error: unknown) {
@@ -88,7 +86,6 @@ export async function createShopVideoUpload(
       where: { storefrontId: input.storefrontId, createdAt: { gte: since }, NOT: { uploadId: "" } },
     });
     const plan = planUpload({
-      verifiedPro: input.actor.verifiedPro,
       consent: input.consent,
       fileName: input.fileName,
       mimeType: input.mimeType,
@@ -512,4 +509,4 @@ export function chunkSizeForMode() {
   return videoMode() === "mock" ? MOCK_CHUNK_SIZE_KB : LIVE_CHUNK_SIZE_KB;
 }
 
-export { shopVideoHiddenByPro, shopVideoIsPublic };
+export { shopVideoIsPublic };

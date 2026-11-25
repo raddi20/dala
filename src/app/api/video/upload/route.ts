@@ -3,7 +3,6 @@ import { z } from "zod";
 import { getVideoBackend } from "@/lib/video/backend";
 import { isAllowedUploadOrigin, videoMode } from "@/lib/video/config";
 import { createShopVideoUpload } from "@/lib/video/service";
-import { isProActive } from "@/lib/pro";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
   if (!backend) return NextResponse.json({ error: "Shop video is coming soon." }, { status: 503 });
 
   const result = await createShopVideoUpload(prisma, backend, {
-    actor: { id: user.id, role: user.role, verifiedPro: isProActive(user) },
+    actor: { id: user.id, role: user.role },
     storefrontId: shop.id,
     corsOrigin: origin,
     consent: parsed.data.consent,
@@ -57,7 +56,7 @@ export async function POST(request: Request) {
     caption: parsed.data.caption,
   });
   if (!result.ok) {
-    const status = result.code === "pro" || result.code === "forbidden" ? 403 : result.code === "rate" || result.code === "inflight" ? 429 : 400;
+    const status = result.code === "forbidden" ? 403 : result.code === "rate" || result.code === "inflight" ? 429 : 400;
     return NextResponse.json({ error: result.error }, { status });
   }
   return NextResponse.json({

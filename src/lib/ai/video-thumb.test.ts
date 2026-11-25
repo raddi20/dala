@@ -19,7 +19,6 @@ const live: PublicVideoThumbInput = {
   status: "approved",
   publicPlaybackId: playback,
   published: true,
-  verifiedPro: true,
   ownerUser: "seller_1",
 };
 
@@ -44,7 +43,6 @@ test("only an approved public shop video is queued for a thumbnail fingerprint",
   ]);
   assert.deepEqual(publicVideoThumbTargets([{ ...live, status: "pending", publicPlaybackId: "" }]), []);
   assert.deepEqual(publicVideoThumbTargets([{ ...live, status: "pending" }]), []);
-  assert.deepEqual(publicVideoThumbTargets([{ ...live, verifiedPro: false }]), []);
   assert.deepEqual(publicVideoThumbTargets([{ ...live, published: false }]), []);
   assert.deepEqual(publicVideoThumbTargets([{ ...live, publicPlaybackId: "signed/id" }]), []);
   assert.deepEqual(publicVideoThumbTargets([{ ...live, ownerUser: " " }]), []);

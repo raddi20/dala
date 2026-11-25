@@ -92,7 +92,7 @@ export function PayForm({
             <span className="font-semibold">Verified Pro</span>
             <span className="mt-1 block text-ink/70">
               {chargeFor("verified_pro", "Nairobi").label} / {chargeFor("verified_pro", "London").label} per {PRO_DAYS}{" "}
-              days. Paid plan, shown as Pro plan. It adds a cover banner, a shop video, and up to {PRO_OFFERING_CAP}{" "}
+              days. Paid plan, shown as Pro plan. It adds a cover banner and up to {PRO_OFFERING_CAP}{" "}
               offerings. Free shops list {FREE_OFFERING_CAP}. Renewing early adds {PRO_DAYS} days to the current end date.
               It does not grant Phone, Location, or Business verified. An admin grants those shop checks, and the green
               listing Verified badge.

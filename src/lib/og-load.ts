@@ -31,7 +31,6 @@ export async function loadShopOg(slug: string) {
   const video = shop.videos[0];
   const hasVideo = video
     ? shopVideoIsPublic({
-        verifiedPro: proActive,
         published: true,
         status: video.status,
         publicPlaybackId: video.publicPlaybackId,

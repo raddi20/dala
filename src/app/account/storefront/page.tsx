@@ -172,7 +172,7 @@ export default async function ManageStorefrontPage({
           <p className="text-sm text-ink/75">
             Active until <time dateTime={user.verifiedProUntil?.toISOString()}>{proUntilLabel}</time>.{" "}
             {PRICES.verified_pro.Nairobi} / {PRICES.verified_pro.London} per {PRO_DAYS} days. Renewing early adds {PRO_DAYS}{" "}
-            days to that date. The cover, shop video, and all {PRO_OFFERING_CAP} offerings stay available while this date
+            days to that date. The cover and all {PRO_OFFERING_CAP} offerings stay available while this date
             is still ahead.
           </p>
         ) : proActive ? (
@@ -189,14 +189,14 @@ export default async function ManageStorefrontPage({
             ) : (
               "Verified Pro has ended. "
             )}
-            The cover banner and shop video are hidden. Offerings after the first {FREE_OFFERING_CAP} in the list below
+            The cover banner is hidden. Offerings after the first {FREE_OFFERING_CAP} in the list below
             are hidden on the public shop. Nothing was deleted. A renewal starts another {PRO_DAYS} days
             {proUntilLabel ? " from today, because this date has passed" : ""}.
           </p>
         ) : (
           <p className="text-sm text-ink/75">
             This shop is on the free plan: {FREE_OFFERING_CAP} offerings. Verified Pro is {PRICES.verified_pro.Nairobi} /{" "}
-            {PRICES.verified_pro.London} per {PRO_DAYS} days, with a cover, a shop video, and {PRO_OFFERING_CAP} offerings.
+            {PRICES.verified_pro.London} per {PRO_DAYS} days, with a cover and {PRO_OFFERING_CAP} offerings.
           </p>
         )}
         {live ? (
@@ -219,7 +219,7 @@ export default async function ManageStorefrontPage({
       </section>
       <section id="shop-video" className={`${cardClass} grid gap-3 p-5`}>
         <h2 className="font-serif text-xl text-navy">Shop video</h2>
-        <ShopVideoPanel verifiedPro={proActive} lapsed={lapsed} videos={shop.videos} paymentsOpen={live} />
+        <ShopVideoPanel videos={shop.videos} />
       </section>
       {flash ? <Flash>{flash}</Flash> : null}
       {shop.hidden ? (
@@ -444,36 +444,25 @@ export default async function ManageStorefrontPage({
 }
 
 function ShopVideoPanel({
-  verifiedPro,
-  lapsed,
   videos,
-  paymentsOpen,
 }: {
-  verifiedPro: boolean;
-  lapsed: boolean;
   videos: { status: string; caption: string; rejectReason: string; publicPlaybackId: string }[];
-  paymentsOpen: boolean;
 }) {
   const mode = videoMode();
   const live = videos.find((video) => video.status === "approved" && video.publicPlaybackId);
   const review = videos.find((video) => video.status !== "approved" && video.status !== "replaced");
   const notices = sellerVideoNotices({
     mode,
-    verifiedPro,
     live: live ? { caption: live.caption } : null,
     review: review ? { status: review.status, rejectReason: review.rejectReason, caption: review.caption } : null,
   });
   const waiting = review?.status === "uploading" || review?.status === "processing" || review?.status === "pending";
-  const disabledReason = !verifiedPro
-    ? "Shop video is part of the Pro plan. Upload stays off until the plan is on."
-    : waiting
-      ? "A video is already uploading or waiting for review."
-      : "";
+  const disabledReason = waiting ? "A video is already uploading or waiting for review." : "";
 
   return (
     <div className="grid gap-3">
       <p className="text-sm text-ink/65">
-        One video, up to 45 seconds. It stays private until an admin approves it. A replacement does not take the current
+        Free for every shop. One video, up to 45 seconds. It stays private until an admin approves it. A replacement does not take the current
         video down until the new one is approved.
       </p>
       {notices.map((notice) => (
@@ -481,19 +470,7 @@ function ShopVideoPanel({
           {notice}
         </p>
       ))}
-      {mode === "off" ? null : !verifiedPro ? (
-        <p className="text-sm">
-          {paymentsOpen ? (
-            <Link href="/upgrade?product=verified_pro" className="font-semibold text-lake-dark hover:text-lake">
-              {lapsed ? "Renew" : "See the Pro plan"}
-            </Link>
-          ) : (
-            <span className="font-semibold text-navy">{PAID_UPGRADES_COMING_SOON}</span>
-          )}
-        </p>
-      ) : (
-        <ShopVideoUpload disabledReason={disabledReason} />
-      )}
+      {mode === "off" ? null : <ShopVideoUpload disabledReason={disabledReason} />}
     </div>
   );
 }

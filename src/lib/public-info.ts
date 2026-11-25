@@ -169,7 +169,7 @@ export function verifiedProDayCount(): number | null {
  */
 export function verifiedProDurationCopy(days: number | null = verifiedProDayCount()) {
   const lapse =
-    "When the plan lapses, the cover, the shop video, and offerings past the free limit are hidden, not deleted, and they show again when the plan is renewed.";
+    "When the plan lapses, the cover and offerings past the free limit are hidden, not deleted, and they show again when the plan is renewed.";
   if (days) {
     return `Verified Pro is a paid plan, not a verification badge. It lasts ${days} days. Renewing before the end date adds another ${days} days to that date. ${lapse}`;
   }

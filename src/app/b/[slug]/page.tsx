@@ -106,7 +106,6 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const clip = shop.videos[0];
   const hasPublicVideo = clip
     ? shopVideoIsPublic({
-        verifiedPro: proActive,
         published: true,
         status: clip.status,
         publicPlaybackId: clip.publicPlaybackId,
@@ -284,13 +283,12 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
   const moderatorHidden = isOwner || isAdmin ? shop.offerings.filter((offering) => offering.hidden) : [];
   const publicVideo = shop.videos.find((video) =>
     shopVideoIsPublic({
-      verifiedPro: proActive,
       published: shop.published || isOwner,
       status: video.status,
       publicPlaybackId: video.publicPlaybackId,
     }),
   );
-  const showVideo = Boolean(publicVideo && (shop.published || isOwner) && proActive);
+  const showVideo = Boolean(publicVideo && (shop.published || isOwner));
   const shopBadges = {
     phoneVerified: shop.phoneVerified,
     locationVerified: shop.locationVerified,

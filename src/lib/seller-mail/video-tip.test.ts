@@ -5,39 +5,42 @@ import { runVisibilityTips, visibilityEmailText, type VisibilitySeller } from "@
 import { computeShopGaps } from "@/lib/seller-mail/gaps";
 import {
   SHOP_VIDEO_EDITOR_PATH,
-  VIDEO_TIP_PRO_NOTE,
   VIDEO_TIP_TITLE,
   shopVideoEditorUrl,
-  videoTipKind,
   videoTipLines,
+  wantsVideoTip,
 } from "@/lib/seller-mail/video-tip";
 import { safePath } from "@/lib/utils";
 
-const base = { videoMode: "live" as const, proActive: true, paymentsLive: false, videos: [] as { status: string }[] };
+const base = { videoMode: "live" as const, email: "amina@example.com", shopName: "Amina Kitchen", videos: [] as { status: string }[] };
 
-test("a Pro shop with no video gets the upload tip", () => {
-  assert.equal(videoTipKind(base), "upload");
-  assert.equal(videoTipKind({ ...base, videos: [{ status: "rejected" }, { status: "errored" }, { status: "replaced" }] }), "upload");
+test("every real shop with no video gets the tip, whatever its plan", () => {
+  assert.equal(wantsVideoTip(base), true);
+  assert.equal(wantsVideoTip({ ...base, videos: [{ status: "rejected" }, { status: "errored" }, { status: "replaced" }] }), true);
 });
 
 test("a shop with a live or in-review video gets no tip", () => {
   for (const status of ["approved", "uploading", "processing", "pending"]) {
-    assert.equal(videoTipKind({ ...base, videos: [{ status }] }), null, status);
-    assert.equal(videoTipKind({ ...base, proActive: false, paymentsLive: true, videos: [{ status }] }), null, status);
+    assert.equal(wantsVideoTip({ ...base, videos: [{ status }] }), false, status);
   }
 });
 
-test("a free shop only hears about video when checkout is live, and is told it is Pro", () => {
-  assert.equal(videoTipKind({ ...base, proActive: false, paymentsLive: false }), null);
-  assert.equal(videoTipKind({ ...base, proActive: false, paymentsLive: true }), "pro");
-  const lines = videoTipLines("pro", "https://www.rangach.co.ke");
-  assert.ok(lines.includes(VIDEO_TIP_PRO_NOTE));
-  assert.equal(videoTipLines("upload", "https://www.rangach.co.ke").includes(VIDEO_TIP_PRO_NOTE), false);
+test("demo shops never get the tip", () => {
+  assert.equal(wantsVideoTip({ ...base, email: "atieno@dala.local" }), false);
+  assert.equal(wantsVideoTip({ ...base, shopName: "Mama Atieno's Kitchen" }), false);
+  assert.equal(wantsVideoTip({ ...base, email: "" }), false);
 });
 
 test("no tip when shop video is off on this deploy", () => {
-  assert.equal(videoTipKind({ ...base, videoMode: "off" }), null);
-  assert.deepEqual(videoTipLines(null, "https://www.rangach.co.ke"), []);
+  assert.equal(wantsVideoTip({ ...base, videoMode: "off" }), false);
+  assert.equal(wantsVideoTip({ ...base, videoMode: "mock" }), true);
+  assert.deepEqual(videoTipLines(false, "https://www.rangach.co.ke"), []);
+});
+
+test("the tip copy never calls video a Pro perk", () => {
+  const text = videoTipLines(true, "https://www.rangach.co.ke").join("\n");
+  assert.equal(/\bpro\b|plan|upgrade|ksh|kes/i.test(text), false);
+  assert.match(text, /free for every shop/);
 });
 
 test("the link opens the seller's own shop video section through sign-in", () => {
@@ -50,13 +53,13 @@ test("the link opens the seller's own shop video section through sign-in", () =>
 
 test("the weekly AI email carries the fixed tip only when asked", () => {
   const result = { summary: "A quiet week.", tips: [{ title: "Add a photo", body: "Two listings have no photo.", action: "add_photo" as const }] };
-  const withTip = tipEmailText("Amina", result, "https://u", { kind: "upload", origin: "https://www.rangach.co.ke" });
+  const withTip = tipEmailText("Amina", result, "https://u", { show: true, origin: "https://www.rangach.co.ke" });
   assert.ok(withTip.includes(VIDEO_TIP_TITLE));
   assert.ok(withTip.indexOf(VIDEO_TIP_TITLE) < withTip.indexOf("Unsubscribe:"));
   assert.ok(withTip.includes("Add your shop video: https://www.rangach.co.ke/login?next=%2Faccount%2Fstorefront%23shop-video"));
   assert.equal(tipEmailText("Amina", result, "https://u").includes(VIDEO_TIP_TITLE), false);
   assert.equal(
-    tipEmailText("Amina", result, "https://u", { kind: null, origin: "https://www.rangach.co.ke" }).includes(VIDEO_TIP_TITLE),
+    tipEmailText("Amina", result, "https://u", { show: false, origin: "https://www.rangach.co.ke" }).includes(VIDEO_TIP_TITLE),
     false,
   );
 });
@@ -84,7 +87,7 @@ function visSeller(overrides: Partial<VisibilitySeller> = {}): VisibilitySeller 
     optOut: false,
     lastSentAt: null,
     gaps: gaps(),
-    videoTip: null,
+    videoTip: false,
     ...overrides,
   };
 }
@@ -101,7 +104,7 @@ test("the weekly visibility email adds the tip only to targeted shops", async ()
       EMAIL_FROM: "Rangach <hello@rangach.co.ke>",
       CRON_SECRET: "long-secret",
     } as unknown as NodeJS.ProcessEnv,
-    sellers: [visSeller({ videoTip: "upload" }), visSeller({ userId: "user_2", storefrontId: "shop_2", videoTip: null })],
+    sellers: [visSeller({ videoTip: true }), visSeller({ userId: "user_2", storefrontId: "shop_2", videoTip: false })],
     send: async (message) => {
       sent.push(message.text);
       return "sent";

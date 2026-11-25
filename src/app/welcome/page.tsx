@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { WelcomeGuide } from "@/components/welcome-guide";
 import { appName } from "@/lib/brand";
 import { WELCOME_DESCRIPTION, WELCOME_PATH, WELCOME_TITLE } from "@/lib/launch-pages";
-import { paymentsLive } from "@/lib/payments/live";
 import { publicOrigin } from "@/lib/payments/origin";
 import { buildShareMetadata } from "@/lib/share-metadata";
 
@@ -20,5 +19,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function WelcomePage() {
-  return <WelcomeGuide paymentsOpen={paymentsLive()} />;
+  return <WelcomeGuide />;
 }

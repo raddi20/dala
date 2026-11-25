@@ -17,7 +17,7 @@ export default function VideoPolicyPage() {
       <div>
         <h1 className="font-serif text-3xl text-navy">Video policy</h1>
         <p className="mt-2 text-sm text-ink/70">
-          A shop on the Pro plan can put one short video on its page. {name} reviews it before anyone else can play it.
+          Every shop can put one short video on its page, free. {name} reviews it before anyone else can play it.
         </p>
       </div>
       <section className={`${cardClass} grid gap-3 p-5 text-sm leading-relaxed text-ink/85`}>
@@ -35,7 +35,6 @@ export default function VideoPolicyPage() {
           A rejected video is deleted from the video host after {REJECT_PURGE_DAYS} days. The reason is kept. A video longer than 45
           seconds is deleted straight away.
         </p>
-        <p>If the Pro plan is turned off, the video is hidden from the shop and from link previews. It is kept, and it shows again when Pro is on.</p>
       </section>
       <section className={`${cardClass} grid gap-3 p-5 text-sm leading-relaxed text-ink/85`}>
         <h2 className="font-serif text-xl text-navy">Takedown and reports</h2>

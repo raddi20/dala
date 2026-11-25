@@ -156,7 +156,7 @@ export default async function FaqPage() {
 
       <InfoSection title="Shop videos">
         <p>
-          A shop on the Pro plan can upload one video, up to {MAX_DURATION_SECONDS} seconds. The file goes to Mux, the
+          Every shop can upload one video, up to {MAX_DURATION_SECONDS} seconds, free. The file goes to Mux, the
           video host, and it stays private until an admin has watched it and approved it. A shop can start{" "}
           {UPLOADS_PER_DAY === 1 ? "one new upload" : `${UPLOADS_PER_DAY} new uploads`} every 24 hours. You tick a box
           that you have the rights to the picture and any music, and the
@@ -164,8 +164,7 @@ export default async function FaqPage() {
         </p>
         <p>
           A video longer than {MAX_DURATION_SECONDS} seconds is deleted straight away. A rejected video is deleted from
-          Mux after {REJECT_PURGE_DAYS} days. The reason is kept. If the Pro plan is turned off, an approved video is
-          hidden from the shop and from link previews. The file is kept, and it can show again when Pro is on.
+          Mux after {REJECT_PURGE_DAYS} days. The reason is kept.
         </p>
         <p>
           The{" "}

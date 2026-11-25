@@ -25,28 +25,20 @@ export type VideoRow = {
 
 export type VideoFailure = { ok: false; code: string; error: string };
 
-/** `verifiedPro` means the plan is active now (`isProActive`), not the stored flag on its own. */
+/** Shop video is free for every shop. An approved clip on a published shop is public. */
 export function shopVideoIsPublic(input: {
-  verifiedPro: boolean;
   published: boolean;
   status: string;
   publicPlaybackId: string;
 }) {
   return Boolean(
-    input.verifiedPro &&
-      input.published &&
+    input.published &&
       input.status === "approved" &&
       input.publicPlaybackId.trim(),
   );
 }
 
-/** Hidden while Pro is off. The asset stays, so renewing Pro shows it again. */
-export function shopVideoHiddenByPro(input: { verifiedPro: boolean; status: string; publicPlaybackId: string }) {
-  return Boolean(!input.verifiedPro && input.status === "approved" && input.publicPlaybackId.trim());
-}
-
 export function planUpload(input: {
-  verifiedPro: boolean;
   consent: boolean;
   fileName: string;
   mimeType: string;
@@ -57,9 +49,6 @@ export function planUpload(input: {
   inFlight: boolean;
   adminExempt: boolean;
 }): { ok: true; caption: string } | VideoFailure {
-  if (!input.verifiedPro) {
-    return { ok: false, code: "pro", error: "Shop video is part of the Pro plan." };
-  }
   if (!input.consent) {
     return { ok: false, code: "consent", error: "Tick the box to confirm you have the rights and consent." };
   }
