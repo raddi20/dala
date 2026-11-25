@@ -348,9 +348,11 @@ function useIsStandaloneApp() {
 export function InstallAppLink({
   appName,
   className = "hover:text-navy",
+  role,
 }: {
   appName: string;
   className?: string;
+  role?: "menuitem";
 }) {
   const standalone = useIsStandaloneApp();
   if (standalone) return null;
@@ -358,6 +360,7 @@ export function InstallAppLink({
   return (
     <button
       type="button"
+      role={role}
       className={className}
       data-install-link="1"
       onClick={() => {

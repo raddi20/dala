@@ -112,6 +112,61 @@ for (const path of pages) {
 }
 await desk.close();
 
+async function moreMenu(browserType, label, width) {
+  const browser = await browserType.launch();
+  const page = await (await browser.newContext({ viewport: { width, height: 900 }, deviceScaleFactor: 1, colorScheme: "light" })).newPage();
+  await page.goto(`${BASE}/?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+  const more = page.getByRole("button", { name: "More", exact: true });
+  if ((await more.count()) === 0) {
+    console.log(label, "More is hidden at this width");
+    await browser.close();
+    return;
+  }
+  const expanded = () => more.getAttribute("aria-expanded");
+  const menu = page.locator("[data-more-menu]");
+  await more.click();
+  if ((await expanded()) !== "true" || (await menu.isHidden())) fail(errors, `${label} More did not open`);
+  const overlap = await page.evaluate(() => {
+    const panel = document.querySelector("[data-more-menu]");
+    if (!panel || panel.hasAttribute("hidden")) return [];
+    const a = panel.getBoundingClientRect();
+    return [...document.querySelectorAll("[data-sulwe-root], .tour-prompt, [data-sulwe-ask]")].flatMap((el) => {
+      const style = getComputedStyle(el);
+      const b = el.getBoundingClientRect();
+      if (style.display === "none" || b.width === 0) return [];
+      const hit = a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      return hit ? [el.className.toString().slice(0, 40)] : [];
+    });
+  });
+  if (overlap.length) fail(errors, `${label} More menu overlaps the floating stack: ${overlap.join(", ")}`);
+  await more.click();
+  if ((await expanded()) !== "false" || (await menu.isHidden()) === false) fail(errors, `${label} second click did not close More`);
+  await more.click();
+  await page.locator("h1").click();
+  if ((await expanded()) !== "false") fail(errors, `${label} outside click did not close More`);
+  await more.focus();
+  await page.keyboard.press("Enter");
+  if ((await expanded()) !== "true") fail(errors, `${label} Enter did not open More`);
+  await page.keyboard.press("ArrowDown");
+  const firstItem = await page.evaluate(() => document.activeElement?.textContent?.trim().slice(0, 40) ?? "");
+  if (!firstItem || firstItem === "More") fail(errors, `${label} ArrowDown did not move into the menu (${firstItem})`);
+  await page.keyboard.press("Escape");
+  const focusName = await page.evaluate(() => document.activeElement?.textContent?.trim() ?? "");
+  if ((await expanded()) !== "false" || focusName !== "More") fail(errors, `${label} Escape did not close More and return focus (${focusName})`);
+  await more.click();
+  await page.getByRole("menuitem", { name: "Saved" }).click();
+  await page.waitForURL(/\/saved/, { timeout: 20000 });
+  if (await page.locator("[data-more-menu]").isVisible().catch(() => false)) fail(errors, `${label} menu stayed open after an item click`);
+  await page.goBack();
+  await page.waitForURL((url) => !url.pathname.startsWith("/saved"), { timeout: 20000 });
+  if (await page.locator("[data-more-menu]").isVisible().catch(() => false)) fail(errors, `${label} menu reopened after back`);
+  console.log(label, "More menu closed on click, outside, Escape, item, and back");
+  await browser.close();
+}
+
+await moreMenu(chromium, "chromium-1440", 1440);
+await moreMenu(webkit, "webkit-1440", 1440);
+
 if (errors.length) {
   console.error(`\n${errors.length} layout check(s) failed`);
   process.exit(1);
