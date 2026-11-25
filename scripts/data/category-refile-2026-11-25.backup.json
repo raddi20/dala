@@ -1,0 +1,422 @@
+{
+  "takenAt": "2026-11-25T22:20:53+01:00",
+  "source": "Read-only SELECT from the production database (Listing.id and Listing.category), in a read-only transaction. All 104 rows were found, none belongs to a demo (@dala.local) account, and each value matches the mapping's from value and the live listing page.",
+  "rows": [
+    {
+      "id": "cmvqdixwx0007k108acg5kq1p",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmuo8t1770002jp04rx5mt33c",
+      "category": "Real estate / housing"
+    },
+    {
+      "id": "cmuo8ydq90001lb04sn6lpsks",
+      "category": "Real estate / housing"
+    },
+    {
+      "id": "cmvqggvfd0007l908j1cwdd8h",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvqnmy7k0001jq08g3ru9buo",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvqqb1ac0004lc08evw9fuu7",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvqq6zww0001lc08gzgaagqs",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvqspgso0006l608apq94u3h",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvrtlzyo0001kw08cxjejzd7",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvs1h4ua0001jm08r26un19l",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvs1rur10003l508jogu8jrg",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvtosmq80003jn08kkf4d4oj",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvtojefr0008l008il2ri42k",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvuvvi2y0005js071m98kv2g",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvv73sik000fjn08yyqqdpbs",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv78zv5000eky07sb5nkx76",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv777i8000ijn08ww7x1yag",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv7aijz000mjn08k6uqv519",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv7c6r9000hky071yzzpa58",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv7do77000njy07kz7j180i",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmvv7fbx10005l308w3f4ekgp",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw27dsnh000rjr07468w7jau",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvxzg9gf0001l4083sv45z95",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvz42cfq0008jr07rojwp9ux",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvz77s0o0007l208uzof04vu",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvzhhps20002k108knvslw8h",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvzhovl30005l507qkgah15m",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmvzhs21r000dlb08dm77lg33",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw0go9wk0009la08f4ktrced",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw4t6om50007jp07fkwc4w7h",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw27a6b2000cl808uhjhzzi6",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw2fhw8c0001ie08p7xi52yp",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw32rvnr0001js071qlhre7x",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw32vxuz0004l508to410a4r",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw2flfso000hif08nkh667a1",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw2fjkhz000eif08a1gwfjbn",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw3ai4oi0004l808x9oklggf",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3e1fob0008l808sg46jz76",
+      "category": "Fashion & clothing"
+    },
+    {
+      "id": "cmw3e46ha0004la08pc41if8d",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3kvot1001ll008xach2abp",
+      "category": "Beauty & personal care"
+    },
+    {
+      "id": "cmw3kw42w005ljm08veu5xkw5",
+      "category": "Tailoring & alterations"
+    },
+    {
+      "id": "cmw3ktdto001il008i3ed9xmc",
+      "category": "Beauty & personal care"
+    },
+    {
+      "id": "cmw3l1vnl004qkw08gp9po9zq",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3pa83c0006jv08ysi7x5uz",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3q8n09000njp089zek11rh",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw3qard0000bjv08w3dwtarh",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw3q6mqh000jjp088mryiyx2",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw3q9qk1000cjv08up6tsnmu",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3qpve9000mjv08i6q5atvn",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw3qc66h000fjv08h3cvs7mi",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw4t2bi70001jt07d3624szs",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw4wiecz0007jv0823kevdcl",
+      "category": "Fashion & clothing"
+    },
+    {
+      "id": "cmw4y84e30001jq07aknt6hti",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw4ywm1s000ala08pnsi81v1",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw54imj40008l208o7fsqw3k",
+      "category": "Home & furniture"
+    },
+    {
+      "id": "cmw934hn80006kz07vborznrk",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw9faggi0003k408q80pj9vh",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmw9fbtl80001jn07fjl6gagx",
+      "category": "Tents, chairs & décor"
+    },
+    {
+      "id": "cmw9fdmhf0008jp08ops6tjpa",
+      "category": "Tents, chairs & décor"
+    },
+    {
+      "id": "cmw9f8y2s0005jp08cp04msdv",
+      "category": "Tents, chairs & décor"
+    },
+    {
+      "id": "cmw9hbm7o000bjq08tf5lt4zp",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmw9hhi8l0001le07wz8dccun",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmw9hna0k0002l208bwnvg84d",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmw9hk64m0004le07q7hww3w7",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwactfwf0005kt084wwxznlm",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwagleon000cjn084a74lkzb",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwalals50009la08d8bkpzb3",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwbq4sbu0001ld08yrbaz4xs",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwj0r99x0006kw08d5u13uxg",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwcfa5qz0005jp08mvj5d2df",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwc2a03e0004lb08xjrc40b4",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwdxi3up0001l408wqgh9s4a",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwdxj8lt0004l408i51f6pse",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwdxket70002lc08z6mshh33",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwf0ufxh000jl7089miyyhck",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf0y7uo000ml7086zpya1yn",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf6s73a0002jh08iq587b9z",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf6tsqp0005jh08t7zunnoh",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf6v2sj0004jt08dc38eftg",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf6w5ma0009js08s6m34igk",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwf6xib70008jh083gl7zarh",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwfa1g14000akw07c7h2jsaw",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwfa2dlm0003lc07x6mwel28",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwivjp470001jp07rgy12gq3",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwivrree0001l908mjfjz2oo",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwivpmmc0001lf078bz6vvjb",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwj12kcr000bl807ceflkvjv",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwj0u4180008l807s4h0uejh",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwivlt870004jp07dngku4s1",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwkd8llf0006jv07qlckyila",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwkpjlmj0006kz081djbkkwf",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwm82c22000al407rj6goytp",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwn4v7s70001jp08nrr36acp",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwdl8bhf0006l207l9fdwlta",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwn53rw50001jw08uj59u64q",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwo0pi2q0003lb08gzwewpz2",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwum8jmx0005lc088hznzxof",
+      "category": "Food & restaurants"
+    },
+    {
+      "id": "cmwdssqd70001l507doc2zw6h",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwdswzc70004l507nwgy9puq",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwdsy7xi0002l108c7nnqw3v",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwdsu5x00004l008ensi46jj",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwfapbjx0008lc07svmlyk2o",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwfaqgg60001l6078t1un7d8",
+      "category": "Retail / shops"
+    },
+    {
+      "id": "cmwfbz18i000hkw072z7p5shb",
+      "category": "Retail / shops"
+    }
+  ]
+}
