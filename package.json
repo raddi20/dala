@@ -13,7 +13,8 @@
     "postinstall": "node scripts/ensure-env.mjs && prisma generate",
     "db:setup": "prisma migrate deploy && prisma db seed",
     "db:reset": "prisma migrate reset --force",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "refile:categories": "node --import tsx scripts/refile-categories.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
