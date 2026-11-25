@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/build-sw.mjs && next build",
-    "build:vercel": "node scripts/prepare-db-provider.mjs && prisma generate && node scripts/db-push.mjs && node --import tsx scripts/backfill-pro-until.ts && node scripts/seed-if-empty.mjs && node --import tsx scripts/secure-accounts.ts && node scripts/build-sw.mjs && next build",
+    "build:vercel": "node scripts/prepare-db-provider.mjs && prisma generate && node scripts/db-push.mjs && node --import tsx scripts/backfill-pro-until.ts && node scripts/seed-if-empty.mjs && node --import tsx scripts/secure-accounts.ts && node --import tsx scripts/refile-categories.ts --build && node scripts/build-sw.mjs && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "node --env-file=.env --import tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.mjs\"",
