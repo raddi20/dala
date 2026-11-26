@@ -31,7 +31,7 @@ test("Kenya and Britain see the real charge, with no approximate mark", () => {
   const kenya = visitorPrice({ country: "KE", kes, gbp, rates: null, kesPerUsd: 129 });
   assert.equal(kenya.kind, "exact");
   if (kenya.kind === "exact") {
-    assert.equal(kenya.label, "KES 1,500");
+    assert.equal(kenya.label, "Ksh 1,500");
     assert.equal(kenya.label.includes("≈"), false);
     assert.match(kenya.caption, /Kenyan shillings/);
   }
@@ -74,7 +74,7 @@ test("other countries see one approximate figure, and a missing rate falls back 
   const offline = visitorPrice({ country: "DE", kes, gbp, rates: null, kesPerUsd: 129 });
   assert.equal(offline.kind, "charges");
   if (offline.kind === "charges") {
-    assert.equal(offline.kesLabel, "KES 1,500");
+    assert.equal(offline.kesLabel, "Ksh 1,500");
     assert.equal(offline.gbpLabel, "£12");
   }
 
@@ -89,7 +89,7 @@ test("the promote form keeps the exact charge and may add an approximate local f
 
   const ke = localFx({ country: "KE", rates: null, kesPerUsd: 129, kesPerGbp: 170 });
   assert.equal(approxBesideCharge({ amount: 1500, currency: "KES" }, ke), null);
-  assert.match(approxBesideCharge({ amount: 12, currency: "GBP" }, ke) ?? "", /^≈ KES /);
+  assert.match(approxBesideCharge({ amount: 12, currency: "GBP" }, ke) ?? "", /^≈ Ksh /);
 
   const gb = localFx({ country: "GB", rates: null, kesPerUsd: 129, kesPerGbp: 170 });
   assert.equal(approxBesideCharge({ amount: 12, currency: "GBP" }, gb), null);

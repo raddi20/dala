@@ -312,10 +312,11 @@ export function tourPromptLift(input: {
   const gap = input.gap ?? 8;
   let top = input.prompt.top;
   const { left, width, height } = input.prompt;
-  for (let pass = 0; pass < 8; pass += 1) {
+  for (let pass = 0; pass < 16; pass += 1) {
     const box = { top, left, width, height };
-    const hit = input.obstacles.find((obstacle) => obstacle.width > 1 && obstacle.height > 1 && boxesOverlap(box, obstacle));
-    if (!hit) break;
+    const hits = input.obstacles.filter((obstacle) => obstacle.width > 1 && obstacle.height > 1 && boxesOverlap(box, obstacle));
+    if (hits.length === 0) break;
+    const hit = hits.reduce((highest, obstacle) => (obstacle.top < highest.top ? obstacle : highest));
     const next = hit.top - gap - height;
     if (next >= top || next < SCREEN_MARGIN) break;
     top = next;

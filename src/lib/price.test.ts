@@ -45,8 +45,8 @@ test("range must ascend", () => {
 });
 
 test("format single unchanged, range formats both ends", () => {
-  assert.equal(formatOfferingPrice(10000000, "KES"), "KES 100,000");
-  assert.equal(formatOfferingPrice(8000000, "KES", 12000000), "KSh 80,000 – 120,000");
+  assert.equal(formatOfferingPrice(10000000, "KES"), "Ksh 100,000");
+  assert.equal(formatOfferingPrice(8000000, "KES", 12000000), "Ksh 80,000 – 120,000");
   assert.equal(formatOfferingPrice(4000, "GBP", 6050), "£40 – £60.50");
   assert.equal(formatOfferingPrice(null, "KES", 500), "");
 });

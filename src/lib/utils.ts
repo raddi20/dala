@@ -1,3 +1,5 @@
+import { kshAmount } from "@/lib/ksh-copy";
+
 export function one(value: string | string[] | undefined) {
   if (Array.isArray(value)) return value[0] ?? "";
   return value ?? "";
@@ -82,11 +84,11 @@ export function formatOfferingPrice(
     const low = majorText(priceCents);
     const high = majorText(priceMaxCents);
     if (currency === "GBP") return `£${low} – £${high}`;
-    if (currency === "KES") return `KSh ${low} – ${high}`;
+    if (currency === "KES") return `${kshAmount(low)} – ${high}`;
     return currency ? `${currency} ${low} – ${high}` : `${low} – ${high}`;
   }
   const text = majorText(priceCents);
   if (currency === "GBP") return `£${text}`;
-  if (currency === "KES") return `KES ${text}`;
+  if (currency === "KES") return kshAmount(text);
   return currency ? `${currency} ${text}` : text;
 }

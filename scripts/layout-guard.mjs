@@ -338,6 +338,47 @@ async function checkedChip(page) {
   });
 }
 
+async function controlHits(page) {
+  return page.evaluate(() => {
+    const misses = [];
+    const tabs = [];
+    for (const el of document.querySelectorAll("a, button")) {
+      const style = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") continue;
+      if (r.width < 8 || r.height < 8) continue;
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      if (x < 1 || y < 1 || x > window.innerWidth - 1 || y > window.innerHeight - 1) continue;
+      const top = document.elementFromPoint(x, y);
+      const hit = Boolean(top && (top === el || el.contains(top)));
+      const label = (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 48);
+      const row = { label, hit };
+      const tab = Boolean(el.closest("[data-shop-tabs]"));
+      if (tab) tabs.push(row);
+      const stack = top?.closest(".sticky-cta-bar, .bottom-nav");
+      if (!hit && !(stack && !tab)) {
+        const cover = top?.closest("[data-tour-prompt], .sticky-cta-bar, .bottom-nav, [data-sulwe-root], [data-sulwe-ask], a, button");
+        misses.push({
+          label,
+          cover: (cover?.getAttribute("aria-label") || cover?.textContent || top?.tagName || "none").toString().trim().replace(/\s+/g, " ").slice(0, 48),
+        });
+      }
+    }
+    return { misses, tabs };
+  });
+}
+
+function expectControls(name, report) {
+  if (name.endsWith(" shop")) {
+    if (report.tabs.length < 3) fail(errors, `${name} shop tabs missing ${JSON.stringify(report.tabs)}`);
+    for (const tab of report.tabs) {
+      if (!tab.hit) fail(errors, `${name} shop tab not hit ${tab.label}`);
+    }
+  }
+  if (report.misses.length) fail(errors, `${name} link or button covered ${JSON.stringify(report.misses)}`);
+}
+
 function expectHits(name, hits, keys, state) {
   if (Boolean(hits.banner) !== state.banner) fail(errors, `${name} install banner ${hits.banner ? "shown" : "hidden"}`);
   if (Boolean(hits.tour) !== state.tour) fail(errors, `${name} tour bubble ${hits.tour ? "shown" : "hidden"}`);
@@ -387,12 +428,14 @@ async function hitPass(browserType, label, width, height) {
     if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
     await page.waitForTimeout(450);
     expectHits(`${name} shop`, await centreHits(page), ["call", "share"], state);
+    expectControls(`${name} shop`, await controlHits(page));
 
     await page.goto(`${BASE}/listings/fixture_listing_tilapia?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
     if (state.tour) await page.locator("[data-tour-prompt]").waitFor({ timeout: 8000 });
     if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
     await page.waitForTimeout(450);
     expectHits(`${name} listing`, await centreHits(page), ["save", "follow"], state);
+    expectControls(`${name} listing`, await controlHits(page));
 
     await page.goto(`${BASE}/listings?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
     await page.waitForTimeout(250);

@@ -6,6 +6,7 @@ import {
   PRO_OFFERING_CAP,
   type PaidProduct,
 } from "@/lib/constants";
+import { asKshCopy } from "@/lib/ksh-copy";
 import { PRO_PLAN_LABEL } from "@/lib/shop-badges";
 
 /**
@@ -72,7 +73,7 @@ export function priceLinesForCharge(
   rates: { kesPerUsd: number; kesPerGbp: number },
 ): PlanPrices {
   return {
-    kes: { label: kes.label, amount: kes.amount, approximate: false, currency: "KES" },
+    kes: { label: asKshCopy(kes.label), amount: kes.amount, approximate: false, currency: "KES" },
     gbp: gbp
       ? { label: gbp.label, approximate: false, currency: "GBP" }
       : {

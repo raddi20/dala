@@ -1,3 +1,5 @@
+import { asKshCopy } from "@/lib/ksh-copy";
+
 /**
  * Display prices in the visitor's currency. Checkout still charges KES or GBP.
  * Rates come from the keyless Open Exchange Rate API (USD base) and are cached
@@ -142,7 +144,7 @@ export function approxLabel(amount: number, currency: string) {
   if (currency === "USD") return `≈ $${rounded}`;
   if (currency === "EUR") return `≈ €${rounded}`;
   if (currency === "GBP") return `≈ £${rounded}`;
-  if (currency === "KES") return `≈ KES ${grouped(rounded)}`;
+  if (currency === "KES") return `≈ Ksh ${grouped(rounded)}`;
   try {
     const formatted = new Intl.NumberFormat("en", {
       style: "currency",
@@ -177,14 +179,14 @@ export function visitorPrice(input: {
   kesPerUsd: number;
 }): VisitorPrice {
   const currency = currencyForCountry(input.country);
-  if (currency === "KES") return { kind: "exact", label: input.kes.label, caption: EXACT_KES };
+  if (currency === "KES") return { kind: "exact", label: asKshCopy(input.kes.label), caption: EXACT_KES };
   if (currency === "GBP") return { kind: "exact", label: input.gbp.label, caption: EXACT_GBP };
   if (!currency) {
-    return { kind: "charges", kesLabel: input.kes.label, gbpLabel: input.gbp.label, caption: CHARGES };
+    return { kind: "charges", kesLabel: asKshCopy(input.kes.label), gbpLabel: input.gbp.label, caption: CHARGES };
   }
   const local = convertKes(input.kes.amount, currency, input.rates, input.kesPerUsd);
   if (local == null) {
-    return { kind: "charges", kesLabel: input.kes.label, gbpLabel: input.gbp.label, caption: CHARGES };
+    return { kind: "charges", kesLabel: asKshCopy(input.kes.label), gbpLabel: input.gbp.label, caption: CHARGES };
   }
   return { kind: "approx", label: approxLabel(local, currency), caption: APPROX };
 }

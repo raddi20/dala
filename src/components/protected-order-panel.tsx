@@ -49,7 +49,7 @@ export async function ProtectedOrderPanel({
   const deliveries = deliveryChoices(rows).map((choice) => ({
     id: choice.id,
     label: choice.label,
-    price: choice.feeKes === 0 ? "KES 0" : shownPrice(choice.feeKes * 100, country, rates),
+    price: choice.feeKes === 0 ? "Ksh 0" : shownPrice(choice.feeKes * 100, country, rates),
   }));
 
   return (

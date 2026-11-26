@@ -2,6 +2,7 @@
  * Sentences built only from fields the caller passes in.
  * A blank field is left out. Nothing here is a review, a rating, or a price we made up.
  */
+import { asKshCopy } from "@/lib/ksh-copy";
 
 const FUNERAL_WORD = /funeral|burial/i;
 
@@ -18,13 +19,13 @@ export function sentenceCategory(category: string) {
 }
 
 /**
- * A seller's price text, unchanged.
- * A bare number is shown as shillings. An empty price stays empty.
+ * A seller's price text. A bare number is shown as shillings.
+ * The word KES in a stored label is shown as Ksh. An empty price stays empty.
  */
 export function shownPriceLabel(priceLabel: string) {
   const text = priceLabel.trim();
   if (!text) return "";
-  if (/[A-Za-z£$€]/.test(text)) return text;
+  if (/[A-Za-z£$€]/.test(text)) return asKshCopy(text);
   if (/^\d[\d,.\s]*$/.test(text)) return `Ksh ${text}`;
   return text;
 }

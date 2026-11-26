@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { useId, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { BodyPortal } from "@/components/body-portal";
 import type { Lang } from "@/lib/i18n/lang";
@@ -16,7 +16,6 @@ import {
   storageKeyForKind,
   tourEntry,
   tourKindForPath,
-  tourPromptLift,
   tourQueryOn,
   writeTourDeclined,
 } from "@/lib/tour";
@@ -55,56 +54,14 @@ export function TourPromptCard({
   titleId?: string;
 }) {
   const short = compactInvite(lang);
-  const promptRef = useRef<HTMLDivElement>(null);
-  const [lift, setLift] = useState(0);
-  useEffect(() => {
-    const node = promptRef.current;
-    if (!node) return;
-    let frame = 0;
-    const measure = () => {
-      frame = 0;
-      const rect = node.getBoundingClientRect();
-      const current = Number.parseFloat(getComputedStyle(node).getPropertyValue("--rangach-tour-lift")) || 0;
-      const obstacles = [...document.querySelectorAll<HTMLElement>("[data-primary-action], [data-save-heart], [data-follow-shop]")].flatMap((el) => {
-        if (node.contains(el)) return [];
-        const style = getComputedStyle(el);
-        const box = el.getBoundingClientRect();
-        if (style.display === "none" || style.visibility === "hidden" || box.width < 2 || box.height < 2) return [];
-        return [{ top: box.top, left: box.left, width: box.width, height: box.height }];
-      });
-      const next = tourPromptLift({
-        prompt: { top: rect.top + current, left: rect.left, width: rect.width, height: rect.height },
-        obstacles,
-      });
-      setLift((prev) => (prev === next ? prev : next));
-    };
-    const schedule = () => {
-      if (!frame) frame = window.requestAnimationFrame(measure);
-    };
-    measure();
-    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
-    observer?.observe(document.documentElement);
-    window.addEventListener("resize", schedule);
-    window.addEventListener("scroll", schedule, { passive: true });
-    const late = window.setTimeout(measure, 350);
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-      window.clearTimeout(late);
-      observer?.disconnect();
-      window.removeEventListener("resize", schedule);
-      window.removeEventListener("scroll", schedule);
-    };
-  }, [lang, withSulwe]);
   return (
     <BodyPortal>
     <div
-      ref={promptRef}
       role="dialog"
       aria-modal="false"
       aria-label={uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
       data-tour-prompt={withSulwe ? "sulwe" : "card"}
       className="tour-prompt fixed z-[46] flex h-11 items-center gap-1 rounded-full border-2 border-gold bg-white pl-3 pr-1 shadow-[0_6px_16px_rgb(20_26_36/0.16)] print:hidden"
-      style={{ ["--rangach-tour-lift" as string]: `${lift}px` }}
     >
       {withSulwe ? (
         <span

@@ -73,9 +73,9 @@ test("the invite card renders both buttons, in English and Dholuo, above Sulwe a
   assert.match(css, /\.tour-prompt \{[^}]*right: 12px/);
   assert.match(
     css,
-    /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 10px \+ 92px \+ 8px \+ var\(--rangach-vv\) \+ var\(--rangach-tour-lift, 0px\)\)/,
+    /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 10px \+ 92px \+ 8px \+ var\(--rangach-vv\) \+ var\(--rangach-tour-lift, 0px\) \+ var\(--rangach-float-lift, 0px\)\)/,
   );
-  assert.match(css, /bottom: calc\(20px \+ var\(--rangach-cta\) \+ 92px \+ 8px \+ var\(--rangach-tour-lift, 0px\)\)/);
+  assert.match(css, /bottom: calc\(20px \+ var\(--rangach-cta\) \+ 92px \+ 8px \+ var\(--rangach-tour-lift, 0px\) \+ var\(--rangach-float-lift, 0px\)\)/);
   const card = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: false, onYes: noop, onNo: noop }));
   assert.match(card, /data-tour-prompt="card"/);
   assert.match(card, /New here\? Want a quick tour of Rangach\?/);

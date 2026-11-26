@@ -314,7 +314,7 @@ main .grid > * {
 .sulwe-dock {
   position: fixed;
   right: 12px;
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv));
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv) + var(--rangach-float-lift, 0px));
   z-index: 45;
   transform: none;
   overflow: visible;
@@ -338,8 +338,8 @@ main .grid > * {
 .tour-prompt {
   height: 44px;
   right: 12px;
-  /* Above Sulwe, who sits 10px over the WhatsApp bar. A lift variable nudges it clear of Call and Share. */
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + var(--rangach-vv) + var(--rangach-tour-lift, 0px));
+  /* Above Sulwe, who sits 10px over the WhatsApp bar. Lift variables clear links and buttons. */
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + var(--rangach-vv) + var(--rangach-tour-lift, 0px) + var(--rangach-float-lift, 0px));
   background-color: #fff;
   opacity: 1;
   transform: none;
@@ -361,11 +361,11 @@ main .grid > * {
   }
 
   .sulwe-dock {
-    bottom: calc(20px + var(--rangach-cta));
+    bottom: calc(20px + var(--rangach-cta) + var(--rangach-float-lift, 0px));
   }
 
   .tour-prompt {
-    bottom: calc(20px + var(--rangach-cta) + 92px + 8px + var(--rangach-tour-lift, 0px));
+    bottom: calc(20px + var(--rangach-cta) + 92px + 8px + var(--rangach-tour-lift, 0px) + var(--rangach-float-lift, 0px));
   }
 }
 

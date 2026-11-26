@@ -58,7 +58,7 @@ export default async function KisumuBusinessSheet() {
                 {tier.contactUs ? <p className="text-sm font-semibold text-navy">Contact us</p> : null}
                 {tier.offer ? <p className="text-sm font-semibold text-lake-dark">{tier.offer}</p> : null}
                 <p className="text-sm text-ink/60">
-                  Invoice {tier.kesTo ? `${kesLabel(tier.kes)}–${kesLabel(tier.kesTo).replace("KES ", "")}` : kesLabel(tier.kes)} a month
+                  Invoice {tier.kesTo ? `${kesLabel(tier.kes)}–${kesLabel(tier.kesTo).replace("Ksh ", "")}` : kesLabel(tier.kes)} a month
                 </p>
               </li>
             );

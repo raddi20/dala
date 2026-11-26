@@ -1,3 +1,5 @@
+import { asKshCopy } from "@/lib/ksh-copy";
+
 /** Short tag on a photo card. Housing wins over the listing type. */
 export function itemKindTag(input: { kind: "offering" | "listing"; type?: string; category?: string }): string {
   if (input.kind === "offering") return "Shop";
@@ -18,7 +20,7 @@ export function itemKindTag(input: { kind: "offering" | "listing"; type?: string
 export const PRICE_ON_REQUEST = "Price on request";
 
 export function itemPriceText(price: string | null | undefined): { text: string; ask: boolean } {
-  const text = price?.trim() ?? "";
+  const text = asKshCopy(price?.trim() ?? "");
   if (!text) return { text: PRICE_ON_REQUEST, ask: true };
   return { text, ask: false };
 }

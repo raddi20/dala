@@ -39,7 +39,7 @@ test("basket labels follow the visitor currency and unnamed baskets stay words",
   const grocery = SEND_HOME_BASKETS[0];
   const tilapia = SEND_HOME_BASKETS.find((basket) => basket.id === "tilapia");
   assert.ok(grocery && tilapia);
-  assert.equal(basketPriceLabel(grocery, money), "Grocery basket · KES 3,000");
+  assert.equal(basketPriceLabel(grocery, money), "Grocery basket · Ksh 3,000");
   assert.equal(basketPriceLabel(grocery, { ...money, country: "US" }), "Grocery basket · ≈ $23");
   assert.equal(basketPriceLabel(grocery, { ...money, country: "GB" }), "Grocery basket · £18");
   assert.equal(basketPriceLabel(tilapia, money), "Fresh tilapia");

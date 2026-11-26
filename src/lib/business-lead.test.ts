@@ -61,13 +61,13 @@ test("prices follow the visitor currency and the invoice stays in shillings", ()
   const starter = BUSINESS_TIERS[0];
   const business = BUSINESS_TIERS[2];
   assert.ok(starter && business);
-  assert.equal(tierPriceView(starter, { ...money, country: "KE" }).primary, "KES 1,500");
+  assert.equal(tierPriceView(starter, { ...money, country: "KE" }).primary, "Ksh 1,500");
   assert.equal(tierPriceView(starter, { ...money, country: "US" }).primary, "≈ $12");
   assert.equal(tierPriceView(starter, { ...money, country: "GB" }).primary, "£9");
-  assert.equal(tierPriceView(business, { ...money, country: "KE" }).primary, "KES 10,000–15,000");
+  assert.equal(tierPriceView(business, { ...money, country: "KE" }).primary, "Ksh 10,000–15,000");
   assert.equal(tierPriceView(business, { ...money, country: "US" }).primary, "≈ $78–$116");
   assert.match(tierPriceView(starter, { ...money, country: "US" }).caption, /Kenyan shillings/);
-  assert.equal(tierPriceView(starter, { ...money, country: null }).primary, "KES 1,500");
+  assert.equal(tierPriceView(starter, { ...money, country: null }).primary, "Ksh 1,500");
   assert.equal(tierPriceView(starter, { ...money, country: null }).secondary, "£9");
 });
 
@@ -78,10 +78,10 @@ test("the tier cards name the plans, hide checkout, and respect the payments fla
   assert.match(off, /Kenya, East Africa and the Diaspora/);
   assert.match(off, /Duka Starter/);
   assert.match(off, /Duka Pro/);
-  assert.match(off, /KES 1,500/);
+  assert.match(off, /Ksh 1,500/);
   assert.match(off, /First month free/);
-  assert.match(off, /KES 4,500/);
-  assert.match(off, /KES 10,000–15,000/);
+  assert.match(off, /Ksh 4,500/);
+  assert.match(off, /Ksh 10,000–15,000/);
   assert.match(off, /Contact us/);
   assert.match(off, new RegExp(PAID_UPGRADES_COMING_SOON));
   assert.match(off, /no card payment/i);
