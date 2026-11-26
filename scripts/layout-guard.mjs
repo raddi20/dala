@@ -625,6 +625,41 @@ if (fixture.status === 0) {
   await gridDockPass(chromium, "chromium-1440", 1440, 900);
 }
 
+async function chunkLoadPass() {
+  const browser = await webkit.launch();
+  const context = await browser.newContext({
+    ...iphone,
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  const problems = [];
+  page.on("console", (msg) => {
+    if (/ChunkLoadError|Failed to load chunk/i.test(msg.text())) problems.push(msg.text().slice(0, 180));
+  });
+  page.on("pageerror", (err) => problems.push(`${err.name}: ${err.message}`.slice(0, 180)));
+  const response = await page.goto(`${BASE}/`, { waitUntil: "networkidle", timeout: 60000 });
+  await page.waitForTimeout(600);
+  const first = await page.evaluate(() => ({
+    broken: /Something went wrong|Rangach did not load|This page did not load/.test(document.body.innerText),
+    h1: document.querySelector("h1")?.innerText?.slice(0, 80) || "",
+  }));
+  if (!response || response.status() >= 400) fail(errors, `webkit first load status ${response ? response.status() : "none"}`);
+  if (first.broken) fail(errors, `webkit first load showed the error screen (${first.h1})`);
+  if (problems.length) fail(errors, `webkit first load ${problems.join(" | ")}`);
+  problems.length = 0;
+  await page.goto(`${BASE}/listings`, { waitUntil: "networkidle", timeout: 60000 });
+  await page.waitForTimeout(400);
+  const second = await page.evaluate(() => /Something went wrong|Rangach did not load|This page did not load/.test(document.body.innerText));
+  if (second) fail(errors, "webkit second load showed the error screen");
+  if (problems.length) fail(errors, `webkit second load ${problems.join(" | ")}`);
+  console.log("webkit fresh context", first.h1 || "(no heading)", "no ChunkLoadError");
+  await browser.close();
+}
+
+await chunkLoadPass();
+
 if (errors.length) {
   console.error(`\n${errors.length} layout check(s) failed`);
   process.exit(1);

@@ -5,7 +5,10 @@ import { useEffect } from "react";
 /**
  * Registers /sw.js in production on secure origins only (https, and localhost
  * when `next start` is used to check a production build). Development stays unregistered.
- * A new worker calls skipWaiting; once it takes over an already-controlled page, reload once.
+ * The worker does not claim this page. WebKit drops in-flight scripts when a worker
+ * takes control mid-load, and the error-boundary chunk is one of those scripts.
+ * The next navigation is controlled. A later worker that does take over an
+ * already-controlled page reloads once.
  */
 export function PwaRegister() {
   useEffect(() => {
