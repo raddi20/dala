@@ -126,7 +126,7 @@ export default async function AdminOrdersPage({
                 <ul className="text-sm text-ink/70">
                   {shop.deliveryOptions.map((option) => (
                     <li key={option.id}>
-                      {option.kind}: {option.label} · KES {option.feeKes}
+                      {option.kind}: {option.label} · Ksh {option.feeKes}
                       {option.active ? "" : " · off"}
                     </li>
                   ))}
@@ -144,7 +144,7 @@ export default async function AdminOrdersPage({
                   </select>
                 </label>
                 <label className={labelClass}>
-                  Fee (KES)
+                  Fee (Ksh)
                   <input name="feeKes" type="number" min={0} max={100000} defaultValue={0} className={fieldClass} />
                 </label>
                 <label className={`${labelClass} sm:col-span-2`}>

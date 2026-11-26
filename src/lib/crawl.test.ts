@@ -76,7 +76,7 @@ test("listing details and hub text stay inside real fields", () => {
     details,
     "Lunch plate is a Food & restaurants listing in Nairobi on Rangach. Listed by Atieno Odhiambo. Price: Ksh 500.",
   );
-  assert.equal(shownPriceLabel("From KES 450"), "From KES 450");
+  assert.equal(shownPriceLabel("From KES 450"), "From Ksh 450");
   assert.equal(shownPriceLabel(""), "");
   const noPrice = listingDetailsSentence({
     title: "Lunch plate",

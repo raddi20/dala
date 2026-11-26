@@ -190,7 +190,7 @@ export async function addDeliveryOption(formData: FormData) {
     action: "order.delivery",
     targetType: "storefront",
     targetId: storefrontId,
-    reason: `${kind} ${label} KES ${feeKes} (${row.id})`,
+    reason: `${kind} ${label} Ksh ${feeKes} (${row.id})`,
   });
   revalidatePath("/admin/orders");
   redirect("/admin/orders?notice=saved");

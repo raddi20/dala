@@ -59,7 +59,7 @@ test("captions use only provided facts", () => {
   const text = buildCaption("facebook", listing, handlesFromShop({}));
   assert.match(text, /Room in Kisumu/);
   assert.match(text, /Kisumu/);
-  assert.match(text, /KES 8,000 \/ month/);
+  assert.match(text, /Ksh 8,000 \/ month/);
   assert.match(text, /https:\/\/www\.rangach\.co\.ke\/listings\/abc/);
   assert.equal(text.includes("Nairobi"), false);
 });

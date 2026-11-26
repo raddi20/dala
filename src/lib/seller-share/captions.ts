@@ -1,3 +1,4 @@
+import { asKshCopy } from "@/lib/ksh-copy";
 import { rangachSocialLine } from "@/lib/seller-share/rangach-socials";
 import {
   displayHandle,
@@ -36,7 +37,7 @@ function clip(value: string, max: number): string {
 function factBits(subject: ShareSubject): string[] {
   const bits: string[] = [];
   if (subject.city?.trim()) bits.push(subject.city.trim());
-  if (subject.priceLabel?.trim()) bits.push(subject.priceLabel.trim());
+  if (subject.priceLabel?.trim()) bits.push(asKshCopy(subject.priceLabel.trim()));
   return bits;
 }
 

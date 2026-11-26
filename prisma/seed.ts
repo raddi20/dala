@@ -123,11 +123,11 @@ const listings: SeedListing[] = [
     type: "business",
     title: "Mama Atieno's Kitchen",
     description:
-      "Luo home cooking in Kilimani. Lunch plates with fish, ugali, and greens from KES 450. Weekend nyama by the tray if you book on Thursday. Seats about twenty, and we do office drops along Ngong Road.",
+      "Luo home cooking in Kilimani. Lunch plates with fish, ugali, and greens from Ksh 450. Weekend nyama by the tray if you book on Thursday. Seats about twenty, and we do office drops along Ngong Road.",
     category: "Food & restaurants",
     city: "Nairobi",
     address: "Argwings Kodhek Road, Kilimani",
-    priceLabel: "From KES 450",
+    priceLabel: "From Ksh 450",
     verified: true,
     featured: true,
   },
@@ -140,7 +140,7 @@ const listings: SeedListing[] = [
     category: "Professional services",
     city: "Nairobi",
     address: "Upper Hill",
-    priceLabel: "From KES 8,000",
+    priceLabel: "From Ksh 8,000",
     verified: true,
   },
   {
@@ -152,7 +152,7 @@ const listings: SeedListing[] = [
     category: "Beauty & personal care",
     city: "Nairobi",
     address: "South B shopping centre",
-    priceLabel: "From KES 1,500",
+    priceLabel: "From Ksh 1,500",
     featured: true,
   },
   {
@@ -175,7 +175,7 @@ const listings: SeedListing[] = [
     category: "Transport & logistics",
     city: "Nairobi",
     address: "Industrial Area",
-    priceLabel: "From KES 300",
+    priceLabel: "From Ksh 300",
   },
   {
     owner: "achieng@dala.local",
@@ -186,7 +186,7 @@ const listings: SeedListing[] = [
     category: "Education & tutoring",
     city: "Nairobi",
     address: "Kilimani and South B",
-    priceLabel: "KES 1,200 an hour",
+    priceLabel: "Ksh 1,200 an hour",
   },
   {
     owner: "atieno@dala.local",
@@ -197,7 +197,7 @@ const listings: SeedListing[] = [
     category: "Events & entertainment",
     city: "Nairobi",
     address: "Westlands",
-    priceLabel: "From KES 25,000",
+    priceLabel: "From Ksh 25,000",
   },
   {
     owner: "mary@dala.local",
@@ -242,7 +242,7 @@ const listings: SeedListing[] = [
     category: "Health & wellness",
     city: "Nairobi",
     address: "Ngong Road",
-    priceLabel: "Consultation KES 1,000",
+    priceLabel: "Consultation Ksh 1,000",
     verified: true,
   },
   {
@@ -254,7 +254,7 @@ const listings: SeedListing[] = [
     category: "Food & restaurants",
     city: "Nairobi",
     address: "South C",
-    priceLabel: "From KES 600 a plate",
+    priceLabel: "From Ksh 600 a plate",
   },
   {
     owner: "peter@dala.local",
@@ -368,7 +368,7 @@ const listings: SeedListing[] = [
     category: "Auto & mechanics",
     city: "Nairobi",
     address: "Industrial Area",
-    priceLabel: "KES 850,000",
+    priceLabel: "Ksh 850,000",
   },
   {
     owner: "achieng@dala.local",
@@ -379,7 +379,7 @@ const listings: SeedListing[] = [
     category: "Retail / shops",
     city: "Nairobi",
     address: "South B",
-    priceLabel: "KES 12,000",
+    priceLabel: "Ksh 12,000",
   },
   {
     owner: "atieno@dala.local",
@@ -401,7 +401,7 @@ const listings: SeedListing[] = [
     category: "Real estate / housing",
     city: "Nairobi",
     address: "Kilimani, near Yaya",
-    priceLabel: "KES 55,000 / month",
+    priceLabel: "Ksh 55,000 / month",
   },
   {
     owner: "james@dala.local",
@@ -423,7 +423,7 @@ const listings: SeedListing[] = [
     category: "Events & entertainment",
     city: "Nairobi",
     address: "Nairobi",
-    priceLabel: "From KES 15,000",
+    priceLabel: "From Ksh 15,000",
   },
   {
     owner: "okello@dala.local",
@@ -445,7 +445,7 @@ const listings: SeedListing[] = [
     category: "Retail / shops",
     city: "Nairobi",
     address: "Industrial Area",
-    priceLabel: "KES 18,000",
+    priceLabel: "Ksh 18,000",
   },
   {
     owner: "atieno@dala.local",
@@ -500,7 +500,7 @@ const listings: SeedListing[] = [
     category: "Construction & trades",
     city: "Nairobi",
     address: "South C",
-    priceLabel: "Labour KES 45,000",
+    priceLabel: "Labour Ksh 45,000",
   },
   {
     owner: "achieng@dala.local",
@@ -511,7 +511,7 @@ const listings: SeedListing[] = [
     category: "Retail / shops",
     city: "Nairobi",
     address: "Nairobi",
-    priceLabel: "KES 8,000",
+    priceLabel: "Ksh 8,000",
   },
   {
     owner: "james@dala.local",
@@ -522,7 +522,7 @@ const listings: SeedListing[] = [
     category: "Real estate / housing",
     city: "Nairobi",
     address: "Out of town",
-    priceLabel: "KES 15,000 deposit",
+    priceLabel: "Ksh 15,000 deposit",
   },
   {
     owner: "achieng@dala.local",
@@ -533,7 +533,7 @@ const listings: SeedListing[] = [
     category: "Retail / shops",
     city: "Nairobi",
     address: "Nairobi",
-    priceLabel: "KES 4,500",
+    priceLabel: "Ksh 4,500",
     hidden: true,
   },
 ];

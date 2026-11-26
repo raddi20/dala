@@ -361,7 +361,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       ) : null}
 
       <header>
-        <div className="-mx-4 h-[210px] overflow-hidden bg-navy">
+        <div className="shop-cover relative -mx-4 overflow-hidden bg-navy">
           <RemoteImage
             src={cover?.src ?? ""}
             srcSet={cover?.srcSet}
@@ -372,10 +372,38 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             loading="eager"
             decoding="async"
             fetchPriority="high"
-            className="h-[210px] w-full object-cover"
+            className="shop-cover w-full object-cover"
           >
-            <div className="h-[210px] bg-navy" />
+            <div className="shop-cover bg-navy" />
           </RemoteImage>
+          <div className="absolute inset-x-0 bottom-0 z-10 flex justify-end gap-3 bg-gradient-to-t from-navy via-navy/75 to-transparent px-3 pb-3 pt-16">
+            {callUrl ? (
+              <a href={callUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} data-primary-action="call" className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-white">
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white text-navy shadow-sm">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+                    <path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 6 6L17 13l4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 5a2 2 0 0 1 2-2z" />
+                  </svg>
+                </span>
+                <span className="rounded-full bg-navy/90 px-2 py-0.5 leading-none shadow-sm">{uiText(lang, "call")}</span>
+              </a>
+            ) : null}
+            {shareUrl ? (
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noreferrer"
+                data-primary-action="share"
+                className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-white"
+              >
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/80 bg-white text-navy shadow-sm">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+                    <path d="M14 4l6 6-6 6v-4H9a6 6 0 0 0-6 6v1h2v-1a4 4 0 0 1 4-4h5v-4z" />
+                  </svg>
+                </span>
+                <span className="rounded-full bg-navy/90 px-2 py-0.5 leading-none shadow-sm">{uiText(lang, "share")}</span>
+              </a>
+            ) : null}
+          </div>
         </div>
         <div className="relative z-10 -mt-8">
           <RemoteImage
@@ -432,33 +460,6 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             <p className="mt-1 text-sm font-semibold text-navy">{trust}</p>
           )
         ) : null}
-        <div className="mt-3 flex gap-6">
-          {callUrl ? (
-            <a href={callUrl} data-contact-shop={shop.slug} data-contact-name={shop.user.name} className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white">
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
-                  <path d="M7 3h3l1.5 4-2 1.5a12 12 0 0 0 6 6L17 13l4 1.5V18a2 2 0 0 1-2 2A15 15 0 0 1 4 5a2 2 0 0 1 2-2z" />
-                </svg>
-              </span>
-              {uiText(lang, "call")}
-            </a>
-          ) : null}
-          {shareUrl ? (
-            <a
-              href={shareUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 min-w-11 flex-col items-center gap-1 text-xs font-semibold text-ink"
-            >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white">
-                <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
-                  <path d="M14 4l6 6-6 6v-4H9a6 6 0 0 0-6 6v1h2v-1a4 4 0 0 1 4-4h5v-4z" />
-                </svg>
-              </span>
-              {uiText(lang, "share")}
-            </a>
-          ) : null}
-        </div>
         {contacts.hidden ? <DemoContactNote note={DEMO_SHOP_CONTACT_NOTE} /> : null}
         {followNotice(one(query.follow)) ? (
           <p className="mt-3 text-sm text-ink/80" role="status" aria-live="polite">
@@ -467,22 +468,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         ) : null}
       </header>
 
-      {isDemoEmail(shop.user.email) ? null : (
-        <ShopUpdates updates={shopUpdates} canReport={Boolean(viewer) && !isOwner} />
-      )}
-
-      {showVideo && publicVideo ? (
-        <section aria-label={uiText(lang, "shop_video")}>
-          <ShopVideoPoster
-            playbackId={publicVideo.publicPlaybackId}
-            posterUrl={publicVideo.posterUrl}
-            caption={publicVideo.caption}
-            mock={videoMode() === "mock" || publicVideo.publicPlaybackId.startsWith("mock")}
-          />
-        </section>
-      ) : null}
-
-      <nav aria-label={uiText(lang, "shop_sections")} className="flex min-w-0 flex-wrap gap-1 border-b border-line">
+      <nav aria-label={uiText(lang, "shop_sections")} data-shop-tabs="" className="flex min-w-0 flex-wrap gap-1 border-b border-line">
         <a href="#offerings" className="inline-flex min-h-11 items-center border-b-2 border-navy px-2 text-sm font-semibold text-navy">
           {uiText(lang, "offerings")} ({publicOfferings.length})
         </a>
@@ -499,6 +485,21 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
           {reviews.length > 0 ? ` (${reviews.length})` : ""}
         </a>
       </nav>
+
+      {isDemoEmail(shop.user.email) ? null : (
+        <ShopUpdates updates={shopUpdates} canReport={Boolean(viewer) && !isOwner} />
+      )}
+
+      {showVideo && publicVideo ? (
+        <section aria-label={uiText(lang, "shop_video")}>
+          <ShopVideoPoster
+            playbackId={publicVideo.publicPlaybackId}
+            posterUrl={publicVideo.posterUrl}
+            caption={publicVideo.caption}
+            mock={videoMode() === "mock" || publicVideo.publicPlaybackId.startsWith("mock")}
+          />
+        </section>
+      ) : null}
 
       <section id="offerings" className="grid scroll-mt-28 gap-3">
         <h2 className="sr-only">{uiText(lang, "offerings")}</h2>

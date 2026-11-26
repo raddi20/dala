@@ -248,7 +248,36 @@ h3,
   max-width: 100%;
   min-height: 100dvh;
   flex-direction: column;
-  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 8.5rem);
+  /* Nav, WhatsApp bar, Sulwe (92px), then the 44px tour invite above him, plus a little air. */
+  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + 44px + 16px);
+}
+
+/* Phone listing photo stays short so the price, Save, and Follow clear the bottom stack. */
+.listing-hero-media {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+}
+
+img.listing-hero-media,
+img.shop-cover {
+  display: block;
+}
+
+/* Shop cover. Call and Share sit on it, above the avatar, so the bottom stack cannot cover them. */
+.shop-cover {
+  height: 10rem;
+}
+
+@media (min-width: 640px) {
+  .listing-hero-media {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .shop-cover {
+    height: 210px;
+  }
 }
 
 .page-shell > * {
@@ -285,7 +314,7 @@ main .grid > * {
 .sulwe-dock {
   position: fixed;
   right: 12px;
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv));
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv) + var(--rangach-float-lift, 0px));
   z-index: 45;
   transform: none;
   overflow: visible;
@@ -308,10 +337,54 @@ main .grid > * {
 
 .tour-prompt {
   height: 44px;
+  right: 12px;
   bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 34px + var(--rangach-vv));
   background-color: #fff;
   opacity: 1;
   transform: none;
+}
+
+/* Docked to Sulwe's row, directly on his left, the same seat as Ask Sulwe. */
+.tour-prompt-docked {
+  position: absolute;
+  right: calc(100% + 6px);
+  bottom: auto;
+  left: auto;
+  top: 32%;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+html[data-tour-invite="dot"] .tour-prompt-docked {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tour-invite-dot {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  height: 44px;
+  width: 44px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.tour-invite-dot span {
+  display: block;
+  height: 12px;
+  width: 12px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+html[data-tour-invite="dot"] .tour-invite-dot {
+  display: grid;
 }
 
 .tour-prompt [data-tour-prompt-tail] {
@@ -321,8 +394,8 @@ main .grid > * {
 @media (min-width: 768px) {
   .page-shell {
     min-height: 100%;
-    /* Sulwe is 92px tall and sits 20px above the bottom bar. Keep the last footer row above him. */
-    padding-bottom: calc(var(--rangach-cta) + 20px + 92px + 16px);
+    /* Sulwe is 92px tall and sits 20px above the bottom bar. The tour invite sits above him. */
+    padding-bottom: calc(var(--rangach-cta) + 20px + 92px + 8px + 44px + 16px);
   }
 
   .sticky-cta-bar {
@@ -330,11 +403,16 @@ main .grid > * {
   }
 
   .sulwe-dock {
-    bottom: calc(20px + var(--rangach-cta));
+    bottom: calc(20px + var(--rangach-cta) + var(--rangach-float-lift, 0px));
   }
 
   .tour-prompt {
     bottom: calc(44px + var(--rangach-cta));
+  }
+
+  .tour-prompt-docked {
+    bottom: auto;
+    top: 32%;
   }
 }
 

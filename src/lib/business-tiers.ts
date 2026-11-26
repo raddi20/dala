@@ -27,7 +27,7 @@ export const BUSINESS_OBJECTIONS = [
   },
   {
     question: "Too expensive.",
-    answer: "Starter is KES 1,500 a month, and the first month is free. One extra basket a week covers it.",
+    answer: "Starter is Ksh 1,500 a month, and the first month is free. One extra basket a week covers it.",
   },
   {
     question: "No time to upload products.",
@@ -118,7 +118,7 @@ function group(amount: number) {
 }
 
 export function kesLabel(amount: number) {
-  return `KES ${group(amount)}`;
+  return `Ksh ${group(amount)}`;
 }
 
 export function tierOptionLabel(tier: BusinessTier) {
@@ -134,7 +134,7 @@ export type TierPriceView = {
 
 function joinMoney(low: string, high: string) {
   if (low.startsWith("≈ ") && high.startsWith("≈ ")) return `${low}–${high.slice(2)}`;
-  if (low.startsWith("KES ") && high.startsWith("KES ")) return `${low}–${high.slice(4)}`;
+  if (low.startsWith("Ksh ") && high.startsWith("Ksh ")) return `${low}–${high.slice(4)}`;
   return `${low}–${high}`;
 }
 
@@ -168,7 +168,7 @@ function priceCaption(kind: PriceEnd["kind"], text: string) {
     return "Kenya and East Africa price, per month. The other figure is a Diaspora approximation.";
   }
   if (kind === "approx") return "Approximate, in your currency. We invoice Kenyan shillings.";
-  if (text.startsWith("KES")) return "Per month, in Kenyan shillings.";
+  if (text.startsWith("Ksh")) return "Per month, in Kenyan shillings.";
   return "Approximate monthly fee in pounds. We invoice Kenyan shillings.";
 }
 

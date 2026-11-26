@@ -207,6 +207,30 @@ export default async function ListingPage({ params, searchParams }: Props) {
       : await relatedPublicListings({ id: listing.id, category: listing.category, city: listing.city });
   const town = townPageForName(listing.city);
   const price = shownPriceLabel(listing.priceLabel);
+  const shown = itemPriceText(shownPrice(listing));
+  const heroActions = (
+    <div
+      data-listing-actions=""
+      className="absolute inset-x-0 bottom-0 z-10 flex flex-wrap items-end justify-between gap-2 bg-gradient-to-t from-navy via-navy/85 to-transparent px-3 pb-3 pt-16"
+    >
+      <p className={shown.ask ? "pb-2 text-base font-medium text-white/85" : "pb-2 text-lg font-semibold text-gold-l"}>{shown.text}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <SaveHeart variant="page" item={savedItem} />
+        {shop ? (
+          <FollowShop
+            shopId={shop.id}
+            slug={shop.slug}
+            name={listing.owner.name}
+            following={Boolean(shopFollow)}
+            signedIn={Boolean(user)}
+            followable={!isOwner && !isDemoEmail(listing.owner.email)}
+            returnTo={`/listings/${listing.id}`}
+            tone="onPhoto"
+          />
+        ) : null}
+      </div>
+    </div>
+  );
   const details = listingDetailsSentence({
     title: listing.title,
     category: listing.category,
@@ -217,7 +241,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
   });
 
   return (
-    <article className="mx-auto grid min-w-0 max-w-3xl gap-6 px-4 py-8 sm:pb-10">
+    <article className="mx-auto grid min-w-0 max-w-3xl gap-6 px-4 py-4 sm:py-8">
       {notice ? <Flash>{notice}</Flash> : null}
       {!listing.hidden && !listing.owner.suspended ? (
         <JsonLd
@@ -238,6 +262,7 @@ export default async function ListingPage({ params, searchParams }: Props) {
         </Flash>
       ) : null}
 
+      <div className="relative overflow-hidden rounded-[14px] border border-line/80 bg-navy shadow-[var(--shadow-card)]">
       {photo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -250,14 +275,16 @@ export default async function ListingPage({ params, searchParams }: Props) {
           loading={photo.loading}
           decoding={photo.decoding}
           fetchPriority={photo.fetchPriority}
-          className={`${LISTING_PHOTO_ASPECT_CLASS} h-auto w-full rounded-[14px] border border-line/80 bg-sand object-cover shadow-[var(--shadow-card)]`}
+          className={`${LISTING_PHOTO_ASPECT_CLASS} listing-hero-media bg-sand object-cover`}
         />
       ) : (
-        <div className={`flex ${LISTING_PHOTO_ASPECT_CLASS} items-end rounded-[1.25rem] bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white shadow-[var(--shadow-card)]`}>
+        <div className={`${LISTING_PHOTO_ASPECT_CLASS} listing-hero-media flex items-end bg-gradient-to-br from-navy via-navy-soft to-lake-dark p-5 text-white`}>
           <span className="font-serif text-4xl">{listing.title.charAt(0).toUpperCase()}</span>
           <span className="ml-auto text-sm uppercase tracking-wide text-white/80">{listing.category}</span>
         </div>
       )}
+      {heroActions}
+      </div>
 
       <div className="grid gap-3">
         <Badges
@@ -275,26 +302,6 @@ export default async function ListingPage({ params, searchParams }: Props) {
           {listing.region === "diaspora" ? uiText(lang, "diaspora") : `${cityChipLabel(listing.city)} · ${uiText(lang, "homeland")}`} · {listing.category}
           {listing.address ? ` · ${listing.address}` : ""}
         </p>
-        {(() => {
-          const shown = itemPriceText(shownPrice(listing));
-          return (
-            <p className={shown.ask ? "text-base font-medium text-ink/60" : "text-lg font-semibold text-ink"}>{shown.text}</p>
-          );
-        })()}
-        <div className="flex flex-wrap items-center gap-2">
-          <SaveHeart variant="page" item={savedItem} />
-          {shop ? (
-            <FollowShop
-              shopId={shop.id}
-              slug={shop.slug}
-              name={listing.owner.name}
-              following={Boolean(shopFollow)}
-              signedIn={Boolean(user)}
-              followable={!isOwner && !isDemoEmail(listing.owner.email)}
-              returnTo={`/listings/${listing.id}`}
-            />
-          ) : null}
-        </div>
         <TrackRecent item={savedItem} />
         <p className="text-sm text-ink/55">
           {rating === null

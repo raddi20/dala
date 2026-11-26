@@ -83,7 +83,7 @@ test("a split initialises on the shop subaccount with a 4 percent commission", (
   assert.equal(request.body.subaccount, "ACCT_TILAPIA");
   assert.equal(request.body.percentage_charge, 4);
   assert.equal(request.body.bearer, "subaccount");
-  assert.equal(kesLabelFromSubunit(170_000), "KES 1,700");
+  assert.equal(kesLabelFromSubunit(170_000), "Ksh 1,700");
 });
 
 test("the webhook signature must match, and a repeat or a wrong amount does not mark paid", () => {

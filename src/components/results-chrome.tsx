@@ -57,7 +57,10 @@ export function ResultsSearchBar({
       </form>
       <div className="mt-2 flex items-start gap-2">
         {sheet}
-        <div className="chip-scroll min-w-0 flex-1">{pills}</div>
+        {/* Wrap, rather than a fading scroller, so Checked is never cut at the edge. */}
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2" data-browse-chips="">
+          {pills}
+        </div>
       </div>
     </div>
   );

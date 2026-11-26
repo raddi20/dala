@@ -26,5 +26,5 @@ test("missing price falls back to Price on request, never an invented amount", (
     assert.deepEqual(itemPriceText(empty), { text: PRICE_ON_REQUEST, ask: true });
   }
   assert.equal(PRICE_ON_REQUEST, "Price on request");
-  assert.deepEqual(itemPriceText(" KES 1,500 "), { text: "KES 1,500", ask: false });
+  assert.deepEqual(itemPriceText(" KES 1,500 "), { text: "Ksh 1,500", ask: false });
 });

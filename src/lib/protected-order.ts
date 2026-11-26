@@ -253,5 +253,5 @@ export function kesLabelFromSubunit(subunit: number) {
   const shillings = subunit / 100;
   const rounded = Number.isInteger(shillings) ? shillings : Math.round(shillings * 100) / 100;
   const text = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
-  return `KES ${text.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
+  return `Ksh ${text.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }

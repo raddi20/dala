@@ -67,7 +67,7 @@ export function basketPriceLabel(
   const pounds = Math.max(1, Math.round(basket.kes / perGbp));
   const shown = visitorPrice({
     country: input.country,
-    kes: { amount: basket.kes, label: `KES ${group(basket.kes)}` },
+    kes: { amount: basket.kes, label: `Ksh ${group(basket.kes)}` },
     gbp: { amount: pounds, label: `£${group(pounds)}` },
     rates: input.rates,
     kesPerUsd: perUsd,

@@ -26,7 +26,7 @@ test("featured and pro prices come from the checkout charge table", () => {
   assert.equal(pro.gbp.label, "£20");
   assert.equal(pro.gbp.approximate, false);
   assert.equal(featured.gbp.label, "£12");
-  assert.equal(featured.kes.label, "KES 1,500");
+  assert.equal(featured.kes.label, "Ksh 1,500");
 });
 
 test("USD is approximate from the shilling amount and the documented rate", () => {
@@ -70,7 +70,7 @@ test("plan copy uses the real offering caps and says Pro is not verified", () =>
   assert.match(pro.includes.join(" "), new RegExp(String(FREE_OFFERING_CAP)));
   assert.match(pro.includes.join(" "), new RegExp(String(PRO_DAYS)));
   assert.match(pro.summary, /per 30 days/i);
-  assert.match(pro.summary, /KES 2,500/);
+  assert.match(pro.summary, /Ksh 2,500/);
   assert.match(pro.summary, /£20/);
   assert.equal(pro.period, `per ${PRO_DAYS} days`);
   assert.match(pro.includes.join(" "), /adds another 30 days/i);

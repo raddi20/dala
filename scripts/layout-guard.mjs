@@ -265,6 +265,231 @@ if (fixture.status !== 0) {
   await communitySurface(chromium, "1440", 1440, 900);
 }
 
+async function centreHits(page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(80);
+  return page.evaluate(() => {
+    function one(selector) {
+      const el = document.querySelector(selector);
+      if (!el) return { selector, missing: true };
+      const r = el.getBoundingClientRect();
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      const top = document.elementFromPoint(x, y);
+      const hit = Boolean(top && (top === el || el.contains(top)));
+      const inView = r.top >= -1 && r.left >= -1 && r.bottom <= window.innerHeight + 1 && r.right <= window.innerWidth + 1;
+      return {
+        selector,
+        hit,
+        inView,
+        tall: r.height >= 44 && r.width >= 44,
+        top: Math.round(r.top),
+        bottom: Math.round(r.bottom),
+        target: top ? (top.closest("a, button")?.getAttribute("data-primary-action") || top.closest("a, button")?.getAttribute("aria-label") || top.textContent || "").toString().trim().replace(/\s+/g, " ").slice(0, 60) : "",
+      };
+    }
+    return {
+      save: one("[data-save-heart]"),
+      follow: one("[data-follow-shop]"),
+      call: one('[data-primary-action="call"]'),
+      share: one('[data-primary-action="share"]'),
+      banner: Boolean(document.querySelector("#install-hint")),
+      tour: Boolean(document.querySelector("[data-tour-prompt]")),
+    };
+  });
+}
+
+async function checkedChip(page) {
+  await page.evaluate(() => window.scrollTo(0, 0));
+  return page.evaluate(() => {
+    const chip = [...document.querySelectorAll("[data-browse-chips] a")].find((el) => (el.textContent || "").trim() === "Checked");
+    if (!chip) return { missing: true };
+    const r = chip.getBoundingClientRect();
+    let clipped = false;
+    let node = chip.parentElement;
+    while (node && node !== document.documentElement) {
+      const style = getComputedStyle(node);
+      const overflow = `${style.overflow} ${style.overflowX} ${style.overflowY}`;
+      if (/auto|hidden|clip|scroll/.test(overflow)) {
+        const b = node.getBoundingClientRect();
+        if (r.left < b.left - 1 || r.right > b.right + 1 || r.top < b.top - 1 || r.bottom > b.bottom + 1) clipped = true;
+      }
+      const mask = style.maskImage || style.webkitMaskImage || "none";
+      if (mask !== "none") {
+        const b = node.getBoundingClientRect();
+        if (r.right > b.right - 20 || r.left < b.left + 2) clipped = true;
+      }
+      node = node.parentElement;
+    }
+    const y = r.top + r.height / 2;
+    const centre = document.elementFromPoint(r.left + r.width / 2, y);
+    const edge = document.elementFromPoint(Math.min(r.right - 3, window.innerWidth - 1), y);
+    return {
+      missing: false,
+      clipped,
+      inView: r.top >= -1 && r.left >= -1 && r.bottom <= window.innerHeight + 1 && r.right <= window.innerWidth + 1,
+      centerHit: Boolean(centre && chip.contains(centre)),
+      edgeHit: Boolean(edge && chip.contains(edge)),
+      left: Math.round(r.left),
+      right: Math.round(r.right),
+      top: Math.round(r.top),
+      bottom: Math.round(r.bottom),
+    };
+  });
+}
+
+async function controlHits(page) {
+  return page.evaluate(() => {
+    const misses = [];
+    const tabs = [];
+    for (const el of document.querySelectorAll("a, button")) {
+      const style = getComputedStyle(el);
+      const r = el.getBoundingClientRect();
+      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") continue;
+      if (r.width < 8 || r.height < 8) continue;
+      const x = r.left + r.width / 2;
+      const y = r.top + r.height / 2;
+      if (x < 1 || y < 1 || x > window.innerWidth - 1 || y > window.innerHeight - 1) continue;
+      const top = document.elementFromPoint(x, y);
+      const hit = Boolean(top && (top === el || el.contains(top)));
+      const label = (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 48);
+      const row = { label, hit };
+      const tab = Boolean(el.closest("[data-shop-tabs]"));
+      if (tab) tabs.push(row);
+      const stack = top?.closest(".sticky-cta-bar, .bottom-nav");
+      if (!hit && !(stack && !tab)) {
+        const cover = top?.closest("[data-tour-prompt], .sticky-cta-bar, .bottom-nav, [data-sulwe-root], [data-sulwe-ask], a, button");
+        misses.push({
+          label,
+          cover: (cover?.getAttribute("aria-label") || cover?.textContent || top?.tagName || "none").toString().trim().replace(/\s+/g, " ").slice(0, 48),
+        });
+      }
+    }
+    return { misses, tabs };
+  });
+}
+
+function expectControls(name, report) {
+  if (name.endsWith(" shop")) {
+    if (report.tabs.length < 3) fail(errors, `${name} shop tabs missing ${JSON.stringify(report.tabs)}`);
+    for (const tab of report.tabs) {
+      if (!tab.hit) fail(errors, `${name} shop tab not hit ${tab.label}`);
+    }
+  }
+  if (report.misses.length) fail(errors, `${name} link or button covered ${JSON.stringify(report.misses)}`);
+}
+
+async function expectDocked(page, name) {
+  const dock = await page.evaluate(() => {
+    const prompt = document.querySelector("[data-tour-prompt='sulwe']");
+    const sulwe = document.querySelector("[data-sulwe-root]");
+    if (!prompt || !sulwe) return { missing: true };
+    const style = getComputedStyle(prompt);
+    const hidden = style.visibility === "hidden" || style.display === "none";
+    if (document.documentElement.getAttribute("data-tour-invite") === "dot" || hidden) return { collapsed: true };
+    const pill = prompt.getBoundingClientRect();
+    const host = sulwe.getBoundingClientRect();
+    return {
+      collapsed: false,
+      gap: Math.round(host.left - pill.right),
+      sameRow: pill.top < host.bottom - 4 && pill.bottom > host.top + 4,
+    };
+  });
+  if (dock.missing) fail(errors, `${name} tour dock missing ${JSON.stringify(dock)}`);
+  else if (!dock.collapsed && (dock.gap < -1 || dock.gap > 16 || !dock.sameRow)) {
+    fail(errors, `${name} tour pill left Sulwe ${JSON.stringify(dock)}`);
+  }
+}
+
+function expectHits(name, hits, keys, state) {
+  if (Boolean(hits.banner) !== state.banner) fail(errors, `${name} install banner ${hits.banner ? "shown" : "hidden"}`);
+  if (Boolean(hits.tour) !== state.tour) fail(errors, `${name} tour bubble ${hits.tour ? "shown" : "hidden"}`);
+  for (const key of keys) {
+    const row = hits[key];
+    if (!row || row.missing) fail(errors, `${name} missing ${key}`);
+    else if (!row.hit || !row.inView || !row.tall) fail(errors, `${name} ${key} not hit ${JSON.stringify(row)}`);
+  }
+}
+
+async function hitPass(browserType, label, width, height) {
+  const browser = await browserType.launch();
+  const context = await browser.newContext({
+    viewport: { width, height },
+    deviceScaleFactor: 1,
+    colorScheme: "light",
+    userAgent: iphone.userAgent,
+    hasTouch: true,
+    isMobile: width < 768,
+  });
+  const page = await context.newPage();
+  const states = [
+    { banner: false, tour: false },
+    { banner: true, tour: false },
+    { banner: false, tour: true },
+    { banner: true, tour: true },
+  ];
+  for (const state of states) {
+    const name = `${label} banner ${state.banner ? "on" : "off"}, tour ${state.tour ? "on" : "off"}`;
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.evaluate((flags) => {
+      localStorage.removeItem("rangach.pwa.installed");
+      if (flags.banner) localStorage.removeItem("rangach.pwa.dismissedAt");
+      else localStorage.setItem("rangach.pwa.dismissedAt", String(Date.now()));
+      if (flags.tour) {
+        localStorage.removeItem("rangach_tour_prompt_visitor");
+        localStorage.removeItem("rangach_tour_prompt_seller");
+        localStorage.removeItem("rangach_tour");
+      } else {
+        localStorage.setItem("rangach_tour_prompt_visitor", "no");
+        localStorage.setItem("rangach_tour_prompt_seller", "no");
+      }
+    }, state);
+
+    await page.goto(`${BASE}/b/nyangoma-fish?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+    if (state.tour) {
+      await page.waitForFunction(() => {
+        const shown = (el) => el && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
+        return shown(document.querySelector("[data-tour-prompt]")) || shown(document.querySelector("[data-tour-invite-dot]"));
+      }, null, { timeout: 8000 });
+    }
+    if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
+    await page.waitForTimeout(450);
+    expectHits(`${name} shop`, await centreHits(page), ["call", "share"], state);
+    expectControls(`${name} shop`, await controlHits(page));
+    if (state.tour) await expectDocked(page, `${name} shop`);
+
+    await page.goto(`${BASE}/listings/fixture_listing_tilapia?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+    if (state.tour) {
+      await page.waitForFunction(() => {
+        const shown = (el) => el && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
+        return shown(document.querySelector("[data-tour-prompt]")) || shown(document.querySelector("[data-tour-invite-dot]"));
+      }, null, { timeout: 8000 });
+    }
+    if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
+    await page.waitForTimeout(450);
+    expectHits(`${name} listing`, await centreHits(page), ["save", "follow"], state);
+    expectControls(`${name} listing`, await controlHits(page));
+    if (state.tour) await expectDocked(page, `${name} listing`);
+
+    await page.goto(`${BASE}/listings?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+    await page.waitForTimeout(250);
+    const chip = await checkedChip(page);
+    if (chip.missing || chip.clipped || !chip.inView || !chip.centerHit || !chip.edgeHit) {
+      fail(errors, `${name} Checked chip ${JSON.stringify(chip)}`);
+    } else {
+      console.log(name, "Checked", chip.left, chip.right);
+    }
+  }
+  console.log(label, "Save, Follow, Call, and Share are the elements under the pointer");
+  await browser.close();
+}
+
+if (fixture.status === 0) {
+  await hitPass(webkit, "webkit-390", 390, 844);
+  await hitPass(chromium, "chromium-390", 390, 844);
+  await hitPass(chromium, "chromium-1280", 1280, 800);
+}
+
 if (errors.length) {
   console.error(`\n${errors.length} layout check(s) failed`);
   process.exit(1);

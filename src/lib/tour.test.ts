@@ -16,6 +16,7 @@ import {
   parseTourRun,
   persistTourRecord,
   placeTourBubble,
+  placeTourDock,
   readTourRecord,
   replayTour,
   resumedStepId,
@@ -168,6 +169,24 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
   assert.match(card, /Next/);
   assert.match(card, /Skip/);
   assert.equal((card.match(/data-tour-dot=/g) ?? []).length, 5);
+});
+
+test("the quick-tour pill stays on Sulwe's row, and collapses instead of leaving the bottom-right zone", () => {
+  const sulwe = { top: 620, left: 286, width: 92, height: 92 };
+  const pill = { width: 180, height: 44 };
+  const clear = placeTourDock({ sulwe, pill, obstacles: [], viewportHeight: 844 });
+  assert.deepEqual(clear, { lift: 0, collapsed: false });
+
+  const follow = { top: 600, left: 200, width: 80, height: 44 };
+  const nudged = placeTourDock({ sulwe, pill, obstacles: [follow], viewportHeight: 844 });
+  assert.equal(nudged.collapsed, false);
+  assert.ok(nudged.lift > 0);
+  assert.ok(nudged.lift <= sulwe.top - 844 * 0.46);
+
+  const wall = { top: 300, left: 0, width: 390, height: 544 };
+  const blocked = placeTourDock({ sulwe, pill, obstacles: [wall], viewportHeight: 844 });
+  assert.equal(blocked.collapsed, true);
+  assert.ok(blocked.lift <= sulwe.top - 844 * 0.46);
 });
 
 test("the bubble flips above a low target and stays on a 360px screen", () => {

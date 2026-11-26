@@ -5,7 +5,7 @@
  * and ranges such as "80,000 – 120,000", "80k-120k", "80 000 to 120 000".
  * Amounts are returned in cents (subunits) so GBP decimals like 12.50 still work.
  */
-export const PRICE_ERROR = "Enter a price like 100,000 or KES 100 000, or a range like 80,000 – 120,000.";
+export const PRICE_ERROR = "Enter a price like 100,000 or Ksh 100 000, or a range like 80,000 – 120,000.";
 export const RANGE_ORDER_ERROR = "The first price in a range must be lower than the second.";
 
 export type ParsedPrice =

@@ -249,6 +249,11 @@ export const AUDIT_LABELS: Record<string, string> = {
   "business_lead.export": "Exported business sign-ups",
   "recruiter.add": "Added a shop recruiter",
   "recruiter.update": "Updated a shop recruiter",
+  "update.approve": "Approved a shop update",
+  "update.reject": "Rejected a shop update",
+  "update.remove": "Removed a shop update",
+  "community.pause": "Paused shop updates",
+  "community.unpause": "Allowed shop updates",
 };
 
 export function auditLabel(action: string): string {

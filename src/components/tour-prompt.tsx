@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useSyncExternalStore } from "react";
+import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { usePathname, useSearchParams } from "next/navigation";
 import { BodyPortal } from "@/components/body-portal";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiText } from "@/lib/i18n/strings";
-import { SULWE_PREVIEW_KEY, SULWE_SIZE, shouldShowSulwe, sulweHiddenPath, sulweQueryOn } from "@/lib/sulwe";
+import { SULWE_PREVIEW_KEY, shouldShowSulwe, sulweHiddenPath, sulweQueryOn } from "@/lib/sulwe";
 import {
   TOUR_ACCEPT_KEY,
   TOUR_PROMPT_EVENT,
@@ -39,7 +40,31 @@ function compactInvite(lang: Lang) {
   return { line: "Quick tour?", yes: "Yes" };
 }
 
-/** The invite itself. A single 44px line beside Sulwe, not a card over the page. */
+function useIsClient() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+}
+
+/** The dock is already portaled to body, so the pill rides with Sulwe. */
+function SulweDock({ children }: { children: ReactNode }) {
+  const client = useIsClient();
+  const [dock, setDock] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!client) return;
+    const find = () => setDock(document.querySelector<HTMLElement>(".sulwe-dock"));
+    find();
+    const observer = new MutationObserver(find);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, [client]);
+  if (!client || !dock) return children;
+  return createPortal(children, dock);
+}
+
+/** The invite itself. Beside Sulwe it shares his row; without him it is a short line. */
 export function TourPromptCard({
   lang,
   withSulwe,
@@ -54,16 +79,13 @@ export function TourPromptCard({
   titleId?: string;
 }) {
   const short = compactInvite(lang);
-  const style = withSulwe ? { right: 12 + SULWE_SIZE + 8 } : { right: 12 };
-  return (
-    <BodyPortal>
+  const pill = (
     <div
       role="dialog"
       aria-modal="false"
       aria-label={uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
       data-tour-prompt={withSulwe ? "sulwe" : "card"}
-      className="tour-prompt fixed z-[46] flex h-11 items-center gap-1 rounded-full border-2 border-gold bg-white pl-3 pr-1 shadow-[0_6px_16px_rgb(20_26_36/0.16)] print:hidden"
-      style={style}
+      className={`tour-prompt z-[46] flex h-11 items-center gap-1 rounded-full border-2 border-gold bg-white pl-3 pr-1 shadow-[0_6px_16px_rgb(20_26_36/0.16)] print:hidden ${withSulwe ? "tour-prompt-docked" : "fixed"}`}
     >
       {withSulwe ? (
         <span
@@ -94,8 +116,18 @@ export function TourPromptCard({
         ×
       </button>
     </div>
-    </BodyPortal>
   );
+  if (withSulwe) {
+    return (
+      <SulweDock>
+        {pill}
+        <button type="button" className="tour-invite-dot" data-tour-invite-dot="" aria-label={uiText(lang, "invite_tour_yes")} onClick={onYes}>
+          <span />
+        </button>
+      </SulweDock>
+    );
+  }
+  return <BodyPortal>{pill}</BodyPortal>;
 }
 
 /** Asks a first-time visitor before the tour starts. ?tour=1 and replays skip this. */

@@ -293,6 +293,65 @@ const SPOT_PAD = 8;
 const BUBBLE_GAP = 14;
 const SCREEN_MARGIN = 8;
 
+function boxesOverlap(
+  a: { top: number; left: number; width: number; height: number },
+  b: { top: number; left: number; width: number; height: number },
+) {
+  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
+}
+
+/** Horizontal gap between the quick-tour pill and Sulwe. The tail sits in this gap. */
+export const TOUR_DOCK_GAP = 6;
+
+/** Sulwe's face line, matching the Ask label. */
+const TOUR_DOCK_FACE = 0.32;
+
+export type TourDock = { lift: number; collapsed: boolean };
+
+function shifted(box: TourBox, lift: number): TourBox {
+  return { ...box, top: box.top - lift };
+}
+
+function dockedPill(sulwe: TourBox, pill: { width: number; height: number }, lift: number): TourBox {
+  const host = shifted(sulwe, lift);
+  return {
+    top: host.top + host.height * TOUR_DOCK_FACE - pill.height / 2,
+    left: host.left - TOUR_DOCK_GAP - pill.width,
+    width: pill.width,
+    height: pill.height,
+  };
+}
+
+/**
+ * Sulwe and the quick-tour pill move as one unit.
+ * The pill stays on Sulwe's row, just to his left. The search only rises through
+ * the bottom-right zone. If nothing there is clear of controls, the pill collapses.
+ */
+export function placeTourDock(input: {
+  sulwe: TourBox;
+  pill: { width: number; height: number };
+  obstacles: TourBox[];
+  viewportHeight: number;
+}): TourDock {
+  const zoneTop = input.viewportHeight * 0.46;
+  const maxLift = Math.max(0, Math.floor(input.sulwe.top - zoneTop));
+  const blocks = input.obstacles.filter((box) => box.width > 1 && box.height > 1);
+  const clear = (lift: number, withPill: boolean) => {
+    const host = shifted(input.sulwe, lift);
+    if (blocks.some((box) => boxesOverlap(host, box))) return false;
+    if (!withPill || !(input.pill.width > 1 && input.pill.height > 1)) return true;
+    const pill = dockedPill(input.sulwe, input.pill, lift);
+    return !blocks.some((box) => boxesOverlap(pill, box));
+  };
+  for (let lift = 0; lift <= maxLift; lift += 8) {
+    if (clear(lift, true)) return { lift, collapsed: false };
+  }
+  for (let lift = 0; lift <= maxLift; lift += 8) {
+    if (clear(lift, false)) return { lift, collapsed: true };
+  }
+  return { lift: 0, collapsed: true };
+}
+
 /** Place the bubble beside the target, flipping above or below, and clamp it on screen. */
 export function placeTourBubble(input: {
   target: TourBox | null;

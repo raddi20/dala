@@ -132,11 +132,11 @@ export function isOfferingCurrency(value: string): value is OfferingCurrency {
 /** Charged in major units. Nairobi is Kenyan shillings. London is pounds. */
 export const CHARGE = {
   featured: {
-    Nairobi: { amount: 1500, currency: "KES", label: "KES 1,500" },
+    Nairobi: { amount: 1500, currency: "KES", label: "Ksh 1,500" },
     London: { amount: 12, currency: "GBP", label: "£12" },
   },
   verified_pro: {
-    Nairobi: { amount: 2500, currency: "KES", label: "KES 2,500" },
+    Nairobi: { amount: 2500, currency: "KES", label: "Ksh 2,500" },
     London: { amount: 20, currency: "GBP", label: "£20" },
   },
 } as const;
