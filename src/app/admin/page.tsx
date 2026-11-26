@@ -22,7 +22,7 @@ export default async function AdminPage({
   const params = await searchParams;
   const moderationCode = one(params.moderation);
   const moderationNotice = MODERATION_NOTICES[moderationCode] ?? "";
-  const [openReports, pendingReviews, pendingShopChecks, riskyListings] = await Promise.all([
+  const [openReports, pendingReviews, pendingShopChecks, riskyListings, pendingUpdates] = await Promise.all([
     prisma.report.count({ where: { status: "open" } }),
     prisma.shopReview.count({ where: { status: "pending" } }),
     // A published shop with no phone, location or business check yet.
@@ -30,9 +30,10 @@ export default async function AdminPage({
       where: { published: true, hidden: false, phoneVerified: false, locationVerified: false, businessVerified: false },
     }),
     prisma.listing.count({ where: { hidden: false, scamRisk: "high" } }),
+    prisma.shopUpdate.count({ where: { status: "pending", expiresAt: { gt: new Date() } } }),
   ]);
   const tiles = adminTiles(
-    { openReports, pendingReviews, pendingShopChecks, riskyListings },
+    { openReports, pendingReviews, pendingShopChecks, riskyListings, pendingUpdates },
     { ordersOn: protectedOrdersOn() },
   );
 

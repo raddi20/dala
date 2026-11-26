@@ -87,7 +87,7 @@ export function defaultEdit(purpose: UploadPurpose): PhotoEdit {
   return {
     quarterTurns: 0,
     straighten: 0,
-    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : "original",
+    aspect: purpose === "banner" ? "cover" : purpose === "avatar" ? "square" : purpose === "update" ? "original" : "original",
     zoom: 1,
     panX: 0,
     panY: 0,
@@ -117,6 +117,7 @@ export function aspectPresets(purpose: UploadPurpose): { id: AspectPreset; label
   const cover = { id: "cover" as const, label: "Cover", hint: "Wide 2 to 1 crop for the shop banner" };
   if (purpose === "banner") return [cover, original, square];
   if (purpose === "avatar") return [square, original];
+  if (purpose === "update") return [original, card, square];
   return [card, square, original];
 }
 

@@ -73,16 +73,27 @@ export async function createReport(_prev: ActionState, formData: FormData): Prom
   const parsed = reportSchema.safeParse({
     listingId: field(formData, "listingId"),
     targetUserId: field(formData, "targetUserId"),
+    shopUpdateId: field(formData, "shopUpdateId"),
     reason: field(formData, "reason"),
     details: field(formData, "details"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Check the report." };
   }
-  if (!parsed.data.listingId && !parsed.data.targetUserId) {
+  if (!parsed.data.listingId && !parsed.data.targetUserId && !parsed.data.shopUpdateId) {
     return { error: "Nothing to report." };
   }
   if (parsed.data.targetUserId === user.id) return { error: "You can't report yourself." };
+  if (parsed.data.shopUpdateId) {
+    const update = await prisma.shopUpdate.findUnique({
+      where: { id: parsed.data.shopUpdateId },
+      select: { id: true, authorId: true, status: true, expiresAt: true },
+    });
+    if (!update || update.status !== "approved" || update.expiresAt.getTime() <= Date.now()) {
+      return { error: "That update is not available." };
+    }
+    if (update.authorId === user.id) return { error: "You can't report your own update." };
+  }
 
   const gate = await consumeFixedWindow({
     action: "report",
@@ -97,6 +108,7 @@ export async function createReport(_prev: ActionState, formData: FormData): Prom
       reporterId: user.id,
       listingId: parsed.data.listingId || null,
       targetUserId: parsed.data.targetUserId || null,
+      shopUpdateId: parsed.data.shopUpdateId || null,
       reason: parsed.data.reason,
       details: parsed.data.details,
     },

@@ -34,6 +34,7 @@ type Gesture = {
 function presetNote(purpose: UploadPurpose) {
   if (purpose === "banner") return "Cover is the wide photo at the top of the shop.";
   if (purpose === "avatar") return "Square fits the round shop logo.";
+  if (purpose === "update") return "One photo with the shop note. It is resized the same way as a listing photo.";
   return "Card matches the listing and shop photos.";
 }
 

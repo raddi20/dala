@@ -45,6 +45,9 @@ import { variantMap } from "@/lib/image-variant-store";
 import { liteMode } from "@/lib/weak-data";
 import { ListingLinkList } from "@/components/listing-link-list";
 import { Pager } from "@/components/pager";
+import { FollowShop, followNotice } from "@/components/follow-shop";
+import { ShopUpdates } from "@/components/shop-updates";
+import { isDemoEmail } from "@/lib/admin-access";
 import { shopAboutFallback, shopPageTitle } from "@/lib/crawl-copy";
 import { shopCrawlFacts, shopListingPage } from "@/lib/crawl-data";
 import { crawlPage } from "@/lib/crawl-index";
@@ -219,7 +222,7 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
     prefetch: isPrefetchRequest((name) => headerList.get(name)),
   });
 
-  const [signals, reviews, shopRatings, myShopReview, listingWindow] = await Promise.all([
+  const [signals, reviews, shopRatings, myShopReview, listingWindow, followingRow, shopUpdates] = await Promise.all([
     shopSignals(shop.userId),
     shopReviews(shop.userId),
     prisma.shopReview.findMany({
@@ -231,6 +234,18 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
       ? prisma.shopReview.findUnique({ where: { storefrontId_authorId: { storefrontId: shop.id, authorId: viewer.id } } })
       : Promise.resolve(null),
     shopListingPage(shop.userId, crawlPage(one(query.listings))),
+    viewer
+      ? prisma.shopFollow.findUnique({
+          where: { userId_shopId: { userId: viewer.id, shopId: shop.id } },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+    prisma.shopUpdate.findMany({
+      where: { storefrontId: shop.id, status: "approved", expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, body: true, photoUrl: true, createdAt: true },
+    }),
   ]);
   const raterNames = new Map(
     (
@@ -377,7 +392,18 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
             </div>
           </RemoteImage>
         </div>
-        <h1 className="mt-3 font-serif text-[25px] leading-tight text-navy">{shop.user.name}</h1>
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <h1 className="min-w-0 font-serif text-[25px] leading-tight text-navy">{shop.user.name}</h1>
+          <FollowShop
+            shopId={shop.id}
+            slug={shop.slug}
+            name={shop.user.name}
+            following={Boolean(followingRow)}
+            signedIn={Boolean(viewer)}
+            followable={!isOwner && shop.published && !shop.hidden && !isDemoEmail(shop.user.email)}
+            returnTo={`/b/${shop.slug}`}
+          />
+        </div>
         {fromKsh(shop.startingPriceKes) ? (
           <p className="mt-1 text-base font-semibold text-ink">{fromKsh(shop.startingPriceKes)}</p>
         ) : null}
@@ -434,7 +460,16 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
           ) : null}
         </div>
         {contacts.hidden ? <DemoContactNote note={DEMO_SHOP_CONTACT_NOTE} /> : null}
+        {followNotice(one(query.follow)) ? (
+          <p className="mt-3 text-sm text-ink/80" role="status" aria-live="polite">
+            {followNotice(one(query.follow))}
+          </p>
+        ) : null}
       </header>
+
+      {isDemoEmail(shop.user.email) ? null : (
+        <ShopUpdates updates={shopUpdates} canReport={Boolean(viewer) && !isOwner} />
+      )}
 
       {showVideo && publicVideo ? (
         <section aria-label={uiText(lang, "shop_video")}>
@@ -447,10 +482,15 @@ export default async function StorefrontPage({ params, searchParams }: Props) {
         </section>
       ) : null}
 
-      <nav aria-label={uiText(lang, "shop_sections")} className="flex gap-1 border-b border-line">
+      <nav aria-label={uiText(lang, "shop_sections")} className="flex min-w-0 flex-wrap gap-1 border-b border-line">
         <a href="#offerings" className="inline-flex min-h-11 items-center border-b-2 border-navy px-2 text-sm font-semibold text-navy">
           {uiText(lang, "offerings")} ({publicOfferings.length})
         </a>
+        {!isDemoEmail(shop.user.email) && shopUpdates.length > 0 ? (
+          <a href="#updates" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
+            Updates
+          </a>
+        ) : null}
         <a href="#about" className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-muted">
           {uiText(lang, "about")}
         </a>

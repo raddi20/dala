@@ -1,8 +1,8 @@
 import { isProActive } from "@/lib/pro";
 
-export type UploadPurpose = "listing" | "offering" | "banner" | "avatar";
+export type UploadPurpose = "listing" | "offering" | "banner" | "avatar" | "update";
 
-const PURPOSES = new Set<UploadPurpose>(["listing", "offering", "banner", "avatar"]);
+const PURPOSES = new Set<UploadPurpose>(["listing", "offering", "banner", "avatar", "update"]);
 const SAFE_ID = /^[a-z0-9]+$/i;
 
 export type UploadUser = { id: string; role: string; verifiedPro: boolean; verifiedProUntil?: Date | null };
@@ -70,6 +70,15 @@ export function decideUpload(
       return { ok: false, status: 403, error: "You can only upload photos for your own shop." };
     }
     const pathname = ownerPath(ctx.offering.ownerUserId, "offering");
+    if (!pathname) return { ok: false, status: 400, error: "Could not store that photo." };
+    return { ok: true, pathname };
+  }
+
+  if (purpose === "update") {
+    if (!ctx.ownStorefront) {
+      return { ok: false, status: 403, error: "Open a shop before you add a photo to an update." };
+    }
+    const pathname = ownerPath(ctx.user.id, "update");
     if (!pathname) return { ok: false, status: 400, error: "Could not store that photo." };
     return { ok: true, pathname };
   }

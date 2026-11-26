@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { cityChipLabel } from "@/lib/constants";
 import { branchPlaceSuffix } from "@/lib/shop-branches";
 import { CARD_SIZES, cardPhoto } from "@/lib/image-variants";
@@ -7,7 +8,7 @@ import { distanceLabel } from "@/lib/near-me";
 import { fromKsh } from "@/lib/starting-price";
 import type { ShopCardData } from "@/lib/search";
 
-export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: boolean }) {
+export function ShopCard({ shop, lite = false, follow }: { shop: ShopCardData; lite?: boolean; follow?: ReactNode }) {
   const photo = cardPhoto({
     src: shop.coverUrl,
     thumb480: shop.coverThumb480,
@@ -29,7 +30,8 @@ export function ShopCard({ shop, lite = false }: { shop: ShopCardData; lite?: bo
   const initial = shop.name.trim().charAt(0).toUpperCase() || "S";
 
   return (
-    <article className="card-lift h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
+    <article className="card-lift relative h-full overflow-hidden rounded-[14px] border border-line/80 bg-card shadow-[var(--shadow-card)]">
+      {follow}
       <Link href={`/b/${shop.slug}`} className="flex h-full flex-col">
         <div className="relative aspect-[4/3] bg-line">
           {photo ? (

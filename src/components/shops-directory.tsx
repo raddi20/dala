@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NearMeButton, NearMeNote } from "@/components/near-me";
 import { Pager } from "@/components/pager";
+import { FollowShop } from "@/components/follow-shop";
 import { ShopCard } from "@/components/shop-card";
 import {
   FilterSheet,
@@ -36,6 +37,8 @@ export function ShopsDirectory({
   lang = "en",
   lite = false,
   near = "",
+  signedIn = false,
+  followedIds = [],
 }: {
   shops: ShopCardData[];
   query: string;
@@ -59,6 +62,8 @@ export function ShopsDirectory({
   lite?: boolean;
   /** Rounded ?near= value while Near me is on. */
   near?: string;
+  signedIn?: boolean;
+  followedIds?: string[];
 }) {
   const filters = chipBag({
     q: query,
@@ -158,7 +163,25 @@ export function ShopsDirectory({
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {shops.map((shop) => (
-            <ShopCard key={shop.id} shop={shop} lite={lite} />
+            <ShopCard
+              key={shop.id}
+              shop={shop}
+              lite={lite}
+              follow={
+                shop.followable === false ? null : (
+                  <FollowShop
+                    shopId={shop.id}
+                    slug={shop.slug}
+                    name={shop.name}
+                    following={followedIds.includes(shop.id)}
+                    signedIn={signedIn}
+                    followable
+                    returnTo="/shops"
+                    variant="card"
+                  />
+                )
+              }
+            />
           ))}
         </div>
       )}

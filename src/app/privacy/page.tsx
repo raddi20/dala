@@ -151,10 +151,18 @@ export default function PrivacyPage() {
           Paystack pays the shop directly. Rangach does not hold the money. The basis is the order you asked for.
         </p>
         <p>
-          Keeping the site safe: scam checks on listing text, reports, blocks, and admin review of shop videos. An AI
-          moderation pass, when it is switched on, can flag a listing for an admin. It does not hide or delete the
-          listing by itself. The basis is our legitimate interest in a directory people can trust, and, where the law
-          requires a step, our legal duty.
+          Following a shop stores that you follow it, so the shop can show on your account and so a Monday note can
+          tell you when that shop posts something new. Unfollowing deletes that row. Deleting the account deletes the
+          follows with it. The Monday note is only sent when there is something new, and the link in it stops the
+          notes without unfollowing. A shop update is the short note and optional photo the shop posted. It is removed
+          after 60 days. The basis is the follow you chose, and our legitimate interest in sending people to the shop
+          rather than running a social feed.
+        </p>
+        <p>
+          Keeping the site safe: scam checks on listing text, reports, blocks, and admin review of shop videos and shop
+          updates. An AI moderation pass, when it is switched on, can flag a listing or a shop update for an admin. A
+          flagged shop update stays off the shop page until an admin approves it. The basis is our legitimate interest
+          in a directory people can trust, and, where the law requires a step, our legal duty.
         </p>
         <p>
           Understanding which listings are opened and which contact buttons are used, so a seller can see simple
@@ -178,8 +186,8 @@ export default function PrivacyPage() {
       <InfoSection title="How long we keep it">
         <p>
           View and tap counts are deleted after {STAT_RETENTION_DAYS} days. A rejected shop video is removed from Mux
-          after {REJECT_PURGE_DAYS} days. We keep the rejection note and the poster image. A search-result cache lasts{" "}
-          {searchCacheDays} days.
+          after {REJECT_PURGE_DAYS} days. We keep the rejection note and the poster image. A shop update and its photo
+          are deleted 60 days after it was posted. A search-result cache lasts {searchCacheDays} days.
         </p>
         <p>
           Accounts, listings, photos, shop pages, payment records, and AI listing drafts stay while the account is in

@@ -33,7 +33,7 @@ async function contextFor(
       ? await prisma.listing.findUnique({ where: { id: resourceId }, select: { ownerId: true } })
       : null;
   const ownStorefront =
-    purpose === "offering" || purpose === "banner"
+    purpose === "offering" || purpose === "banner" || purpose === "update"
       ? await prisma.storefront.findUnique({ where: { userId: user.id }, select: { id: true } })
       : null;
   const offeringRow =

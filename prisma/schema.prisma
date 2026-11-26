@@ -54,6 +54,10 @@ model User {
   storefront       Storefront?
   shopBadgeEvents  ShopBadgeEvent[]
   passwordResetTokens PasswordResetToken[]
+  // Shops this person follows. Unfollow deletes the row. Deleting the account cascades it.
+  shopFollows      ShopFollow[]
+  // Monday note about shops they follow. Default false means they may receive it.
+  followDigestOptOut Boolean @default(false)
 
   @@index([city])
 }
@@ -132,8 +136,12 @@ model Report {
   listing      Listing? @relation(fields: [listingId], references: [id], onDelete: Cascade)
   reporter     User     @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
   targetUser   User?    @relation("ReportTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+  // Set when the report is about a shop update. Null on every older report.
+  shopUpdateId String?
+  shopUpdate   ShopUpdate? @relation(fields: [shopUpdateId], references: [id], onDelete: SetNull)
 
   @@index([status])
+  @@index([shopUpdateId])
 }
 
 model Block {
@@ -209,6 +217,8 @@ model Storefront {
   // reads the owner's town (User.city) and phone as one branch, so nothing breaks
   // before scripts/backfill-shop-branches.ts runs. Listings stay on the shop, never per branch.
   branches         ShopBranch[]
+  follows          ShopFollow[]
+  updates          ShopUpdate[]
 
   @@index([published])
   @@index([servesDiaspora])
@@ -765,4 +775,48 @@ model SavedListing {
 
   @@unique([userId, listingId])
   @@index([userId, createdAt])
+}
+
+// A buyer following a shop. The row is the whole record: unfollowing deletes it.
+// Demo shops (@dala.local) are not followed. Deleting the account or the shop cascades.
+model ShopFollow {
+  id        String     @id @default(cuid())
+  userId    String
+  shopId    String
+  createdAt DateTime   @default(now())
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shop      Storefront @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, shopId])
+  @@index([shopId, createdAt])
+  @@index([userId, createdAt])
+}
+
+// A short note from a shop. Public only while status is "approved" and expiresAt is still ahead.
+// pending waits for an admin. rejected and removed stay off the shop page.
+// expiresAt is 60 days after posting. A cron deletes the row and its photo.
+model ShopUpdate {
+  id           String     @id @default(cuid())
+  storefrontId String
+  storefront   Storefront @relation(fields: [storefrontId], references: [id], onDelete: Cascade)
+  authorId     String
+  body         String
+  photoUrl     String     @default("")
+  status       String     @default("pending")
+  holdReason   String     @default("")
+  expiresAt    DateTime
+  createdAt    DateTime   @default(now())
+  reports      Report[]
+
+  @@index([storefrontId, status, createdAt])
+  @@index([status, expiresAt])
+}
+
+// One row. updatesPaused stops new shop notes, for example during an election week.
+// Stored here, not in an environment variable, so an admin can flip it without a deploy.
+model CommunitySetting {
+  id            String   @id @default("default")
+  updatesPaused Boolean  @default(false)
+  pauseNote     String   @default("")
+  updatedAt     DateTime @updatedAt
 }

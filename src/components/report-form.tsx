@@ -12,9 +12,11 @@ const initial: ActionState = { error: "" };
 export function ReportForm({
   listingId,
   targetUserId,
+  shopUpdateId,
 }: {
   listingId?: string;
   targetUserId?: string;
+  shopUpdateId?: string;
 }) {
   const [state, action] = useActionState(createReport, initial);
   if (state.ok) {
@@ -25,6 +27,7 @@ export function ReportForm({
       <ErrorNote>{state.error}</ErrorNote>
       {listingId ? <input type="hidden" name="listingId" value={listingId} /> : null}
       {targetUserId ? <input type="hidden" name="targetUserId" value={targetUserId} /> : null}
+      {shopUpdateId ? <input type="hidden" name="shopUpdateId" value={shopUpdateId} /> : null}
       <label className="block text-sm">
         Reason
         <select name="reason" className={fieldClass} defaultValue={REPORT_REASONS[0]}>

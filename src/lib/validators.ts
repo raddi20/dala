@@ -125,6 +125,7 @@ export const reviewSchema = z.object({
 export const reportSchema = z.object({
   listingId: z.string().optional().default(""),
   targetUserId: z.string().optional().default(""),
+  shopUpdateId: z.string().optional().default(""),
   reason: z.string().refine(
     (value): value is (typeof REPORT_REASONS)[number] =>
       (REPORT_REASONS as readonly string[]).includes(value),

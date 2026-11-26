@@ -266,11 +266,11 @@ export function PhotoField({
         </label>
       </div>
       {url ? (
-        <div className="flex flex-wrap gap-x-4 gap-y-1">
+        <div className="flex flex-wrap gap-2">
           {canReframe ? (
             <button
               type="button"
-              className="justify-self-start text-sm font-semibold text-navy hover:text-lake-dark disabled:opacity-60"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-navy hover:text-lake-dark disabled:opacity-60"
               disabled={uploading || Boolean(pendingFile) || reframing}
               onClick={() => void reframeCurrent()}
             >
@@ -279,7 +279,11 @@ export function PhotoField({
           ) : null}
           <button
             type="button"
-            className="justify-self-start text-sm font-semibold text-ink/70 hover:text-ink"
+            className={
+              purpose === "update"
+                ? "inline-flex min-h-11 items-center gap-2 rounded-full border border-navy/20 bg-white px-3 text-sm font-semibold text-navy hover:bg-paper"
+                : "inline-flex min-h-11 items-center text-sm font-semibold text-ink/70 hover:text-ink"
+            }
             onClick={() => {
               setUrl("");
               setChosen(true);
@@ -287,15 +291,24 @@ export function PhotoField({
               setPreviewFailed(false);
             }}
           >
+            {purpose === "update" ? (
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <path d="M6 7h12M9 7V5h6v2M8 7l1 12h6l1-12" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            ) : null}
             Remove photo
           </button>
         </div>
       ) : null}
       {chosen ? (
         <p className="text-sm text-ink/70" role="status">
-          {url
-            ? "New photo selected. Save the form to keep it."
-            : "Photo cleared. Save the form to keep that change."}
+          {purpose === "update"
+            ? url
+              ? "Photo ready. It goes up when you post."
+              : "Photo removed."
+            : url
+              ? "New photo selected. Save the form to keep it."
+              : "Photo cleared. Save the form to keep that change."}
         </p>
       ) : null}
       {error ? (
@@ -303,27 +316,29 @@ export function PhotoField({
           {error}
         </p>
       ) : null}
-      <details className="text-sm">
-        <summary className="cursor-pointer text-ink/60">Paste a photo URL instead</summary>
-        <label className="mt-2 block">
-          Photo URL
-          <input
-            value={url}
-            onChange={(event) => {
-              setUrl(event.target.value);
-              setChosen(true);
-              setPreviewFailed(false);
-              setError("");
-            }}
-            placeholder="https://"
-            maxLength={2000}
-            autoComplete="off"
-            spellCheck={false}
-            className={fieldClass}
-          />
-        </label>
-        <p className="mt-1 text-xs text-ink/55">For a link you already have, including demo photos. Uploading from this device is the usual way.</p>
-      </details>
+      {purpose === "update" ? null : (
+        <details className="text-sm">
+          <summary className="cursor-pointer text-ink/60">Paste a photo URL instead</summary>
+          <label className="mt-2 block">
+            Photo URL
+            <input
+              value={url}
+              onChange={(event) => {
+                setUrl(event.target.value);
+                setChosen(true);
+                setPreviewFailed(false);
+                setError("");
+              }}
+              placeholder="https://"
+              maxLength={2000}
+              autoComplete="off"
+              spellCheck={false}
+              className={fieldClass}
+            />
+          </label>
+          <p className="mt-1 text-xs text-ink/55">For a link you already have, including demo photos. Uploading from this device is the usual way.</p>
+        </details>
+      )}
       {url && !/^https?:\/\//i.test(url.trim()) ? (
         <p className="text-xs text-danger">Photo URL must start with http:// or https://.</p>
       ) : null}

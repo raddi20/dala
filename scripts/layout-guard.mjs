@@ -173,6 +173,98 @@ async function moreMenu(browserType, label, width) {
 await moreMenu(chromium, "chromium-1440", 1440);
 await moreMenu(webkit, "webkit-1440", 1440);
 
+async function communitySurface(browserType, label, width, height) {
+  const browser = await browserType.launch();
+  const page = await (
+    await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, colorScheme: "light" })
+  ).newPage();
+  const shopUrl = `${BASE}/b/nyangoma-fish?sulwe=1`;
+  const shopResponse = await page.goto(shopUrl, { waitUntil: "networkidle", timeout: 60000 });
+  if (!shopResponse || shopResponse.status() >= 400) {
+    fail(errors, `${label} shop status ${shopResponse ? shopResponse.status() : "none"}`);
+    await browser.close();
+    return;
+  }
+  const follow = page.locator("[data-follow-shop]").first();
+  const updates = page.locator("[data-shop-updates]");
+  if ((await follow.count()) === 0) fail(errors, `${label} shop has no follow control`);
+  if ((await updates.count()) === 0) fail(errors, `${label} shop has no updates strip`);
+  const shopWidth = await metrics(page);
+  if (shopWidth.scroll !== shopWidth.client) {
+    fail(errors, `${label} shop scrollWidth ${shopWidth.scroll} != viewport ${shopWidth.client}`);
+  }
+  const box = await follow.boundingBox();
+  if (!box || box.height < 44 || box.width < 44) fail(errors, `${label} follow control is under 44px`);
+  const covered = await page.evaluate(() => {
+    function hits(selector) {
+      const el = document.querySelector(selector);
+      if (!el) return [`missing ${selector}`];
+      const first = el.getBoundingClientRect();
+      const top = window.scrollY + first.top - 96;
+      window.scrollTo(0, Math.max(0, top));
+      const a = el.getBoundingClientRect();
+      const floaters = [...document.querySelectorAll(".bottom-nav, .sticky-cta-bar, [data-sulwe-root], [data-sulwe-ask], .tour-prompt")].filter((node) => {
+        const style = getComputedStyle(node);
+        const b = node.getBoundingClientRect();
+        return style.display !== "none" && style.visibility !== "hidden" && b.width > 0 && b.height > 0;
+      });
+      return floaters.flatMap((node) => {
+        const b = node.getBoundingClientRect();
+        const overlap = a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+        if (!overlap) return [];
+        return [`${selector} covered by ${node.getAttribute("data-sulwe-root") !== null ? "sulwe" : node.className.toString().slice(0, 40)}`];
+      });
+    }
+    return [...hits("[data-follow-shop]"), ...hits("[data-shop-updates] h2")];
+  });
+  if (covered.length) fail(errors, `${label} ${covered.join("; ")}`);
+
+  const listingResponse = await page.goto(`${BASE}/listings/fixture_listing_tilapia?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+  if (!listingResponse || listingResponse.status() >= 400) {
+    fail(errors, `${label} listing status ${listingResponse ? listingResponse.status() : "none"}`);
+  } else {
+    const listingFollow = page.locator("[data-follow-shop]").first();
+    if ((await listingFollow.count()) === 0) fail(errors, `${label} listing has no follow control`);
+    const listingWidth = await metrics(page);
+    if (listingWidth.scroll !== listingWidth.client) {
+      fail(errors, `${label} listing scrollWidth ${listingWidth.scroll} != viewport ${listingWidth.client}`);
+    }
+    const listingCovered = await page.evaluate(() => {
+      const el = document.querySelector("[data-follow-shop]");
+      if (!el) return ["missing follow"];
+      const first = el.getBoundingClientRect();
+      window.scrollTo(0, Math.max(0, window.scrollY + first.top - 96));
+      const a = el.getBoundingClientRect();
+      return [...document.querySelectorAll(".bottom-nav, .sticky-cta-bar, [data-sulwe-root], [data-sulwe-ask], .tour-prompt")].flatMap((node) => {
+        const style = getComputedStyle(node);
+        const b = node.getBoundingClientRect();
+        if (style.display === "none" || b.width === 0 || b.height === 0) return [];
+        const overlap = a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+        return overlap ? ["listing follow covered"] : [];
+      });
+    });
+    if (listingCovered.length) fail(errors, `${label} ${listingCovered.join("; ")}`);
+  }
+  console.log(label, "follow and updates clear of the bottom stack");
+  await browser.close();
+}
+
+const { spawnSync } = await import("node:child_process");
+const fixture = spawnSync(process.execPath, ["--env-file=.env", "--import", "tsx", "scripts/community-fixture.ts"], {
+  encoding: "utf8",
+});
+if (fixture.status !== 0) {
+  const text = `${fixture.stdout || ""} ${fixture.stderr || ""}`;
+  if (text.includes("Refusing community fixture")) {
+    console.log("community layout checks skipped: local file database required");
+  } else {
+    fail(errors, `community fixture failed ${text}`);
+  }
+} else {
+  await communitySurface(webkit, "390", 390, 844);
+  await communitySurface(chromium, "1440", 1440, 900);
+}
+
 if (errors.length) {
   console.error(`\n${errors.length} layout check(s) failed`);
   process.exit(1);
