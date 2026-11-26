@@ -379,6 +379,28 @@ function expectControls(name, report) {
   if (report.misses.length) fail(errors, `${name} link or button covered ${JSON.stringify(report.misses)}`);
 }
 
+async function expectDocked(page, name) {
+  const dock = await page.evaluate(() => {
+    const prompt = document.querySelector("[data-tour-prompt='sulwe']");
+    const sulwe = document.querySelector("[data-sulwe-root]");
+    if (!prompt || !sulwe) return { missing: true };
+    const style = getComputedStyle(prompt);
+    const hidden = style.visibility === "hidden" || style.display === "none";
+    if (document.documentElement.getAttribute("data-tour-invite") === "dot" || hidden) return { collapsed: true };
+    const pill = prompt.getBoundingClientRect();
+    const host = sulwe.getBoundingClientRect();
+    return {
+      collapsed: false,
+      gap: Math.round(host.left - pill.right),
+      sameRow: pill.top < host.bottom - 4 && pill.bottom > host.top + 4,
+    };
+  });
+  if (dock.missing) fail(errors, `${name} tour dock missing ${JSON.stringify(dock)}`);
+  else if (!dock.collapsed && (dock.gap < -1 || dock.gap > 16 || !dock.sameRow)) {
+    fail(errors, `${name} tour pill left Sulwe ${JSON.stringify(dock)}`);
+  }
+}
+
 function expectHits(name, hits, keys, state) {
   if (Boolean(hits.banner) !== state.banner) fail(errors, `${name} install banner ${hits.banner ? "shown" : "hidden"}`);
   if (Boolean(hits.tour) !== state.tour) fail(errors, `${name} tour bubble ${hits.tour ? "shown" : "hidden"}`);
@@ -424,18 +446,30 @@ async function hitPass(browserType, label, width, height) {
     }, state);
 
     await page.goto(`${BASE}/b/nyangoma-fish?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
-    if (state.tour) await page.locator("[data-tour-prompt]").waitFor({ timeout: 8000 });
+    if (state.tour) {
+      await page.waitForFunction(() => {
+        const shown = (el) => el && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
+        return shown(document.querySelector("[data-tour-prompt]")) || shown(document.querySelector("[data-tour-invite-dot]"));
+      }, null, { timeout: 8000 });
+    }
     if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
     await page.waitForTimeout(450);
     expectHits(`${name} shop`, await centreHits(page), ["call", "share"], state);
     expectControls(`${name} shop`, await controlHits(page));
+    if (state.tour) await expectDocked(page, `${name} shop`);
 
     await page.goto(`${BASE}/listings/fixture_listing_tilapia?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
-    if (state.tour) await page.locator("[data-tour-prompt]").waitFor({ timeout: 8000 });
+    if (state.tour) {
+      await page.waitForFunction(() => {
+        const shown = (el) => el && getComputedStyle(el).visibility !== "hidden" && getComputedStyle(el).display !== "none";
+        return shown(document.querySelector("[data-tour-prompt]")) || shown(document.querySelector("[data-tour-invite-dot]"));
+      }, null, { timeout: 8000 });
+    }
     if (state.banner) await page.locator("#install-hint").waitFor({ timeout: 8000 });
     await page.waitForTimeout(450);
     expectHits(`${name} listing`, await centreHits(page), ["save", "follow"], state);
     expectControls(`${name} listing`, await controlHits(page));
+    if (state.tour) await expectDocked(page, `${name} listing`);
 
     await page.goto(`${BASE}/listings?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
     await page.waitForTimeout(250);

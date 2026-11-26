@@ -338,11 +338,53 @@ main .grid > * {
 .tour-prompt {
   height: 44px;
   right: 12px;
-  /* Above Sulwe, who sits 10px over the WhatsApp bar. Lift variables clear links and buttons. */
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + var(--rangach-vv) + var(--rangach-tour-lift, 0px) + var(--rangach-float-lift, 0px));
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 34px + var(--rangach-vv));
   background-color: #fff;
   opacity: 1;
   transform: none;
+}
+
+/* Docked to Sulwe's row, directly on his left, the same seat as Ask Sulwe. */
+.tour-prompt-docked {
+  position: absolute;
+  right: calc(100% + 6px);
+  bottom: auto;
+  left: auto;
+  top: 32%;
+  z-index: 2;
+  transform: translateY(-50%);
+}
+
+html[data-tour-invite="dot"] .tour-prompt-docked {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.tour-invite-dot {
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 3;
+  height: 44px;
+  width: 44px;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.tour-invite-dot span {
+  display: block;
+  height: 12px;
+  width: 12px;
+  border-radius: 999px;
+  background: var(--color-gold);
+  box-shadow: 0 0 0 2px #fff;
+}
+
+html[data-tour-invite="dot"] .tour-invite-dot {
+  display: grid;
 }
 
 .tour-prompt [data-tour-prompt-tail] {
@@ -365,7 +407,12 @@ main .grid > * {
   }
 
   .tour-prompt {
-    bottom: calc(20px + var(--rangach-cta) + 92px + 8px + var(--rangach-tour-lift, 0px) + var(--rangach-float-lift, 0px));
+    bottom: calc(44px + var(--rangach-cta));
+  }
+
+  .tour-prompt-docked {
+    bottom: auto;
+    top: 32%;
   }
 }
 

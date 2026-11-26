@@ -2,7 +2,7 @@
 
 import { useLayoutEffect } from "react";
 import { usePathname } from "next/navigation";
-import { tourPromptLift } from "@/lib/tour";
+import { placeTourDock } from "@/lib/tour";
 
 /**
  * One shared bottom offset for the nav, the WhatsApp bar, Sulwe, and the tour invite.
@@ -62,46 +62,39 @@ function shownBox(el: HTMLElement) {
   return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 }
 
-function unionBox(nodes: HTMLElement[]) {
-  let top = Infinity;
-  let left = Infinity;
-  let right = -Infinity;
-  let bottom = -Infinity;
-  for (const el of nodes) {
-    const box = shownBox(el);
-    if (!box) continue;
-    top = Math.min(top, box.top);
-    left = Math.min(left, box.left);
-    right = Math.max(right, box.left + box.width);
-    bottom = Math.max(bottom, box.top + box.height);
-  }
-  if (!Number.isFinite(top)) return null;
-  return { top, left, width: right - left, height: bottom - top };
+function layoutBox(el: HTMLElement) {
+  const style = getComputedStyle(el);
+  const rect = el.getBoundingClientRect();
+  if (style.display === "none" || rect.width < 2 || rect.height < 2) return null;
+  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 }
 
-/** Keep Sulwe and the quick-tour pill off every visible link and button. */
+/** Move Sulwe and the docked tour pill together, or collapse the pill to a dot. */
 function liftFloaters(root: HTMLElement) {
-  const controls = [...document.querySelectorAll<HTMLElement>("a, button")].flatMap((el) => {
-    if (el.closest("[data-sulwe-root], [data-sulwe-ask], .sulwe-dock, [data-tour-prompt]")) return [];
-    const box = shownBox(el);
-    return box ? [box] : [];
-  });
-  const reading = [...document.querySelectorAll<HTMLElement>("[data-shop-tabs], [data-shop-updates], h1")].flatMap((el) => {
-    const box = shownBox(el);
-    return box ? [box] : [];
-  });
+  const sulweEl = document.querySelector<HTMLElement>("[data-sulwe-root]");
+  if (!sulweEl) {
+    if (root.getAttribute("data-tour-invite")) root.removeAttribute("data-tour-invite");
+    return;
+  }
   const currentFloat = Number.parseFloat(root.style.getPropertyValue("--rangach-float-lift")) || 0;
-  const sulwe = unionBox([...document.querySelectorAll<HTMLElement>("[data-sulwe-root], [data-sulwe-ask], .sulwe-dock")]);
-  const sulweLift = sulwe ? tourPromptLift({ prompt: { ...sulwe, top: sulwe.top + currentFloat }, obstacles: controls }) : 0;
-  if (root.style.getPropertyValue("--rangach-float-lift") !== `${sulweLift}px`) {
-    root.style.setProperty("--rangach-float-lift", `${sulweLift}px`);
-  }
-  const prompt = document.querySelector<HTMLElement>("[data-tour-prompt]");
-  if (!prompt) return;
-  const box = shownBox(prompt);
-  const current = Number.parseFloat(getComputedStyle(prompt).getPropertyValue("--rangach-tour-lift")) || 0;
-  const tourLift = box ? tourPromptLift({ prompt: { ...box, top: box.top + current }, obstacles: [...controls, ...reading] }) : 0;
-  if (prompt.style.getPropertyValue("--rangach-tour-lift") !== `${tourLift}px`) {
-    prompt.style.setProperty("--rangach-tour-lift", `${tourLift}px`);
-  }
+  const sulweBox = layoutBox(sulweEl);
+  if (!sulweBox) return;
+  root.style.setProperty("--rangach-sulwe-size", `${Math.round(sulweBox.width)}px`);
+  const prompt = document.querySelector<HTMLElement>("[data-tour-prompt='sulwe']");
+  const pillBox = prompt ? layoutBox(prompt) : null;
+  const obstacles = [...document.querySelectorAll<HTMLElement>("a, button")].flatMap((el) => {
+    if (el.closest("[data-sulwe-root], [data-sulwe-ask], .sulwe-dock, [data-tour-prompt], [data-tour-invite-dot]")) return [];
+    const box = shownBox(el);
+    return box ? [box] : [];
+  });
+  const placed = placeTourDock({
+    sulwe: { ...sulweBox, top: sulweBox.top + currentFloat },
+    pill: pillBox ? { width: pillBox.width, height: pillBox.height } : { width: 0, height: 0 },
+    obstacles,
+    viewportHeight: window.innerHeight,
+  });
+  const nextLift = `${placed.lift}px`;
+  if (root.style.getPropertyValue("--rangach-float-lift") !== nextLift) root.style.setProperty("--rangach-float-lift", nextLift);
+  const invite = placed.collapsed && pillBox ? "dot" : "pill";
+  if (root.getAttribute("data-tour-invite") !== invite) root.setAttribute("data-tour-invite", invite);
 }

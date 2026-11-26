@@ -65,17 +65,15 @@ test("the invite card renders both buttons, in English and Dholuo, above Sulwe a
   assert.match(en, /role="dialog"/);
   assert.match(en, /aria-modal="false"/);
   assert.match(en, /data-tour-prompt-tail/);
-  assert.match(en, /-bottom-\[7px\]/);
+  assert.match(en, /-right-\[7px\]/);
+  assert.match(en, /tour-prompt-docked/);
+  assert.match(en, /data-tour-invite-dot/);
   assert.match(en, /h-11/);
   assert.match(en, /bg-white/);
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
-  assert.match(css, /\.tour-prompt \{[^}]*height: 44px/);
-  assert.match(css, /\.tour-prompt \{[^}]*right: 12px/);
-  assert.match(
-    css,
-    /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 10px \+ 92px \+ 8px \+ var\(--rangach-vv\) \+ var\(--rangach-tour-lift, 0px\) \+ var\(--rangach-float-lift, 0px\)\)/,
-  );
-  assert.match(css, /bottom: calc\(20px \+ var\(--rangach-cta\) \+ 92px \+ 8px \+ var\(--rangach-tour-lift, 0px\) \+ var\(--rangach-float-lift, 0px\)\)/);
+  assert.match(css, /\.tour-prompt-docked \{[^}]*right: calc\(100% \+ 6px\)/);
+  assert.match(css, /\.tour-prompt-docked \{[^}]*top: 32%/);
+  assert.match(css, /html\[data-tour-invite="dot"\] \.tour-invite-dot \{[^}]*display: grid/);
   const card = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: false, onYes: noop, onNo: noop }));
   assert.match(card, /data-tour-prompt="card"/);
   assert.match(card, /New here\? Want a quick tour of Rangach\?/);
