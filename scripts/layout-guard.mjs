@@ -484,10 +484,145 @@ async function hitPass(browserType, label, width, height) {
   await browser.close();
 }
 
+async function gridControlHits(page) {
+  return page.evaluate(() => {
+    const misses = [];
+    const checked = { whatsapp: 0, link: 0 };
+    const chrome = ".bottom-nav, .sticky-cta-bar, header, .results-search-bar";
+    const root = document.querySelector("main") || document.body;
+    for (const card of root.querySelectorAll("article, li")) {
+      const whatsapp = card.querySelector('a[aria-label^="WhatsApp"]');
+      const link = [...card.querySelectorAll('a[href^="/listings/"], a[href^="/b/"]')].find((el) => el !== whatsapp);
+      const controls = [];
+      if (whatsapp) controls.push(["whatsapp", whatsapp]);
+      if (link) controls.push(["link", link]);
+      for (const [kind, el] of controls) {
+        const style = getComputedStyle(el);
+        if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) continue;
+        const r = el.getBoundingClientRect();
+        if (r.width < 8 || r.height < 8) continue;
+        const points = [
+          [r.left + r.width / 2, r.top + r.height / 2],
+          [r.left + 3, r.top + r.height / 2],
+          [r.right - 3, r.top + r.height / 2],
+          [r.left + r.width / 2, r.top + 3],
+          [r.left + r.width / 2, r.bottom - 3],
+        ].filter(([x, y]) => x >= 1 && y >= 1 && x <= window.innerWidth - 1 && y <= window.innerHeight - 1);
+        if (!points.length) continue;
+        checked[kind] += 1;
+        const label = (el.getAttribute("aria-label") || el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 48);
+        for (const [x, y] of points) {
+          const top = document.elementFromPoint(x, y);
+          if (!top || top.closest(chrome)) continue;
+          const floater = top.closest("[data-sulwe-root], .sulwe-dock, [data-tour-prompt], [data-tour-invite-dot], [data-sulwe-ask]");
+          const hit = top === el || el.contains(top);
+          if (floater || !hit) {
+            misses.push({
+              kind,
+              label,
+              cover: floater
+                ? floater.hasAttribute("data-tour-invite-dot")
+                  ? "tour-dot"
+                  : floater.hasAttribute("data-tour-prompt")
+                    ? "tour-pill"
+                    : "sulwe"
+                : (top.closest("a, button")?.getAttribute("aria-label") || top.tagName || "none").toString().trim().slice(0, 40),
+              x: Math.round(x),
+              y: Math.round(y),
+            });
+          }
+        }
+      }
+    }
+    return { misses: misses.slice(0, 6), checked };
+  });
+}
+
+async function sweepListingGrid(page, name) {
+  const max = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
+  const step = 140;
+  const stops = [];
+  for (let y = 0; y < max; y += step) stops.push(y);
+  stops.push(max);
+  const seen = { whatsapp: 0, link: 0 };
+  for (const y of stops) {
+    await page.evaluate(
+      (top) =>
+        new Promise((resolve) => {
+          window.scrollTo(0, top);
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)));
+        }),
+      y,
+    );
+    const report = await gridControlHits(page);
+    seen.whatsapp += report.checked.whatsapp;
+    seen.link += report.checked.link;
+    if (report.misses.length) fail(errors, `${name} scroll ${y} ${JSON.stringify(report.misses)}`);
+  }
+  return seen;
+}
+
+async function gridDockPass(browserType, label, width, height) {
+  const browser = await browserType.launch();
+  const context = await browser.newContext({
+    viewport: { width, height },
+    deviceScaleFactor: 1,
+    colorScheme: "light",
+    userAgent: width < 768 ? iphone.userAgent : undefined,
+    hasTouch: width < 768,
+    isMobile: width < 768,
+  });
+  const page = await context.newPage();
+  for (const hold of ["pill", "dot"]) {
+    const name = `${label} tour ${hold}`;
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.evaluate(() => {
+      localStorage.removeItem("rangach_tour_prompt_visitor");
+      localStorage.removeItem("rangach_tour_prompt_seller");
+      localStorage.removeItem("rangach_tour");
+      localStorage.setItem("rangach.pwa.dismissedAt", String(Date.now()));
+    });
+    await page.goto(`${BASE}/listings?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+    await page.evaluate((mode) => {
+      document.documentElement.setAttribute("data-tour-invite-hold", mode);
+      window.dispatchEvent(new Event("resize"));
+    }, hold);
+    const ready = await page
+      .waitForFunction(
+        (mode) => {
+          if (!document.querySelector("[data-tour-prompt='sulwe']")) return false;
+          const invite = document.documentElement.getAttribute("data-tour-invite");
+          return mode === "dot" ? invite === "dot" : invite !== "dot";
+        },
+        hold,
+        { timeout: 8000 },
+      )
+      .then(() => true)
+      .catch(() => false);
+    if (!ready) {
+      const state = await page.evaluate(() => ({
+        prompt: Boolean(document.querySelector("[data-tour-prompt='sulwe']")),
+        invite: document.documentElement.getAttribute("data-tour-invite"),
+      }));
+      fail(errors, `${name} invite not ready ${JSON.stringify(state)}`);
+      continue;
+    }
+    const seen = await sweepListingGrid(page, name);
+    if (seen.whatsapp < 1) fail(errors, `${name} saw no WhatsApp button`);
+    if (seen.link < 1) fail(errors, `${name} saw no card link`);
+    console.log(name, "whatsapp", seen.whatsapp, "links", seen.link);
+  }
+  await browser.close();
+}
+
 if (fixture.status === 0) {
   await hitPass(webkit, "webkit-390", 390, 844);
   await hitPass(chromium, "chromium-390", 390, 844);
   await hitPass(chromium, "chromium-1280", 1280, 800);
+  await gridDockPass(webkit, "webkit-390", 390, 844);
+  await gridDockPass(chromium, "chromium-390", 390, 844);
+  await gridDockPass(chromium, "chromium-1280", 1280, 800);
+  await gridDockPass(chromium, "chromium-1440", 1440, 900);
 }
 
 if (errors.length) {

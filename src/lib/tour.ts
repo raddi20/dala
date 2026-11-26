@@ -306,7 +306,7 @@ export const TOUR_DOCK_GAP = 6;
 /** Sulwe's face line, matching the Ask label. */
 const TOUR_DOCK_FACE = 0.32;
 
-export type TourDock = { lift: number; collapsed: boolean };
+export type TourDock = { lift: number; collapsed: boolean; yield: boolean };
 
 function shifted(box: TourBox, lift: number): TourBox {
   return { ...box, top: box.top - lift };
@@ -322,34 +322,64 @@ function dockedPill(sulwe: TourBox, pill: { width: number; height: number }, lif
   };
 }
 
+/** Extra air required before a yielded dock comes back, so a scrolling card does not flicker it. */
+const DOCK_YIELD_PAD = 12;
+
+function padded(box: TourBox, pad: number): TourBox {
+  if (!pad) return box;
+  return { top: box.top - pad, left: box.left - pad, width: box.width + pad * 2, height: box.height + pad * 2 };
+}
+
 /**
  * Sulwe and the quick-tour pill move as one unit.
  * The pill stays on Sulwe's row, just to his left. The search only rises through
- * the bottom-right zone. If nothing there is clear of controls, the pill collapses.
+ * the bottom-right zone. If the pill cannot sit clear of a control, it collapses
+ * to the dot on Sulwe. If Sulwe himself cannot sit clear, the whole dock yields:
+ * it fades out and stops taking taps until the card has scrolled past.
  */
 export function placeTourDock(input: {
   sulwe: TourBox;
   pill: { width: number; height: number };
   obstacles: TourBox[];
   viewportHeight: number;
+  /** Hold the invite open or collapsed. Unset tries the pill, then the dot. */
+  prefer?: "pill" | "dot";
+  /** Already yielded. Ask for a little extra clearance before coming back. */
+  sticky?: boolean;
 }): TourDock {
   const zoneTop = input.viewportHeight * 0.46;
   const maxLift = Math.max(0, Math.floor(input.sulwe.top - zoneTop));
   const blocks = input.obstacles.filter((box) => box.width > 1 && box.height > 1);
-  const clear = (lift: number, withPill: boolean) => {
+  const wantPill = input.prefer !== "dot";
+  const wantDot = input.prefer !== "pill";
+  const hits = (box: TourBox, pad: number) => blocks.some((block) => boxesOverlap(padded(box, pad), block));
+  const clearAt = (lift: number, withPill: boolean, pad: number) => {
     const host = shifted(input.sulwe, lift);
-    if (blocks.some((box) => boxesOverlap(host, box))) return false;
+    if (hits(host, pad)) return false;
     if (!withPill || !(input.pill.width > 1 && input.pill.height > 1)) return true;
-    const pill = dockedPill(input.sulwe, input.pill, lift);
-    return !blocks.some((box) => boxesOverlap(pill, box));
+    return !hits(dockedPill(input.sulwe, input.pill, lift), pad);
   };
-  for (let lift = 0; lift <= maxLift; lift += 8) {
-    if (clear(lift, true)) return { lift, collapsed: false };
+  const firstClear = (withPill: boolean) => {
+    for (let lift = 0; lift <= maxLift; lift += 8) {
+      if (clearAt(lift, withPill, 0)) return lift;
+    }
+    return null;
+  };
+  const seat = (withPill: boolean): TourDock | null => {
+    const lift = firstClear(withPill);
+    if (lift === null) return null;
+    if (input.sticky && !clearAt(lift, withPill, DOCK_YIELD_PAD)) return null;
+    return { lift, collapsed: !withPill, yield: false };
+  };
+  if (wantPill) {
+    const placed = seat(true);
+    if (placed) return placed;
   }
-  for (let lift = 0; lift <= maxLift; lift += 8) {
-    if (clear(lift, false)) return { lift, collapsed: true };
+  if (wantDot) {
+    const placed = seat(false);
+    if (placed) return placed;
   }
-  return { lift: 0, collapsed: true };
+  return { lift: 0, collapsed: input.prefer !== "pill", yield: true };
 }
 
 /** Place the bubble beside the target, flipping above or below, and clamp it on screen. */

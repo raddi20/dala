@@ -142,7 +142,7 @@ export default async function ListingsPage({
     isCategory(filters.category) && !nlRaw && !filters.q && !filters.city && !filters.region && !filters.type;
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
+    <div className="dock-scroll-pad mx-auto grid max-w-5xl gap-4 px-4 py-4">
       <h1 className="sr-only">{uiText(lang, "browse_title")}</h1>
       {categoryHub ? <CategoryCrawlHub category={filters.category} shopPage={crawlPage(one(sp.shops))} /> : null}
       <ResultsSearchBar

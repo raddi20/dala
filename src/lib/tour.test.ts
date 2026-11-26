@@ -171,22 +171,41 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
   assert.equal((card.match(/data-tour-dot=/g) ?? []).length, 5);
 });
 
-test("the quick-tour pill stays on Sulwe's row, and collapses instead of leaving the bottom-right zone", () => {
+test("the quick-tour pill stays on Sulwe's row, and yields instead of covering a control", () => {
   const sulwe = { top: 620, left: 286, width: 92, height: 92 };
   const pill = { width: 180, height: 44 };
   const clear = placeTourDock({ sulwe, pill, obstacles: [], viewportHeight: 844 });
-  assert.deepEqual(clear, { lift: 0, collapsed: false });
+  assert.deepEqual(clear, { lift: 0, collapsed: false, yield: false });
 
   const follow = { top: 600, left: 200, width: 80, height: 44 };
   const nudged = placeTourDock({ sulwe, pill, obstacles: [follow], viewportHeight: 844 });
+  assert.equal(nudged.yield, false);
   assert.equal(nudged.collapsed, false);
   assert.ok(nudged.lift > 0);
   assert.ok(nudged.lift <= sulwe.top - 844 * 0.46);
 
   const wall = { top: 300, left: 0, width: 390, height: 544 };
   const blocked = placeTourDock({ sulwe, pill, obstacles: [wall], viewportHeight: 844 });
-  assert.equal(blocked.collapsed, true);
-  assert.ok(blocked.lift <= sulwe.top - 844 * 0.46);
+  assert.deepEqual(blocked, { lift: 0, collapsed: true, yield: true });
+
+  const heldPill = placeTourDock({ sulwe, pill, obstacles: [wall], viewportHeight: 844, prefer: "pill" });
+  assert.deepEqual(heldPill, { lift: 0, collapsed: false, yield: true });
+  const heldDot = placeTourDock({ sulwe, pill, obstacles: [wall], viewportHeight: 844, prefer: "dot" });
+  assert.deepEqual(heldDot, { lift: 0, collapsed: true, yield: true });
+
+  // A control beside Sulwe collapses the pill to the dot. Sulwe himself stays.
+  const beside = { top: 630, left: 40, width: 160, height: 50 };
+  const dot = placeTourDock({ sulwe, pill, obstacles: [beside], viewportHeight: 844, prefer: "dot" });
+  assert.deepEqual(dot, { lift: 0, collapsed: true, yield: false });
+
+  // A card that only grazes the seat does not bring a yielded dock straight back.
+  const graze = { top: 716, left: 286, width: 92, height: 40 };
+  const open = placeTourDock({ sulwe, pill, obstacles: [graze], viewportHeight: 844 });
+  assert.equal(open.yield, false);
+  assert.equal(open.lift, 0);
+  const sticky = placeTourDock({ sulwe, pill, obstacles: [graze], viewportHeight: 844, sticky: true });
+  assert.equal(sticky.yield, true);
+  assert.equal(sticky.lift, 0);
 });
 
 test("the bubble flips above a low target and stays on a 360px screen", () => {

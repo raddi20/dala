@@ -140,6 +140,10 @@ test("hashed static files, icons, and fonts can be cached; other fetches cannot"
     kind: "cache-first",
     cache: "static",
   });
+  assert.deepEqual(plan({ pathname: "/_next/static/immutable/chunks/30p2-36tqq_ce.js", destination: "script" }), {
+    kind: "cache-first",
+    cache: "static",
+  });
   assert.deepEqual(plan({ pathname: "/_next/static/media/fraunces.woff2", destination: "font" }), {
     kind: "cache-first",
     cache: "static",
@@ -205,6 +209,16 @@ test("asset responses that are HTML, redirects, or errors are not stored", () =>
   );
   assert.equal(
     mayStoreAssetResponse({ ok: false, redirected: false, type: "opaque", contentType: null, cache: "static" }),
+    false,
+  );
+  assert.equal(
+    mayStoreAssetResponse({
+      ok: false,
+      redirected: false,
+      type: "basic",
+      contentType: "application/javascript",
+      cache: "static",
+    }),
     false,
   );
 });

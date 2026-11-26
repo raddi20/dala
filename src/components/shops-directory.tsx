@@ -80,7 +80,7 @@ export function ShopsDirectory({
   const sheetActive = Boolean(city || category || diaspora || occasion);
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-4 px-4 py-4">
+    <div className="dock-scroll-pad mx-auto grid max-w-5xl gap-4 px-4 py-4">
       <h1 className="sr-only">{uiText(lang, "home_shops")}</h1>
       <ResultsSearchBar
         action="/shops"

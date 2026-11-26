@@ -84,7 +84,7 @@ export default async function HomePage() {
   const name = appName();
 
   return (
-    <div>
+    <div className="dock-scroll-pad">
       <JsonLd data={[organizationJsonLd(origin, name), websiteJsonLd(origin, name)]} />
       <section className="min-w-0 bg-navy text-white">
         <div className="mx-auto min-w-0 max-w-5xl px-4 pb-4 pt-5">
