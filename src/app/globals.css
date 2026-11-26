@@ -248,7 +248,36 @@ h3,
   max-width: 100%;
   min-height: 100dvh;
   flex-direction: column;
-  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 8.5rem);
+  /* Nav, WhatsApp bar, Sulwe (92px), then the 44px tour invite above him, plus a little air. */
+  padding-bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + 44px + 16px);
+}
+
+/* Phone listing photo stays short so the price, Save, and Follow clear the bottom stack. */
+.listing-hero-media {
+  width: 100%;
+  height: 11rem;
+  object-fit: cover;
+}
+
+img.listing-hero-media,
+img.shop-cover {
+  display: block;
+}
+
+/* Shop cover. Call and Share sit on it, above the avatar, so the bottom stack cannot cover them. */
+.shop-cover {
+  height: 10rem;
+}
+
+@media (min-width: 640px) {
+  .listing-hero-media {
+    height: auto;
+    aspect-ratio: 4 / 3;
+  }
+
+  .shop-cover {
+    height: 210px;
+  }
 }
 
 .page-shell > * {
@@ -308,7 +337,9 @@ main .grid > * {
 
 .tour-prompt {
   height: 44px;
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 34px + var(--rangach-vv));
+  right: 12px;
+  /* Above Sulwe, who sits 10px over the WhatsApp bar. A lift variable nudges it clear of Call and Share. */
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + 92px + 8px + var(--rangach-vv) + var(--rangach-tour-lift, 0px));
   background-color: #fff;
   opacity: 1;
   transform: none;
@@ -321,8 +352,8 @@ main .grid > * {
 @media (min-width: 768px) {
   .page-shell {
     min-height: 100%;
-    /* Sulwe is 92px tall and sits 20px above the bottom bar. Keep the last footer row above him. */
-    padding-bottom: calc(var(--rangach-cta) + 20px + 92px + 16px);
+    /* Sulwe is 92px tall and sits 20px above the bottom bar. The tour invite sits above him. */
+    padding-bottom: calc(var(--rangach-cta) + 20px + 92px + 8px + 44px + 16px);
   }
 
   .sticky-cta-bar {
@@ -334,7 +365,7 @@ main .grid > * {
   }
 
   .tour-prompt {
-    bottom: calc(44px + var(--rangach-cta));
+    bottom: calc(20px + var(--rangach-cta) + 92px + 8px + var(--rangach-tour-lift, 0px));
   }
 }
 

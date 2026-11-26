@@ -16,6 +16,7 @@ import {
   parseTourRun,
   persistTourRecord,
   placeTourBubble,
+  tourPromptLift,
   readTourRecord,
   replayTour,
   resumedStepId,
@@ -168,6 +169,21 @@ test("tour copy is signed off and stays clear of funeral and escrow wording", ()
   assert.match(card, /Next/);
   assert.match(card, /Skip/);
   assert.equal((card.match(/data-tour-dot=/g) ?? []).length, 5);
+});
+
+test("the quick-tour pill lifts clear of a primary action and stays put when it is already clear", () => {
+  const share = { top: 580, left: 90, width: 56, height: 68 };
+  const prompt = { top: 560, left: 80, width: 220, height: 44 };
+  const lift = tourPromptLift({ prompt, obstacles: [share] });
+  assert.ok(lift >= 580 - 8 - 44 - 560);
+  const moved = { ...prompt, top: prompt.top - lift };
+  const overlaps =
+    moved.left < share.left + share.width &&
+    moved.left + moved.width > share.left &&
+    moved.top < share.top + share.height &&
+    moved.top + moved.height > share.top;
+  assert.equal(overlaps, false);
+  assert.equal(tourPromptLift({ prompt: { top: 120, left: 16, width: 180, height: 44 }, obstacles: [share] }), 0);
 });
 
 test("the bubble flips above a low target and stays on a 360px screen", () => {

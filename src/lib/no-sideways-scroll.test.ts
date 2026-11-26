@@ -21,7 +21,9 @@ test("the results search bar can shrink to a phone screen, so /listings does not
   assert.match(root, /results-search-bar/);
   // It sits in a grid (/listings) or flex column (/shops). Without min-w-0 its min width is the nowrap pill row.
   assert.ok(root.split(" ").includes("min-w-0"), root);
-  assert.match(html, /class="chip-scroll min-w-0 flex-1"/);
+  assert.match(html, /data-browse-chips/);
+  assert.match(html, /flex min-w-0 flex-1 flex-wrap gap-2/);
+  assert.doesNotMatch(html, /chip-scroll min-w-0 flex-1/);
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
   const chips = css.slice(css.indexOf(".chip-scroll {"), css.indexOf("}", css.indexOf(".chip-scroll {")));
   assert.match(chips, /overflow-x:\s*auto/);

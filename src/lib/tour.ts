@@ -293,6 +293,36 @@ const SPOT_PAD = 8;
 const BUBBLE_GAP = 14;
 const SCREEN_MARGIN = 8;
 
+function boxesOverlap(
+  a: { top: number; left: number; width: number; height: number },
+  b: { top: number; left: number; width: number; height: number },
+) {
+  return a.left < b.left + b.width && a.left + a.width > b.left && a.top < b.top + b.height && a.top + a.height > b.top;
+}
+
+/**
+ * How far to lift the quick-tour pill, in px, so it clears primary actions.
+ * The pill stays in the bottom stack; only its bottom offset grows.
+ */
+export function tourPromptLift(input: {
+  prompt: TourBox;
+  obstacles: TourBox[];
+  gap?: number;
+}): number {
+  const gap = input.gap ?? 8;
+  let top = input.prompt.top;
+  const { left, width, height } = input.prompt;
+  for (let pass = 0; pass < 8; pass += 1) {
+    const box = { top, left, width, height };
+    const hit = input.obstacles.find((obstacle) => obstacle.width > 1 && obstacle.height > 1 && boxesOverlap(box, obstacle));
+    if (!hit) break;
+    const next = hit.top - gap - height;
+    if (next >= top || next < SCREEN_MARGIN) break;
+    top = next;
+  }
+  return Math.max(0, Math.round(input.prompt.top - top));
+}
+
 /** Place the bubble beside the target, flipping above or below, and clamp it on screen. */
 export function placeTourBubble(input: {
   target: TourBox | null;

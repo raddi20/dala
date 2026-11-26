@@ -5,7 +5,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TourPromptCard } from "@/components/tour-prompt";
 import { UI_STRINGS, uiText } from "@/lib/i18n/strings";
-import { SULWE_SIZE } from "@/lib/sulwe";
 import { readTourDeclined, tourEntry, tourPromptKey, writeTourDeclined } from "@/lib/tour";
 
 function memoryStore() {
@@ -56,7 +55,7 @@ test("?tour=1 and a tour already walking across pages skip the invite", () => {
   assert.equal(tourEntry({ ...firstVisit, activeRun: true, declined: true }), "tour");
 });
 
-test("the invite card renders both buttons, in English and Dholuo, beside Sulwe and above the nav", () => {
+test("the invite card renders both buttons, in English and Dholuo, above Sulwe and the nav", () => {
   const noop = () => undefined;
   const en = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: true, onYes: noop, onNo: noop }));
   assert.match(en, /Hi! Want a quick tour\?/);
@@ -66,13 +65,17 @@ test("the invite card renders both buttons, in English and Dholuo, beside Sulwe 
   assert.match(en, /role="dialog"/);
   assert.match(en, /aria-modal="false"/);
   assert.match(en, /data-tour-prompt-tail/);
+  assert.match(en, /-bottom-\[7px\]/);
   assert.match(en, /h-11/);
-  assert.match(en, new RegExp(`right:${12 + SULWE_SIZE + 8}px`));
   assert.match(en, /bg-white/);
   const css = readFileSync(new URL("../app/globals.css", import.meta.url), "utf8");
   assert.match(css, /\.tour-prompt \{[^}]*height: 44px/);
-  assert.match(css, /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 34px \+ var\(--rangach-vv\)\)/);
-  assert.match(css, /bottom: calc\(44px \+ var\(--rangach-cta\)\)/);
+  assert.match(css, /\.tour-prompt \{[^}]*right: 12px/);
+  assert.match(
+    css,
+    /\.tour-prompt \{[^}]*bottom: calc\(var\(--rangach-above-nav\) \+ var\(--rangach-cta\) \+ 10px \+ 92px \+ 8px \+ var\(--rangach-vv\) \+ var\(--rangach-tour-lift, 0px\)\)/,
+  );
+  assert.match(css, /bottom: calc\(20px \+ var\(--rangach-cta\) \+ 92px \+ 8px \+ var\(--rangach-tour-lift, 0px\)\)/);
   const card = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: false, onYes: noop, onNo: noop }));
   assert.match(card, /data-tour-prompt="card"/);
   assert.match(card, /New here\? Want a quick tour of Rangach\?/);

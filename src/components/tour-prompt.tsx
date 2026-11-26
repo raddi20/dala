@@ -1,11 +1,11 @@
 "use client";
 
-import { useId, useSyncExternalStore } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { BodyPortal } from "@/components/body-portal";
 import type { Lang } from "@/lib/i18n/lang";
 import { uiText } from "@/lib/i18n/strings";
-import { SULWE_PREVIEW_KEY, SULWE_SIZE, shouldShowSulwe, sulweHiddenPath, sulweQueryOn } from "@/lib/sulwe";
+import { SULWE_PREVIEW_KEY, shouldShowSulwe, sulweHiddenPath, sulweQueryOn } from "@/lib/sulwe";
 import {
   TOUR_ACCEPT_KEY,
   TOUR_PROMPT_EVENT,
@@ -16,6 +16,7 @@ import {
   storageKeyForKind,
   tourEntry,
   tourKindForPath,
+  tourPromptLift,
   tourQueryOn,
   writeTourDeclined,
 } from "@/lib/tour";
@@ -54,21 +55,61 @@ export function TourPromptCard({
   titleId?: string;
 }) {
   const short = compactInvite(lang);
-  const style = withSulwe ? { right: 12 + SULWE_SIZE + 8 } : { right: 12 };
+  const promptRef = useRef<HTMLDivElement>(null);
+  const [lift, setLift] = useState(0);
+  useEffect(() => {
+    const node = promptRef.current;
+    if (!node) return;
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const rect = node.getBoundingClientRect();
+      const current = Number.parseFloat(getComputedStyle(node).getPropertyValue("--rangach-tour-lift")) || 0;
+      const obstacles = [...document.querySelectorAll<HTMLElement>("[data-primary-action], [data-save-heart], [data-follow-shop]")].flatMap((el) => {
+        if (node.contains(el)) return [];
+        const style = getComputedStyle(el);
+        const box = el.getBoundingClientRect();
+        if (style.display === "none" || style.visibility === "hidden" || box.width < 2 || box.height < 2) return [];
+        return [{ top: box.top, left: box.left, width: box.width, height: box.height }];
+      });
+      const next = tourPromptLift({
+        prompt: { top: rect.top + current, left: rect.left, width: rect.width, height: rect.height },
+        obstacles,
+      });
+      setLift((prev) => (prev === next ? prev : next));
+    };
+    const schedule = () => {
+      if (!frame) frame = window.requestAnimationFrame(measure);
+    };
+    measure();
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    observer?.observe(document.documentElement);
+    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", schedule, { passive: true });
+    const late = window.setTimeout(measure, 350);
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.clearTimeout(late);
+      observer?.disconnect();
+      window.removeEventListener("resize", schedule);
+      window.removeEventListener("scroll", schedule);
+    };
+  }, [lang, withSulwe]);
   return (
     <BodyPortal>
     <div
+      ref={promptRef}
       role="dialog"
       aria-modal="false"
       aria-label={uiText(lang, withSulwe ? "invite_tour_hi" : "invite_tour_card")}
       data-tour-prompt={withSulwe ? "sulwe" : "card"}
       className="tour-prompt fixed z-[46] flex h-11 items-center gap-1 rounded-full border-2 border-gold bg-white pl-3 pr-1 shadow-[0_6px_16px_rgb(20_26_36/0.16)] print:hidden"
-      style={style}
+      style={{ ["--rangach-tour-lift" as string]: `${lift}px` }}
     >
       {withSulwe ? (
         <span
           aria-hidden="true"
-          className="absolute -right-[7px] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 border-r-2 border-t-2 border-gold bg-white"
+          className="absolute -bottom-[7px] right-7 h-2.5 w-2.5 rotate-45 border-b-2 border-r-2 border-gold bg-white"
           data-tour-prompt-tail=""
         />
       ) : null}

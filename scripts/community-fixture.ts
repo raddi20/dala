@@ -141,6 +141,34 @@ await prisma.shopUpdate.upsert({
   },
 });
 
+await prisma.shopUpdate.upsert({
+  where: { id: "fixture_update_held_reject" },
+  update: { status: "pending", holdReason: "Held for a moderator.", expiresAt: expires },
+  create: {
+    id: "fixture_update_held_reject",
+    storefrontId: shop.id,
+    authorId: seller.id,
+    body: "Tilapia is plentiful this week. Come by the stall before noon.",
+    status: "pending",
+    holdReason: "Held for a moderator.",
+    expiresAt: expires,
+  },
+});
+
+await prisma.shopUpdate.upsert({
+  where: { id: "fixture_update_held_remove" },
+  update: { status: "pending", holdReason: "Held for a moderator.", expiresAt: expires },
+  create: {
+    id: "fixture_update_held_remove",
+    storefrontId: shop.id,
+    authorId: seller.id,
+    body: "We open early on Saturday for the market rush.",
+    status: "pending",
+    holdReason: "Held for a moderator.",
+    expiresAt: expires,
+  },
+});
+
 await prisma.shopFollow.upsert({
   where: { userId_shopId: { userId: buyer.id, shopId: shop.id } },
   update: {},

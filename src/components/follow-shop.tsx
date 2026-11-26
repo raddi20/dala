@@ -19,6 +19,7 @@ export function FollowShop({
   followable,
   returnTo,
   variant = "page",
+  tone = "default",
 }: {
   shopId: string;
   slug: string;
@@ -28,10 +29,18 @@ export function FollowShop({
   followable: boolean;
   returnTo: string;
   variant?: "page" | "card";
+  /** On a photo, gold and white stay readable. Navy-on-navy would disappear. */
+  tone?: "default" | "onPhoto";
 }) {
   if (!followable) return null;
   const label = following ? `Following ${name}` : `Follow ${name}`;
-  const look = following ? "border-navy bg-navy text-white" : "border-gold/40 bg-white text-navy hover:border-gold";
+  const look = following
+    ? tone === "onPhoto"
+      ? "border-gold bg-gold text-navy"
+      : "border-navy bg-navy text-white"
+    : tone === "onPhoto"
+      ? "border-white bg-white text-navy"
+      : "border-gold/40 bg-white text-navy hover:border-gold";
   const className = `${variant === "card" ? cardClass : pageClass} ${look}`;
   const place = variant === "card" ? "absolute right-1.5 top-1.5 z-10" : "";
   if (!signedIn) {
