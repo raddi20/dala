@@ -69,11 +69,12 @@ function layoutBox(el: HTMLElement) {
   return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 }
 
-/** Move Sulwe and the docked tour pill together, or collapse the pill to a dot. */
+/** Move Sulwe and the docked tour pill together, collapse the pill to a dot, or yield the whole dock. */
 function liftFloaters(root: HTMLElement) {
   const sulweEl = document.querySelector<HTMLElement>("[data-sulwe-root]");
   if (!sulweEl) {
     if (root.getAttribute("data-tour-invite")) root.removeAttribute("data-tour-invite");
+    if (root.hasAttribute("data-sulwe-yield")) root.removeAttribute("data-sulwe-yield");
     return;
   }
   const currentFloat = Number.parseFloat(root.style.getPropertyValue("--rangach-float-lift")) || 0;
@@ -87,14 +88,27 @@ function liftFloaters(root: HTMLElement) {
     const box = shownBox(el);
     return box ? [box] : [];
   });
+  const hold = root.getAttribute("data-tour-invite-hold");
   const placed = placeTourDock({
     sulwe: { ...sulweBox, top: sulweBox.top + currentFloat },
     pill: pillBox ? { width: pillBox.width, height: pillBox.height } : { width: 0, height: 0 },
     obstacles,
     viewportHeight: window.innerHeight,
+    prefer: hold === "pill" || hold === "dot" ? hold : undefined,
+    sticky: root.getAttribute("data-sulwe-yield") === "1",
   });
-  const nextLift = `${placed.lift}px`;
-  if (root.style.getPropertyValue("--rangach-float-lift") !== nextLift) root.style.setProperty("--rangach-float-lift", nextLift);
+  // Leave the seat alone while fading, so the dock does not jump as it leaves.
+  if (!placed.yield) {
+    const nextLift = `${placed.lift}px`;
+    if (root.style.getPropertyValue("--rangach-float-lift") !== nextLift) root.style.setProperty("--rangach-float-lift", nextLift);
+  }
   const invite = placed.collapsed && pillBox ? "dot" : "pill";
   if (root.getAttribute("data-tour-invite") !== invite) root.setAttribute("data-tour-invite", invite);
+  if (placed.yield) {
+    if (root.getAttribute("data-sulwe-yield") !== "1") root.setAttribute("data-sulwe-yield", "1");
+    if (!sulweEl.hasAttribute("inert")) sulweEl.setAttribute("inert", "");
+  } else {
+    if (root.hasAttribute("data-sulwe-yield")) root.removeAttribute("data-sulwe-yield");
+    if (sulweEl.hasAttribute("inert")) sulweEl.removeAttribute("inert");
+  }
 }

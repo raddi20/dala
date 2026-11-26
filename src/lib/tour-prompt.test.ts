@@ -74,6 +74,10 @@ test("the invite card renders both buttons, in English and Dholuo, above Sulwe a
   assert.match(css, /\.tour-prompt-docked \{[^}]*right: calc\(100% \+ 6px\)/);
   assert.match(css, /\.tour-prompt-docked \{[^}]*top: 32%/);
   assert.match(css, /html\[data-tour-invite="dot"\] \.tour-invite-dot \{[^}]*display: grid/);
+  assert.match(css, /html\[data-sulwe-yield="1"\] \.sulwe-dock \{[^}]*opacity: 0/);
+  assert.match(css, /html\[data-sulwe-yield="1"\] \.sulwe-dock \{[^}]*pointer-events: none/);
+  assert.match(css, /\.dock-scroll-pad \{[^}]*92px \+ 16px \+ env\(safe-area-inset-bottom, 0px\)/);
+  assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\s*\.sulwe-dock \{\s*transition: none;/);
   const card = renderToStaticMarkup(createElement(TourPromptCard, { lang: "en", withSulwe: false, onYes: noop, onNo: noop }));
   assert.match(card, /data-tour-prompt="card"/);
   assert.match(card, /New here\? Want a quick tour of Rangach\?/);

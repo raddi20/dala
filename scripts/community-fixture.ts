@@ -175,6 +175,79 @@ await prisma.shopFollow.upsert({
   create: { id: "fixture_follow_achieng", userId: buyer.id, shopId: shop.id },
 });
 
+// A tall /listings grid so the dock is checked while cards scroll through it.
+const stalls = [
+  "Awuor Textiles",
+  "Odhiambo Joinery",
+  "Anyango Catering",
+  "Ochieng Hardware",
+  "Adhiambo Braids",
+  "Okello Boda",
+  "Akinyi Baskets",
+  "Omondi Repairs",
+];
+for (let i = 0; i < stalls.length; i += 1) {
+  const name = stalls[i];
+  const when = new Date(now.getTime() - i * 1000);
+  const phone = `+25471110010${i}`;
+  const sellerId = `fixture_grid_user_${i}`;
+  const gridSeller = await prisma.user.upsert({
+    where: { email: `grid-stall-${i}@example.com` },
+    update: { name, passwordHash, role: "user", city: "Kisumu", suspended: false, phone, whatsapp: phone },
+    create: {
+      id: sellerId,
+      email: `grid-stall-${i}@example.com`,
+      name,
+      passwordHash,
+      role: "user",
+      kind: "business",
+      city: "Kisumu",
+      phone,
+      whatsapp: phone,
+      bio: `${name} on the grid fixture.`,
+    },
+  });
+  await prisma.storefront.upsert({
+    where: { slug: `grid-stall-${i}` },
+    update: { published: true, hidden: false, userId: gridSeller.id, createdAt: when },
+    create: {
+      id: `fixture_grid_shop_${i}`,
+      userId: gridSeller.id,
+      slug: `grid-stall-${i}`,
+      published: true,
+      bannerUrl: photo,
+      createdAt: when,
+    },
+  });
+  await prisma.listing.upsert({
+    where: { id: `fixture_grid_listing_${i}` },
+    update: {
+      hidden: false,
+      title: `${name}, this week`,
+      ownerId: gridSeller.id,
+      priceLabel: "Ksh 450",
+      createdAt: new Date(when.getTime() - 60_000),
+    },
+    create: {
+      id: `fixture_grid_listing_${i}`,
+      type: "business",
+      title: `${name}, this week`,
+      description: "Ask on WhatsApp.",
+      category: "Butchery & fish",
+      city: "Kisumu",
+      region: "homeland",
+      priceLabel: "Ksh 450",
+      photoUrl: photo,
+      contactName: name,
+      contactPhone: phone,
+      contactWhatsapp: phone,
+      ownerId: gridSeller.id,
+      scamRisk: "low",
+      createdAt: new Date(when.getTime() - 60_000),
+    },
+  });
+}
+
 console.log("Community fixture ready: /b/nyangoma-fish");
 }
 
