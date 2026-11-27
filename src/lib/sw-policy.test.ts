@@ -250,6 +250,7 @@ test("the built worker keeps the kill switch note and does not cache pages by UR
   assert.match(built, /stream\.mux\.com/);
   assert.match(built, /rangach-pwa-/);
   assert.match(built, /skipWaiting/);
+  assert.doesNotMatch(source.slice(source.indexOf('addEventListener("activate"'), source.indexOf('addEventListener("message"')), /clients\.claim/);
   assert.match(built, /\/admin/);
   assert.match(built, /\/pricing/);
   assert.match(built, /\/api/);

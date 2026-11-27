@@ -21,6 +21,7 @@ import { sulweVoiceOn } from "@/lib/sulwe-voice-flag";
 import { guidedTourOn } from "@/lib/tour";
 import { footerHubLinks } from "@/lib/crawl-data";
 import { publicOrigin } from "@/lib/payments/origin";
+import { readEarlyScriptSrcs } from "@/lib/early-scripts";
 import { PWA_THEME_COLOR, pwaNames } from "@/lib/pwa";
 import "./globals.css";
 
@@ -70,8 +71,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const [lang, hubs] = await Promise.all([requestLang(), footerHubLinks()]);
   const tourOn = guidedTourOn();
   const sulweFlag = sulweOn();
+  const earlyScripts = readEarlyScriptSrcs();
   return (
     <html lang="en" className="min-h-full antialiased">
+      <head>
+        {earlyScripts.map((src) => (
+          <script key={src} src={src} async />
+        ))}
+      </head>
       <body className="min-w-0 font-sans">
         <div className="page-shell">
         <a

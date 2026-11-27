@@ -224,7 +224,7 @@
     event.waitUntil(precache().catch(() => void 0));
   });
   worker.addEventListener("activate", (event) => {
-    event.waitUntil(SW_MODE === "kill" ? killWorker() : claimWorker());
+    event.waitUntil(SW_MODE === "kill" ? killWorker() : activateWorker());
   });
   worker.addEventListener("message", (event) => {
     if (event.data && event.data.type === "SKIP_WAITING") {
@@ -293,10 +293,9 @@
       })
     );
   }
-  async function claimWorker() {
+  async function activateWorker() {
     const keys = await caches.keys();
     await Promise.all(cachesToDelete(keys, false).map((key) => caches.delete(key)));
-    await worker.clients.claim();
   }
   async function killWorker() {
     const keys = await caches.keys();
@@ -392,7 +391,14 @@
     const cache = await caches.open(name);
     const cached = await cache.match(request);
     if (cached) return cached;
-    const response = await fetch(request);
+    let response = await fetch(request);
+    if (response.redirected && response.ok) {
+      response = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers
+      });
+    }
     if (mayStoreAssetResponse({
       ok: response.ok,
       redirected: response.redirected,

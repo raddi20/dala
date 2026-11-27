@@ -52,7 +52,7 @@ worker.addEventListener("install", (event) => {
 });
 
 worker.addEventListener("activate", (event) => {
-  event.waitUntil(SW_MODE === "kill" ? killWorker() : claimWorker());
+  event.waitUntil(SW_MODE === "kill" ? killWorker() : activateWorker());
 });
 
 worker.addEventListener("message", (event) => {
@@ -132,10 +132,14 @@ async function precacheAssets(paths: string[]) {
   );
 }
 
-async function claimWorker() {
+async function activateWorker() {
   const keys = await caches.keys();
   await Promise.all(cachesToDelete(keys, false).map((key) => caches.delete(key)));
-  await worker.clients.claim();
+  // Do not clients.claim() here. The first page is still loading the error-boundary
+  // chunk (a script the flight client inserts, not one of the parser scripts).
+  // WebKit aborts in-flight scripts when a worker claims the page, and that failed
+  // load is the ChunkLoadError that replaces the page with "Rangach did not load".
+  // The active worker controls the next navigation without claim.
 }
 
 async function killWorker() {
@@ -247,7 +251,16 @@ async function cacheFirst(request: Request, cacheName: "static" | "image"): Prom
   const cached = await cache.match(request);
   if (cached) return cached;
 
-  const response = await fetch(request);
+  let response = await fetch(request);
+  // Safari will not run a script when the worker hands back a redirected response,
+  // even though the final status is 200. Hand back a plain response instead.
+  if (response.redirected && response.ok) {
+    response = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+    });
+  }
   if (
     mayStoreAssetResponse({
       ok: response.ok,
