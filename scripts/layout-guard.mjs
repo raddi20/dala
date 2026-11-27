@@ -615,6 +615,109 @@ async function gridDockPass(browserType, label, width, height) {
   await browser.close();
 }
 
+function sameSeat(a, b) {
+  if (!a || !b) return false;
+  return Math.abs(a.t - b.t) <= 1 && Math.abs(a.b - b.b) <= 1 && Math.abs(a.l - b.l) <= 1 && Math.abs(a.r - b.r) <= 1;
+}
+
+async function dockSeatPass(browserType, label) {
+  const browser = await browserType.launch();
+  const context = await browser.newContext({
+    ...iphone,
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 1,
+    colorScheme: "light",
+  });
+  const page = await context.newPage();
+  const paths = ["/", "/listings", "/b/nyangoma-fish"];
+  for (const path of paths) {
+    await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.evaluate(() => {
+      localStorage.removeItem("rangach_tour_prompt_visitor");
+      localStorage.removeItem("rangach_tour_prompt_seller");
+      localStorage.removeItem("rangach_tour");
+      localStorage.setItem("rangach.pwa.dismissedAt", String(Date.now()));
+    });
+    await page.goto(`${BASE}${path}?sulwe=1`, { waitUntil: "networkidle", timeout: 60000 });
+    await page.evaluate(() => {
+      document.documentElement.setAttribute("data-tour-invite-hold", "pill");
+      window.dispatchEvent(new Event("resize"));
+    });
+    const ready = await page
+      .waitForFunction(() => document.querySelector("[data-sulwe-root]") && document.querySelector("[data-tour-prompt='sulwe']"), null, { timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!ready) {
+      fail(errors, `${label} ${path} dock missing`);
+      continue;
+    }
+    const max = await page.evaluate(() => Math.max(0, document.documentElement.scrollHeight - window.innerHeight));
+    const stops = [];
+    for (let y = 0; y < max; y += 160) stops.push(y);
+    stops.push(max);
+    let seat = null;
+    let sawYield = false;
+    let sawVisible = false;
+    for (const y of stops) {
+      await page.evaluate(
+        (top) =>
+          new Promise((resolve) => {
+            window.scrollTo(0, top);
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve(null)));
+          }),
+        y,
+      );
+      const sample = await page.evaluate(() => {
+        const sulwe = document.querySelector("[data-sulwe-root]");
+        const pill = document.querySelector("[data-tour-prompt='sulwe']");
+        const nav = document.querySelector(".bottom-nav");
+        if (!sulwe || !pill || !nav) return { missing: true };
+        const box = (el) => {
+          const r = el.getBoundingClientRect();
+          return { t: Math.round(r.top), b: Math.round(r.bottom), l: Math.round(r.left), r: Math.round(r.right) };
+        };
+        const cta = [...document.querySelectorAll(".sticky-cta-bar")].find((el) => {
+          const style = getComputedStyle(el);
+          return style.display !== "none" && style.visibility !== "hidden" && el.getBoundingClientRect().height > 8;
+        });
+        const navTop = Math.round(nav.getBoundingClientRect().top);
+        const anchorTop = cta ? Math.round(cta.getBoundingClientRect().top) : navTop;
+        return {
+          missing: false,
+          sulwe: box(sulwe),
+          pill: box(pill),
+          navTop,
+          anchorTop,
+          yielded: document.documentElement.getAttribute("data-sulwe-yield") === "1",
+        };
+      });
+      if (sample.missing) {
+        fail(errors, `${label} ${path} scroll ${y} lost the dock`);
+        break;
+      }
+      if (!seat) seat = sample;
+      if (!sameSeat(sample.sulwe, seat.sulwe) || !sameSeat(sample.pill, seat.pill)) {
+        fail(errors, `${label} ${path} scroll ${y} dock moved ${JSON.stringify({ sulwe: sample.sulwe, pill: sample.pill, home: seat.sulwe })}`);
+        break;
+      }
+      const aboveNav = sample.sulwe.b <= sample.anchorTop - 4 && sample.sulwe.b <= sample.navTop - 4;
+      const inBand = sample.sulwe.b >= sample.anchorTop - 36;
+      const pillWithSulwe = sample.pill.r <= sample.sulwe.l + 16 && sample.pill.b > sample.sulwe.t && sample.pill.t < sample.sulwe.b;
+      if (!aboveNav || !inBand || !pillWithSulwe) {
+        fail(errors, `${label} ${path} scroll ${y} dock left the bottom band ${JSON.stringify(sample)}`);
+        break;
+      }
+      if (sample.yielded) sawYield = true;
+      else sawVisible = true;
+    }
+    console.log(label, path, "seat", seat && seat.sulwe.b, "yielded", sawYield, "visible", sawVisible);
+    if (path === "/" && (!sawYield || !sawVisible)) {
+      fail(errors, `${label} home did not show both a yielded and a visible dock`);
+    }
+  }
+  await browser.close();
+}
+
 if (fixture.status === 0) {
   await hitPass(webkit, "webkit-390", 390, 844);
   await hitPass(chromium, "chromium-390", 390, 844);
@@ -623,6 +726,8 @@ if (fixture.status === 0) {
   await gridDockPass(chromium, "chromium-390", 390, 844);
   await gridDockPass(chromium, "chromium-1280", 1280, 800);
   await gridDockPass(chromium, "chromium-1440", 1440, 900);
+  await dockSeatPass(webkit, "webkit-390");
+  await dockSeatPass(chromium, "chromium-390");
 }
 
 async function chunkLoadPass() {

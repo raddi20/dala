@@ -69,15 +69,15 @@ function layoutBox(el: HTMLElement) {
   return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 }
 
-/** Move Sulwe and the docked tour pill together, collapse the pill to a dot, or yield the whole dock. */
+/** Fade Sulwe and the docked tour pill in place, or collapse the pill to a dot. Never move them. */
 function liftFloaters(root: HTMLElement) {
   const sulweEl = document.querySelector<HTMLElement>("[data-sulwe-root]");
+  if (root.style.getPropertyValue("--rangach-float-lift")) root.style.removeProperty("--rangach-float-lift");
   if (!sulweEl) {
     if (root.getAttribute("data-tour-invite")) root.removeAttribute("data-tour-invite");
     if (root.hasAttribute("data-sulwe-yield")) root.removeAttribute("data-sulwe-yield");
     return;
   }
-  const currentFloat = Number.parseFloat(root.style.getPropertyValue("--rangach-float-lift")) || 0;
   const sulweBox = layoutBox(sulweEl);
   if (!sulweBox) return;
   root.style.setProperty("--rangach-sulwe-size", `${Math.round(sulweBox.width)}px`);
@@ -90,18 +90,13 @@ function liftFloaters(root: HTMLElement) {
   });
   const hold = root.getAttribute("data-tour-invite-hold");
   const placed = placeTourDock({
-    sulwe: { ...sulweBox, top: sulweBox.top + currentFloat },
+    sulwe: sulweBox,
     pill: pillBox ? { width: pillBox.width, height: pillBox.height } : { width: 0, height: 0 },
     obstacles,
     viewportHeight: window.innerHeight,
     prefer: hold === "pill" || hold === "dot" ? hold : undefined,
     sticky: root.getAttribute("data-sulwe-yield") === "1",
   });
-  // Leave the seat alone while fading, so the dock does not jump as it leaves.
-  if (!placed.yield) {
-    const nextLift = `${placed.lift}px`;
-    if (root.style.getPropertyValue("--rangach-float-lift") !== nextLift) root.style.setProperty("--rangach-float-lift", nextLift);
-  }
   const invite = placed.collapsed && pillBox ? "dot" : "pill";
   if (root.getAttribute("data-tour-invite") !== invite) root.setAttribute("data-tour-invite", invite);
   if (placed.yield) {

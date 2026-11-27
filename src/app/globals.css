@@ -314,7 +314,7 @@ main .grid > * {
 .sulwe-dock {
   position: fixed;
   right: 12px;
-  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv) + var(--rangach-float-lift, 0px));
+  bottom: calc(var(--rangach-above-nav) + var(--rangach-cta) + 10px + var(--rangach-vv));
   z-index: 45;
   transform: none;
   overflow: visible;
@@ -421,7 +421,7 @@ html[data-tour-invite="dot"] .tour-invite-dot {
   }
 
   .sulwe-dock {
-    bottom: calc(20px + var(--rangach-cta) + var(--rangach-float-lift, 0px));
+    bottom: calc(20px + var(--rangach-cta));
   }
 
   .tour-prompt {
