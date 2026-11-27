@@ -331,10 +331,9 @@ function padded(box: TourBox, pad: number): TourBox {
 }
 
 /**
- * Sulwe and the quick-tour pill move as one unit.
- * The pill stays on Sulwe's row, just to his left. The search only rises through
- * the bottom-right zone. If the pill cannot sit clear of a control, it collapses
- * to the dot on Sulwe. If Sulwe himself cannot sit clear, the whole dock yields:
+ * Sulwe stays in the bottom band. The pill stays on his row.
+ * Nothing here moves him. If the pill would cover a control, it collapses to the
+ * dot. If Sulwe himself would cover a control, the whole dock yields in place:
  * it fades out and stops taking taps until the card has scrolled past.
  */
 export function placeTourDock(input: {
@@ -347,29 +346,20 @@ export function placeTourDock(input: {
   /** Already yielded. Ask for a little extra clearance before coming back. */
   sticky?: boolean;
 }): TourDock {
-  const zoneTop = input.viewportHeight * 0.46;
-  const maxLift = Math.max(0, Math.floor(input.sulwe.top - zoneTop));
+  void input.viewportHeight;
   const blocks = input.obstacles.filter((box) => box.width > 1 && box.height > 1);
   const wantPill = input.prefer !== "dot";
   const wantDot = input.prefer !== "pill";
   const hits = (box: TourBox, pad: number) => blocks.some((block) => boxesOverlap(padded(box, pad), block));
-  const clearAt = (lift: number, withPill: boolean, pad: number) => {
-    const host = shifted(input.sulwe, lift);
-    if (hits(host, pad)) return false;
+  const clearAt = (withPill: boolean, pad: number) => {
+    if (hits(input.sulwe, pad)) return false;
     if (!withPill || !(input.pill.width > 1 && input.pill.height > 1)) return true;
-    return !hits(dockedPill(input.sulwe, input.pill, lift), pad);
-  };
-  const firstClear = (withPill: boolean) => {
-    for (let lift = 0; lift <= maxLift; lift += 8) {
-      if (clearAt(lift, withPill, 0)) return lift;
-    }
-    return null;
+    return !hits(dockedPill(input.sulwe, input.pill, 0), pad);
   };
   const seat = (withPill: boolean): TourDock | null => {
-    const lift = firstClear(withPill);
-    if (lift === null) return null;
-    if (input.sticky && !clearAt(lift, withPill, DOCK_YIELD_PAD)) return null;
-    return { lift, collapsed: !withPill, yield: false };
+    if (!clearAt(withPill, 0)) return null;
+    if (input.sticky && !clearAt(withPill, DOCK_YIELD_PAD)) return null;
+    return { lift: 0, collapsed: !withPill, yield: false };
   };
   if (wantPill) {
     const placed = seat(true);

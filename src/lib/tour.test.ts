@@ -179,10 +179,7 @@ test("the quick-tour pill stays on Sulwe's row, and yields instead of covering a
 
   const follow = { top: 600, left: 200, width: 80, height: 44 };
   const nudged = placeTourDock({ sulwe, pill, obstacles: [follow], viewportHeight: 844 });
-  assert.equal(nudged.yield, false);
-  assert.equal(nudged.collapsed, false);
-  assert.ok(nudged.lift > 0);
-  assert.ok(nudged.lift <= sulwe.top - 844 * 0.46);
+  assert.deepEqual(nudged, { lift: 0, collapsed: true, yield: false });
 
   const wall = { top: 300, left: 0, width: 390, height: 544 };
   const blocked = placeTourDock({ sulwe, pill, obstacles: [wall], viewportHeight: 844 });
